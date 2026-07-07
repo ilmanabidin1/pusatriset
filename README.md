@@ -30,6 +30,14 @@ jurnalhub/
 
 Karena website ini dibangun menggunakan **HTML, CSS, dan JavaScript murni**, Anda tidak perlu melakukan kompilasi atau instalasi dependency yang rumit. 
 
+Untuk membuka database jurnal, server membutuhkan environment variable `ACCESS_CODE`. Kode ini tidak disimpan di frontend agar tidak mudah dilihat pengunjung.
+
+```bash
+ACCESS_CODE="kode-rahasia-anda" npm start
+```
+
+Di Railway, tambahkan variable `ACCESS_CODE` pada menu Variables project, lalu isi dengan kode rahasia yang ingin dibagikan ke pembeli.
+
 ### Opsi 1: Buka Langsung (Tanpa Server)
 1. Unduh atau clone repositori ini ke komputer Anda.
 2. Klik ganda (double-click) file `index.html` untuk langsung membukanya di browser favorit Anda (Google Chrome, Firefox, Edge, Safari, dll).

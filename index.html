@@ -22,6 +22,19 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div class="access-overlay" id="accessOverlay" aria-modal="true" role="dialog">
+    <form class="access-modal" id="accessForm">
+      <div class="access-icon"><i class="fa-solid fa-lock"></i></div>
+      <h2>Akses JurnalHub</h2>
+      <p>Masukkan kode akses untuk membuka database jurnal dan fitur pencarian.</p>
+      <label for="accessCode">Kode Rahasia</label>
+      <input type="password" id="accessCode" name="code" autocomplete="off" placeholder="Masukkan kode akses" required>
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-unlock-keyhole"></i> Buka Akses
+      </button>
+      <p class="access-error" id="accessError" role="alert"></p>
+    </form>
+  </div>
 
   <!-- Navigation Bar -->
   <header class="navbar" id="navbar">
@@ -203,6 +216,66 @@
   </footer>
 
   <!-- Scripts -->
+  <script>
+    (function () {
+      const overlay = document.getElementById('accessOverlay');
+      const form = document.getElementById('accessForm');
+      const input = document.getElementById('accessCode');
+      const error = document.getElementById('accessError');
+
+      function lockPage() {
+        overlay.classList.remove('is-hidden');
+        document.body.classList.add('access-locked');
+        input.focus();
+      }
+
+      function unlockPage() {
+        overlay.classList.add('is-hidden');
+        document.body.classList.remove('access-locked');
+      }
+
+      fetch('/api/access-status')
+        .then(response => response.json())
+        .then(data => {
+          if (data.hasAccess) {
+            unlockPage();
+          } else {
+            lockPage();
+          }
+        })
+        .catch(lockPage);
+
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        error.textContent = '';
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa...';
+
+        try {
+          const response = await fetch('/api/access', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: input.value })
+          });
+
+          if (!response.ok) {
+            error.textContent = 'Kode akses salah. Silakan coba lagi.';
+            input.select();
+            return;
+          }
+
+          window.location.reload();
+        } catch (err) {
+          error.textContent = 'Tidak bisa memeriksa kode. Coba lagi.';
+        } finally {
+          submitButton.disabled = false;
+          submitButton.innerHTML = '<i class="fa-solid fa-unlock-keyhole"></i> Buka Akses';
+        }
+      });
+    })();
+  </script>
   <script src="database.js"></script>
   <script src="app.js"></script>
 </body>

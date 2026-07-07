@@ -1045,3 +1045,97 @@ body {
 .journal-card {
   animation: fadeIn 0.4s ease forwards;
 }
+
+.access-locked {
+  overflow: hidden;
+}
+
+.access-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(7, 9, 14, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.access-overlay.is-hidden {
+  display: none;
+}
+
+.access-modal {
+  width: min(100%, 420px);
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-lg);
+  background: rgba(13, 17, 23, 0.96);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.access-icon {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1.25rem;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--gradient-primary);
+}
+
+.access-modal h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.access-modal p {
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.access-modal label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.access-modal input {
+  width: 100%;
+  min-height: 3rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  font: inherit;
+}
+
+.access-modal input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.access-modal .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.access-modal .btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.access-error {
+  min-height: 1.25rem;
+  margin: 1rem 0 0;
+  color: #f87171 !important;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
