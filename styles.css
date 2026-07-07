@@ -1312,6 +1312,24 @@ body {
   opacity: 0.72;
 }
 
+.access-help {
+  margin: 1rem 0 0 !important;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.access-help a {
+  color: #60a5fa;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.access-help a:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
 .access-error {
   min-height: 1.25rem;
   margin: 1rem 0 0;
