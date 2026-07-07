@@ -1,6 +1,6 @@
 /**
  * Logika Aplikasi Pusat Riset
- * Mengatur pencarian, filter, tampilan grid/list, dan perhitungan statistik.
+ * Mengatur pencarian, filter, tampilan grid/list, lazy-loading, dan perhitungan statistik.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetFiltersBtn = document.getElementById('resetFilters');
   const resultsCount = document.getElementById('resultsCount');
   const resultsContainer = document.getElementById('resultsContainer');
+  const loadMoreContainer = document.getElementById('loadMoreContainer');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
   
   const viewGridBtn = document.getElementById('viewGrid');
   const viewListBtn = document.getElementById('viewList');
@@ -27,17 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // State Management
   let currentLayout = 'grid'; // 'grid' atau 'list'
+  let visibleCount = 30;     // Jumlah kartu awal yang dirender (lazy-loading)
+  let activeJournals = [];   // Menyimpan hasil filter saat ini
 
   // --- 1. TAMPILAN MENYELURUH (RENDERING) ---
   
-  // Fungsi merender kartu ke HTML
-  function renderCards(journals) {
+  // Fungsi merender kartu ke HTML (dilengkapi lazy-loading)
+  function renderCards() {
     resultsContainer.innerHTML = '';
     
-    // Update label jumlah hasil pencarian
-    resultsCount.textContent = `Menampilkan ${journals.length} jurnal`;
+    // Update label jumlah hasil pencarian keseluruhan
+    resultsCount.textContent = `Menampilkan ${activeJournals.length} jurnal`;
 
-    if (journals.length === 0) {
+    if (activeJournals.length === 0) {
       resultsContainer.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
@@ -45,14 +49,18 @@ document.addEventListener('DOMContentLoaded', () => {
           <p>Coba gunakan kata kunci lain, bersihkan filter, atau periksa ejaan Anda.</p>
         </div>
       `;
+      loadMoreContainer.style.display = 'none';
       return;
     }
 
-    journals.forEach((journal, index) => {
+    // Ambil data sebagian sesuai visibleCount
+    const chunk = activeJournals.slice(0, visibleCount);
+
+    chunk.forEach((journal, index) => {
       const card = document.createElement('div');
       card.className = `journal-card ${journal.type.toLowerCase()}-card`;
       // Efek stagger animasi masuk
-      card.style.animationDelay = `${index * 0.05}s`;
+      card.style.animationDelay = `${(index % 30) * 0.03}s`;
 
       const typeBadgeClass = journal.type === 'Scopus' ? 'type-scopus' : 'type-sinta';
       const rankBadgeClass = `rank-${journal.rank.toLowerCase()}`;
@@ -103,6 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       resultsContainer.appendChild(card);
     });
+
+    // Atur visibilitas tombol "Muat Lebih Banyak"
+    if (visibleCount < activeJournals.length) {
+      loadMoreContainer.style.display = 'block';
+    } else {
+      loadMoreContainer.style.display = 'none';
+    }
   }
 
   // --- 2. LOGIKA PENYARINGAN (FILTERING) ---
@@ -116,14 +131,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lakukan penyaringan pada JOURNAL_DATABASE (dari database.js)
     const filtered = JOURNAL_DATABASE.filter(journal => {
-      // 1. Filter Kata Kunci (Pencocokan Judul, Penerbit, Keilmuan, dan Keyword)
+      // 1. Filter Kata Kunci (Pencocokan Judul, Penerbit, Keilmuan, dan Deskripsi)
       const matchesQuery = 
         query === '' ||
         journal.title.toLowerCase().includes(query) ||
         journal.publisher.toLowerCase().includes(query) ||
         journal.keilmuan.toLowerCase().includes(query) ||
         journal.subject.toLowerCase().includes(query) ||
-        (journal.keyword && journal.keyword.some(kw => kw.toLowerCase().includes(query)));
+        journal.description.toLowerCase().includes(query);
 
       // 2. Filter Kategori (Scopus / Sinta)
       const matchesType = typeValue === 'all' || journal.type === typeValue;
@@ -140,7 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return matchesQuery && matchesType && matchesSubject && matchesRank && matchesFree;
     });
 
-    renderCards(filtered);
+    // Reset hitungan lazy-loading saat filter berubah
+    activeJournals = filtered;
+    visibleCount = 30;
+    renderCards();
   }
 
   // --- 3. LOGIKA STATISTIK ---
@@ -184,6 +202,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 4. EVEN LISTENERS ---
 
+  // Tombol Load More
+  loadMoreBtn.addEventListener('click', () => {
+    visibleCount += 30;
+    renderCards();
+  });
+
   // Deteksi Input Pencarian
   searchInput.addEventListener('input', () => {
     if (searchInput.value.length > 0) {
@@ -204,7 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Deteksi Perubahan Filter Dropdown & Checkbox
   filterType.addEventListener('change', () => {
-    // Sembunyikan/tampilkan opsi ranking yang tidak sesuai tipe terpilih
     adjustRankOptions(filterType.value);
     filterJournals();
   });
@@ -249,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
     filterRank.value = 'all';
     checkFreeOnly.checked = false;
     
-    // Tampilkan kembali semua opsi rank
     adjustRankOptions('all');
     filterJournals();
   });
@@ -261,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     viewGridBtn.classList.add('active');
     viewListBtn.classList.remove('active');
     resultsContainer.classList.remove('list-view');
-    filterJournals();
+    renderCards();
   });
 
   viewListBtn.addEventListener('click', () => {
@@ -270,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     viewListBtn.classList.add('active');
     viewGridBtn.classList.remove('active');
     resultsContainer.classList.add('list-view');
-    filterJournals();
+    renderCards();
   });
 
   // Mobile Hamburger Toggle
@@ -302,7 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 5. INITIALIZATION ---
   function init() {
-    renderCards(JOURNAL_DATABASE);
+    activeJournals = JOURNAL_DATABASE;
+    renderCards();
     calculateStats();
   }
 
