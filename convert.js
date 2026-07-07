@@ -329,7 +329,7 @@ console.log(`\nTotal Jurnal Terkumpul (Tanpa Duplikat): ${compiledJournals.lengt
 
 // Simpan data terkompilasi ke database.js
 const outputContent = `/**
- * Database Jurnal Pusat Riset
+ * Database Jurnal JurnalHub
  * Data ini digenerate secara otomatis dari file Excel.
  * Total Jurnal: ${compiledJournals.length}
  */

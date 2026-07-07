@@ -1,5 +1,5 @@
 /**
- * Database Jurnal Pusat Riset
+ * Database Jurnal JurnalHub
  * Data ini digenerate secara otomatis dari file Excel.
  * Total Jurnal: 756
  */

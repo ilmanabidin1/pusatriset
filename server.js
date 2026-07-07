@@ -14,5 +14,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server Pusat Riset berjalan di port ${PORT}`);
+  console.log(`Server JurnalHub berjalan di port ${PORT}`);
 });

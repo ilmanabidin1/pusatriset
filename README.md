@@ -1,6 +1,6 @@
-# Pusat Riset - Database Jurnal Scopus & Sinta Interaktif
+# JurnalHub - Database Jurnal Scopus & Sinta Interaktif
 
-Pusat Riset adalah platform berbasis web interaktif, responsif, dan premium yang dirancang untuk membantu akademisi, peneliti, dan mahasiswa di Indonesia dalam mencari rekomendasi jurnal ilmiah terindeks Scopus dan terakreditasi Sinta secara instan dan mudah.
+JurnalHub adalah platform berbasis web interaktif, responsif, dan premium yang dirancang untuk membantu akademisi, peneliti, dan mahasiswa di Indonesia dalam mencari rekomendasi jurnal ilmiah terindeks Scopus dan terakreditasi Sinta secara instan dan mudah.
 
 ## 🚀 Fitur Utama
 
@@ -17,7 +17,7 @@ Pusat Riset adalah platform berbasis web interaktif, responsif, dan premium yang
 ## 🛠️ Struktur Proyek
 
 ```bash
-pusat-riset/
+jurnalhub/
 │
 ├── index.html       # Struktur markup halaman utama
 ├── styles.css       # File style CSS sistem desain visual
@@ -45,7 +45,7 @@ Untuk performa optimal dan menghindari isu pembatasan browser (CORS jika dikemba
 
 ## 🗃️ Cara Mengubah/Menambahkan Database Jurnal Anda Sendiri
 
-Semua data jurnal disimpan dalam file [database.js](file:///C:/Users/user/.gemini/antigravity/scratch/pusat-riset/database.js). Anda dapat membuka file tersebut dengan editor teks (seperti VS Code atau Notepad) dan memodifikasi array `JOURNAL_DATABASE`.
+Semua data jurnal disimpan dalam file `database.js`. Anda dapat membuka file tersebut dengan editor teks (seperti VS Code atau Notepad) dan memodifikasi array `JOURNAL_DATABASE`.
 
 ### Struktur Objek Jurnal
 Setiap jurnal diwakili oleh objek JavaScript dengan struktur sebagai berikut:

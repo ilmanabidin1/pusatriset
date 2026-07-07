@@ -1,13 +1,16 @@
 {
-  "name": "pusat-riset",
+  "name": "jurnalhub",
   "version": "1.0.0",
-  "description": "Pusat Riset - Cari Jurnal Scopus & Sinta",
+  "description": "JurnalHub - Cari Jurnal Scopus & Sinta",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "convert": "node convert.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
     "xlsx": "^0.18.5"
   }
 }

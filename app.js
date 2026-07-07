@@ -1,5 +1,5 @@
 /**
- * Logika Aplikasi Pusat Riset
+ * Logika Aplikasi JurnalHub
  * Mengatur pencarian, filter, tampilan grid/list, lazy-loading, dan perhitungan statistik.
  */
 
@@ -128,24 +128,47 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- 2. LOGIKA PENYARINGAN (FILTERING) ---
+
+  function normalizeText(value) {
+    return String(value || '').toLowerCase().trim();
+  }
+
+  function getTitleMatchScore(title, query) {
+    const normalizedTitle = normalizeText(title);
+    if (!query) return 0;
+    if (normalizedTitle === query) return 100;
+    if (normalizedTitle.startsWith(query)) return 80;
+    if (normalizedTitle.includes(query)) return 60;
+
+    const queryWords = query.split(/\s+/).filter(Boolean);
+    const matchedWords = queryWords.filter(word => normalizedTitle.includes(word)).length;
+    return matchedWords > 0 ? Math.round((matchedWords / queryWords.length) * 40) : 0;
+  }
   
   function filterJournals() {
-    const query = searchInput.value.toLowerCase().trim();
+    const query = normalizeText(searchInput.value);
     const typeValue = filterType.value;
     const subjectValue = filterSubject.value;
     const rankValue = filterRank.value;
     const freeOnly = checkFreeOnly.checked;
 
     // Lakukan penyaringan pada JOURNAL_DATABASE (dari database.js)
-    const filtered = JOURNAL_DATABASE.filter(journal => {
-      // 1. Filter Kata Kunci (Pencocokan Judul, Penerbit, Keilmuan, dan Deskripsi)
-      const matchesQuery = 
-        query === '' ||
-        journal.title.toLowerCase().includes(query) ||
-        journal.publisher.toLowerCase().includes(query) ||
-        journal.keilmuan.toLowerCase().includes(query) ||
-        journal.subject.toLowerCase().includes(query) ||
-        journal.description.toLowerCase().includes(query);
+    const filtered = JOURNAL_DATABASE
+      .map((journal, index) => {
+        const titleScore = getTitleMatchScore(journal.title, query);
+        const matchesKeyword =
+          query === '' ||
+          titleScore > 0 ||
+          normalizeText(journal.publisher).includes(query) ||
+          normalizeText(journal.keilmuan).includes(query) ||
+          normalizeText(journal.subject).includes(query) ||
+          normalizeText(journal.description).includes(query);
+
+        return { journal, index, titleScore, matchesKeyword };
+      })
+      .filter(({ journal, matchesKeyword }) => {
+        // 1. Filter Judul/Kata Kunci
+        const matchesQuery = matchesKeyword;
 
       // 2. Filter Kategori (Scopus / Sinta)
       const matchesType = typeValue === 'all' || journal.type === typeValue;
@@ -163,7 +186,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const matchesFastTrack = !checkFastTrackOnly.checked || journal.isFastTrack;
 
       return matchesQuery && matchesType && matchesSubject && matchesRank && matchesFree && matchesFastTrack;
-    });
+    })
+      .sort((a, b) => {
+        if (query && b.titleScore !== a.titleScore) {
+          return b.titleScore - a.titleScore;
+        }
+        return a.index - b.index;
+      })
+      .map(({ journal }) => journal);
 
     // Reset hitungan lazy-loading saat filter berubah
     activeJournals = filtered;
