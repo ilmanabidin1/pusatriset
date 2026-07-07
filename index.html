@@ -33,7 +33,6 @@
       <nav class="nav-links">
         <a href="#hero" class="nav-link active">Beranda</a>
         <a href="#search-section" class="nav-link">Cari Jurnal</a>
-        <a href="#stats-section" class="nav-link">Statistik</a>
       </nav>
       <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Menu">
         <i class="fa-solid fa-bars"></i>
@@ -42,22 +41,38 @@
   </header>
 
   <!-- Hero Section -->
-  <section class="hero-section" id="hero">
+  <section class="hero-section" id="hero" style="min-height: 95vh; padding-bottom: 6rem;">
     <div class="hero-background">
       <div class="glow-sphere sphere-1"></div>
       <div class="glow-sphere sphere-2"></div>
     </div>
-    <div class="hero-container">
+    <div class="hero-container" style="display: flex; flex-direction: column; align-items: center;">
       <span class="hero-tagline"><i class="fa-solid fa-graduation-cap"></i> Created by Dr. M Ilman Abidin, S.H., M.H.</span>
       <h1 class="hero-title">Temukan Jurnal <span class="gradient-text">Scopus</span> & <span class="gradient-text">Sinta</span> Terbaik</h1>
       <p class="hero-subtitle">Cari rekomendasi jurnal internasional dan nasional dengan mudah. Saring berdasarkan bidang keilmuan, tingkatan kuartil, dan temukan opsi gratis (tanpa biaya publikasi/APC).</p>
-      <div class="hero-actions">
+      <div class="hero-actions" style="margin-bottom: 3rem;">
         <a href="#search-section" class="btn btn-primary" id="btnExplore">
           <i class="fa-solid fa-magnifying-glass"></i> Mulai Pencarian
         </a>
-        <a href="#stats-section" class="btn btn-secondary" id="btnStats">
-          Lihat Statistik <i class="fa-solid fa-arrow-down"></i>
-        </a>
+      </div>
+
+      <!-- Statistics Grid directly on Homepage Hero -->
+      <div class="stats-grid" style="width: 100%; max-width: 900px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1rem;">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-globe"></i></div>
+          <div class="stat-value" id="statScopusVal">0</div>
+          <div class="stat-label">Jurnal Scopus Terindeks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-medal"></i></div>
+          <div class="stat-value" id="statSintaVal">0</div>
+          <div class="stat-label">Jurnal Sinta Terakreditasi</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+          <div class="stat-value" id="statFreeVal">0</div>
+          <div class="stat-label">Jurnal Tanpa Biaya (No APC)</div>
+        </div>
       </div>
     </div>
   </section>
@@ -166,28 +181,7 @@
     </div>
   </section>
 
-  <!-- Statistics Section -->
-  <section class="stats-section" id="stats-section">
-    <div class="section-container">
-      <div class="stats-grid">
-        <div class="stat-card" id="statScopus">
-          <div class="stat-icon"><i class="fa-solid fa-globe"></i></div>
-          <div class="stat-value" id="statScopusVal">0</div>
-          <div class="stat-label">Jurnal Scopus Terindeks</div>
-        </div>
-        <div class="stat-card" id="statSinta">
-          <div class="stat-icon"><i class="fa-solid fa-medal"></i></div>
-          <div class="stat-value" id="statSintaVal">0</div>
-          <div class="stat-label">Jurnal Sinta Terakreditasi</div>
-        </div>
-        <div class="stat-card" id="statFree">
-          <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-          <div class="stat-value" id="statFreeVal">0</div>
-          <div class="stat-label">Jurnal Tanpa Biaya (No APC)</div>
-        </div>
-      </div>
-    </div>
-  </section>
+
 
 
   <!-- Footer -->
