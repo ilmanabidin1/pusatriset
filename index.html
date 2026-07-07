@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pusat Riset - Cari Jurnal Scopus & Sinta Gratis</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Pusat Riset - Platform pencarian dan rekomendasi jurnal Scopus gratis dan jurnal Sinta berdasarkan bidang keilmuan dan kata kunci Anda.">
+  <meta name="keywords" content="Pusat Riset, Jurnal Scopus, Jurnal Sinta, Jurnal Gratis, No APC, Publikasi Ilmiah, Rekomendasi Jurnal">
+  <meta name="author" content="Pusat Riset">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for modern UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo" id="navLogo">
+        <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+        <span>Pusat<span class="gradient-text">Riset</span></span>
+      </a>
+      <nav class="nav-links">
+        <a href="#hero" class="nav-link active">Beranda</a>
+        <a href="#search-section" class="nav-link">Cari Jurnal</a>
+        <a href="#stats-section" class="nav-link">Statistik</a>
+        <a href="https://github.com/ilmanabidin1/pusatriset" target="_blank" class="github-btn" id="githubLink">
+          <i class="fa-brands fa-github"></i> GitHub
+        </a>
+      </nav>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section" id="hero">
+    <div class="hero-background">
+      <div class="glow-sphere sphere-1"></div>
+      <div class="glow-sphere sphere-2"></div>
+    </div>
+    <div class="hero-container">
+      <span class="hero-tagline"><i class="fa-solid fa-atom"></i> Solusi Publikasi Ilmiah Anda</span>
+      <h1 class="hero-title">Temukan Jurnal <span class="gradient-text">Scopus</span> & <span class="gradient-text">Sinta</span> Terbaik</h1>
+      <p class="hero-subtitle">Cari rekomendasi jurnal internasional dan nasional dengan mudah. Saring berdasarkan bidang keilmuan, tingkatan kuartil, dan temukan opsi gratis (tanpa biaya publikasi/APC).</p>
+      <div class="hero-actions">
+        <a href="#search-section" class="btn btn-primary" id="btnExplore">
+          <i class="fa-solid fa-magnifying-glass"></i> Mulai Pencarian
+        </a>
+        <a href="#stats-section" class="btn btn-secondary" id="btnStats">
+          Lihat Statistik <i class="fa-solid fa-arrow-down"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Search & Database Section -->
+  <section class="search-section" id="search-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Database Jurnal Interaktif</h2>
+        <p class="section-subtitle">Masukkan kata kunci, nama jurnal, atau pilih bidang keilmuan untuk mencari jurnal impian Anda.</p>
+      </div>
+
+      <!-- Search Controls -->
+      <div class="search-box-wrapper" id="searchBoxWrapper">
+        <div class="search-input-group">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Cari berdasarkan judul jurnal, penerbit, atau kata kunci..." aria-label="Cari Jurnal">
+          <button id="clearSearch" class="clear-search-btn" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="filter-group">
+          <!-- Filter Type -->
+          <div class="filter-item">
+            <label for="filterType"><i class="fa-solid fa-tags"></i> Kategori</label>
+            <select id="filterType">
+              <option value="all">Semua Jurnal</option>
+              <option value="Scopus">Scopus Only</option>
+              <option value="Sinta">Sinta Only</option>
+            </select>
+          </div>
+
+          <!-- Filter Subject -->
+          <div class="filter-item">
+            <label for="filterSubject"><i class="fa-solid fa-book-open"></i> Rumpun Keilmuan</label>
+            <select id="filterSubject">
+              <option value="all">Semua Rumpun</option>
+              <option value="Sains & Teknologi">Sains & Teknologi</option>
+              <option value="Sosial & Humaniora">Sosial & Humaniora</option>
+              <option value="Kesehatan">Kesehatan</option>
+              <option value="Ekonomi & Bisnis">Ekonomi & Bisnis</option>
+            </select>
+          </div>
+
+          <!-- Filter Rank -->
+          <div class="filter-item">
+            <label for="filterRank"><i class="fa-solid fa-award"></i> Tingkatan / Rank</label>
+            <select id="filterRank">
+              <option value="all">Semua Tingkat</option>
+              <option value="Q1">Scopus Q1</option>
+              <option value="Q2">Scopus Q2</option>
+              <option value="Q3">Scopus Q3</option>
+              <option value="Q4">Scopus Q4</option>
+              <option value="S1">Sinta S1</option>
+              <option value="S2">Sinta S2</option>
+              <option value="S3">Sinta S3</option>
+              <option value="S4">Sinta S4</option>
+              <option value="S5">Sinta S5</option>
+              <option value="S6">Sinta S6</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-footer">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="checkFreeOnly">
+            <label for="checkFreeOnly" class="checkbox-label">
+              <span class="custom-checkbox"><i class="fa-solid fa-check"></i></span>
+              Tampilkan Hanya Jurnal Gratis (No APC)
+            </label>
+          </div>
+          <button id="resetFilters" class="reset-btn" id="btnResetFilters">
+            <i class="fa-solid fa-rotate-left"></i> Reset Filter
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Bar & Mode View Toggle -->
+      <div class="results-meta">
+        <span class="results-count" id="resultsCount">Menampilkan 0 jurnal</span>
+        <div class="view-toggle">
+          <button class="view-btn active" id="viewGrid" aria-label="Tampilan Grid"><i class="fa-solid fa-grip"></i></button>
+          <button class="view-btn" id="viewList" aria-label="Tampilan List"><i class="fa-solid fa-list"></i></button>
+        </div>
+      </div>
+
+      <!-- Results Container -->
+      <div class="results-grid" id="resultsContainer">
+        <!-- Cards will be dynamically inserted here via app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Statistics Section -->
+  <section class="stats-section" id="stats-section">
+    <div class="section-container">
+      <div class="stats-grid">
+        <div class="stat-card" id="statScopus">
+          <div class="stat-icon"><i class="fa-solid fa-globe"></i></div>
+          <div class="stat-value" id="statScopusVal">0</div>
+          <div class="stat-label">Jurnal Scopus Terindeks</div>
+        </div>
+        <div class="stat-card" id="statSinta">
+          <div class="stat-icon"><i class="fa-solid fa-medal"></i></div>
+          <div class="stat-value" id="statSintaVal">0</div>
+          <div class="stat-label">Jurnal Sinta Terakreditasi</div>
+        </div>
+        <div class="stat-card" id="statFree">
+          <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+          <div class="stat-value" id="statFreeVal">0</div>
+          <div class="stat-label">Jurnal Tanpa Biaya (No APC)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Info/Contribution Callout -->
+  <section class="info-section">
+    <div class="section-container">
+      <div class="info-card">
+        <div class="info-content">
+          <h3>Punya Data Jurnal Sendiri?</h3>
+          <p>Anda dapat mengkustomisasi seluruh daftar jurnal di website ini secara mudah dengan mengedit file <code>database.js</code> di direktori repositori Anda.</p>
+        </div>
+        <a href="https://github.com/ilmanabidin1/pusatriset" target="_blank" class="btn btn-primary">
+          <i class="fa-solid fa-code"></i> Pelajari Cara Edit Data
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <a href="#" class="footer-logo">
+          <i class="fa-solid fa-graduation-cap"></i> Pusat<span>Riset</span>
+        </a>
+        <p>Aplikasi pencarian referensi jurnal ilmiah nasional dan internasional terbaik untuk mendukung riset anak bangsa.</p>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Pusat Riset. Dibuat untuk mendukung iklim riset terbuka di Indonesia.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="database.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
