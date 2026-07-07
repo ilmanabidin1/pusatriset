@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const filterSubject = document.getElementById('filterSubject');
   const filterRank = document.getElementById('filterRank');
   const checkFreeOnly = document.getElementById('checkFreeOnly');
+  const checkFastTrackOnly = document.getElementById('checkFastTrackOnly');
   const resetFiltersBtn = document.getElementById('resetFilters');
   const resultsCount = document.getElementById('resultsCount');
   const resultsContainer = document.getElementById('resultsContainer');
@@ -99,6 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="meta-label">Biaya APC:</span>
               <span class="meta-value meta-apc ${apcClass}">${journal.apc}</span>
             </div>
+            ${journal.isFastTrack ? `
+            <div class="meta-detail-row" style="color: #fbbf24; font-weight: 600;">
+              <span class="meta-label">Fast Track:</span>
+              <span class="meta-value"><i class="fa-solid fa-bolt"></i> ${journal.responseTime || 'Ya'}</span>
+            </div>
+            ` : ''}
           </div>
           
           <div class="card-footer" style="margin-top: 1.25rem;">
@@ -152,7 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // 5. Filter Gratis (No APC)
       const matchesFree = !freeOnly || journal.isFree;
 
-      return matchesQuery && matchesType && matchesSubject && matchesRank && matchesFree;
+      // 6. Filter Fast Track (Berbayar)
+      const matchesFastTrack = !checkFastTrackOnly.checked || journal.isFastTrack;
+
+      return matchesQuery && matchesType && matchesSubject && matchesRank && matchesFree && matchesFastTrack;
     });
 
     // Reset hitungan lazy-loading saat filter berubah
@@ -235,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
   filterSubject.addEventListener('change', filterJournals);
   filterRank.addEventListener('change', filterJournals);
   checkFreeOnly.addEventListener('change', filterJournals);
+  checkFastTrackOnly.addEventListener('change', filterJournals);
 
   // Sesuaikan pilihan tingkatan berdasarkan Kategori yang dipilih
   function adjustRankOptions(selectedType) {
@@ -271,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     filterSubject.value = 'all';
     filterRank.value = 'all';
     checkFreeOnly.checked = false;
+    checkFastTrackOnly.checked = false;
     
     adjustRankOptions('all');
     filterJournals();

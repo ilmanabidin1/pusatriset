@@ -156,6 +156,7 @@ const excelConfigs = [
   {
     file: "DAFTAR 200+ JURNAL ILMIAH SCOPUS Q1-Q4 GRATIS TAHUN 2026 - SEMUA BIDANG.xlsx",
     type: "Scopus",
+    isFastTrack: false,
     map: (row) => ({
       title: row[1],
       originalSubject: row[2],
@@ -169,6 +170,7 @@ const excelConfigs = [
   {
     file: "DAFTAR JURNAL ILMIAH SINTA 1-2 GRATIS TAHUN 2026 - SEMUA BIDANG.xlsx",
     type: "Sinta",
+    isFastTrack: false,
     map: (row) => ({
       title: row[1],
       originalSubject: row[2],
@@ -182,6 +184,7 @@ const excelConfigs = [
   {
     file: "DAFTAR JURNAL ILMIAH SINTA 3-4 GRATIS TAHUN 2026 - SEMUA BIDANG.xlsx",
     type: "Sinta",
+    isFastTrack: false,
     map: (row) => ({
       title: row[1],
       originalSubject: row[3], // Kolom 3 adalah Subject Area
@@ -195,6 +198,7 @@ const excelConfigs = [
   {
     file: "DAFTAR JURNAL ILMIAH SINTA 5-6 GRATIS TAHUN 2026 - SEMUA BIDANG.xlsx",
     type: "Sinta",
+    isFastTrack: false,
     map: (row) => ({
       title: row[1],
       originalSubject: row[2],
@@ -208,6 +212,7 @@ const excelConfigs = [
   {
     file: "DAFTAR JURNAL ILMIAH SINTA FAST TRACK - TAHUN 2026 - SEMUA BIDANG.xlsx",
     type: "Sinta",
+    isFastTrack: true,
     map: (row) => ({
       title: row[1],
       originalSubject: row[2],
@@ -215,12 +220,14 @@ const excelConfigs = [
       originalRank: row[4],
       apcVal: row[5],
       publisher: row[8] || 'Tidak Diketahui',
-      url: row[9] || '#'
+      url: row[9] || '#',
+      responseTime: row[6] ? row[6].toString().trim() : 'Tidak Disebutkan'
     })
   },
   {
     file: "DAFTAR JURNAL ILMIAH SINTA GRATIS TAHUN 2026 - BIDANG PENGABDIAN MASARAKAT.xlsx",
     type: "Sinta",
+    isFastTrack: false,
     map: (row) => ({
       title: row[1],
       originalSubject: row[2],
@@ -284,6 +291,8 @@ excelConfigs.forEach(config => {
       const subjMeta = mapSubject(mapped.originalSubject);
       const rank = parseRank(mapped.originalRank, config.type);
       const apcMeta = parseAPC(mapped.apcVal);
+      const isFastTrack = config.isFastTrack || false;
+      const responseTime = mapped.responseTime || null;
 
       // Pastikan URL valid
       let finalUrl = mapped.url.toString().trim();
@@ -301,6 +310,8 @@ excelConfigs.forEach(config => {
         keilmuan: subjMeta.keilmuan,
         apc: apcMeta.apc,
         isFree: apcMeta.isFree,
+        isFastTrack: isFastTrack,
+        responseTime: responseTime,
         url: finalUrl,
         description: mapped.desc.toString().trim().replace(/\r\n/g, ' ').replace(/\n/g, ' ')
       });

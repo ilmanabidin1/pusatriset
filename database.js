@@ -14,6 +14,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalkonstitusi.mkri.id/index.php/jk/",
     "description": "Constitutions, constitutional courts, constitutional court decisions, and topics of constitutional law, specifically in Indonesia"
   },
@@ -27,6 +29,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jimf-bi.org/index.php/JIMF",
     "description": "Islamic economics, Monetary and Finance; encourage and foster research in the area of Islamic Economics, Monetary, and Finance; and bridge the gap between theory and practice in the area Islamic Economics, Monetary, and Finance"
   },
@@ -40,6 +44,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://bulletin.bmeb-bi.org/",
     "description": "Monetary economics, banking, macro-prudential, payment systems, financial stability, financial markets, and economic growth (including policy coordination) that are of regional and global relevance"
   },
@@ -53,6 +59,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal-balitbang.kkp.go.id/index.php/iaj/index",
     "description": "Various disciplines of aquaculture including genetics, reproduction, nutrition and feed, fish health and diseases, engineering, and environmental assessment"
   },
@@ -66,6 +74,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://atomindonesia.brin.go.id/index.php/aij/index",
     "description": "Nuclear physics, reactor physics, radioactive waste, fuel element, radioisotopes, radiopharmaceuticals, radiation, and neutron scattering, as well as their utilization in agriculture, industry, health, environment, energy, material science and technology, and related fields."
   },
@@ -79,6 +89,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/ijil/about.html",
     "description": "Crucial role of international law by fostering a rule-based international community"
   },
@@ -92,6 +104,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/gamaijb",
     "description": "Marketing Management, Finance Management, Strategic Management, Operation Management, Human Resource Management, E-business, Knowledge Management, Corporate Governance Management Information System, International Business, Business Ethics and Sustainability Entrepreneurship"
   },
@@ -105,6 +119,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.ugm.ac.id/v3/jieb/index",
     "description": "Economics, business, or accounting"
   },
@@ -118,6 +134,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment, Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JKL/index",
     "description": "Environmental health risk assessment; Environmental health management; Vector rodent disease control and prevention; Environmental sanitation; Aspects of environmental health in disaster management; Environmental toxicology"
   },
@@ -131,6 +149,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/RLJ/about",
     "description": "Library science, records, information, and documentation"
   },
@@ -144,6 +164,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law, Economics and Business, Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/ijsls/",
     "description": "Legal anthropology; Sociology of Law; Law and Politics; Law and Economics; Law and Psychology; Gender and Law; Health, Law and Society; Law, Social Change and Technology."
   },
@@ -157,6 +179,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.lemigas.esdm.go.id/index.php/SCOG",
     "description": "Technology engineering development and laboratory testing in the oil and gas field"
   },
@@ -170,6 +194,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://consrev.mkri.id/index.php/const-rev",
     "description": "Constitutional topics, including constitutional frameworks, constitutional courts, judicial decisions, and broader constitutional law issues, both within Indonesia and globally"
   },
@@ -183,6 +209,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities and Arts",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/ENS",
     "description": "Study of the links that expand across and beyond Eurasia. The Journal defines Eurasia broadly as the region that encompasses Central Asia and the Caucasus, as well as in Russia, Ukraine, Moldova, Turkey, and Southwest Asia."
   },
@@ -196,6 +224,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jenci.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "All fields of basic, applied and clinical cancer research. Main topics of interest include: local and systemic anticancer therapy (with specific interest on applied cancer research from developing countries); experimental oncology; early cancer detection; randomized trials (including negatives ones); and key emerging fields of personalized medicine, such as molecular pathology, bioinformatics, and biotechnologies."
   },
@@ -209,6 +239,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://tehj.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "All aspects of cardiovascular disease, including original clinical studies and translational investigations"
   },
@@ -222,6 +254,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jmhg.springeropen.com/about",
     "description": "All aspects of the genetic basis of human disease, with a particular emphasis on biochemical genetics, biological studies of enzymes and other protein deficiencies, as well as immunogenetics"
   },
@@ -235,6 +269,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://mefj.springeropen.com/about",
     "description": "Aspects of reproductive physiology and pathology, reproductive endocrinology and endocrine therapies. It also includes andrology, contraception, early pregnancy, embryo development, ethical issues, fertilization, gametogenesis, genetic screening (first trimester), genetic diagnosis (pre-implantation), gonadal function, implantation, infectious diseases, menstrual disorders, psycho-social issues, reproductive genetics, reproductive surgery, reproductive epidemiology, and stem cell research"
   },
@@ -248,6 +284,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://afju.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Ooncology related issues, endourology, genitourinary medicine, andrology, uro-pharmacology, uro-radiology, prevention, as well as female and reconstructive urology. AFJU aims to bridge the gap between African urologists and other international experts by providing a platform for the dissemination of quality research. The journal welcomes submissions of original research, review, short communications and case reports"
   },
@@ -261,6 +299,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejfs.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Forensic sciences, pathology and clinical forensic medicine and its related specialities. The journal carries classic reviews, case studies, original research, hypotheses and learning points, offering critical analysis and scientific appraisal"
   },
@@ -274,6 +314,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/ROE",
     "description": "• Comparative and international education     • Education policy     • Interdisciplinary studies of education     • Curriculum, instruction, and learning     • Educational leadership and management      • Learning science and technology innovation     • Teaching and teacher education"
   },
@@ -287,6 +329,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/CCA",
     "description": "The editors welcome contributions on current affairs within Greater China, including Hong Kong, Macau and Taiwan. Submissions can focus on emerging topics and current developments as well as on future-oriented debates in the fields of China's global and regional roles; political, economic and social developments including foreign affairs, business, finance, cultural industries, religion, education, science and technology; and so on."
   },
@@ -300,6 +344,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://cybersecurity.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "• Cryptography and its applications • Network and critical infrastructure security • Hardware security • Software and system security • Cybersecurity data analytics • Data-driven security and measurement studies • Adversarial reasoning • Malware analysis • Privacy-enhancing technologies and anonymity • IoT Security • AI Security"
   },
@@ -313,6 +359,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jesit.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Behavioural Information Systems and Human-Computer Interaction, Data Analytics, Data, Information and Security, E-Business, Intelligent Systems and Applications, Logistics and Supply Chain Management/Optimisation, Social Media Analysis, Technology Enhanced Learning."
   },
@@ -326,6 +374,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://sjes.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Theoretical and empirical contributions to any field of economics and reaches an international audience"
   },
@@ -339,6 +389,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/PLA#collapse-publishing-fees-and-open-access",
     "description": "Research-oriented matters (e.g. debates in the discipline, research notes, political science information sources, funding opportunities) and information for politicians, policy makers, the media, and the public. JPLA seeks to provide a prime forum for the exchange of ideas between scholars and students of comparative politics in Latin America."
   },
@@ -352,6 +404,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://bjbas.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Fields of applied nanotechnology and biotechnology); medical sciences; pharmaceutical sciences and engineering. The multidisciplinary aspects of the journal encourage global collaboration between researchers in multiple fields and provide cross-disciplinary dissemination of findings."
   },
@@ -365,6 +419,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/SAA",
     "description": "International relations, politics, economics, society, education, environment and law in Southeast Asia"
   },
@@ -378,6 +434,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/41471/aims-and-scope",
     "description": "Traditional and emerging business administration areas, including among others accounting, finance, marketing, strategic management, organization, human resource management, production and logistics management, taxation, digital business, and entrepreneurship. SBUR is open for cross-disciplinary and multi-disciplinary research."
   },
@@ -391,6 +449,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/NAD",
     "description": "Social science research on alcohol and drugs, as well as other substances and behaviours, such as gambling, gaming, eating, and smoking."
   },
@@ -404,6 +464,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/HJO",
     "description": "Theory and practice in occupational therapy, and facilitates documentation and communication among educators, researchers and practitioners in the profession."
   },
@@ -417,6 +479,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/SZJ",
     "description": "All domains of psychiatric practice and research"
   },
@@ -430,6 +494,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://aia.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Scientific and technological advances in aerodynamics from the aspects of academic research, industrial development, and engineering applications; and to provide a platform for ideas exchange and discussion in this fast-changing field"
   },
@@ -443,6 +509,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://vciba.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Industrial fields: Computer vision, computer graphics, computer geometry, image processing and analysis, visualization, virtual reality, human-machine graphic interaction, CAD/CAM/CAE Biomedical fields: Molecular imaging, metabolic imaging, functional imaging, structural imaging, multimodality imaging, biomedical/medical image processing, biomedical/medical image analysis, radiomics  Art and design fields: Visual arts, artistic design, computational design, animation, architectural design, generative art, aesthetic visual computing"
   },
@@ -456,6 +524,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/44214",
     "description": "Quantum science, especially focused on the interface between condensed matter physics and quantum information science."
   },
@@ -469,6 +539,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/43994",
     "description": "Pure and Applied Mathematics, Statistics and Probability -Pure and Applied Physics -Chemistry -Biology -Earth and Environmental Science"
   },
@@ -482,6 +554,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/MEA",
     "description": "Mathematics education research, theory and practice in Asia and, more generally, the world"
   },
@@ -495,6 +569,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://satellite-navigation.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Innovative ideas, new results or progress on the theoretical techniques and applications of satellite navigation"
   },
@@ -508,6 +584,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/40534/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Design theory and construction technology System dynamics and safety Electrification, signaling and communication Operation and maintenance System health monitoring and reliability Environmental impact and sustainability Cutting-edge technologies"
   },
@@ -521,6 +599,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/43995/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Mechanical and Vehicle Engineering Information and Electronic Engineering Chemical, Metallurgical, and Materials Engineering Energy and Mining Engineering Civil, Hydraulic, and Architecture Engineering Environment & Light and Textile Industries Engineering Engineering Management Computer Sciences and Engineering"
   },
@@ -534,6 +614,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/43684/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Autonomous intelligent systems, which lies at the intersection of artificial intelligence, robotics, learning systems, systems and control, unmanned systems, multi-agents systems, networks, machine learning, cyber-physical systems, distributed systems, automation, human-robot interaction, artificial intelligence ethics, and laws, etc."
   },
@@ -547,6 +629,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://diser.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Empirical, conceptual and policy studies reflecting the latest development in science education from disciplinary and interdisciplinary perspectives. DISER bridges the divide and facilitates dialogue between formal and informal, disciplinary and interdisciplinary, K-12 and post-secondary, as well as English-speaking and non-English speaking country science education."
   },
@@ -560,6 +644,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://built-heritage.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "history and theory, that is, the critical reflection and theoretical construction of the discipline; research on conservation projects focusing on their design, implementation, control and management; heritage management based on the acknowledgement of the roles that different stakeholders play, from policy making and resource investment to social participation and public dissemination."
   },
@@ -573,6 +659,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jeas.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Architectural Engineering, Chemical Engineering, Civil Engineering, Electrical Engineering, Engineering Mathematics and Physics, Mechanical Engineering, Mining, Petroleum and Metallurgy"
   },
@@ -586,6 +674,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/40789/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Coal scientific research and mining development (Geology, geochemistry, geophysics, mineralogy, and petrology, Upstream energy and mineral extractions, Downstream energy and mineral processing, utilization, and conversion, Environment and hazard control, Energy and natural resource policy)."
   },
@@ -599,6 +689,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/10052/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Experimental Physics I: Accelerator Based High-Energy Physics, Experimental Physics II: Astroparticle Physics, Computing, Software and Data Science, Theoretical Physics I: Phenomenology of the Standard Model and Beyond, Theoretical Physics II: Astroparticle Physics and Cosmology - Models and Phenomenology, Theoretical Physics III: Quantum Field Theory and Gravity - Fundamental and Formal Aspects."
   },
@@ -612,6 +704,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/43979/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Low carbon and net-zero emission, promoting low carbon development with cutting-edge technologies, and informing decision-makers with management know-how and in-depth understanding of carbon policies"
   },
@@ -625,6 +719,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/44154/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Stress biology, including, but not limited to, work that (1) provides fundamental insights into the understanding of responses of plants, microorganisms and animals to abiotic and biotic stresses; (2) elucidates the mechanisms underlying the adaptation and resistance of plants, microorganisms and animals to biotic and abiotic stresses; and (3) uses biotechnological and other strategies to improve the resistance of plants, microorganisms and animals to abiotic and biotic stresses. Topics covered by the journal include physiology, molecular biology, cell biology, microbiology, pathology, ecology, genomics, epigenetics, gene editing, stress resistance breeding, biotechnology, and so on."
   },
@@ -638,6 +734,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://aben.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Innovation in the structural styles of bridges Innovation and application of new materials Loads determination and effects evaluation Static and dynamic behavior for complex bridges Resistance of wind, seismic or other disasters Dynamic effects and running safety of the traffic on bridges Health monitoring and damage identification State assessment, reinforcement, and maintenance Artificial intelligence and big data Construction technology innovation Bridges for new types of transportation Interdisciplinary innovation and application"
   },
@@ -651,6 +749,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/43762/how-to-publish-with-us#Fees%20and%20funding",
     "description": "1.Agent-based models of social interactions 2.Data sharing and dissemination in urban computing research 3.Large-scale Social activities in physical and virtual spaces 4.Multi-scale urban modeling 5.Privacy issues in mobile and big data and possible solutions 6.Space-time data models for urban computing 7.Spatiotemporal social network analysis 8.Trajectory data mining, analysis, and visualization 9.Visualization and computation of big health data"
   },
@@ -664,6 +764,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/nuclear-engineering-and-technology/publish/open-access-options",
     "description": "1) Reactor Physics 2) Thermal Hydraulics 3) Nuclear Safety 4) Nuclear I&C 5) Nuclear Physics, Fusion, Laser, and Accelerator Technology 6) Nuclear Fuel Cycle and Radioactive Waste Management 7) Nuclear Fuel and Reactor Materials 8) Radiation Application 9) Radiation Protection 10) Structural Integrity Analysis and Plant Management & Maintenance 11) Nuclear Policy, Economics, and Human Resource Development"
   },
@@ -677,6 +779,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/44444/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Engineering Sciences and welcome articles of interdisciplinary nature"
   },
@@ -690,6 +794,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/13753/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Theoretical and methodological issues in all areas of disaster risk science, policy, and practice"
   },
@@ -703,6 +809,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ervet-journal.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Professional, vocational and technical education, comparing the effectiveness, efficiency and equity of different vocational education systems at the school, company and systemic level. The journal fills a gap in the existing literature focusing on empirically-oriented academic research and stimulating the interest in strengthening the vocational part of the educational system, both at the basic and higher education level."
   },
@@ -716,6 +824,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://largescaleassessmentsineducation.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Large-scale Assessments in Education is a joint publication of the International Association for the Evaluation of Educational Achievement (IEA) and Educational Testing Service (ETS). Articles considered for publication in this journal are those that make use of the databases published by national and international large-scale assessment programs, present results of interest to a broad national or international audience, or contribute to enhance and improve the methods and procedures, implementation, or use of large-scale assessments in education and their data."
   },
@@ -729,6 +839,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/13659/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Natural products: isolation and structure elucidation Natural products: synthesis Biological evaluation of biologically active natural products Bioorganic and medicinal chemistry Biosynthesis and microbiological transformation Fermentation and plant tissue cultures Bioprospecting of natural products from natural resources"
   },
@@ -742,6 +854,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ijccep.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "• Assessment and evaluation of ECEC policy and programs • ECEC curriculum and pedagogy • Workforce qualifications and development of ECEC staff • Financing ECEC services • Regulations and standards of ECEC • Family and community engagement • Quality issues in ECEC • Integration of education and care in ECEC • Policy on diversity and social inclusion in ECEC • International comparisons of ECEC policy"
   },
@@ -755,6 +869,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://educationaltechnologyjournal.springeropen.com/#Fees%20and%20funding",
     "description": "Higher education; contribute to the advancement of scientific knowledge regarding the human and personal approach to the use of technology in higher education; and inform readers about the latest developments in the application of digital technologies in higher education learning, training, research and management."
   },
@@ -768,6 +884,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jfin-swufe.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Agentic financial workflow, asset pricing, behavioral finance, big data analytics in finance, computational financial intelligence, corporate finance, derivative pricing and hedging, disruptive financial models, extreme risks and insurance, financial economics, financial engineering, financial instruments, financial intermediation, financial market, financial risk management and analysis, GenAI-centric financial process automation, high frequency and algorithmic trading, household finance, human-AI collaboration in finance, innovative financial services, international finance, internet and mobile finance, legal and social issues of new finance, public finance and taxation, and other relevant topics."
   },
@@ -781,6 +899,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journalofchinesesociology.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Sociological studies on Chinese society around the world (all areas of sociology and sociologically informed contributions from anthropologists, economists, historians, psychologists and political scientists)."
   },
@@ -794,6 +914,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/PAC",
     "description": "Journal of Pacific Rim Psychology is devoted to advancing psychological science by providing an international platform for timely dissemination of important research ideas and findings. Although the title of the journal mentions the Pacific Rim, it aims also to go beyond this regional focus, and publish high quality articles that address issues that challenge contemporary societies."
   },
@@ -807,6 +929,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://cjme.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Mechanism and Robotics, Intelligent Manufacturing Technology,  Advanced Transportation Equipment, Ocean Engineering Equipment, Smart Material."
   },
@@ -820,6 +944,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/AFR#collapse-publishing-fees-and-open-access",
     "description": "Political, social, and economic life; culture; and development in sub-Saharan Africa, including historical studies that illuminate current events on the continent. Africa Spectrum is the leading German academic journal exclusively devoted to this continent and is part of the GIGA Journal Family. The journal accepts Research Articles, Analyses and Reports as well as Book Reviews."
   },
@@ -833,6 +959,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/BRQ",
     "description": "General management, strategy, human resource management, innovation, international business, sustainability, entrepreneurship, marketing, finance, and operations."
   },
@@ -846,6 +974,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.upd.edu.ph/index.php/humanitiesdiliman/about",
     "description": "An open-access journal, it is multilingual and both disciplinal and multi-disciplinary. Humanities Diliman (HD) promotes scholarship in the arts and humanities in the Philippines, as well as international synergies, especially with scholars on Southeast Asia."
   },
@@ -859,6 +989,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://kirj.ee/acta-editorial-policy/?v=b718adec73e0",
     "description": "History of the Eastern Europe, of the Baltic Sea region and of the Baltic States"
   },
@@ -872,6 +1004,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.copmadrid.org/pi/about",
     "description": "All areas of Psychology and allied disciplines, such as sociology, social work, public health, and social epidemiology."
   },
@@ -885,6 +1019,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://rpd.unibo.it/about#publicationFees",
     "description": "Studies and research on education"
   },
@@ -898,6 +1034,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://revistas.uva.es/index.php/sociotecno/about",
     "description": "The central aim of the journal Sociology and Technoscience is to study, understand and analyze the social influence of the various scientific and technological or technoscientific activities (especially Sociology of Health and Sociology of Science and Technology)"
   },
@@ -911,6 +1049,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jspp.psychopen.eu/index.php/jspp/policies",
     "description": "It publishes articles that substantially engage with and advance the understanding of social or political problems, their reduction, and the promotion of social justice, from social or political psychological perspectives."
   },
@@ -924,6 +1064,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://sjst.psu.ac.th/index.php",
     "description": "Agricultural and Biological Sciences, Biotechnology and Agro-Industry, Chemistry and Pharmaceutical Sciences, Engineering and Industrial Research, Environmental and Natural Resources, and Physical Sciences and Mathematics."
   },
@@ -937,6 +1079,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://www.ijea.org/",
     "description": "The journal primarily publishes peer reviewed research-based field studies including, among others, aesthetics, art theory, music education, visual arts education, media education, drama education, dance education, education in literature, and narrative and holistic integrated studies that cross or transcend these fields."
   },
@@ -950,6 +1094,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.acorn.org.au/index.php/jpn/policies#article-charges",
     "description": "Clinical, educational, scientific, organisational and economic factors relevant to the aims of our journal. We welcome research into beneficial clinical strategies which enhance the provision of preoperative, intra-operative, post-operative and perioperative care. We will consider the publication of multi-disciplinary and international perspectives relevant to the aims of the journal."
   },
@@ -963,6 +1109,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.irrodl.org/index.php/irrodl",
     "description": "The International Review of Research in Open and Distributed Learning (IRRODL) is a refereed, open access e-journal that disseminates original research, theory, and best practice in open and distributed learning worldwide."
   },
@@ -976,6 +1124,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.jespk.net/page.php?pageid=4",
     "description": "Commerce, business and economics. It attempts to publish quality research focusing on multi-disciplinary and inter-disciplinary empirical research related to full range of commerce and cognate disciplines."
   },
@@ -989,6 +1139,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://repository.nls.ac.in/ijclp/contact.html",
     "description": "-Consumer welfare legislation and its implementation- Consumer rights in the digital era- Technological advancements in the enforcement of consumer rights- Effectiveness of mediation as a tool to resolve consumer disputes- The need for an international consumer protection framework and policy"
   },
@@ -1002,6 +1154,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciopen.com/journal/join_journal/submission_guidelines?id=1400738783960883202&issn=2688-5255#a7",
     "description": "(1) computational social science—the use of computation to learn from the explosion of social data becoming available today; (2) complex social systems or the analysis of how dynamic, evolving social collectives constitute emergent computers to solve their own problems; and (3) human computer interaction whereby machines and persons recursively combine to generate unique knowledge and collective intelligence, or the intersection of these areas"
   },
@@ -1015,6 +1169,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://josi.ft.unand.ac.id/index.php/josi/about",
     "description": "Jurnal Optimasi Sistem Industri (JOSI) is dedicated to advancing industrial systems and engineering research, focusing primarily on optimizing soft systems—the human, organizational, and managerial aspects of industrial processes. JOSI also considers hard systems research if it supports soft systems optimization. Key areas include Production Planning, Ergonomics, Multicriteria Decision Making, Product Design, and Supply Chain Management, fostering a holistic approach to enhancing industrial systems."
   },
@@ -1028,6 +1184,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/journal-of-taibah-university-medical-sciences/about/aims-and-scope",
     "description": "Authors are invited to submit articles for publication, reporting original work in clinical and basic medical sciences covering topics from Medicine, Dentistry, Nursing, Pharmacy, and Applied Medical Sciences."
   },
@@ -1041,6 +1199,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://npt.tums.ac.ir/index.php/npt/publication_fee",
     "description": "All aspects of nursing that have a sound scientific, theoretical, or philosophical base are published. It accepts Original Papers, Review Articles, Short Communications, Case Reports and Letters to the Editor in the fields of Nursing, including but not limited to Innovations in Practice, Nursing Care Across the Lifespan for Acute and Chronic Illness, Critical Care, Rehabilitation, Palliative Care, Community-based Nursing, Leadership, and Health Policy."
   },
@@ -1054,6 +1214,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://interpersona.psychopen.eu/index.php/interpersona/policies",
     "description": "1) Interpersona aims at promoting scholarship in the field of interpersonal relationships based on different methodologies and stemming from several disciplines, including Psychology, Family Studies, Sociology, Anthropology, Communication Studies, Economics, Management Science, Biology, Health Sciences, History, and others. Interpersona aims at contributing to the collective construction of an Interpersonal Relationship Science. 2) Manuscripts examining a wide range of relationships, including close or intimate relationships and weak or temporary ties, are welcome."
   },
@@ -1067,6 +1229,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://meth.psychopen.eu/index.php/meth/policies",
     "description": "This association is a union of methodologists working in different areas of the social and behavioral sciences (e.g., psychology, sociology, economics, educational and political sciences). The aim of the journal is to present a platform for an interdisciplinary exchange of methodological research and applications in the different fields. There are three main disciplines to be covered: data analysis, research methodology, psychometrics."
   },
@@ -1080,6 +1244,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://spb.psychopen.eu/index.php/spb/policies",
     "description": "Social Psychological Bulletin is an open-access (free for both readers and authors) peer-reviewed quarterly journal that publishes original empirical research, theoretical review papers, scientific debates, and methodological contributions in the field of basic and applied social psychology. The SPB Editorial team actively promotes standards of open-science, supports an integrative approach to all aspects of social psychological science and is committed to discussing timely social issues of high importance."
   },
@@ -1093,6 +1259,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.geologinenseura.fi/bulletin/",
     "description": "Bulletin of the Geological Society of Finland (BGSF) publishes research articles and short communications in all branches of geosciences. Contributions from outside Finland are welcome, provided that they contain material relevant to Finnish geology or are of general interest."
   },
@@ -1106,6 +1274,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://pp.bme.hu/ch/about",
     "description": "The main scope of the journal is to publish original research articles in the wide field of chemical engineering including environmental and bioengineering."
   },
@@ -1119,6 +1289,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://nirc.nanzan-u.ac.jp/journal/6",
     "description": "JJRS aims for a multidisciplinary approach to the study of religion in Japan, and submissions are welcomed from scholars in all fields of the humanities and social sciences. To submit a manuscript or inquiry about publishing in our journal, please contact us at the address below."
   },
@@ -1132,6 +1304,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.plutojournals.com/asq/",
     "description": "ASQ publishes original articles, review essays and book reviews on the Arabs, their history, culture and institutions. The Journal is intended for academics, students and individuals interested in Arab and Middle Eastern affairs."
   },
@@ -1145,6 +1319,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.plutojournals.com/wrpe/",
     "description": "State Capitalism, Monopoly Capitalism, Financial Capitalism, Neoliberal Capitalism, Imperialism, and Capitalist Development History; Economic Globalization, Internationalization of Capital, Global Value Chain, Underdevelopment, Unequal Exchange, Colonialism, and Capitalist System; Exploitation, Profit Squeeze, Living Wage, Income Inequality, and Relationship between Capital and Labour; Business Cycle, Capital Accumulation, Under-Consumption, Over-Investment, Financial Crisis, and Theory of Economic Crisis; Organic Composition of Capital, Technical Change, Labour Process, Digital Economy, Platform Economy, Productive Automation, and Theory of Falling Profit Rate; Productive and Unproductive Labour, Surplus Value, Value Composition of Capital, Value and Price, Value Formation and Transformation, and Labour Theory of Value; Labour-Managed Firms, Participatory Planning, Market Socialism, Eco-Socialism, Feasible Socialism, and Socialist Development History."
   },
@@ -1158,6 +1334,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.plutojournals.com/world-organisation-labour-and-globalisation/",
     "description": "Provide a single home for articles which specifically address issues relating to the changing international division of labour and the restructuring of work in a global knowledge-based economy. Bring together the results of empirical research, both qualitative and quantitative, with theoretical analyses in order to inform the development of new interdisciplinary approaches to the study of the restructuring of work, organisational structures and labour in a global context. Be global in scope, with a particular emphasis on attracting contributions from developing countries as well as from Europe, North America and other developed regions. Encourage a dialogue between university-based researchers and their counterparts in international and national government agencies, independent research institutes, trade unions and civil society as well as other policy makers. Subject to the requirements of scholarly peer review, it is open to submissions from contributors working outside the academic sphere and encourages an accessible style of writing in order to facilitate this goal. Complement, rather than compete with, existing discipline-based journals. Bring to the attention of English-speaking readers relevant articles originally published in other languages."
   },
@@ -1171,6 +1349,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Political",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.plutojournals.com/ijcs/",
     "description": "IJCS aims to provide a forum for objective investigation and informed debate, and a publication opportunity for scholarly work, on the nature of the Cuban experience: its historical context; its international image and relationships; its scientific, cultural and social achievements; its future orientation; and similar topics. It encourages submissions from the whole range of disciplines and from multi-disciplinary perspectives. The journal takes a broad view of the emerging and diverging positions held within Cuba and outside."
   },
@@ -1184,6 +1364,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Political",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.plutojournals.com/scj/",
     "description": "The Journal’s focus is a reflection of the growing awareness within criminology that state criminality is endemic and acts as a significant barrier to security and development. Contributions from a variety of disciplinary and theoretical perspectives are welcomed. Topics covered by the journal include: torture; genocide and other forms of government and politically organised mass killing; war crimes; state-corporate crime; state-organised crime; natural disasters exacerbated by government (in)action; asylum and refugee policy and practice; state terror; political and economic corruption; and resistance to state violence and corruption."
   },
@@ -1197,6 +1379,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Political",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ese.arphahub.com/about#:~:text=Open%20Access%20Policy&text=We%20have%20no%20article%20processing,charges%20are%20levied%20on%20authors.",
     "description": "The journal publishes original contributions related to aspects of scientific and scholarly editing and publishing (for example: research integrity, peer review, scientometrics, open science, predatory publishing, statistics), writing, translation and ethics."
   },
@@ -1210,6 +1394,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/VIK",
     "description": "• Accounting and management control • Agriculture management • Managerial communication • Economics • Finance and Banking • Information Technology • Innovation and Entrepreneurship • Marketing • Operations Management • Organizational Behaviour and Human Resource Management • Public Systems, including Health and Education, and Government • Rural Development • Strategic Management and Leadership"
   },
@@ -1223,6 +1409,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://hamdardislamicus.com.pk/index.php/hi/apc",
     "description": "Hamdard Islamicus is an Academic Journal devoted to Islamic research and scholarship It is to serve as a forum for scholars to write objectively, analytically and, where ever necessary, critically on Islamic History, Philosophy, Science, Arts, Culture, Archaeology, Law, and Jurisprudence, etc It brings out the achievements of Muslims in the fields of Humanities, Social and Natural sciences."
   },
@@ -1236,6 +1424,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://acta.imeko.org/index.php/acta-imeko/about",
     "description": "The main goal of this journal is the enhancement of academic activities of IMEKO and a wider dissemination of scientific output from IMEKO TC events. High-quality papers presented at IMEKO conferences, workshops or congresses are seleted by the event organizers and the authors are invited to publish an enhanced version of their paper in this journal. The journal also publishes scientific articles on measurement and instrumentation not related to an IMEKO event."
   },
@@ -1249,6 +1439,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.erudit.org/en/journals/refuge/",
     "description": "It is interdisciplinary and publishes both theoretical and empirical work from a wide range of disciplinary and regional perspectives from academics, advanced graduate students, policy-makers, and practitioners in the field of forced migration. The journal provides space for discussion of emerging themes and debates. The journal also features a book review section and occasionally publishes special issues on specific themes related to forced migration."
   },
@@ -1262,6 +1454,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ajstd.ubd.edu.bn/journal/",
     "description": "We cover a wide range of technology-related fields, including biotechnology, non-conventional energy research, materials science and technology, marine sciences, atmospheric and earth sciences, food science and technology, microelectronics and information technology, space applications, science and technology policy, and infrastructure and resources development, within the specific context of ASEAN."
   },
@@ -1275,6 +1469,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://educar.uab.cat/index",
     "description": "The aim of this journal is promote, share, and discuss new issues and developments in educational research among the educational community, education professionals, scientists and academicians, and everyone who is specialised or interested in educational aspects."
   },
@@ -1288,6 +1484,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.publishing.umich.edu/fc/site/about/",
     "description": "Film Criticism is a peer-reviewed, online publication whose aim is to bring together scholarship in the field of cinema and media studies in order to present the finest work in this area, foregrounding textual criticism as a primary value. Our readership is academic, although we strive to publish material that is both accessible to undergraduates and engaging to established scholars. With over 40 years of continuous publication, Film Criticism is the third oldest academic film journal in the United States."
   },
@@ -1301,6 +1499,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.berghahnjournals.com/view/journals/social-analysis/social-analysis-overview.xml?tab_body=about",
     "description": "Social Analysis is an international peer-reviewed journal devoted to exploring the analytical potentials of anthropological research. It encourages contributions grounded in original empirical research that critically probe established paradigms of social and cultural analysis. The journal expresses the best that anthropology has to offer by exploring in original ways the relationship between ethnographic materials and theoretical insight."
   },
@@ -1314,6 +1514,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.asianfisheriessociety.org/publication/",
     "description": "Aquatic ecosystems, population dynamics, resource assessment, fishing gear technology, fish processing, socioeconomics, farming systems, breeding, nutrition, fish health, pollution, and aquatic resources management"
   },
@@ -1327,6 +1529,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.worldscientific.com/worldscinet/adr",
     "description": "The ADR publishes empirical papers, survey articles, historical analyses, and policy-oriented work. It bridges theoretical work and rigorous empirical studies that advance the understanding of Asia’s development, and it is open to discussions of alternative perspectives on all aspects of development, including globalization, inequality, structural transformation, and poverty."
   },
@@ -1340,6 +1544,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals-sol.sbc.org.br/index.php/jbcs/about",
     "description": "Coverage extends to all computer science topics, computer systems development and formal and theoretical aspects of computing, including computer architecture; high-performance computing; database management and information retrieval; computational biology; computer graphics; data visualization; image and video processing; VLSI design and software-hardware codesign; embedded systems; geoinformatics; artificial intelligence; games, entertainment and virtual reality; natural language processing and much more."
   },
@@ -1353,6 +1559,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://centrodeeconomiapolitica.org.br/repojs/index.php/journal/about",
     "description": "The Brazilian Journal of Political Economy is a peer-reviewed journal published since January 1981. It sees economics in its classical sense, as a historical-deductive political economy, not as hypothetic-deductive economics.. The Journal is interested in papers on development macroeconomics, on the recent history of economic thought, and on papers discussing the Brazilian or the Latin American economies."
   },
@@ -1366,6 +1574,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://nzjforestryscience.nz/index.php/nzjfs/about",
     "description": "The New Zealand Journal of Forestry Science is an international journal covering the breadth of forestry science. Planted forests are a particular focus but manuscripts on a wide range of forestry topics will also be considered. The journal's scope covers forestry species, which are those capable of reaching at least five metres in height at maturity in the place they are located, but not grown or managed primarily for fruit or nut production."
   },
@@ -1379,6 +1589,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://australian.museum/learn/publications/records-of-the-australian-museum-journal/",
     "description": "Taxonomy, systematics, zoology, natural history, museum collections & cultural history"
   },
@@ -1392,6 +1604,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournals.vdu.lt/index.php/Pedagogika",
     "description": "The general issues of education and training, education policy and education management; curriculum, methods and environments; learners' competencies and achievements; general and subject didactic; inclusive education; information technology and media in education; teachers training; education psychology; andragogy; the methodology of educational research; current problems of education and training."
   },
@@ -1405,6 +1619,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/ISY",
     "description": "Focusing primarily on socially relevant practice, priority is given to critical and conceptual research which integrates insights from various disciplines and paradigms to frame and address the societal and scientific challenges posed by interpreting practice and enquiry. The journal is also interested in empirical and pedagogical studies that offer novel insights and adopt a cross-disciplinary perspective."
   },
@@ -1418,6 +1634,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/perspectives-in-ecology-and-conservation/publish/open-access-options",
     "description": "Perspectives in Ecology and Conservation publishes original papers on biodiversity conservation and restoration, on the main drivers affecting native ecosystems, and on nature’s benefits to people and human wellbeing. This scope includes studies on biodiversity patterns, the effects of habitat loss, fragmentation, biological invasion and climate change on biodiversity, conservation genetics, spatial conservation planning, ecosystem management, ecosystem services, sustainability and resilience of socio-ecological systems, conservation policy, among others."
   },
@@ -1431,6 +1649,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ijae.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "Anthropology and Ethnology, concerning theory, policy and practice, especially the critical global issues and challenges people are facing up to all over the world."
   },
@@ -1444,6 +1664,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/41019/how-to-publish-with-us#Fees%20and%20funding",
     "description": "The journal of Data Science and Engineering (DSE) responds to the remarkable change in the focus of information technology development from CPU-intensive computation to data-intensive computation, where the effective application of data, especially big data, becomes vital. The emerging discipline data science and engineering, an interdisciplinary field integrating theories and methods from computer science, statistics, information science, and other fields, focuses on the foundations and engineering of efficient and effective techniques and systems for data collection and management, for data integration and correlation, for information and knowledge extraction from massive data sets, and for data use in different application domains."
   },
@@ -1457,6 +1679,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/GCH",
     "description": "Global Media and China is a peer reviewed, open access, scholarly journal that provides a dedicated, interdisciplinary forum for international research on all aspects of communication and media. The journal has a special, but not exclusive, interest in China and Chinese media both from a global and a Chinese perspective. The journal also publishes new research on digital platforms, social media and related policy."
   },
@@ -1470,6 +1694,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/international-journal-of-mining-science-and-technology/publish/open-access-options",
     "description": "• Mining Engineering • Mine Safety Science and Technology • Mineral Processing • Geomechanics and Geoengineering • Geological Engineering • Mining Environment and Sustainable Development"
   },
@@ -1483,6 +1709,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/44447/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Scope of the journal includes, Agricultural Engineering, Plant production, Plant protection, Animal science, Agricultural extension, Agricultural economics, Food science and technology, Soil and water sciences, Irrigation science and technology and environmental science (soil formation, biological classification, mapping and management of soil)."
   },
@@ -1496,6 +1724,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/borsa-istanbul-review/publish/open-access-options",
     "description": "• Investments and Portfolio Management • Behavioral Finance • Financial Markets and Institutions • Market Microstructure • Islamic Finance • Financial Risk Management • Valuation • Capital Markets Governance • Financial Regulations"
   },
@@ -1509,6 +1739,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/journal-of-sport-and-health-science/publish/open-access-options",
     "description": "• Sport and exercise medicine • Injury prevention and clinical rehabilitation • Sport and exercise physiology • Public Health Promotion • Physical activity epidemiology • Biomechanics and motor behavior • Sport and exercise biochemistry and nutrition • Sport and exercise psychology • Exercise and brain health • Physical education • Traditional Chinese sports, exercise and health"
   },
@@ -1522,6 +1754,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/journal-of-asia-pacific-biodiversity/publish/open-access-options",
     "description": "The scope of journal is wide and multidisciplinary that publishes original research papers as well as conceptual, technical and methodological papers on all aspects of biological diversity-its description, analysis and conservation, and its application by humankind."
   },
@@ -1535,6 +1769,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jhlscm#jlp_author_guidelines",
     "description": "The Journal of Humanitarian Logistics and Supply Chain Management (JHLSCM) is targeted at academics and practitioners in humanitarian public and private sector organizations working on all aspects of humanitarian logistics and supply chain management. The journal promotes the exchange of knowledge, experience and new ideas between researchers and practitioners and encourages a multi-disciplinary and cross-functional approach to the resolution of problems and exploitations of opportunities within humanitarian supply chains."
   },
@@ -1548,6 +1784,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciopen.com/journal/join_journal/submission_guidelines?id=1503926538684948481&issn=2097-194X#a7",
     "description": "- Brain and cognitive science - Machine perception and pattern recognition - Machine learning and computational intelligence - Natural language processing - Big data and knowledge engineering - Robot and swarm intelligence - Intelligence system and application Join th"
   },
@@ -1561,6 +1799,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://suvannabhumi.bufs.ac.kr/suvannabhumi/index.php?pCode=MN200002",
     "description": "Cultural studies, the arts, language and linguistics, history, archaeology and prehistory, anthropology, sociology, religion, literature, tourism, socio-economic issues, and politics. It is published biannually on the last day(30th or 31st) of June and December(in January and July from 2019 onwards). In addition to regular Issues, SUVANNABHUMI also publishes Special Issues focusing on particular themes or regions."
   },
@@ -1574,6 +1814,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jbsed#jlp_author_guidelines",
     "description": "Accounting and Auditing. Business Economics. Corporate Culture, Diversity and Social Responsibility. Corporate entrepreneurship and intrapreneurship in emerging economies. Corporate Finance and Governance. Development Planning and Policy. Economic Growth and Aggregate Productivity. Economic Integration and development. Economics of Gender. Enterprise Policy. Entrepreneurial opportunities and challenges in emerging economies. Entrepreneurship, poverty alleviation, and economic development. Financial Markets. FinTech, RegTech and entrepreneurship. Funding for entrepreneurial internationalization and growth. Gender Diversity and Firm Performance. Gender issues and entrepreneurship in emerging economies. Government Policy and Regulation. Industrialization, Manufacturing and Service Industries. Institutions and the Macroeconomy. Intellectual Property and Intellectual Capital. International Business Administration. International Linkages to Development and Role of International Organizations. Macroeconomic Analyses of Economic Development. Management and Human Resources. Management of Technological Innovation and R&D. Marketing and Advertising. Microeconomic Analyses of Economic Development. Production Management. Public Enterprises and Public-Private Enterprises. Saving and Capital Investment. Social Entrepreneurship. Technological Change: Choices and Consequences. The interaction effect of formal and informal institutions on the development of entrepreneurial activities. The nexus of Ethnic, family and entrepreneurship in emerging economies. The role of formal and informal institutions on entrepreneurial activities. The role of government policy on entrepreneurship."
   },
@@ -1587,6 +1829,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ieeexplore.ieee.org/xpl/aboutJournal.jsp?punumber=9732629",
     "description": "All aspects of power and energy, including any kind of technologies and applications from power generation, transmission, distribution, to conversion, utilization, and storage. iEnergy provides a platform for delivering cutting-edge advancements of sciences and technologies for the future-generation power and energy systems."
   },
@@ -1600,6 +1844,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciopen.com/journal/join_journal/submission_guidelines?id=1404097305465446402&issn=2096-0654#a7",
     "description": "Big Data Mining and Analytics (Published by Tsinghua University Press) discovers hidden patterns, correlations, insights and knowledge through mining and analyzing large amounts of data obtained from various applications. It addresses the most innovative developments, research issues and solutions in big data research and their applications."
   },
@@ -1613,6 +1859,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://academic.oup.com/jcmc/pages/General_Instructions#Open%20Access",
     "description": "Its focus is social science research on communicating with computer-based media technologies. Within that general purview, the journal is broadly interdisciplinary, publishing work by scholars in communication, business, education, political science, sociology, psychology, media studies, information science, and other disciplines."
   },
@@ -1626,6 +1874,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/pap#jlp_author_guidelines",
     "description": "Public Administration and Policy: An Asia-Pacific Journal (PAP) is devoted to the integration of theories and practice of public administration and management, with special emphasis on the Asia-Pacific region. It aims at contributing to the improvements of the delivery and management of public services by highlighting issues, problems, and examples of efficient and innovative management practices."
   },
@@ -1639,6 +1889,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jed#jlp_author_guidelines",
     "description": "JED welcomes both theoretical and empirical papers in the fields of economics, business and economic development that are of wider significance to sustainable development. Specifically, the journal explores the dynamic between society, development, and the environment, and their implications for sustainable development. It delves into the economic, social, and institutional aspects of sustainability, as well as the practical implementation of sustainable practices at local, regional, and global levels."
   },
@@ -1652,6 +1904,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.uclpress.co.uk/lre/site/about/",
     "description": "LRE is a wide-ranging journal that features rigorous analysis and significant research using a variety of methodologies across key themes in education. For example, we cover but are not limited to: assessment; curriculum; educational improvement; equalities and human rights; institutional effectiveness; language, literacy and numeracy; lifelong learning; organization; pedagogy; public goals and policies; resources and technology; teacher education; widening participation."
   },
@@ -1665,6 +1919,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.lww.com/amhe/Pages/informationforauthors.aspx",
     "description": "The journal will cover technical and clinical studies related to health, ethical and social issues in field of Psychiatry, Psychology, Mental health, Behavioral medicine / sciences, Neuroscience, Medicine. Articles with clinical interest and implications will be given preference."
   },
@@ -1678,6 +1934,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jabes#jlp_author_guidelines",
     "description": "The Journal of Asian Business and Economic Studies (JABES) seeks to explore ways of improving sustainability in business and economics with a focus on Asia. The journal examines potential theoretical and empirical solutions to business and economic issues in the context of 'sustainable development'. JABES welcomes papers covering topics of business and economic development that are of wider significance to sustainable policy, and of interest to businesses and public policy entities. All policy prescriptions should be supported by rigorous analysis and appraisal."
   },
@@ -1691,6 +1949,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.uclpress.co.uk/ewlr/site/about/",
     "description": "The journal serves as a forum where the national, international and EU perspectives meet and engage. The journal therefore does not follow the traditional distinctions between EU, international, and national law. While primarily offering legal doctrinal and theoretical analyses, the journal also publishes multi-disciplinary work and political science and international relations contributions with an external perspective on the law of EU’s external relations."
   },
@@ -1704,6 +1964,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/ajar#jlp_author_guidelines",
     "description": "AJAR welcomes a wide range of methodologies in all aspects of accounting and finance in developing countries, with a majority in Asia."
   },
@@ -1717,6 +1979,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.lww.com/IJJT/pages/aboutthejournal.aspx",
     "description": "Nephrologists, urologists and transplant surgeons alike. It has a very wide circulation among all the nephrologists, urologists, transplant surgeons and physicians iinvolved in kidney, heart, liver, lungs and pancreas transplantation."
   },
@@ -1730,6 +1994,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jefas#jlp_author_guidelines",
     "description": "Theoretical and empirical implications from business areas such as management, economics, and finance. While manuscripts may focus on a country or small group of countries, we appreciate submissions that reflect and explore Latin- or Ibero- American contexts."
   },
@@ -1743,6 +2009,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/neje#jlp_author_guidelines",
     "description": "• Venture creation and financing • Corporate entrepreneurship and innovation • Small business management • Social entrepreneurship • Entrepreneurial ecosystems • International and cross-cultural entrepreneurship • Family business management • Entrepreneurship in non-profits • Woman and minority entrepreneurship • Entrepreneurship pedagogy and education research • Public policy • Arts entrepreneurship"
   },
@@ -1756,6 +2024,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jdal#jlp_author_guidelines",
     "description": "The Journal of Defense Analytics and Logistics (JDAL) considers a broad range of topics across the logistics, operations research, and supply chain management space. However, each research article considered at the journal must contribute directly to the art and science of national and/or international defense. Manuscripts that develop innovative new ways of thinking about defense are especially encouraged. Successful manuscripts are theoretically sound, methodologically rigorous and practically relevant."
   },
@@ -1769,6 +2039,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jcms#jlp_author_guidelines",
     "description": ": • Capital Markets and Financial Institutions • Financial Instruments and Financial Innovation • Investment and Financial Decision Making • Valuation of Financial Assets • Financial and Non-Financial Information • Corporate Reporting & Investment Decision • Capital Market Governance & Sustainability • Investor Protection • Financial Literacy • Financial Standards and Regulations • Financial Crime • Market Microstructure • Financial Risk Management • Financial Engineering & Derivatives • Financial Econometrics • Islamic Finance • Emerging Markets Studies • Behavioural Finance • International Financial Markets • International/Regional Financial Center • Capital Markets Technology & Cybersecurity"
   },
@@ -1782,6 +2054,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/aaouj#jlp_author_guidelines",
     "description": "Asian Association of Open Universities Journal (AAOUJ) aims to provide a forum for academics and scholars to share their research and expertise in the field of ODE and to build a vibrant research community of educational leaders from related domains. Papers submitted to the journal may be empirical studies, case studies or critical literature reviews."
   },
@@ -1795,6 +2069,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jrit#jlp_author_guidelines",
     "description": "The Journal of Research in Innovative Teaching & Learning (JRIT&L) aims to publish the best theoretical and empirical research on innovations in teaching and learning that will inform organizational practices and educational policies and have the potential to make a considerable improvement in teaching and learning. JRIT&L embraces action-oriented, applied research that can have an immediate or long-term impact on the design, delivery, and assessment of educational practices and policies, governance, and tourism."
   },
@@ -1808,6 +2084,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/inmr#jlp_author_guidelines",
     "description": "INMR's main objectives are: to disseminate the intellectual production in the field of technological, organisational and market innovation, stimulating creative academic and research contributions; to do its share in increasing the knowledge production of the academic and professional communities related to applied sciences in the field of innovation; to serve as a proper channel to spread conceptual and methodological advances and experiences of innovation in modern society; and to encourage the dissemination of knowledge that promotes new studies and new theoretical and empirical formulations for the field of innovation."
   },
@@ -1821,6 +2099,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/rausp#jlp_author_guidelines",
     "description": "The journal covers all fields of management, including entrepreneurship; education, strategy and business economics; corporate governance; finance and accounting; environmental management; public management; technology management; marketing; quality and productivity; human resources and organisations; and information technology. RAUSP Management Journal is ranked among the best Brazilian journals in business and management (Qualis-Capes Brazil)."
   },
@@ -1834,6 +2114,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jwam#jlp_author_guidelines",
     "description": "Journal of Work-Applied Management (JWAM) publishes articles that share work-applied management insights generated at the nexus of practice and theory. Therefore, we are particularly seeking original articles which: -Use work-based, work-applied, collaborative, and experiential approaches, such as case-based, reflective and action-oriented research methodologies, and -Are relevant to practitioners/researchers in developing and challenging this field of practice across public, private and community sectors and academic subject disciplines."
   },
@@ -1847,6 +2129,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://academic.oup.com/ce/pages/author-guidelines#section-9",
     "description": "Clean Energy is an open access, peer-reviewed international journal and serves as an important medium to present the latest research developments and knowledge on topics related to clean energy. Energy is crucial for prosperity and development as well as playing a key role in driving innovation. The transition of the world fuel energy mix from fossil fuels towards renewable energy will take time. Clean Energy’s content will highlight the importance of clean utilization of fossil energy, renewable energy and increased energy efficiency as key elements to achieve an economic and ecological sustainable energy future."
   },
@@ -1860,6 +2144,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/lthe#jlp_author_guidelines",
     "description": "Learning and Teaching in Higher Education: Gulf Perspectives aims to present and discuss issues and research of relevance to university and college educators in the Arab Gulf Region. LTHE is a refereed journal published by Emerald Publishing Group. The journal is intended to be of relevance to people teaching in any discipline, or supporting learning in other ways, in higher education in the Gulf, although the readership is worldwide."
   },
@@ -1873,6 +2159,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.psu.edu.sa/en/author-guidelines",
     "description": "PSU Research Review: An International Interdisciplinary Journal aims to cover interdisciplinary research with relevance to the Sustainable Development Goals. These goals, outlined by UN member states in 2015, provide “a shared blueprint for peace and prosperity for people and the planet, now and into the future” (https://sdgs.un.org/goals). PRR and the editorial team hope to make our contribution toward these objectives by publishing high quality and timely research which can help tackle the challenges which face all countries, developing and developed and as such is international in its scope."
   },
@@ -1886,6 +2174,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciopen.com/journal/join_journal/submission_guidelines?id=1475718852099366914&issn=2398-7294#a0",
     "description": "Crowd intelligence (CI) phenomena are widespread, including collective intelligence, swarm intelligence, as well as other new group phenomena with larger scale and closer interconnection between human intelligence and artificial intelligence. The International Journal of Crowd Science aims to facilitate the discovery of fundamental theories in understanding the networked society of human in the loop AI and crowd intelligence, and to explore related technologies and new ways of developing and harnessing crowd intelligence to improve the efficiency of CI network system, as well as socioeconomic outcomes."
   },
@@ -1899,6 +2189,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.publishing.umich.edu/jmmh/submissions/",
     "description": "The Journal of Muslim Mental Health is an interdisciplinary peer-reviewed academic journal and publishes articles exploring social, cultural, medical, theological, historical, and psychological factors affecting the mental health of Muslims in the United States and globally. The journal publishes research and clinical material, including research articles, reviews, and reflections on clinical practice."
   },
@@ -1912,6 +2204,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Tourism",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/jtf#jlp_author_guidelines",
     "description": "The Journal of Tourism Futures is a result of the growing awareness, in academia but especially in the professional world, of the increasing importance of tourism as a social phenomenon and as an economic sector. If we see that the impact on our lives, our culture and our economy is growing, it becomes urgent that we understand how things will evolve, which variables determine this development and where we should intervene. The goal of this initiative is to bring academic rigour to the study of the future of tourism."
   },
@@ -1925,6 +2219,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.lww.com/JFSM/Pages/informationforauthors.aspx",
     "description": "Subjects include but are not limited to criminalistics, digital and multimedia sciences, engineering science, forensic anthropology, forensic clinical medicine, forensic odontology, forensic pathology, forensic biology, forensic radiology, forensic toxicology, jurisprudence, questioned documents, forensic psychiatry and behavioral Science. Submissions of malpractice or ethics in forensic science and medicine are also acceptable."
   },
@@ -1938,6 +2234,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.lww.com/APJR/Pages/informationforauthors.aspx",
     "description": "The journal will cover technical and clinical studies related to health, ethical and social issues in field of Gynecology and Obstetrics. Articles with clinical interest and implications will be given preference."
   },
@@ -1951,6 +2249,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.lww.com/tjps/Pages/informationforauthors.aspx",
     "description": "Turkish Journal of Plastic Surgery publishes clinical and experimental research articles, case reports, review articles, technical notes and letters to the editor prepared in accordance with ethical guidelines in all disciplines of health sciences. The journal also presents the latest surgical procedures with audit and outcome studies of new and established techniques in plastic surgery including cranio-maxillofacial surgery, orthognathic surgery, microsurgery, hand surgery, trauma surgery, surgery of the congenital anomalies (cleft lip and palate etc), burns, oncologic surgery, breast surgery, and aesthetic surgery."
   },
@@ -1964,6 +2264,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/aci#jlp_author_guidelines",
     "description": "Applied Computing and Informatics aims to be timely in disseminating leading-edge knowledge to researchers, practitioners and academics whose interest is in the latest developments in applied computing and information systems concepts, strategies, practices, tools and technologies. In particular, the journal encourages research studies that have significant contributions to make to the continuous development and improvement of IT practices in the Kingdom of Saudi Arabia and other countries."
   },
@@ -1977,6 +2279,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.publishing.umich.edu/ergo/site/submit/",
     "description": "Ergo is an open access philosophy journal accepting submissions on all philosophical topics and from all philosophical traditions. This includes, among other things: history of philosophy, work in both the analytic and continental traditions, as well as formal and empirically informed philosophy. Ergo is strongly committed to diversity and especially welcomes submissions from members of groups currently underrepresented in philosophy."
   },
@@ -1990,6 +2294,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.emeraldgrouppublishing.com/journal/econ#jlp_author_guidelines",
     "description": "As a broad-based professional and international journal, EconomiA welcomes submissions of applied and theoretical research papers in all fields of economics. The aim of EconomiA is to contribute to the development of the science of economics and its applications, as well as to improve communication between academic researchers, teachers and policy makers."
   },
@@ -2003,6 +2309,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://academic.oup.com/jlb/pages/General_Instructions",
     "description": "The Journal of Law and the Biosciences (JLB) is the first fully open access, peer-reviewed, legal journal focused on the advances at the intersection of law and the biosciences. A co-venture between Duke University, Harvard University Law School, and Stanford University, and published by Oxford University Press, this open access, online, and interdisciplinary academic journal publishes cutting-edge scholarship in this this important new field. The journal contains original and response articles, essays, and commentaries on a wide range of topics, including bioethics, neuroethics, genetics, reproductive technologies, stem cells, enhancement, patent law, and food and drug regulation."
   },
@@ -2016,6 +2324,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://academic.oup.com/jla/pages/General_Instructions",
     "description": "The Journal of Legal Analysis , founded in 2009, is a fully open access peer-reviewed general journal on all aspects of law, centered at Harvard Law School but with a board of editors drawn from many universities. It welcomes traditional legal articles as well as interdisciplinary work, and invites submissions from scholars worldwide. All publications may be viewed and downloaded free of charge. Print copies can be purchased at a modest charge at the end of each year. The Journal of Legal Analysis is published by the Oxford University Press on behalf of the Harvard Law School"
   },
@@ -2029,6 +2339,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jhs.iihr.res.in/index.php/jhs/index",
     "description": "The scope and focus of the journal are on all branches of horticulture and other cognate disciplines. It publishes review articles, research papers, and short communications of both basic and applied aspects of original research related to horticultural sciences. Its overall goal is to appraise the scientists and all the stakeholders who are interested in horticulture about recent scientific advancements and extension findings."
   },
@@ -2042,6 +2354,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economics and Business",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.eizg.hr/croatian-economic-survey-462/462",
     "description": "Croatian Economic Survey is an English-language, peer-reviewed scholarly journal published by the Institute of Economics, Zagreb in Croatia. The journal aims to serve as a forum for academics and practitioners by publishing high-quality research papers on topics in all areas of economics. Special focus is given to post-socialist Europe. Comparative studies are especially encouraged, since these countries share a similar socio-economic background and comparative studies offer a valuable source of insight for policy formulation as well as a basis for competitive benchmarking."
   },
@@ -2055,6 +2369,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.pollinationecology.org/index.php/jpe/about",
     "description": "The Journal of Pollination Ecology (JPE) is a non-profit, open access, peer-reviewed, online journal that aims to promote the exchange of original knowledge and research in any area of pollination and pollinator ecology. JPE invites manuscripts, short communications and reviews based on original descriptive and experimental research worldwide. The journal focuses on evolutionary and ecological aspects of pollination, abiotic as well as biotic pollination, reproductive strategies of plants in general, pollinator behaviour, community and population dynamics of plants and their pollinators as well as diversity and conservation issues. It invites contributions concerning all different modes of pollination and encourages interdisciplinary research from genes to ecosystems."
   },
@@ -2068,6 +2384,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/NQH",
     "description": "The Netherlands Quarterly of Human Rights (NQHR) publishes the latest evolutions in the promotion and protection of human rights from around the world. The journal welcomes articles addressing human rights law issues from an international perspective and also welcomes submissions that connect human rights to perspectives from international relations, history, political science, sociology and anthropology. In addition, the Quarterly also publishes recent speeches and lectures delivered on the topic of human rights, as well as a section on new literature in the field of human rights."
   },
@@ -2081,6 +2399,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.sagepub.com/author-instructions/CTP",
     "description": "This peer reviewed journal is interested in publishing articles on a wide range of topics, including but not limited to: the formation of publics and public spheres; new technologies and digital publics; historical trajectories and cultural variations of civil society, citizenship, social capital, and network society; the changing meanings of public and private; the relationship between publics and other social categories such as class, gender, race, and nation; media and social movements; and communication ethics in the formation of publics and public opinion."
   },
@@ -2094,6 +2414,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://elight.springeropen.com/submission-guidelines/fees-and-funding",
     "description": "eLight aims to attract the finest manuscripts, broadly covering all sub-fields of optics, photonics and electromagnetics. In particular, we focus on those emerging topics and cross-disciplinary researches related to optics."
   },
@@ -2107,6 +2429,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/kuwait-journal-of-science",
     "description": "Kuwait Journal of Science (KJS) publishes peer-reviewed articles in various fields of Science including Mathematics, Computer Science, Physics, Statistics, Operations Research, Biology, Chemistry, and Earth & Environmental Sciences. In addition, it also aims to bring the results of scientific research carried out under a variety of intellectual traditions and organizations to the attention of specialized scholarly readership. As such, the journal expects the submission of original manuscripts which contain analysis and solutions about important theoretical, empirical, and normative issues."
   },
@@ -2120,6 +2444,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.tandfonline.com/action/authorSubmission?show=instructions&journalCode=ucda20",
     "description": "The award-winning Journal of the California Dental Association  promulgates, translates, and advances oral health insights, scientific advances, clinical practice procedures, business management strategies, and legislative policies and proposals through accessible, peer-reviewed, evidence-based research."
   },
@@ -2133,6 +2459,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/apunts-sports-medicine/publish/open-access-options",
     "description": "Apunts Sports Medicine, a publication by Consell Català de l'Esport (Catalan Sports Council), is a scientific journal dedicated to sports medicine. Apunts is focused, on the one hand, on the impact of high sports performance on men and women and, especially, in the study of team sports and muscle and tendon injuries. On the other hand, on the behaviour to follow while practicing sport or physical activity during illnesses or in certain situations. The journal regularly includes original articles on Applied Research, Clinical Cases, Editorial articles or Comments, Consensus Articles, Reviews and Letters to the Editor, all of which undergo an anonymous external peer review process."
   },
@@ -2146,6 +2474,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.tandfonline.com/journals/ujse21/about-this-journal#aims-and-scope",
     "description": "The  Journal of Statistics and Data Science Education  (JSDSE) is an open access peer-reviewed journal published by the American Statistical Association. It disseminates accessible knowledge for the improvement of data science and statistics education at all levels, including: elementary, secondary, post-secondary, post-graduate, continuing, and workplace education. Although JSDSE is a journal of the American Statistical Association, submissions are welcome from educators, practitioners, and researchers around the world."
   },
@@ -2159,6 +2489,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/anales-de-pediatria-english-edition/publish/open-access-options",
     "description": "Anales de Pediatría is the Official Publication of the Asociación Española de Pediatría (Spanish Association of Paediatrics). The print version is published in Spanish and the electronic version is available in a bilingual Spanish and English format on Science Direct. It is a peer-reviewed journal that will consider all manuscript submissions dealing with paediatrics and related specialties. The journal is indexed in Science Citation Index Expanded (IF 2015: 0.773), Index Medicus/Medline and Scopus."
   },
@@ -2172,6 +2504,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.tandfonline.com/journals/twas20/about-this-journal#open-access",
     "description": "River basin planning and management Hydraulic structures and machinery Surface and ground water hydrology/hydraulics River morphology and engineering Coastal zone systems Water quality and pollution control over water bodies Climate change and hydro-environmental studies Water resource socio-economics"
   },
@@ -2185,6 +2519,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.tandfonline.com/journals/tnzk20/about-this-journal#aims-and-scope",
     "description": "Scope of submissions: Kotuitui publishes original research papers, review articles, short communications on topical issues. We encourage quality submissions addressing questions of pertinence to national policy and communities in the New Zealand context. International submissions of relevance to New Zealand are also welcome. The journal’s subject matter ranges across the social sciences. Kotuitui also publishes special sections on matters of major New Zealand and international interest from time to time."
   },
@@ -2198,6 +2534,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.tandfonline.com/action/authorSubmission?show=instructions&journalCode=tusc20#article-publishing-charge",
     "description": "The Journal of Taibah University for Science publishes high-quality, open access research within the natural sciences, with an emphasis on physical chemistry and discrete mathematics.  The journal also covers physics, geology, biology and environmental research, with a focus on molecular biology and biotechnology."
   },
@@ -2211,6 +2549,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://mmrjournal.biomedcentral.com/submission-guidelines/fees-and-funding",
     "description": "Military Medical Research is an open access, peer-reviewed journal publishing cutting-edge findings on basic medical science and clinical research that are related to military medicine. The journal aims to translate the basic science research into the clinical practice and combine advances in civilian and military medicine, with a special focus on the modern military medicine disciplines and the leading progress in precision medicine and translational medicine. Military Medical Research considers articles mainly related to the fields of trauma and war surgery, disaster medicine, emergency medicine and critical care, infectious diseases and military psychiatry/psychology. Topics of interest in Military Medical Research may also include, but are not limited to the following: CBRN (chemical, biological, radiological, nuclear) medical countermeasures, mass casualty readiness and response, environmental medicine (including austere environments such as battlefields, high altitude, extreme cold and hot environments), aerospace medicine and marine medicine, and military training as well as health service."
   },
@@ -2224,6 +2564,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://iopscience.iop.org/journal/2631-7990/page/publication-charges",
     "description": "The International Journal of Extreme Manufacturing (IJEM) publishes original articles and reviews of the highest quality related to the science and technology of manufacturing functional devices and systems with extreme dimensions (extremely large or small) and/or extreme functionalities, ranging from fundamental science to cutting-edge technologies that support the manufacturing of high-performance products involving emerging techniques and breaking the limits of currently known theories, methods, scales, environments, and performance. Extreme manufacturing is specifically manifested in manufacturing with extremely high energy density, ultrahigh precision, extremely small spatial and temporal scales, extremely intensive fields, and giant systems with extreme complexity and several factors. It involves multidisciplinary fields, including machinery, materials, optics, physics, chemistry, mechanics, and mathematics. Subjects of interest include but are not limited to, theory, process, metrology, characterization, equipment, conditions, and system integration in extreme manufacturing, as well as materials, structures, and devices with extreme functionalities."
   },
@@ -2237,6 +2579,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://spj.science.org/page/energymatadv/apc",
     "description": "Energy Material Advances is an Open Access journal published in affiliation with Beijing Institute of Technology (BIT) and published by the American Association for the Advancement of Science (AAAS). Like all partners participating in the Science Partner Journal program, Energy Material Advances is editorially independent from the Science family of journals and BIT is responsible for all content published in the journal. To learn more about the Science Partner Journal program, visit the SPJ program homepage. Should researchers be interested in submitting their work to Energy Material Advances, we ask that they please first review the Information for Authors page. Energy Material Advances content is open access, publishing under a Creative Commons Attribution License (CC BY) on a continuous basis. This means that content is freely available to all readers upon publication and content is published as soon as production is complete. BIT holds an exclusive license to the content, the author(s) hold copyright and retain the right to publish."
   },
@@ -2250,6 +2594,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.light-am.com/news/guidance.htm",
     "description": "Light: Advanced Manufacturing LAM is a new, highly selective, open-access, and free of charge international sister journal of the Nature Journal Light: Science & Applications. The journal is aimed to publish innovative research in all modern areas of preferred light-based manufacturing, including fundamental and applied research as well as industrial innovations."
   },
@@ -2263,6 +2609,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jbiomedsci.biomedcentral.com/submission-guidelines/fees-and-funding",
     "description": "Journal of Biomedical Science is an open access, peer-reviewed journal that encompasses all fundamental and molecular aspects of basic medical sciences, with an emphasis on the molecular studies of biomedical problems and molecular mechanisms. The journal is supported by the Ministry of Science and Technology (MOST), Taiwan, who covers the cost of publication on behalf of the authors on acceptance of their article. Topics of interest include, but are not limited to: -anatomic pathology -biochemistry -genetics -immunology -microbiology and virology -molecular, cellular and cancer biology -neurosciences -pharmacology -physiology Journal of Biomedical Science aims to provide an international forum for encouraging interdisciplinary discussions and contributing to the advancement of medicine, benefiting readers and authors by accelerating the dissemination of research information and providing maximum access to scholarly communication. Join the"
   },
@@ -2276,6 +2624,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ems.press/journals/jems/submit",
     "description": "The Journal of the European Mathematical Society (JEMS) is the official journal of the EMS. The Society, founded in 1990, works at promoting joint scientific efforts between the many different structures that characterize European mathematics. JEMS will publish research articles in all active areas of pure and applied mathematics. These will be selected by a distinguished, international board of editors for their outstanding quality and interest, according to the highest international standards. Occasionally, substantial survey papers on topics of exceptional interest will also be published"
   },
@@ -2289,6 +2639,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.oejournal.org/oes/news/1013",
     "description": "Opto-Electronic Science (OES) is a peer-reviewed, open access, interdisciplinary and international journal. OES is dedicated to provide a professional platform to promote academic exchange and accelerate innovation. OES publishes articles, reviews, and letters of the fundamental breakthroughs in basic science of optics and optoelectronics. OES has been selected as the China’s High-Profile New Journal（卓越行动计划高起点新刊项目）. It is managed by the same team which created the journal Opto-Electronic Advances. OES focuses on in-depth and universal results, its main topics include: • Solid state physics and integrated optics • Nonlinear optics • Ultrafast optics • Quantum optics • Information optics • Micro/nano optics • Optical imaging and display principles • Laser optics and processing • Advanced optoelectronic materials • Biophotonics • Photovoltaics • Digital and intelligent optics"
   },
@@ -2302,6 +2654,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://publishingsupport.iopscience.iop.org/journals/materials-futures/about-materials-futures/#publication-charges",
     "description": "Materials Futures is an international peer-reviewed gold open access journal focused on publishing original works, perspectives and reviews articles in all areas of basic and applied materials science and technology. It is an affiliated journal of Songshan Lake Materials Laboratory. It has established cooperation with International Union of Materials Research Societies (IUMRS) since December 2021."
   },
@@ -2315,6 +2669,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.biofueljournal.com/journal/authors.note",
     "description": "• Biofuels: biodiesel, bioethanol, biobuthanol, biogas, biofuels production, modeling and economics • Bioprocesses and bioproducts: bioreactions, biocatalysis, bioreactors, membrane-bioreactors, modeling and optimization, scale-up, supercritical technology, ionic liquids and fermentations • Biomass and feedstock utilization: bioconversion of agro-industrial residues • Biorefinery: membrane separation technology, adsorption, solvent-extraction, etc. • Environmental protection: simultaneous biological waste treatment and biofuel production, clean development mechanism • Thermochemical conversion of biomass: combustion, pyrolysis, gasification, catalysis • Algal biofuel and energy crops including energy crops genetic engineering • Application of artificial photosynthesis for biofuels production • Carbon footprinting analysis • Strategies for limiting green house gas (GHG) emissions • Life cycle assessment (LCA) analysis of biofuel production/application pathways • Exergy analysis of biofuel production/application pathways • Compliance with the international standards (such as PAS 2050:2011 and ISO 14040:2006) • Technoeconomic analysis of biofuel production/application • Impacts of biofuels production/consumption on climate change • Futuristic pathways for biofuels production • Biofuels finance • Biofuels and bioproducts in Circular Economy • Biofuel applications in the developing world for indigenous development"
   },
@@ -2328,6 +2684,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://spj.science.org/page/ultrafastscience/apc",
     "description": "The mission of Ultrafast Science is to build a platform for ultrafast scientific research; present new theories, concepts, ideas, technologies and progress in this field; publish the latest research representing the forefront of the discipline and that of international concern; and promote academic exchange and development worldwide. The journal publishes high-quality original research articles, comprehensive reviews, editorials, and perspectives which feature high novelty, significance and technical quality in cutting-edge and emerging topics in ultrafast science with broad interest from scientific communities. The scope of Ultrafast Science includes such topics as: attosecond light source, attosecond physics, ultrafast laser and application, ultrafast imaging, ultrafast spectroscopy, ultrafast diagnosis, ultrafast materials and detector, ultrafast terahertz photonics, ultrafast electronics, ultrafast chemical physics and other ultrafast phenomena."
   },
@@ -2341,6 +2699,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://spj.science.org/page/remotesensing/apc",
     "description": "The Journal of Remote Sensing aims to publish high-quality, online-only, Open Access publications to benefit the earth observation community, open to everyone in need of them. Scope: The Journal of Remote Sensing focuses on the theory, science, and technology of remote sensing, as well as interdisciplinary research with earth science and information science. The journal publishes original research articles, review articles, editorials, and perspectives. Topics of particular interest include, but are not limited to: • Radiative transfer modelling • Biogeosciences remote sensing • Land cover and land use • Agriculture, forestry and range • Atmospheric science and meteorology • Ocean and inland water remote sensing • Snow, ice and glaciers • Remote sensing of energy, water and biogeochemistry cycles • Natural hazards/disasters and environment sciences • Image processing, data fusion, data mining and data assimilation • Advanced remote sensing techniques and spectral-radiometric measurements • Interdisciplinary research in artificial intelligence and big data"
   },
@@ -2354,6 +2714,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.rsc.org/publishing/publish-with-us/publish-a-journal-article/chemical-science",
     "description": "Chemical Science is a multi-disciplinary journal publishing findings from across the breadth of the chemical sciences. Articles should present new findings of exceptional significance to their field, and also be of wider interest to readers working in other areas across the chemical sciences. For work to be published, it should provide a significant, conceptually novel advance or insight into the development of its field, and be written to be accessible to scientists across the broad readership of the journal. More specialised work is generally not suitable for publication in the journal."
   },
@@ -2367,6 +2729,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agriculture",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://molhort.biomedcentral.com/submission-guidelines/fees-and-funding",
     "description": "Molecular Horticulture publishes original Research Articles, Letters, and Reviews on novel discoveries on the following, but not limited to, aspects of horticultural plants (including medicinal plants): Developmental and evolutionary biology- Physiology, biochemistry and cell biology- Plant-microbe and plant-environment interactions- Genetics and epigenetics- Molecular breeding and biotechnology- Secondary metabolism and synthetic biology- Multi-omics dealing with data sets of genome, transcriptome, proteome, metabolome, epigenome and/or microbiome. The journal also welcomes research articles using model plants that reveal mechanisms and/or principles readily applicable to horticultural plants, translational research articles involving application of basic knowledge (including those of model plants) to the horticultural crops, novel Methods and Resources of broad interest."
   },
@@ -2380,6 +2744,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.keaipublishing.com/en/journals/journal-of-road-engineering/guide-for-authors/",
     "description": "The scope of Journal of Road Engineering includes: • Environmentally-friendly pavements and materials • Road construction and maintenance in special regions • Functional pavements and materials • Intelligent construction • Resilient infrastructures • Sustainable and low-carbon development • Smart highway and smart cities • Energy harvesting among roadways • Modeling and behaviors of pavements • Advanced planning and management • Interdisciplinary and integrated topics related to pavement engineering • Applications of pavement engineering in infrastructure design, construction, maintenance, and operation, including airport pavement, port pavement, industrial floor and service areas, leisure and built-up areas"
   },
@@ -2393,6 +2759,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.jeehp.org/authors/processing_charge.php",
     "description": "Journal of Educational Evaluation for Health Professions aims to provide readers the state-of-the art practical information on the educational evaluation for health professions so that to increase the quality of undergraduate, graduate, and continuing education. It is specialized in educational evaluation including adoption of measurement theory to medical health education, promotion of high stakes examination such as national licensing examinations, improvement of nationwide or international programs of education, computer-based testing, computerized adaptive testing, and medical health regulatory bodies. Its field comprises a variety of professions that address public medical health as following but not limited to: Care workers Dental hygienists Dental technicians Dentists Dietitians Emergency medical technicians Health educators Medical record technicians Medical technologists Midwives Nurses Nursing aides Occupational therapists Opticians Oriental medical doctors Oriental medicine dispensers Oriental pharmacists Pharmacists Physical therapists Physicians Prosthetists and Orthotists Radiological technologists Rehabilitation counselor Sanitary technicians Speech-language therapists."
   },
@@ -2406,6 +2774,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://algebraicgeometry.nl/",
     "description": "This journal is an open access journal owned by the Foundation Compositio Mathematica. The purpose of the journal is to publish first-class research papers in algebraic geometry and related fields. All contributions are required to meet high standards of quality and originality and are carefully screened by experts in the field."
   },
@@ -2419,6 +2789,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.jomes.org/content/authors/instructions-to-authors.html",
     "description": "The Journal of Obesity & Metabolic Syndrome (pISSN: 2508-6235 | eISSN: 2508-7576) aims to improve the lives of those affected with and reduce the incidence of obesity-related metabolic syndrome by providing a better perception towards the prevention and treatment of obesity. It desires to contribute to the awareness and treatment of obesity through sharing of scientific information on the latest developments in obesity research among members of the Korean Society for the Study of Obesity, and also physicians and researchers worldwide. Its scopes cover all aspects of obesity, particularly epidemiology, etiology and pathogenesis, treatment, and the prevention of obesity. It focuses on research on the basic and clinical aspects of obesity and obesity-related metabolic syndrome, as well as on the specific applications of biochemistry, physiology, genetics, and metabolic study to clinical practice. Nutritional, physical, psychological, and epidemiological aspects are also welcomed. Its regional scope is mainly Korea, but it welcomes submissions from researchers all over the world."
   },
@@ -2432,6 +2804,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.keaipublishing.com/en/journals/underground-space/guide-for-authors/#gfa-instruction-7",
     "description": "Underground Space is an open access international journal without article processing charges (APC) committed to serving as a scientific forum for researchers and practitioners in the field of underground engineering. The journal welcomes manuscripts that deal with original theories, methods, technologies, and important applications throughout the life-cycle of underground projects, including planning, design, operation and maintenance, disaster prevention, and demolition. The journal is particularly interested in manuscripts related to the latest development of smart underground engineering from the perspectives of resilience, resources saving, environmental friendliness, humanity, and artificial intelligence."
   },
@@ -2445,6 +2819,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.j-ets.net/author_guide#h.p_pdXUIz6AaAGw",
     "description": "Journal of Educational Technology & Society (ET&S) is an open-access academic journal published quarterly (January, April, July, and October) since October 1998. By 2018, ET&S has achieved its purposes at the first stage by providing an international forum for open access scientific dialogue for developers, educators and researchers to foster the development of research in educational technology. Thanks to all of the Authors, Reviewers and Readers, the journal has enjoyed tremendous success. Starting from 2019, the ET&S journal has established a solid and stable editorial office with the support of National Yunlin University of Science and Technology. The new Editors-in-Chief have been appointed aiming to promote innovative educational technology research based on empirical inquires to echo the pedagogical essentials of learning in the real world—lifelong learning, competency-orientation, and multimodal literacy in the 21st century. ET&S publishes the research that well bridges the pedagogy and practice in advanced technology for evidence-based and meaningfully educational application."
   },
@@ -2458,6 +2834,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Arts and Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://direct.mit.edu/tacl/pages/submission-guidelines",
     "description": "TACL invites paper submissions in all areas of computational linguistics and natural language processing. Submissions must describe substantial, original, completed and unpublished work. Submissions will be judged on correctness, originality, technical strength, significance, and relevance to computational linguistics and natural language processing. TACL has the goal of coverage of a broad range of topics. We invite papers in the following four broad categories: theoretical computational linguistics, empirical/data-driven approaches, resources/evaluation, and applications/tools."
   },
@@ -2471,6 +2849,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://misinforeview.hks.harvard.edu/submit/#publication-fees-319e95bb-7bfd-407e-b076-55b317a5000d",
     "description": "The widespread adoption of digital media and information technologies has made it exponentially easier and faster to produce, disseminate, and be exposed to false, manipulated, and sometimes hateful content. Still, misinformation is a complex, largely misunderstood phenomenon. The public, the media, and policymakers are in need of reliable, unbiased research on the prevalence, diffusion, and impact of misinformation worldwide.The HKS Misinformation Review is a new format of peer-reviewed, scholarly publication. We publish high-quality, interdisciplinary research that examines misinformation from different perspectives—from its prevalence and impact to the effectiveness of possible interventions—employing a fast-review process designed to publish articles within one to three months of entering peer review."
   },
@@ -2484,6 +2864,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://kneesurgrelatres.biomedcentral.com/submission-guidelines/fees-and-funding",
     "description": "Knee Surgery & Related Research covers all aspects of knee surgery relating to knee joint diseases, trauma and treatment as well as basic research with clinical relevance. Knee Surgery and Related Research is the official journal of the Korean Knee Society with affiliation of the Asian societies relating Knee joint; Thailand Hip and Knee Society, Taiwan Joint Reconstruction Society, Indonesian Hip and Knee Society, Malaysian Society for Hip and Knee Surgeons, Taiwan Arthroscopy and Knee Society, Indonesian Orthopaedic Society for Sports Medicine and Arthroscopy, Singapore Orthopaedic Association, and Adult Reconstruction Chapter of the Hong Kong Orthopaedic Association. As an international journal publishing high-quality research articles and reviews, our aim is to provide emerging trends and new approaches to knee surgeons, imaging specialists, rehabilitation personnel, basic researchers, biomechanical engineers, materials scientists, and all those with an interest in knee surgery. Moreover, the journal strives to be the representative journal published in Asia in the field of knee surgery."
   },
@@ -2497,6 +2879,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciopen.com/journal/join_journal/submission_guidelines?id=1556556375104610305&issn=2957-9821",
     "description": "Topics covered in the journal include the latest research and advances on polyoxometalates and clusters of metals, metal oxides and chalcogenides in the following areas: -Synthesis, characterization and manipulation- Application in the field of catalysis- Application in the field of biology or medicine- Application in the field of energy- Application in the field of environment- Devices- Supramolecule assembly- Functional materials- Simulation and modeling"
   },
@@ -2510,6 +2894,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.scimagojr.com/journalsearch.php?q=21100874341&tip=sid&clean=0",
     "description": "Geochemical Perspectives Letters is an open access, internationally peer-reviewed journal of the European Association of Geochemistry (EAG) that publishes short, highest-quality articles spanning geochemical sciences. The journal aims at rapid publication of the most novel research in geochemistry with a focus on outstanding quality, international importance, originality, and stimulating new developments across the vast array of geochemical disciplines."
   },
@@ -2523,6 +2909,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.keaipublishing.com/en/journals/energy-and-built-environment/guide-for-authors",
     "description": "Energy and Built Environment (EBE) is an international journal that disseminates original research articles on energy harvesting and utilization in the built environment. The aim is to present new research results that are focused on promoting energy efficiency, clean energy utilization, and environment quality in the built environment, which constitutes buildings and transportation. We encourage submissions in the following areas - Energy conservation and balances in built environment - Energy storage technologies and their applications to the built environment - The application and integration of renewable energy technologies in built environment - The evaluation and control of indoor environment quality (acoustic, visual, thermal and air quality) - The impact of climate change on built environment performance - Modelling and prediction technologies for built environment"
   },
@@ -2536,6 +2924,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://gpsych.bmj.com/pages/authors#article_publishing_charges",
     "description": "General Psychiatry (GPSYCH) is an open access journal that covers all topics of interest to psychiatrists and other mental health professionals internationally. The journal includes original research, systematic reviews, meta-analyses (that, unlike meta-analyses in other journals, pool results from studies published in Chinese and English), forums on topical issues (with commentaries from Chinese and international authors), case reports, research methods in psychiatry, and a unique section on ‘Biostatistics in Psychiatry’. Original articles on basic research, clinical research, community-based studies, and ecological studies are all considered for publication."
   },
@@ -2549,6 +2939,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/journal-of-physiotherapy",
     "description": "Journal of Physiotherapy is the official journal of the Australian Physiotherapy Association. The journal's mission is to publish significant research which has important implications for physiotherapy (also known as physical therapy). Our vision is for the journal to be the pre-eminent international publication of the science and practice of physiotherapy. In January 2008 Journal of Physiotherapy became the first physiotherapy journal to conform to the ICMJE requirement wherein randomised trials are registered with a recognised Trial Registry. The journal prioritises systematic reviews and reports of clinical trials, economic analyses, experimental studies, qualitative studies, epidemiological studies, and observational studies. In January 2014 the journal became the first core physiotherapy / physical therapy journal to make Editorials and peer-reviewed original research freely-available. In 2016 the APA extended their support of excellence in physiotherapy practice by sponsoring Open Access publication of all Journal of Physiotherapy content. All past, present and future journal articles are therefore freely accessible. There are no author fees for publication."
   },
@@ -2562,6 +2954,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://smai-jcm.centre-mersenne.org/#",
     "description": "SMAI-JCM publishes high quality research articles on the design and analysis of algorithms for computing the numerical solution of mathematical problems arising in applications. Such mathematical problems may be continuous or discrete, deterministic or stochastic, and relevant applications span the sciences, social sciences, engineering, and technology."
   },
@@ -2575,6 +2969,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.copmadrid.org/ejpalc/",
     "description": "The European Journal of Psychology Applied to Legal Context, the official journal of the Sociedad Española de Psicología Jurídica y Forense [Spanish Society of Forensic Psychology] and the Asociación Iberoamericana de Justicia Terapéutica [Latin-American Association of Therapeutic Jurisprudence] edited by these associations and Colegio Oficial de la Psicología de Madrid [Madrid Regional Association of Psychology]. It publishes unpublished empirical articles and meta-analytic reviews of topics dealing with psychology and law (e.g., legal decision making, eyewitness). Papers addressing both the inquisitorial and the adversarial legal systems will be welcome as well as papers based on concrete laws of a European or Latin-American country. Neither the Editors nor the Publishers will accept responsibility for the views or statements expressed by the authors. The journal is aimed at researchers, academics and professionals in Psychology, Law, Social Work, Forensic Sciences, Educators and, in general, people related with Social Sciences and the Law."
   },
@@ -2588,6 +2984,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Marine",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://spj.science.org/page/olar/apc",
     "description": "Manuscripts featuring cutting-edge science, innovative technology, and interdisciplinary studies within the journal’s scope are particularly welcome. Topics of the journal encompass but are not limited to: • Ocean-Land-Atmosphere Interaction • Physical Oceanography • Marine Biology and Ecology • Marine Geology and Geophysics • Chemical Oceanography • Marine Meteorology • Atmospheric Physics and Atmospheric Environment • Cryosphere Science • Estuarine and Coastal Science • Marine Engineering and Technology • Exploration and Utilization of Marine Resources • Ocean Carbon Neutrality"
   },
@@ -2601,6 +2999,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scipost.org/",
     "description": "SciPost Physics publishes breakthrough research articles in the whole field of Physics, covering Experimental, Theoretical and Computational approaches. Specialties covered by this Journal: - Atomic, Molecular and Optical Physics - Experiment - Atomic, Molecular and Optical Physics - Theory - Biophysics - Condensed Matter Physics - Experiment - Condensed Matter Physics - Theory - Condensed Matter Physics - Computational - Fluid Dynamics - Gravitation, Cosmology and Astroparticle Physics - High-Energy Physics - Experiment - High-Energy Physics - Theory - High-Energy Physics - Phenomenology - Mathematical Physics - Nuclear Physics - Experiment - Nuclear Physics - Theory - Quantum Physics - Statistical and Soft Matter Physics"
   },
@@ -2614,6 +3014,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://onlinelibrary.wiley.com/page/journal/18911803/homepage/open-access",
     "description": "Campbell Systematic Reviews is an open access journal prepared under the editorial control of the Campbell Collaboration. The journal publishes systematic reviews, evidence and gap maps, and methods research papers. These are published in Campbell Systematic Reviews, an open-access journal, which is a member of the Centre for Open Science Registered Reports, thus adheres to peer review and publication of the planned methods as a protocol to minimize bias.  Campbell has a growing list of editorial topic areas, including Ageing, Business & Management, Children & Young Persons Wellbeing, Climate Solutions, Crime & Justice, Disability, Education, International Development, Knowledge Translation & Implementation, Methods and Social Welfare."
   },
@@ -2627,6 +3029,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Environment",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/40789/how-to-publish-with-us#Fees%20and%20funding",
     "description": "The scope of coverage is broad, extending to such topics as: Coal geology, geochemistry, geophysics, mineralogy and petrology – coal basin and coal seam formation and evolution; petrology of coal; organic matter-rich shales, including mineralogy, geochemistry, formation, transport and storage of gases in coal and shales; unconventional energy systems (e.g. oil shales, shale gas, and other carbon-based fuels); ore deposits of materials and rare metals in coal and coal-bearing strata; and groundwater management."
   },
@@ -2640,6 +3044,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.jair.org/index.php/jair/about",
     "description": "JAIR(ISSN 1076 - 9757) covers all areas of artificial intelligence (AI), publishing refereed research articles, survey articles, and technical notes. Established in 1993 as one of the first electronic scientific journals, JAIR is indexed by INSPEC, Science Citation Index, and MathSciNet. JAIR reviews papers within approximately three months of submission and publishes accepted articles on the internet immediately upon receiving the final versions. JAIR articles are published for free distribution on the internet by the AI Access Foundation, and for purchase in bound volumes by AAAI Press."
   },
@@ -2653,6 +3059,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://stars.library.ucf.edu/hmc/policies.html",
     "description": "Designed as an international, interdisciplinary hub, Human-Machine Communication will publish high-impact scholarship examining human-machine communication from a breadth of methodological, theoretical, and philosophical/critical angles to bring further visibility, legitimacy, and community to this newly emergent locus of scholarly and public interest. The journal is the result of collective organizing around recent pre-conferences and workshops at the International Communication Association (ICA), Association of Internet Researchers (AoIR), and ACM/IEEE International Conference on Human-Robot Interaction (HRI). It is clear there is tremendous scholarly energy converging around this topic matter."
   },
@@ -2666,6 +3074,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://link.springer.com/journal/13619/how-to-publish-with-us#Fees%20and%20funding",
     "description": "Cell Regeneration aims to provide a worldwide platform for researches on stem cells and regenerative biology to develop basic science and to foster its clinical translation in medicine. Cell Regeneration welcomes reports on novel discoveries, theories, methods, technologies, and products in the field of stem cells and regenerative research, the journal is interested, but not limited to the following topics: ◎ Embryonic stem cells ◎ Induced pluripotent stem cells ◎ Tissue-specific stem cells ◎ Tissue or organ regeneration ◎ Methodology ◎ Biomaterials and regeneration ◎ Clinical translation or application in medicine"
   },
@@ -2679,6 +3089,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.sciencedirect.com/journal/physics-letters-b/publish/open-access-options",
     "description": "Physics Letters B ensures the rapid publication of important new results in particle physics, nuclear physics and cosmology. Specialized editors are responsible for contributions in experimental nuclear physics, theoretical nuclear physics, experimental high-energy physics, theoretical high-energy physics, and astrophysics."
   },
@@ -2692,6 +3104,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://direct.mit.edu/opmi/pages/submission-guidelines",
     "description": "Open Mind provides a forum for two types of submissions: original Research Reports on all aspects of cognitive science, emphasizing new discoveries that advance the field or definitive contributions that settle an on-going controversy, or Perspectives that are a mix of short review and opinion piece on a critical issue in the field that highlights a new conceptual or methodological approach. Open Mind is a diamond OA publication; there is no Article Processing Charge (APC). We encourage the inclusion of Supplementary Materials as a complement to Research Reports. These Supplementary Materials will be linked to the main manuscript and should be smaller than 500KB in size. For larger data sets (e.g. video files), they can be freely archived in the Open Mind repository within The Dataverse Project system once a manuscript has been accepted for publication."
   },
@@ -2705,6 +3119,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science and Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://dergipark.org.tr/en/pub/cma/price-policy",
     "description": "Constructive Mathematical Analysis is an international quarterly journal, publishing significant research papers from all branches of Analysis and Functions Theory. It provides authoritative reviews of current developments in mathematical analysis research. Contributions are invited from researchers from all over the world. Topics covered by Constructive Mathematical Analysis include (but are not limited to): Real analysis, Complex analysis, Potential theory, Special functions and their applications, Matrix analysis, Approximations and expansions, Harmonic analysis, Fourier analysis, Integral transforms-operational calculus, Functional analysis, Operator theory, Miscellaneous applications of functional analysis, Convex and geometric analysis, Stochastic analysis, Numerical analysis."
   },
@@ -2718,6 +3134,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://iafor.org/journal/iafor-journal-of-education/",
     "description": "As an education journal, the IAFOR Journal of Education (JoE) encourages interdisciplinary research where the primary focus is on addressing critical issues and current trends in education."
   },
@@ -2731,6 +3149,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jmla.mlanet.org/ojs/jmla/openaccesspolicy",
     "description": "JMLA welcomes the submission of any original manuscript that seeks to improve the practice of health sciences librarianship, to improve the provision of information in health or biological sciences, or to articulate important developments and history of the profession and related fields."
   },
@@ -2744,6 +3164,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Technology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.computationalcommunication.org/openaccess",
     "description": "In particular, we welcome submissions that : • Apply computational methods to communication research questions; • Present innovative computational methods for communication research; • Evaluate or validate computational approaches to communication research; • Address the role of computational methods in communication research; • Present or validate tools, software packages, and datasets that are useful for communication research."
   },
@@ -2757,6 +3179,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social and Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://policyreview.info/openaccess",
     "description": "The Internet Policy Review tracks public regulatory changes as well as private policy developments which are expected to have long lasting impacts on European societies. The journal is a resource on internet policy for academics, civil society advocates, entrepreneurs, the media and policymakers alike. The Internet Policy Review contributes empirical research, analysis and current affairs coverage to contemporary debate about media, information technology, telecommunications and internet governance. The Internet Policy Review’s expertise resides in its clear and independent analysis of inter-European and pan-European digital policy changes."
   },
@@ -2770,6 +3194,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.ugm.ac.id/v3/JCEF/about",
     "description": "Geo-disaster (earthquake, landslide, and volcanic eruption), water-related disaster (flood, debris flow, coastal disaster, drought, and tsunami), and human-made disasters (structural failure, congestion and traffic accident, pollution, and mining disaster)"
   },
@@ -2783,6 +3209,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JEBIS/index",
     "description": "Islamic economics, Islamic business and Islamic finance, at at Islamic countries and other countries that support Islamic economics system"
   },
@@ -2796,6 +3224,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://penamas.kemenag.go.id/index.php/penamas",
     "description": "Religious and social issues (isu-isu keagamaan dan sosial kemasyarakatan)"
   },
@@ -2809,6 +3239,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalpuslitjakdikbud.kemdikbud.go.id/index.php/litjak/about",
     "description": "Education management, educational evaluation and assessment, curriculum, education technology, and educational innovations"
   },
@@ -2822,6 +3254,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan, Hukum, Sosial dan Politik, Ekonomi dan Bisnis, Pendidikan, Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.blasemarang.id/index.php/analisa",
     "description": "Anthropology of Religion; Religious Studies; Sociology of Religion; Political Religion; Religious Education; Religious Law; and Economics of Religion"
   },
@@ -2835,6 +3269,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan, Sosial dan Politik, Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://heritage.kemenag.go.id/index.php/heritage",
     "description": "Studies on religious literature and heritage, including classic and contemporary religious manuscripts, religious history, society, archaeology, and arts in Nusantara"
   },
@@ -2848,6 +3284,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.balitbangham.go.id/index.php/ham/about",
     "description": "Rights-oriented analysis, law and policy debates, case studies and other empirical findings related to human rights and freedom, theoretical views of human rights, and diverse methods in human rights study"
   },
@@ -2861,6 +3299,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora , Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.jurnalalqalam.or.id/index.php/Alqalam/index",
     "description": "Religious Communities and Religious Services, Religious Education as well as Religious Matters, Contemporary religious script, socio-religious history, religious archeology, Archipelago Religious Arts and Culture"
   },
@@ -2874,6 +3314,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.kpk.go.id/index.php/integritas/about",
     "description": "Phenomenon of corruption and anti-corruption with the scope of specific research / study topics"
   },
@@ -2887,6 +3329,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/jaki/about.html",
     "description": "Accounting theory, practice, and education"
   },
@@ -2900,6 +3344,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Pendidikan, Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.dpr.go.id/index.php/aspirasi/index?csrt=16582259609818867207",
     "description": "Social issues that publishes articles from parliamentary perspectives, covering both library and field studies (sociology, psychology, education, environment, religion, and health)"
   },
@@ -2913,6 +3359,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://aksara.kemdikbud.go.id/index.php/aksara/index",
     "description": "Linguistic, applied linguistic, interdisciplinary linguistic studies, theoretical literary studies, interdisciplinary literary studies, literature and identity politics, philology, and oral tradition"
   },
@@ -2926,6 +3374,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora , Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnaldikbud.kemdikbud.go.id/index.php/jpnk/about",
     "description": "Education and culture, mainly in the field of education management, education assessment, education technology,  education curriculum, learning and teaching, latest education policy, and culture related to education and Indonesian’s nation values"
   },
@@ -2939,6 +3389,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.kominfo.go.id/index.php/iptekkom/issue/view/287",
     "description": "Media and Communication Studies, and Digital Public Policy."
   },
@@ -2952,6 +3404,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalharmoni.kemenag.go.id/index.php/harmoni",
     "description": "Religious Streams and Movements; Religious services such as marriage registrar office of KUA, pilgrimage services of Hajj and Umrah, and Certification of Halal Products; Interfaith Religious Relations."
   },
@@ -2965,6 +3419,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/leadership",
     "description": "Issues of leadership in varied organizations (relationship of leaders and followers, traits of leadership, organizational performance in varied environments)"
   },
@@ -2978,6 +3434,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/jepi/policies.html",
     "description": "Monetary, fiscal, environment and natural resource, industrial organization, regional and urban economics, and international and trade"
   },
@@ -2991,6 +3449,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/v3/MH",
     "description": "Critical analysis of the principles, theories, and philosophies of law (jurisprudence) Critical analysis of principles, theories, and philosophies of other fields towards law. A combination thereof, analyzed comparatively"
   },
@@ -3004,6 +3464,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Hukum, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.kemendagri.go.id/index.php/jbp/about",
     "description": "Multidisciplinary research drawn from all areas of Governance"
   },
@@ -3017,6 +3479,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Humaniora, Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.poltekesos.ac.id/index.php/Sosioinforma/about",
     "description": "Social welfare, including the problems of poverty handling, social rehabilitation, social security protection, social empowerment, and social work"
   },
@@ -3030,6 +3494,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora , Keagamaan, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.blasemarang.id/index.php/smart",
     "description": "Religious life; religion and religious education; literature and religious treasures"
   },
@@ -3043,6 +3509,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.balitbanghub.dephub.go.id/index.php/jurnaldarat/index",
     "description": "Transportasi darat, perkeretaapian, dan angkutan umum"
   },
@@ -3056,6 +3524,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hospitality",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.kemenparekraf.go.id/index.php/jki/index",
     "description": "Tourism Destinations and Infrastructure, Tourism Marketing, Tourism Industry and Investment, Human Resources and Institutions"
   },
@@ -3069,6 +3539,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan, Humaniora , Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnaldialog.kemenag.go.id/index.php/dialog",
     "description": "Religious Tolerance and Harmony, Religion and Politics, Islamic Religious Education, Local Wisdom in Religious Practices, Religious Conflict and Resolution, Civil Society and Religion"
   },
@@ -3082,6 +3554,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Humaniora , Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnaledukasi.kemenag.go.id/edukasi/about",
     "description": "Management of Religious Education Institutions, Roles and Practices of Religious Educators, Management and Funding of Religious Education Evaluation, Quality Assurance, and Accreditation of Religious Education, The Role of Students in Religious Education"
   },
@@ -3095,6 +3569,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalkwangsan.kemdikbud.go.id/index.php/jurnalkwangsan/index",
     "description": "Learning System Design, the development, implementation, assessment, management, research papers, and case studies of educational technology, which are effective in giving positive contributions to schools and educational institutions"
   },
@@ -3108,6 +3584,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Hukum, Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.kemnaker.go.id/index.php/naker/about",
     "description": "All aspects of labor and employment policies, which are based on various scientific approaches such as economics, public administration, management, sociology, politics, government, communication, public policy, and other sciences relevant to the development of employment policies"
   },
@@ -3121,6 +3599,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.balitbangham.go.id/index.php/dejure/about",
     "description": "Legal Establishment, Law enforcement, Law and Development, Law and Society, International law, Constitutional law, State Administrative Law"
   },
@@ -3134,6 +3614,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalhukumdanperadilan.org/jhp",
     "description": "Law and judiciary, including civil law, criminal law, administrative law, military law, constitutional law, international law, judicial case management, and management of the judicial apparatus"
   },
@@ -3147,6 +3629,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pertanian",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalpangan.com/index.php/pangan/about#APS",
     "description": "Produksi pangan, pengolahan pangan, penyimpanan pangan, transportasi pangan, pemasaran pangan, perdagangan pangan, konsumsi pangan gizi, sarana, teknologi pangan, jasa, pendanaan, kebijakan pangan"
   },
@@ -3160,6 +3644,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kelautan dan Perikanan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal-balitbang.kkp.go.id/index.php/jkn/index",
     "description": "Planning Analysis, Policy Papers, Review Papers, and Research Paper of Marine and Fisheries science and Technology"
   },
@@ -3173,6 +3659,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jia.stialanbandung.ac.id/index.php/jia/index",
     "description": "Development Administration, Economic Development, Public Policy, Development Planning, Public Sector Finance, Service Management, Public Organization, Human Resource Development, Decentralization and Regional Autonomy, Leadership, Public Sector Innovation, E-Government, Management and Business Policy, E-Commerce, Marketing Management, Budget Management, State Company Management"
   },
@@ -3186,6 +3674,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.balitbanghub.dephub.go.id/index.php/warlit/index",
     "description": "Transportasi Antarmoda, Transportasi Jalan dan Perkeretaapian, Transportasi Laut, Sungai, Danau dan Penyeberangan, serta Transportasi Udara"
   },
@@ -3199,6 +3689,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kelautan dan Perikanan, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal-balitbang.kkp.go.id/index.php/jkpi/index",
     "description": "Research results, information and ideas in marine and fisheries policies"
   },
@@ -3212,6 +3704,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kelautan dan Perikanan, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://itrev.kemenkeu.go.id/index.php/ITRev/about",
     "description": "State treasury, public finance, and public policy with interdisciplinary and multidisciplinary approaches, based on research, study, primary or secondary data analysis, opinions, theoritical review/conceptual/methodology/policy"
   },
@@ -3225,6 +3719,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Sains dan Teknik, Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.pusbindiklatren.bappenas.go.id/lib/jisdep",
     "description": "Politics, economics, social, culture, environment, peace and justice, energy, and other strategic issues about sustainable development planning"
   },
@@ -3238,6 +3734,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.badanbahasa.kemdikbud.go.id/jurnal/index.php/jurnal_ranah/about",
     "description": "Phonetics, phonology, morphology, syntax, discourse analysis, pragmatics, anthropolinguistics, language and culture, dialectology, language documentation, forensic linguistics, comparative historical linguistics, cognitive linguistics, computational linguistics, corpus linguistics, neurolinguistics, language education, translation, language planning, psycholinguistics, sociolinguistics and other scientific fields related to language studies"
   },
@@ -3251,6 +3749,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://samarinda.lan.go.id/jba/index.php/jba/about",
     "description": "Public Policy, Public Management, Public Sector Innovation, Decentralization, Regional Autonomy and Governance, Local Politics and Democracy, and Rural / Village Autonomy and Governance"
   },
@@ -3264,6 +3764,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kelautan dan Perikanan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal-balitbang.kkp.go.id/index.php/jppi/about",
     "description": "Results of research resources, arrest, oceanography, environmental, environmental remediation and enrichment of fish stocks"
   },
@@ -3277,6 +3779,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.balitbangham.go.id/index.php/kebijakan/about",
     "description": "Legal policy, including correctional policy, immigration, laws and regulations, intellectual property, general law administration, human rights, development of national law, as well as administrative policies, supervision, and development of human resources in the field of law and human rights"
   },
@@ -3290,6 +3794,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Pertanian",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://epublikasi.pertanian.go.id/berkala/akp/",
     "description": "Socio-economic aspects of agricultural and rural development, agribusiness development, or commodity development within the scope of food crops, horticulture, plantations and livestock"
   },
@@ -3303,6 +3809,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.isi-dps.ac.id/index.php/mudra/about",
     "description": "Pendidikan"
   },
@@ -3316,6 +3824,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Farmasi",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JFIKI/index",
     "description": "Clinical Pharmacy, Pharmaceutical, Chemistry, Pharmaceutics, Community Pharmacy, Pharmacognosy, Phytochemistry"
   },
@@ -3329,6 +3839,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/wisdom/about",
     "description": "Western Philosophy, Eastern Philosophy, Islamic Philosophy, Indonesian Philosophy, Nusantara Philosophy"
   },
@@ -3342,6 +3854,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.bpk.go.id/index.php/TAKEN/index",
     "description": "State finances in areas of public sector accounting, auditing, governance and accountability, public administration policy, and state finance law"
   },
@@ -3355,6 +3869,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Hukum, Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.idu.ac.id/index.php/DefenseJournal/index",
     "description": "defense and security studies, such as defense strategy, defense management, defense technology, and security issues on a national, regional, and international level"
   },
@@ -3368,6 +3884,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pertanian, Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://epublikasi.pertanian.go.id/berkala/index.php/jae/about",
     "description": "Sosial ekonomi pertanian tanaman pangan, hortikultura, perkebunan, dan peternakan"
   },
@@ -3381,6 +3899,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/jpdi/about.html",
     "description": "Internal medicine, as well as provide alternative solutions to problems, diagnosis, therapy, and prevention"
   },
@@ -3394,6 +3914,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Lingkungan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/v3/jik",
     "description": "Forest management, silviculture, biodiversity conservation, forest technology, and sustainable development"
   },
@@ -3407,6 +3929,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JIET",
     "description": "Banking and finance, monetary economics, international trade, public economics, environmental economics"
   },
@@ -3420,6 +3944,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kelautan dan Perikanan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.bbp4b.litbang.kkp.go.id/jurnal-jpbkp/index.php/jpbkp/about",
     "description": "Pengolahan produk meliputi penanganan dan diversifikasi produk hasil perikanan serta pemanfaatan limbah hasil perikanan; Bioteknologi kelautan dan perikanan meliputi bioproses, kimia bahan alam laut, biomolekuler, bioremediasi dan pengembangan produk berbasis bioteknologi; Keamanan pangan produk kelautan dan perikanan meliputi keamanan produk, pencemaran lingkungan, kajian paparan pencemar dan toksikologi; Mekanisasi proses meliputi rekayasa alat penanganan dan pengolahan produk kelautan dan perikanan; Pengembangan metode analisis dan alat pengujian kualitas dan keamanan produk kelautan dan perikanan; Kebijakan bidang pengolahan produk dan bioteknologi kelautan dan perikanan."
   },
@@ -3433,6 +3959,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JDE",
     "description": "Macroeconomics; Development Economics; Banking, Finance, and Monetary Economics; Industrial Economics; International Economics; Public Economics; Environmental and Energy Economics; Agricultural Economics; Health Economics; Political Economics; Tourism Economics; Microenterprises and Microfinance; Labor Economics; and Regional Economics."
   },
@@ -3446,6 +3974,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.kemensos.go.id/index.php/jsk",
     "description": "Social protection, social security, social rehabilitation, social empowerment, poverty alleviation and management of social development"
   },
@@ -3459,6 +3989,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.jurnalet.com/jet/about",
     "description": "Electronics, telecommunications, and microelectronics engineering"
   },
@@ -3472,6 +4004,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/jwl/index",
     "description": "Regional development and environmental management issues."
   },
@@ -3485,6 +4019,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.tekmira.esdm.go.id/index.php/minerba/about",
     "description": "Mineral dan batubara mulai dari eksplorasi, eksploitasi, pengolahan, ekstraksi, pemanfaatan, lingkungan, kebijakan dan keekonomian termasuk ulasan ilmiah terkait."
   },
@@ -3498,6 +4034,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/pwk/about",
     "description": "Urban and regional development and planning"
   },
@@ -3511,6 +4049,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://widyaparwa.kemdikbud.go.id/index.php/widyaparwa/about",
     "description": "Kebahasaan dan kesastraan Indonesia dan daerah"
   },
@@ -3524,6 +4064,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.brin.go.id/BerkalaArkeologi",
     "description": "Discipline of Archaeology mainly in the Indonesian Archipelago and Southeast Asia with the multidisciplinary approach that must be related to the archaeological subject"
   },
@@ -3537,6 +4079,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JVHS/About",
     "description": "Medical Laboratory Technology; Radiology Nuclear Medicine and Imaging; Public Health, Environmental and Occupational Health; Health Professions (miscellaneous)"
   },
@@ -3550,6 +4094,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/politik/about.html",
     "description": "Politics, government, policies, elections, political parties, conflicts, and political thoughts"
   },
@@ -3563,6 +4109,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pertanian",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://mp.iribb.org/mpjurnal",
     "description": "In vitro culture, molecular biology (omics), bioinformatics, genetic engineering, bioprocess, biofertilizers, and biopesticides"
   },
@@ -3576,6 +4124,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kelautan dan Perikanan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal-balitbang.kkp.go.id/index.php/ifrj/index",
     "description": "Fish resources, fisheries biology, fisheries management, aquatic ecology related to marine, coastal and inland waters."
   },
@@ -3589,6 +4139,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.kominfo.go.id/index.php/pekommas/about#custom-0",
     "description": "Media and Communication (Media and network society, Media technology, Media Impact, Visual Communication, Media literacy, Communication, and policy); Informatics (Information Systems, Big Data and Data Mining, Cloud & Grid Computing, Decision Support Systems, E-Government, ICT for Development, Network & Data Communications, Open Source Systems, Social Networking & Application, Web Engineering, and Wireless Communication)"
   },
@@ -3602,6 +4154,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora , Hukum, Sosial dan Politik, Ekonomi dan Bisnis, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalbhumi.stpn.ac.id/index.php/JB",
     "description": "Agrarian and land studies: geodesy, spatial, social, humanities, history, economics, and law."
   },
@@ -3615,6 +4169,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/MBIO/About",
     "description": "Anatomy, histology, and bioanthropology. The manuscript contains analysis at the levels of biomolecular, cellular, tissue, organs, and body systems. We also welcome studies based on animal models related to disease and/or abnormalities that occur in human."
   },
@@ -3628,6 +4184,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Ekonomi dan Bisnis, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/mjs/about.html",
     "description": "Economy, Organization, and Society; Rural Ecological Society; Urban Social Development toward Inclusive Society; Relation between Society and Extractive Industry; Social Inclusion and Transformation; Education and Social Transformation; Family and Social Transformation; Sustainable Economic Management of Natural Resources and Extractive Industry; Cultural Transformation and New Media"
   },
@@ -3641,6 +4199,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Ekonomi dan Bisnis, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/DIALEKTIKA/About",
     "description": "Widest range of sociological topics including gender, social development, family and relationship, democracy, conflict, social movement, urban and rural society"
   },
@@ -3654,6 +4214,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/IJAR/about",
     "description": "Anesthesia and Intensive Therapy by connecting doctors, medical personnel, and researchers. IJAR publishes original research, reviews (systematic review, meta-analysis, literature review, and article review), and case reports/case studies in the field of Anesthesia and Intensive Therapy"
   },
@@ -3667,6 +4229,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://indotheologyjournal.org/index.php/home/about",
     "description": "Theological education, pedagogy, and ecumenical and interreligious learning"
   },
@@ -3680,6 +4244,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://www.stipmjournal.org/index.php/stipm",
     "description": "Science and technology policy for economic competitiveness, research and development management, and innovation management"
   },
@@ -3693,6 +4259,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://juri.urologi.or.id/juri/index",
     "description": "Oncology, functional urology, reconstructive urology, laparoscopy, robotic surgery, endourology, female urology, andrology, pediatric urology, and sexual medicine"
   },
@@ -3706,6 +4274,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://buletinsdg.geologi.esdm.go.id/index.php/bsdg/about",
     "description": "Geological resource potential, Regulations, Laboratory studies, Data management"
   },
@@ -3719,6 +4289,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jrisetgeotam.brin.go.id/index.php/jrisgeotam/index",
     "description": "Geology, geophysics, geochemistry, mining, engineering geology, economic geology, and environmental geology."
   },
@@ -3732,6 +4304,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jpk.kominfo.go.id/index.php/jpk",
     "description": "Komunikasi, media, dan informatika."
   },
@@ -3745,6 +4319,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/icmr/about.html",
     "description": "Capital markets, financial institutions and services, corporate finance, risk modeling and management, market microstructure in financial markets, Islamic finance, behavioral finance, and financial crisis"
   },
@@ -3758,6 +4334,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejurnalmaterialmetalurgi.lipi.go.id/index.php/metalurgi/index",
     "description": "All areas of metallurgy and materials"
   },
@@ -3771,6 +4349,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Hukum, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/jbb/",
     "description": "Public policy, administrative reform, local government studies, public and private governance, digital governance and business, digital finance, innovation, entrepreneurship, small businesses, people and culture in organization, knowledge management, organizational behavior, fiscal policy, tax administration, international tax, and the politics of taxation"
   },
@@ -3784,6 +4364,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/jpk/about",
     "description": "Human settlement; Urban transportation; Urban tourism; Disaster management; Urban environmental; Urban sociology."
   },
@@ -3797,6 +4379,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kelautan dan Perikanan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.mgi.esdm.go.id/index.php/bomg/about",
     "description": "Marine Geology, Marine Geophysics, Marine Geo-Resources, Marine Geo-Hazard, Marine Geo-Environment, Marine Geo-Dynamics, Marine Geo-Chemistry, Marine Geo-Technique, Marine Geo-Information,, Marine Energy, Coastal and Offshore Development, Economy of Marine Geology"
   },
@@ -3810,6 +4394,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.komisiyudisial.go.id/index.php/jy",
     "description": "Hukum, Kehakiman, dan Pengawasan Peradilan"
   },
@@ -3823,6 +4409,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.jurnalptik.id/index.php/JIK",
     "description": "Police and policing, Law, Criminology, Economic and Business Policing, Security Transport, Other relevant subject concerning policing"
   },
@@ -3836,6 +4424,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jcli-bi.org/index.php/jcli",
     "description": "Central banking law and institutions on monetary, financial system, and payment systems that include regulations, governance (transparency & accountability), credibility, institutional politics, institutional arrangements, and institutional communication"
   },
@@ -3849,6 +4439,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/interaksi/index",
     "description": "Media, Culture and Society: Journalism, Media Studies, Media Policy, Media Literacy, New Media Studies, Economy Political Media, Media Ethics; Strategic Communications: Strategic Communications Management, Social Marketing, Digital Marketing, Political Marketing, Political Campaign, Public Relation."
   },
@@ -3862,6 +4454,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://rechtsvinding.bphn.go.id/ejournal/index.php/jrv",
     "description": "Organization, structure, management and infrastructure of the legal developments of the common law and civil law world"
   },
@@ -3875,6 +4469,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Hukum, Sosial dan Politik, Humaniora , Lingkungan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/ajce/",
     "description": "Community development, community services, community empowerment, community outreach, Sustainable Development Goals (SDGs)."
   },
@@ -3888,6 +4484,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/globalsouth/index",
     "description": "Global South in global politics; the rise, demise, and possible revival of South-South internationalism and Bandung Spirit; and the dynamics of relations between Global South and Global North."
   },
@@ -3901,6 +4499,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora , Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.brin.go.id/jmi/about",
     "description": "Isu dan tantangan yang dihadapi masyarakat Indonesia yang dikaji dari berbagai sudut pandang ilmu-ilmu sosial kemanusiaan."
   },
@@ -3914,6 +4514,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalinstrumentasi.bsn.go.id/index.php/ji/index",
     "description": "Instrument engineering, metrology, testing, and control"
   },
@@ -3927,6 +4529,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.brin.go.id/jsmi/about",
     "description": "Materials science and engineering, technological innovations and applications in industry based on materials such as polymers, ceramics, composites, metals, noble metals, metal alloys, oxides, or carbon, which are related to mechanical, magnetic, physical, optical, dielectric or electronic properties (superconductivity, semiconductivity, superionic conductivity, etc.) with discussion including synthesis, modification and development of methods; testing and characterization; simulation and modeling; nuclear engineering and its applications in materials science, etc"
   },
@@ -3940,6 +4544,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/amj/about.html",
     "description": "Issues and developments of marketing, particularly those related or relevant to the advancement of marketing in South East Asia and beyond (Topic of interest: marketing in emerging economies, marketing ethics, consumer welfare, and marketing and public policy)"
   },
@@ -3953,6 +4559,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/IJCHN/index",
     "description": "Community Health Nursing, Family Health Nursing, Geriatric Nursing, and Occupational Health Nursing, as well as health policies in the areas of community, family, and geriatric health nursing, from comparative and international viewpoints"
   },
@@ -3966,6 +4574,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://gemaperencana.id/index.php/JIGP/about",
     "description": "\"Policy Papers\" from planners, researchers, lecturers, and academics related to the study of Social, Education, Economics, Management, Law, Islamic Studies, and Spatial Planning in the scope of Religion and Religious"
   },
@@ -3979,6 +4589,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik, Sosial dan Politik, Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/proust/",
     "description": "Urban mental health and well-being, Education and child development in urban society; Intergroup relation, acculturation, and identity formation in urban contexts; Urban social issues (e.g., poverty, traffic, crime, and violence); Urban culture; Urban issues on employment and organizational behavior; Technology and urban society"
   },
@@ -3992,6 +4604,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Sosial dan Politik, Humaniora, Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/sju/index.php/counterterrorism",
     "description": "Terrorism Studies in multidisplinary perspective including Law, Politics, Economics, Pyschology, Social, Religious, Education, Security and any related issues whether in Indonesia and Global context"
   },
@@ -4005,6 +4619,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Ekonomi dan Bisnis, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/global/",
     "description": "Foreign policy, international security, international political economy, and transnational issues involving actors of the Global South, having implications towards the Global South, or perspectives from the Global South that are often overlooked in the mainstream journals in the Global North"
   },
@@ -4018,6 +4634,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum, Ekonomi dan Bisnis, Sains dan Teknik, Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.lemhannas.go.id/index.php/jkl/about",
     "description": "Geography, Demography, Natural Resources, Ideology, Politics, Economics, Socio-Cultural, Defense and Security"
   },
@@ -4031,6 +4649,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/wacana/about.html#about",
     "description": "Literature, linguistics, archaeology, history, philosophy, library and information studies, religion, art, and interdisciplinary studies."
   },
@@ -4044,6 +4664,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jiki.cs.ui.ac.id/index.php/jiki/about",
     "description": "Bioinformatics/Biomedical Applications, Biometrical Application, Computer Network and Architecture, Computer Vision, Content-Based Multimedia Retrievals, Data analysis, Fuzzy Logic, Genetic Algorithm, High-Performance Computing, Image Processing, etc (fields related to computer science and information)"
   },
@@ -4057,6 +4679,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/journals/jte/about",
     "description": "Power Systems: Generator, Power Distribution, Electrical Power Convertion, Protection Systems, and Electrical Material; Signals, Systems, and Electronics: Digital Signal Processing, Image Processing, Robotic Systems, Control Systems, and Embedded Systems; Communication Systems: Telecommunication, Wireless Communications, and Computer Network; Information Technology: Software Engineering, Data Mining, Multimedia, Mobile Computing, Parallel / Distributed Computing, Artificial Intelligent, Computer Graphic, and AR/VR."
   },
@@ -4070,6 +4694,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/jslearning",
     "description": "Technology-integrated science learning. The technology integration includes science learning, science learning media, science learning curriculum, and science learning assessment."
   },
@@ -4083,6 +4709,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/vision/author-fees",
     "description": "Foreign language acquisition, Translation and language learning, Foreign language learning and identity, Gender and equality in English language learning, Foreign language skills, Linguistics and English language learning, Literature and English language learning, and Foreign language teaching and learning."
   },
@@ -4096,6 +4724,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.radenintan.ac.id/index.php/al-biruni/about/editorialPolicies#custom-2",
     "description": "JIPF Al-Biruni covers issues such as the improvement of physics learning techniques including the development of instruments of physics evaluation, the development of physics instructional media, and the development of learning model of physics by considering local wisdom and being enriched with the principle of religion and culture. Theoretical physics and current issue of applied physics are also welcome, However, the article related and integrated to the value of religion and culture will be prioritized. Development and educational psychology in context of learning physics such as: learning physics in early education, learning physics in primary and secondary education, and learning physics in higher education."
   },
@@ -4109,6 +4739,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/jpmipa/about/editorialPolicies#custom-4",
     "description": "Journal of Mathematics and Science Teaching or Jurnal Pengajaran Matematika dan Ilmu Pengetahuan Alam (JPMIPA) published original qualitative and or quantitative research concerning mathematics and science teaching. Review article cannot be published in JPMIPA. As a part of our effort to disseminate research results to all stakeholder engaged in mathematics and science education in every part of the world and especially throughout Indonesia, articles can be in English or Bahasa Indonesia."
   },
@@ -4122,6 +4754,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan, Humaniora, Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.radenfatah.ac.id/index.php/Nurani/Publication_Charge",
     "description": "Islamic law and society, Law, Islamic Law, Family Law, Islamic Family Law, Islamic Criminal Law, Customary Law, Sharia Economic Law, Islamic Constitutional Law, Islamic Comparative law, Anthropological Law, Sociological Law, Social Sciences (Miscellaneous), Art and Humanities, Religious Studies"
   },
@@ -4135,6 +4769,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/YDK/editorialPolicies#custom-0",
     "description": "Yuridika publishes only original articles from a wide variety of legal disciplinary perspectives concerning issues in Indonesian and international law, with a focus on emerging countries. These may include but are not limited to various fields such as criminal law, civil law, constitutional law, administrative law, international law, and Islamic law."
   },
@@ -4148,6 +4784,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ujh.unja.ac.id/index.php/home/submissions/fee",
     "description": "Undang: Jurnal Hukum mengakomodasi semua kajian tentang dinamika dan perubahan sosial yang berkaitan atau dikaitkan dengan hukum"
   },
@@ -4161,6 +4799,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.fh.unila.ac.id/index.php/cepalo/about/fees",
     "description": "Special Autonomy, Law and culture, Legal pluralism governance, Local government, Tribal law, Indigenous people and rights, Adat law, Society’s faith, Refund of compensation, Relations of law, Traditional Knowledge, Customary institution law, Ethics law"
   },
@@ -4174,6 +4814,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.fh.unila.ac.id/index.php/fiat/about/fees",
     "description": "humanity, heritage law, family law, civil and political rights, economic, social, and cultural rights, solidarity rights, philosophy of law, private law, international law, civil law, criminal law, administrative law, constitutional law, adat law, Intellectual Property Rights, commercial court, district court, high court, supreme court, constitutional court, industrial relations court, administrative court, fishery court, military court, taxation court, court of human rights, court of religion"
   },
@@ -4187,6 +4829,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan, Sosial dan Politik, Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/icj/author-fees",
     "description": "This journal has a scope of studies and research on: 1.The development of Islamic communication science; 2. Islamic media (old and new media); 3. Da'wah, broadcasting, and journalism; 4. Islam, communication/media, and social changes; 5. Islam, communication, and community development; 6. Islam and public relations; 7. Islam and political communication; 8. Islam and organizational communication; 9. Islam and bussiness communication; 10. Digital/virtual/online religion; 9. etc."
   },
@@ -4200,6 +4844,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/ihis/about/editorialPolicies#custom-3",
     "description": "IHiS (Indonesian Historical Studies) covers all areas of Indonesian history, it deals with all aspects of the history including of its global context. Scholars engaged with current historical debates about any region and period can submit articles on a particular theme thus initiating a dialogue on theoretical and methodological issues. All historical approaches are also welcomed. This journal accepts on diverse format includes an article from scientific forums, review essays, and special issues. It can be written in  Indonesia and English."
   },
@@ -4213,6 +4859,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/MOZAIK/Editorial_Policies#custom-0",
     "description": "Cultural Studies; Literary Studies; Linguistics, such as macro linguistics, micro linguistics, and applied linguistics; Philology; Historical Studies, and; Philosophy."
   },
@@ -4226,6 +4874,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.unpad.ac.id/cosmogov/about/editorialPolicies#custom-3",
     "description": "Cosmogov: Jurnal Ilmu Pemerintahan is an Indonesian journal that examines various issues related to and within the scope of Government Studies, Political Studies, and Public Policy. In particular, Cosmogov: Jurnal Ilmu Pemerintahan focuses on local government studies issues, including governance, political studies, public policy, elections, e-government, and government leadership."
   },
@@ -4239,6 +4889,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/jiafr/about/submissions#authorFees",
     "description": "Development of accounting concepts, regulations and policies in Islamic institutions; Contemporary issues and challenges of auditing and governance in Islamic Institutions. Accounting behaviour based on Islamic teachings; Measurement of financial and non-financial performance in Islamic institutions; Overview of the public sector based on Islamic teachings; Information system and internal control in Islamic institutions."
   },
@@ -4252,6 +4904,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/economica/about/editorialPolicies#focusAndScope",
     "description": "This journal specializes in Islamic economics, thought, research and is intended to communicate original research and current issues on the subject. This journal warmly welcomes contributions from scholars of related disciplines."
   },
@@ -4265,6 +4919,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/ijb/about/submissions#authorFees",
     "description": "DIJB (Diponegoro International Journal of Business) aims to be the media for publishing empirical issues related to business studies. DIJB invites manuscripts in some topics including marketing management, finance management, operation management, human resource management, innovation management, knowledge management, organizational behaviour, organizational development, change management, international business, and Islamic business. DIJB’s main objective is disseminating empirical issues in business studies to broad audiences such as, but not exclusive to, academicians, graduate students, and business practitioners."
   },
@@ -4278,6 +4934,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/Phenomenon/AuthorFees",
     "description": "Phenomenon: Jurnal Pendidikan MIPA calls for scientific articles on science and mathematics education. It covers issues at varying levels of analysis and methods. Furthermore, it provides the opportunity for the publication of articles based on inter/multidisciplinary and trans-disciplinary research, and even prioritizes or reserves special space for these"
   },
@@ -4291,6 +4949,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jtsiskom.undip.ac.id/about/editorialPolicies#custom-0",
     "description": "embedded system based on microcomputer/microcontroller; algorithms and artificial intelligence; robotics; control systems; computer vision and pattern recognition; computer networks and security; processor and ASIC design; programable devices based on HDL and IP Core; high-performance computing (HPC); sensor network and IoT; distributed systems; cloud computing, and mobile computing."
   },
@@ -4304,6 +4964,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JAKI/editorial_policies#custom-0",
     "description": "Healthcare management; Healthcare organization; Healthcare leadership; Health policy"
   },
@@ -4317,6 +4979,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/BIKK/APC",
     "description": "Berkala Ilmu Kesehatan Kulit dan Kelamin (BIKKK)/Periodical of Dermatology and Venereology is a scientific publication of quarterly chess. BIKKK accepts manuscripts in the form of original manuscripts, literature reviews, case reports, and editorials in English in accordance with the scope of Dermatology and Venereology."
   },
@@ -4330,6 +4994,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Farmasi",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.unpad.ac.id/ijcp/about/editorialPolicies#custom-4",
     "description": "Clinical Pharmacy, Pharmaceutical Care, Pharmacotherapy, Rational therapeutics, Evidence-based practice, Pharmacoepidemiology, Pharmacogenetics, Clinical Pharmacokinetics, Clinical Biochemistry, Clinical Microbiology, Pharmacoeconomics, Safety, cost-effectiveness and clinical efficacy of drugs, Drug, Interactions, Drug Utilization, Drug Prescribing, Drug Information, Health Services Research, Medication management, Herbal medicines as a complementary therapy, Other clinical aspects of pharmacy"
   },
@@ -4343,6 +5009,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pertanian, Kelautan dan Perikanan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.uho.ac.id/index.php/peternakan-tropis/pages/view/Author%20Fee",
     "description": "JITRO (Jurnal Ilmu dan Teknologi Peternakan Tropis) is a scientific journal publishing result of research and review in the field of animal science, including: (1) breeding and genetics, (2) reproduction, (3) anatomy and physiology, (4) nutrition and feed technology, (5) agrostology, (6) animal production, (7) biotechnology, (8) behavior, (9) animal health, (10) livestock system, (11) socioeconomics, (12) policy, and (13) animal product."
   },
@@ -4356,6 +5024,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JUXTA/editorialpolicies#custom-1",
     "description": "The scope of JUXTA includes basic health sciences, clinical medicine, healthcare and education in medicine, and also public health sciences. JUXTA also accepts articles about medicine (general & internal) and medicine (research & experimental)."
   },
@@ -4369,6 +5039,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.fk.unpad.ac.id/index.php/jap/about/submissions#authorFees",
     "description": "Perioperative Medicine, Intensive Care, Pediatric Anesthesia, Obstetric Anesthesia, Regional Anesthesia, Pain Management, Neuroanesthesia, Cardiovascular Anesthesia, Geriatric Anesthesia, Ambulatory Anesthesia"
   },
@@ -4382,6 +5054,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.fk.unpad.ac.id/index.php/ijihs/about/submissions#authorFees",
     "description": "Anesthesiology and Intensive Care, Cardiovascular, Child Health, Epidemiology, Internal Medicine, Nutrition, Obstetrics and Gynecology, Oncology, Opthalmology, Otorhynolaryngology, Orthopedics and Traumatology, Clinical Pharmacology & Pharmacy, Clinical Psychology & Psychiatry, Preventive Medicine, Public Health, Radiology, Reproductive Health, Surgery"
   },
@@ -4395,6 +5069,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/SPMRJ/Article_Processing_Charges",
     "description": "Physical medicine rehabilitation, Pain, Musculoskeletal disorders, Neuroscience, Pediatric, Geriatric, Cardiac and respiratory rehabilitation, Occupational therapy, Speech therapy, Cognitive and mental health rehabilitation, Nursing, Return to work, Special education, Social work and social welfare, Rehabilitation psychology, Psychiatry assistive technology, Environmental factors/disability, Development of new rehabilitative technologies, Clinical studies, Epidemiological studies, Use of electrodiagnostic studies."
   },
@@ -4408,6 +5084,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan, Psikologi",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JPS/editorial_policies#custom-0",
     "description": "Mental Health, Neuroscience, Mental Disorders, Psychology, Psychological well-being, Community Psychiatry, CLP (Consultation-Liaison Psychiatry), Geriatric, Child and Adolescent Psychiatry."
   },
@@ -4421,6 +5099,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://sciencebiology.org/index.php/BIOMEDICH/about/submissions#publicationFee",
     "description": "The subject covers innovative and expert findings in the fields of plant, animal, and microorganism secondary metabolite, and also the effect of natural product on biological system as a reference source for researchers in these fields, and with the aim to set international standards in their methodology."
   },
@@ -4434,6 +5114,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://arenahukum.ub.ac.id/index.php/arena/about#articleProcessingCharges",
     "description": "ARENA HUKUM, which mediates the dissemination of academics, researchers, and practitioners in the field of law from around the world. Its editorial objective is to offer an academic platform for cross-border legal research where the boundaries of a particular topic matter such as Civil Law, Criminal Law, Constitutional Law, Administrative Law and International Law, with the scope of justice, certainty and expediency."
   },
@@ -4447,6 +5129,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/seam/policies.html#publicationcharges",
     "description": "The South East Asian Journal of Management (SEAM) seeks to publish high quality, scholarly empirical research articles in management, strategic management, organization, entrepreneurship, operation management, human resource management, business, and organization topics that test, extend, or build theory and contribute to management practices in or related to the Southeast Asian region."
   },
@@ -4460,6 +5144,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psikologi",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jps.ui.ac.id/index.php/jps/about#article-processing-charges",
     "description": "Social psychology, the focus of JPS, is a branch of psychology that specializes in the study of individuals’ behaviors within their social environments or situations. We accept manuscripts with various topics ranging from social cognition (formation or changing of attitudes, explicit/implicit prejudice, consumer behavior, etc.), intragroup dynamics (ingroup values, social influence, team performance, etc.), intergroup relations (intergroup conflict, intergroup cooperation, contact between individuals from different groups, etc.), voting behavior, economic behavior, aggression, radicalism, emotion, online behavior, indigenous psychology, prosocial behavior, social development, and other studies social psychological phenomenon experienced by Indonesian people regardless where they live."
   },
@@ -4473,6 +5159,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/paradigma/policies.html",
     "description": "Paradigma: Jurnal Kajian Budaya is a peer-reviewed and open-access journal published by the Faculty of Humanities, University of Indonesia. This journal accepts original articles about various issues in cultural science, which include but is not limited to philosophy, literature, archeology, anthropology, linguistics, history, cultural studies, philology, arts, library, and information science focused on studies and research."
   },
@@ -4486,6 +5174,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/geoplanning/about/editorialPolicies#custom-1",
     "description": "Geomatics Field: Geomatics Instrument, Geomatics Applications, Technologies on Survey and Mapping, GIS, GIScience, GIS-Transportation, Remote Sensing, Satellite Image Processing, Spatial Modeling  Planning Field (related to geospatial for planning): Urban and Regional Planning, Environmental Planning, Disaster and Mitigation Planning, Climate Change and Land Use Planning, Coastal Planning, and Spatial Management."
   },
@@ -4499,6 +5189,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/mkts/about/editorialPolicies#custom-1",
     "description": "The article can be product of researches, scientific thoughts or case study, in civil engineering and isn’t formed by politics, commercialism, and subjectivity unsure. This scientific journal contains articles of thought and research results in Civil Engineering that have never been published in scientific journals or other media. Any matters relating to the use of the software, citation and copyright permissions made by the author of the article, and the legal consequences it causes, are the sole responsibility of the author of the article. The format of writing scientific articles for publication in scientific journals should follow the guidelines of scientific article writing, which is located on the back of this scientific journal."
   },
@@ -4512,6 +5204,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/ijpd/about/editorialPolicies#custom-0",
     "description": "The topics may cover – but not limited to – the following sub-topics:  urbanization and peri-urbanization; human settlement and livelihood; rural-urban linkages; climate change and community resilience; urban and regional governance; public infrastructure and investment; development finance and public-private partnership; migration, smart mobility, and transportation; growth, equity, and development institutionalization."
   },
@@ -4525,6 +5219,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/teknik/about/editorialPolicies#custom-0",
     "description": "TEKNIK (p-ISSN: 0852-1697; e-ISSN: 2460-9919) in  http://ejournal.undip.ac.id/index.php/teknik) is a peer-reviewed journal that publishes scientific articles from various engineering disciplines.  The articles published in TEKNIK includes original scientific research results (top priority), new (not priority) scientific review articles, or comments or criticisms of scientific papers published by TEKNIK."
   },
@@ -4538,6 +5234,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kelautan dan Perikanan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ijasc.pasca.unand.ac.id/index.php/ijac/Fees",
     "description": "Specific topics of interest include (but are not confined to):  1. All aspects of crop and animal farming and businesses, 2. The scientific underpinning of agronomy and animal husbandry, 3. Engineering solutions, 4. Agro-industrial systems, 5. Decision support systems, 6. Land use, 7. Environmental impacts of agriculture and forestry, 8. Socio-economics of agricultural development, 9. Impacts of climate change, 10. Rural biodiversity 11. Experimental design and statistical analysis, 12. The application of new analytical and study methods (including molecular studies)."
   },
@@ -4551,6 +5249,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jikm.upnvj.ac.id/index.php/home/Article_Processing_Charge",
     "description": "The scope of this journal is public health science, especially in Occupational Health and Safety (OHS), Health Policy Administration (HPA), Epidemiology, Biostatistics, Environmental Health, Health Promotion, Community Nutrition, and Reproductive Health."
   },
@@ -4564,6 +5264,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.upi.edu/index.php/jpis",
     "description": "Geography education in schools Sociology education in schools Economic education in schools History education in schools Religious education in schools Communication Science for Social Science Educational Purposes Tourism Education Educational Technology for Social Sciences Social Studies for Multicultural Education Social Studies in Developing Countries Education"
   },
@@ -4577,6 +5279,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.politik.lipi.go.id/",
     "description": "political fields: national, local, and international; democratization; general election; political parties; political economy; international relations; conflict; regional autonomy; defense and security; foreign policy and diplomacy; the Islamic world;"
   },
@@ -4590,6 +5294,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.uin-suka.ac.id/isoshum/sosiologireflektif",
     "description": "Jurnal Sosiologi Reflektif (JSR) focuses on disseminating research on social and religious issues within Indonesian society, particularly those related to strengthening civil society across various dimensions. Additionally, JSR receives articles based on literature reviews aimed at developing integrated sociological theories with Islamic Studies, such as discourses on prophetic social sciences, women in Islam, rituals, traditions, and other related perspectives.  JSR also invites academics to write critical book reviews on topics related to Sociology. Books should cover themes relevant to the field, such as new approaches in Sociology or current issues in the discipline."
   },
@@ -4603,6 +5309,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.iainmadura.ac.id/index.php/nuansa/index",
     "description": "This journal is published biannually on June and December and published articles reviewed by experts on the related issues. Jurnal Nuansa's scope includes: culture, politics, law, economy, theology, philosophy, communication, and history."
   },
@@ -4616,6 +5324,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.brin.go.id/jki",
     "description": "JKI publishes research articles (in English and in Bahasa) and book reviews and publishes twice a year covering issue related to population studies. We are pleased to invite your participation to contribute article with various issues such as Population Mobility, Fertility, Mortality, Youth and employment, Family, Ageing, Population and Health, Human Resources; Employment; Education, Human Ecology, Population and Climate Change, Population and Disaster."
   },
@@ -4629,6 +5339,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ojs.pnb.ac.id/index.php/SOSHUM",
     "description": "Areas relevant to the scope of the journal include Social Sciences,  Education, Media and Communication studies, Humanities, Tourism, Arts and Culture, Linguistics, Literature, Philosophy, and Religious Studies. Research as well as literary study articles submitted to SOSHUM should be original  and have never been published anywhere. All  submitted  articles will be blinded peer-reviewed by  panel of experts in the concern field of study."
   },
@@ -4642,6 +5354,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.uinsgd.ac.id/index.php/jispo/index",
     "description": "JISPO seeks to publish original research articles on social and political issues including sociology, politics, public policy, citizenship, public administration, social development, governance, democracy, religion and politics, radicalism and terrorism, gender issues, and sociology of religion. It publishes articles in Bahasa Indonesia and English."
   },
@@ -4655,6 +5369,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.usk.ac.id/sklj",
     "description": "We are interested in topics relating to domestic and international legal issues. it accepts articles relating to Civil Law, Criminal Law, Civil Procedural Law, Criminal Justice Process, Commercial Law, Constitutional Law, International Law, State Administrative Law, Adat Law, Islamic Law, Agrarian Law, Environmental Law and Constitutional Procedural Law."
   },
@@ -4668,6 +5384,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.maranatha.edu/index.php/dialogia/",
     "description": "Administration Law; Banking Law; Business and Investment Law; Intellectual Property Law; Competition Law; Consumer Protection Law; Constitutional Law; Criminal Law;  Medical Law; Environmental Law; Economic Law; Employment Law; Environmental Law; Franchise Law; Insurance Law; Private Law; Private International Law; Procedural Law; Public International Law; Taxation Law; Related Legal Issues."
   },
@@ -4681,6 +5399,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jwk.bandung.lan.go.id/ojs/index.php/jwk/index",
     "description": "-"
   },
@@ -4694,6 +5414,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.ar-raniry.ac.id/index.php/jsai",
     "description": "1. Sociology of religion,  2. Sociology (Politic, Education, Economic, Tourism, Conflict, Peace)  3. Communities and Religious communities  4. Multicultural societies  5. Social changes  6. Tradition and Local Wisdom  7. Social relations  8. Religions and culture  9. Education"
   },
@@ -4707,6 +5429,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.untirta.ac.id/index.php/GAGASAN",
     "description": "Gagasan Pendidikan Indonesia contains research publications in the field of education such as Model and Modelling, Integrated STEM Education, STEAM Education, Scientific Argumentation, Socio-Scientific Issue Based Teaching and Learning, Model Based Integrated Inquiry in STEM, Model Based Teaching and Learning, Curriculum and Instruction, Curriculum Ideology, Curriculum Development, Learning Progession, Learning Assessment, Computational Thinking, Bioinformatics Learning, Machine Learning, ICT Based Teaching and Learning, 21st Century Skills, Scientific Literacy, Teacher Ability, Professional Development, Teaching and Learning Based on Local Wisdom, Contextual Based Teaching and Learning, Technological Pedagogical and Content Knowledge, Pedagogical Content Knowledge, Teaching and Learning Based on Indigenous Knowledge, Teacher Education, Educational Policy, Character Education, and Systematic Review and Meta-analysis in Education."
   },
@@ -4720,6 +5444,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.ipdn.ac.id/JIWBP",
     "description": "The scope of aspects of the articles published in this journal include:  1. Government administration practices (Central, Regional, and Village) 2. Government administration 3. Government Politics 4. Governance Law 5. Regional autonomy 6. Public welfare 7. Public Service Management"
   },
@@ -4733,6 +5459,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.usk.ac.id/GASPOL/index",
     "description": "Governance Local Government Administration Management Development Public Policy E-Government Elections And Other Relevant Subjects"
   },
@@ -4746,6 +5474,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uny.ac.id/index.php/foundasia",
     "description": "The results of research and analysis contained in the journal accommodate manuscripts on foundations of education include: philosophy of education, socio-anthropology of education, educational psychology, educational economics, educational history, political education, and comparative education."
   },
@@ -4759,6 +5489,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/v3/JSDS",
     "description": "The journal focuses on three main area of discussions: community empowerment, corporate social responsibility, and social policy. The journal welcomes papers that discuss the following themes: Social Movement and Empowerment; Human Rights, Citizenship and Development; Social Entrepreneurship; Community Development Theories, Approaches and Methods; Community Organization and Participation; Socio-cultural, Environmental and Economic Development; Industrial Relations; Decent Work; Education and Social Policy; Health Insurance and Policy; Social Protection; Wellbeing, Welfare, and Development; Poverty and Social Justice; Social Inclusion; Gender, Family and Development; Digital Technology and Development; Welfare Regime."
   },
@@ -4772,6 +5504,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/khazanah/",
     "description": "Records Management (any research focus on records management, includes electronic records creation and receipt, classification/ distribution, management in mail-handling, filing system, appraisal, disposal, inactive records management, records center management, and information management system); Archives Management (any research focus on archives management, includes electronic archives management in acquisition, description, preservation, conservation, information services, sources publication and any related topic on archives management); Information and Documentation Management (any research focus on indigineous knowledge, heritage documentary management and any related topic on information and documentation management); Current issues relating to archiving (archival and legal issues, professional archivist, records manager; The use of information technology in archives; sources of information on archives,; and care information for archiving information services). Cultural Heritage (encompasses preservation and conservation, management and policy, intangible heritage, digitalization, cultural tourism, museums and libraries, community identity, education, socio-economic-political aspects, and legal and intellectual property protection)"
   },
@@ -4785,6 +5519,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/jph/issue/archive",
     "description": "We are interested in topics which relate generally to Law issues in Indonesia and around the world. Articles submitted might cover topical issues in Civil Law, Criminal Law, Civil Procedural Law,Criminal Procedure Law, Commercial Law, Constitutional Law, International Law, State Administrative Law, Adat Law, Islamic Law, Agrarian Law, Environmental Law,etc"
   },
@@ -4798,6 +5534,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://online-journal.unja.ac.id/index.php/JSSH",
     "description": "Junal Sains Sosio Humaniora is an open access  published by Research institutions and community service (LPPM), Universitas Jambi, Indonesia. The main objective of Junal Sains Sosio Humaniora is to provide a platform for the international scholars, academicians and researchers to share the contemporary thoughts in the field of humanities and social science. Such as: Social Education, Multicultural Education, Social Sciences, Indigenous Studies, Sustainable Development."
   },
@@ -4811,6 +5549,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uny.ac.id/index.php/sosia/index",
     "description": "The SOCIA: Jurnal Ilmu-Imu Sosial, an academic journal that centered in social sciences. We are interested in scholarship that crosses disciplinary lines and speaks to readers from a range of theoretical and methodological perspectives."
   },
@@ -4824,6 +5564,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/jiip/about/editorialPolicies#custom-2",
     "description": "Otonomi dan desentralisasi, kebijakan publik, partai dan pemilu, politik lokal dan internasional, studi parlemen dan pemerintahan, hukum dan korupsi, gerakan sosial, community development, politik agraria dan lingkungan, politik media, agama dan politik, dan kajian seputar politik dan pemerintahan lainnya."
   },
@@ -4837,6 +5579,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.ugm.ac.id/pcd/about/submissions#authorFees",
     "description": "PCD Journal of South and Southeast Asia’s Power, Conflict, and Democracy Studies is an international refereed journal initiated by the Power, Conflict, and Democracy (PCD) consortium, a collaborative work by the University of Colombo in Sri Lanka, Gadjah Mada University in Indonesia, and the University of Oslo in Norway. It is a journal that comprehensively examines the dynamics of power and democracy, including practices of human rights, popular representation, and public policy, particularly, in Indonesia but still giving a space for comparative studies. Invitation is extended to authors with interest in making comparison experiences in Indonesia with those of the rest of the globe. PCD Journal publishes articles,literature review, field notes, and book reviews in major sub fields of political science, human geography, and political anthropology."
   },
@@ -4850,6 +5594,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/IJSS/APC",
     "description": "The focus and scope of this journal are quite broad but limited to the social sciences. The scopes are many areas in social sciences such as politics, sociology, media and information, international relations, and anthropology-- including cultural and bioanthropology, social biology, multiculturalism, believe and culture, culture and education, anthropology of demography, economic anthropology, anthropology of law, anthropology of linguistics, history, anthropology of ecology, socio-psychology, humanities, and gender issues. We accept those topics of social sciences, but we will appreciate those who write those topics in Indonesian settings."
   },
@@ -4863,6 +5609,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/jmki/about/submissions#authorFees",
     "description": "JMKI is dedicated to publishing and disseminating studies, research, theories, and phenomena in communication science."
   },
@@ -4876,6 +5624,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uin-suka.ac.id/dakwah/kjc/author_charges",
     "description": "Kalijaga Journal of Communication focuses on the study of communication in various social, cultural, political, and religious contexts, with an emphasis on media analysis, da'wah, political communication, digital communication, and social interactions within the context of Indonesia and the Islamic community, while also addressing communication and media challenges at both local and global levels."
   },
@@ -4889,6 +5639,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://perspektif.ppj.unp.ac.id/index.php/perspektif/feew",
     "description": "Jurnal Perspektif: Jurnal Kajian Sosiologi dan Pendidikan discussing the phenomena of social, culture, and education that are existing in society nowadays. In addition, the journal also provides new thoughts, concepts and theories that exist in sociology discourses."
   },
@@ -4902,6 +5654,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/nju/FIS/about/submissions#authorFees",
     "description": "The Forum Ilmu Sosial published innovative research encompassed within the social sciences that include. Focus and scope in this journal relate to sociology, anthropology, political science, history, geography, and related disciplines. Contributions are welcome in any suitable form, including critical essays, reviews of significant topics, case studies, theoretical and empirical articles, and statistical analysis."
   },
@@ -4915,6 +5669,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Politics",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://transformative.ub.ac.id/index.php/jtr/AuthorFees",
     "description": "Good Governance; Decentralization and Regional Autonomy; Public Policy; Local Politics; Local Branding Government Innovation Institutions of Government Local Government"
   },
@@ -4928,6 +5684,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.fh.unila.ac.id/index.php/lajil/about/fees",
     "description": "International Law  International Human Rights Law  International Law of The Sea  Air and Space Law Diplomatic Law International Environmental Law Law of Information and Technology  International Economic and Trade Law  Refugee Law  Another section related to contemporary issues in international law  Private International Law"
   },
@@ -4941,6 +5699,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/crepido/about/editorialPolicies#custom-1",
     "description": "Jurnal CREPIDO aims to publish scientific articles in fundamental legal studies, including the Philosophy of Law and Science of Law. All novelty legal issues related to legal studies are required to be analyzed deeply with the approaches from the Science of Law, Theory of Law, and Philosophy of Law studies. Therefore, this academic journal may include but is not limited to various fields of law, such as Criminal Law, Civil Law, International Law, Constitutional Law, Administrative Law, Procedural Law, Law and Society, Islamic Law, Agrarian Law, Environmental Law, Commercial Law, Human Rights Law, Adat Law, and other fields of law related to the contemporary legal issues."
   },
@@ -4954,6 +5714,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Social",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://aijosh.lppm.unand.ac.id/index.php/aijosh/apc",
     "description": "Philosophy and Literature: Examining theoretical and creative approaches to identity, marginalization, and representation. Archaeology and Anthropology: Investigating the material and cultural heritage of marginalized and isolated groups. Linguistics and Endangered Languages: Documenting and analyzing minority languages and exploring strategies for their preservation. History and Cultural Studies: Illuminating the historical narratives and cultural expressions of underrepresented communities. Philology and Arts: Exploring textual traditions, artistic practices, and their role in shaping marginalized identities. Social and Political Repression: Analyzing systems of exclusion, oppression, and resistance. Race, Gender, and Discrimination: Unpacking the intersections of identity and inequality in diverse sociocultural contexts. Education in Marginalized Communities: Addressing issues in access, equity, and representation within educational systems. Isolated and Minority Communities: Investigating the social, cultural, and political dynamics of these groups."
   },
@@ -4967,6 +5729,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Law",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.fh.unmul.ac.id/index.php/mulrev/apc",
     "description": "\"Criminal Law; Civil Law; International Law; State and Administrative Law; Islamic Law; Economic Law; Adat Law and Local Custom; and Natural Resources and Environmental Law.\""
   },
@@ -4980,6 +5744,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JESTT/index",
     "description": "Islamic Economics, Islamic Business and Management, Islamic Finance, Islamic Accounting, Islamic Social Finance"
   },
@@ -4993,6 +5759,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal-balitbang.kkp.go.id/index.php/sosek/issue/archive",
     "description": "1. Management Dynamic of Marine and Fisheries Resources (economic valuation, bioeconomic, environmental economic, resources management, management conflict of marine and fisheries resources); 2. System of Business, Marketing and Trading (economic of marine and fisheries household, marine and fisheries business, marketing management, trading, macro economic, export and import of marine and fisheries product); 3. Social and Institutional (Sociology, anthropology, law, politic, institutional)"
   },
@@ -5006,6 +5774,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.polibatam.ac.id/index.php/JAAT",
     "description": "Journal of Applied Accounting and Taxation (JAAT) is a journal aims to be a peer-reviewed platform and an authoritative source of information. We publish original research papers, review articles and case studies focused on applied accounting, taxation, and finance with special focus on industries problem solving."
   },
@@ -5019,6 +5789,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.uajy.ac.id/index.php/kinerja",
     "description": "KINERJA journal welcomes empirical articles in the fields of Business, Management, Economics, Accounting, Finance, Tourism Management, Entrepreneurship. KINERJA follows the JEL classification system developed for use in the Journal of Economic Literature (JEL) and is a standard method of classifying scholarly literature in economics and business. The issues regarding business and economy in Asia are preferably published in KINERJA. For more details about JEL Classification, open this link https://www.aeaweb.org/econlit/jelCodes.php?view=jel"
   },
@@ -5032,6 +5804,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejurnal.pajak.go.id/st",
     "description": "Scientax publishes the research results on taxes carried out using scientific principles covering various fields related to taxes. The scopes of tax scientific research in the journal are: 1) tax administration and policy in Indonesia, including its comparison with tax administration in other jurisdictions in the world, including tax compliance, tax regulation, tax education, tax service, taxation technology and information, tax law enforcement,  human resource management, process business of taxation, tax institution organizations, and international taxation; and; 2) contemporary problems and issues regarding taxation in the national and global scope."
   },
@@ -5045,6 +5819,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uhamka.ac.id/index.php/agregat/issue/archive",
     "description": "The journal focuses on a wide range of topics within economics and business, including but not limited to the fields of economics, business, finance, human resources, marketing, accounting, tax and Islamic economics."
   },
@@ -5058,6 +5834,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.afebi.org/index.php/aar",
     "description": "The subject coverage of AAR includes all aspects of management and business such as: Auditing, Financial Accounting, Management Accounting, Cost  Accounting, Budgeting, Governmental Accounting, Accounting System, Tax"
   },
@@ -5071,6 +5849,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jurnalpemasaran.petra.ac.id/",
     "description": "This journal aims to discuss current issues and to disseminate the latest findings in marketing studies to the community at large, including to those of scientists, practitioners, and policymakers. We welcome submission of original research in marketing studies (e.g., consumer behaviour, brand management, and marketing analytics)."
   },
@@ -5084,6 +5864,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.unj.ac.id/unj/index.php/jrmsi",
     "description": "JRMSI contains article related to the field of management, including financial management, marketing management, human resource management, strategic management, operations management, and also related o the theory and development that contribute to the management science."
   },
@@ -5097,6 +5879,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jos.unsoed.ac.id/index.php/jame",
     "description": "JAME aims to be the media for publishing empirical issues related to accounting, management, and economics studies. JAME invites manuscripts in the various topics but not limited to, functional areas of accounting, management economics, including behavioral accounting, financial accounting, public sector accounting, marketing management, finance management, operation management, human resource management and economic development. JAME main objective is disseminating empirical issues in accounting, management and economics issues to the broad audiences such as, but not exclusive to academicians, graduate students and business practitioners."
   },
@@ -5110,6 +5894,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.unj.ac.id/unj/index.php/wahana-akuntansi",
     "description": "Wahana akuntansi invites academics and practitioners to become reviewers with the required expertise including Accounting Information System, Auditing, Tax Accounting, Innovation and Technology in Accounting, Financial Accounting, Islamic Accounting, Public Sector Accounting, Behavioral Accounting, Management Accounting, Financial Management, and Corporate Governance"
   },
@@ -5123,6 +5909,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unj.ac.id/unj/index.php/econosains/ArticleProcessingCharges",
     "description": "Economic education, education and teaching studies, economics, finance, human resources and management science studies, with research methodologies that meet the standards set for publication. The manuscript of the article may come from researchers, academics, practitioners, and other economic and educational observers interested in economic and educational research."
   },
@@ -5136,6 +5924,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/jraba/Authors_Fee",
     "description": "Published scientific works divided into two disicplines (1) Accounting and (2) Business Administration.This field is further divided into the following specific areas: 1. Business Administration : Finance, Marketing, HR Management, Strategic Management, Operation, Ethics, and Entrepreneurship; 2. Accounting : Public Sector Accounting, Tax, Finance Accounting, Management Accounting, Audit, Informational System"
   },
@@ -5149,6 +5939,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/TIJAB/editorialPolicies#custom-0",
     "description": "TIJAB (The International Journal of Applied Business) focuses on applied business related to the development issues and challenges of the developing countries. The journal aims to provide a platform for scholars, practitioners, policymakers, and students to share their insights and perspectives on the current and emerging trends in the fields of Accounting, Management, Taxation, Banking, Tourism, Hospitality, Finance, Economics and business issues related to developing countries."
   },
@@ -5162,6 +5954,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/dinamika_pembangunan/about/editorialPolicies#custom-3",
     "description": "The journal is flexible to any science development and any research development. The journal field of studies is microeconomics, macroeconomics, public economics, monetary economics, environmental and resource economics, economics of human resources, regional and urban economics, industrial economics, international economics (trade and finance), development issues, sustainable development, etc."
   },
@@ -5175,6 +5969,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/akuditi/about/submissions#authorFees",
     "description": "Financial Accounting, Performance measurement and managerial accounting, Auditing, Taxation, Accounting Information Systems, Accounting for public services, Strategic Management Accounting, Transfer pricing, International Accounting, Intellectual capital, Behavioral accounting, Forensic accounting and audit, Accounting educations"
   },
@@ -5188,6 +5984,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/jspi/about/editorialPolicies#custom-1",
     "description": "Indonesian Journal of Marketing Science published an article about empirical research and research in the field of marketing."
   },
@@ -5201,6 +5999,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/jbs/about/editorialPolicies#custom-1",
     "description": "Business Strategy, Strategic Management, Financial Management Organizations, Human Resource Management, Organizational Behavior Marketing, Marketing Strategy"
   },
@@ -5214,6 +6014,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/AJIM/editorial_policies#custom-0",
     "description": "AJIM encourages the submission of papers addressing the multidisciplinary nature of the innovation process, combining principles and concepts originating from various scientific fields, from social sciences to technology research and development. AJIM encompasses all phases of technological innovation, from the conceptualization of new technology-based products/services to commercialization."
   },
@@ -5227,6 +6029,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uinmataram.ac.id/index.php/jed/article-processing-charges",
     "description": "The journal aims to serve as a platform for publishing and disseminating social science research in Economics, Finance, Management (related to Economics), Entrepreneurship, and Tourism, with a focus on promoting economic growth and development at local, national, or international levels."
   },
@@ -5240,6 +6044,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jea.ppj.unp.ac.id/index.php/jea/AuthorFees",
     "description": "Jurnal Eksplorasi Akuntansi (JEA) focus on the accounting education, accounting information systems, auditing, financial accounting and capital markets, management accounting, international accounting, sharia accounting, public sector accounting, behavioral accounting, and taxation."
   },
@@ -5253,6 +6059,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uin-malang.ac.id/index.php/el-muhasaba/about/editorialPolicies#custom-1",
     "description": "El Muhasaba is a communication tool intended for researchers, academics and practitioners in the field of Financial Accounting, Auditing, Accounting Information System, Taxation, Islamic Accounting. In order to realize the contribution to the development of Islamic finance and banking, the editorial board invited observers to be able to participate in contributing scientific works in the form of research journals."
   },
@@ -5266,6 +6074,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/arbah/AuthorFees",
     "description": "Islamic Banking, Islamic Rural Bank, Islamic Assurance, Islamic Pawnshop, Islamic Capital Market, Islamic Microfinance, Islamic Mutual Funds, Islamic Bonds"
   },
@@ -5279,6 +6089,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Economy",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.feb.unila.ac.id/index.php/jak/AuthorFee",
     "description": "Scope of articles published in JAK is consist of a broad range of topic in the field of Accoounting and Finance"
   },
@@ -5292,6 +6104,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Tourism",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/Jithor/about/editorialPolicies#custom-1",
     "description": "Tourism Management Hospitality Industry Nature-Based Recreation Recreation Management Ecotourism Marine Tourism Sharia Compliant Tourism Information Communication Technology for Tourism Tourist Behaviour Agrotourism Heritage Tourism (Physical related) Tourism and Covid-19 Pandemic Human Resource Management in Tourism"
   },
@@ -5305,6 +6119,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Tourism",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.ppb.ac.id/index.php/jpar",
     "description": "a) tourism marketing b) ecotourism and sustainable tourism development c) sports tourism d) health tourism e) tourist expectations and experiences f) tourism and hospitality performance management g) marketing of tourism places and destinations h) behavioral patterns of tourism geography i) tourist behavior j) innovation and competitiveness in hospitality and tourism k) hospitality services and place branding l) as well as destination sustainability m) E-tourism and social media, ICT and tourism n) urban and regional tourism planning o) cultural and heritage tourism p) transformation ongoing issues in tourism and hospitality q) tourism and contemporary issues in tourism r) hospitality and tourism education"
   },
@@ -5318,6 +6134,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Art",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://nirmana.petra.ac.id/",
     "description": "Design Practices: - Graphic Design: Exploring the creative process and application of visual content. - Branding: Studies and methodologies in creating and managing brands. - Advertising: Insights into advertising strategies and visual persuasion. - Illustration: The art and technique of visual storytelling. - Typography: The craft of arranging type to make written language legible, readable, and appealing. - Photography: The art, application, and practice of creating durable images. - Social Campaigns: Designing for social change and community engagement. - Packaging Design: Innovations in protecting and presenting products. - Visual Language: The system of communication using visual elements. - Design Thinking: Methodologies for solving problems and generating innovative ideas. - Interactive Multimedia: The creation of digital environments that interact with users. - Game Design: The art of applying design and aesthetics to create a game. - Infographics: Visual representations of information to present data clearly. - Environmental Graphics: Design that connects people to places. - Film/Audio-Visual/Animation: The creation and theory behind moving images.  Interdisciplinary Studies: - History: Exploring the historical context and evolution of visual communication design. - Cultural Studies: Investigating the cultural implications and influences on design. - Media Studies: Analysis of the role of media in society and design. - Sociology: Understanding the social impacts and contexts of design. - Contemporary Philosophy: Philosophical perspectives on design and aesthetics. - Semiotics: The study of signs and symbols in communication. - Psychology: Insights into the cognitive aspects of design and its effects on human behavior. - Gender Studies: Examining the influence of gender on design practices and visual communication, including the representation of gender in media and the role of design in shaping gender perceptions."
   },
@@ -5331,6 +6149,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalsuhuf.kemenag.go.id/suhuf",
     "description": "SUHUF publishes studies on mushafs, translations, interpretations, rasm, qiraah, and other Qur'anic sciences and pays special attention to Al-Qur'an studies in Indonesia and Southeast Asia."
   },
@@ -5344,6 +6164,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ojs.ubharajaya.ac.id/index.php/kamnas",
     "description": "Jurnal Keamanan Nasional presents works or articles on national security issues and the influence of international strategic environment dynamics. PUSKAMNAS invites you to carve critical and original ideas on national security issues (terrorism, insurgency, police issues, military issues, conflict, social issues, brawls, etc.). The works could be a theoretical, analytical, research publication, history, or case study, including recent issues on a national, regional, or international scope."
   },
@@ -5357,6 +6179,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.radenintan.ac.id/index.php/idaroh",
     "description": "The journal calls for research articles related to the following topics: 1. Education Management, 2. Education and Training Management, 3. Education Funding Management, 4. Education Marketing Management, 5. Education Policy."
   },
@@ -5370,6 +6194,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/populasi/",
     "description": "POPULASI is a multidisciplinary journal that facilitates the exchange of ideas and research results addressing issues of social policy, poverty, family planning, reproductive health, employment, environment and population, migration, crime, juvenile delinquency, gender, and other themes related to population and policy."
   },
@@ -5383,6 +6209,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.stftws.ac.id/index.php/spet/about",
     "description": "STUDIA focuses on philosophical and theological studies based on both literary and field researches. The emphasis of study is on systematic attempt of exploring seeds of Indonesian philosophy as well as contextualization and inculturationof theology in socio-political-historical atmosphere of Indonesia.  Scope of STUDIA covers various perspectives of philosophical and theological studies from interdisciplinary methodology and cultural-religious point of view of traditions."
   },
@@ -5396,6 +6224,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uinsi.ac.id/index.php/fenomena",
     "description": "The journal encompasses research articles, original research report, reviews, and scientific commentaries in Islamic studies, including:  Islamic Education Islamic Law"
   },
@@ -5409,6 +6239,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.driyarkara.ac.id/index.php/diskursus/index",
     "description": "Founded in 2002 DISKURSUS Jurnal Filsafat dan Teologi STF Driyarkara (ISSN 1412-3878; e-ISSN 2580-1686) is an academic journal that publishes original and peer-reviewed works in the areas of philosophy and theology. It also welcomes works resulting from interdisciplinary research at the intersections between philosophy/theology and other disciplines, notably exegesis, linguistics, history, sociology, anthropology, politics, economics, and natural sciences."
   },
@@ -5422,6 +6254,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Art",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/jks/index",
     "description": "We invite submissions of original articles from a broad spectrum of research areas, inter alia: Performing Arts, Dance Ethnology, Dance Studies, Musicology, Music Studies, Ethnomusicology, Karawitan, Theatre Studies, Performance Studies, Television studies, film studies, Visual Arts, Plastic Art, Design, Installation, Performance art, Arts and Education, Arts and Technology, Arts and Psychology, Arts and Religion, Arts and Tourism, Arts and Management, etc. Multidisciplinary and interdisciplinary research that includes performing arts and visual arts are also absolutely welcomed. The journal publishes scholarly articles, research papers, and findings, artist’s projects, conversational dialogues with prominent artists, as well as reviews of books, recordings, exhibitions, and performances."
   },
@@ -5435,6 +6269,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.iainmadura.ac.id/index.php/islamuna/index",
     "description": "FOCUS  ISLAMUNA focuses to provide readers with best understanding of Islamic studies from various perspectives i.e. education, law, philosophy, theology, sufism, history, culture, economics, social and politics.  SCOPE  ISLAMUNA specializes in Islamic studies from various perspectives i.e. education, law, philosophy, theology, sufism, history, culture, economics, social and politics."
   },
@@ -5448,6 +6284,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Art",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.isi.ac.id/index.php/IJCAS",
     "description": "Recently, the value of arts studies in higher education level is often phrased in enrichment terms- helping scholars find their voices, and tapping into their undiscovered talents. IJCAS focuses on the important efforts of input and output quality rising of art education today through the experiences exchange among educators, artists, and researchers with their very own background and specializations. Its primary goals is to promote pioneering research on creative and arts studies also to foster the sort of newest point of views from art field or non-art field to widely open to support each other. The journal aims to stimulate an interdisciplinary paradigm that embraces multiple perspectives and applies this paradigm to become an effective tool in art higher institution-wide reform and fixing some of biggest educational challenges to the urban imperative that defines this century. IJCAS will publish thoughtprovoking interdisciplinary articles, reviews, commentary, visual and multi-media works that engage critical issues, themes and debates related to the arts, humanities and social sciences. Topics of special interest to IJCAS include ethnomusicology, cultural creation, social inclusion, social change, cultural management, creative industry, arts education, performing arts, and visual arts."
   },
@@ -5461,6 +6299,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uinsaid.ac.id/index.php/shahih/index",
     "description": "Islamic Law (Fiqh & Sharia) Theories and principles of Islamic jurisprudence (Usul al-Fiqh) Comparative studies of Islamic and modern legal systems Application of Islamic law in contemporary societies Fatwa studies and their socio-legal implications Islamic family law, criminal law, economic law, and human rights Islamic Studies Quranic studies and interpretations (Tafsir) Hadith studies and their methodological developments Islamic theology (Aqidah) and philosophy Sufism (Tasawwuf) and Islamic spirituality Islamic history, civilization, and cultural heritage Contemporary issues in Islam and global challenges The journal encourages interdisciplinary studies that bridge Islamic knowledge with fields such as law, social sciences, humanities, economics, and education."
   },
@@ -5474,6 +6314,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://www.jurnalhunafa.org/index.php/hunafa",
     "description": "Hunafa: Jurnal Studia Islamika invites scholars, researchers, and students to contribute the result of their studies and researches in the areas related to Islam and Muslim society which covers textual and fieldwork investigation with various perspectives of law, philosophy, mysticism, history, art, theology, sociology, anthropology, political science and others."
   },
@@ -5487,6 +6329,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.usk.ac.id/riwayat",
     "description": "The journal publishes writings on (1) History education, (2) History of education,(3) Social sciences education, (4) Sociology education, (5) Philosophy of history, (6) Historiography, (7) Humanities, and (8) Education."
   },
@@ -5500,6 +6344,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.uin-suska.ac.id/index.php/Anida",
     "description": "An-Nida’ publishes original articles addressing issues in Islamic Thought and the social aspects of Muslim communities, particularly in Indonesia and other Muslim-majority countries. The journal embraces diverse theoretical and practical approaches, aiming to present original research and explore current topics within the field. It welcomes contributions from scholars and researchers across various disciplines, including Muslim theology and philosophy, Islam and gender issues, study tafsir and hadith, Islam and contemporary issues, Islam and culture, Islam and human rights, mysticism (tasawwuf), education, communication and propagation (da'wah), and Islamic politics."
   },
@@ -5513,6 +6359,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journals.ums.ac.id/index.php/humaniora/index",
     "description": "linguistics: phonology, morphology, syntax, semantics, pragmatics, sociolinguistics, conversation analysis, critical Discourse Analysis literature: contemporary literature, comparative literature , Interdisciplinary Approaches in Literature, literary criticism, Literature and history, literature and media, literature and other arts, Poetry and prose philosophy: epistemology, metaphysics, ethics, aesthetics, theology psychology: psychology of education, psychology of social, counseling psychology. education: Instruction, teaching and training, guidance and counseling, learning studies. Law cultural studies"
   },
@@ -5526,6 +6374,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.brin.go.id/amerta",
     "description": "AMERTA accepts original articles on any historical archaeology-related subjects and any research methodology that meet the standards established for publication in the journal. Papers published in the journal may cover a wide range of topics in historical archaeology, including, but not limited to:  Field of archaeological findings in Indonesia’s Proto History, Hindu-Buddhist, Islamic, and Colonial periods; New theoretical and methodological analyses; Synthetic overviews of topics in the field of historical archaeology."
   },
@@ -5539,6 +6389,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unud.ac.id/index.php/languange",
     "description": "Syntax Semantics Pragmatics Applied Linguistics Anthropological Linguistics Educational Linguistics Language Teaching Psycholinguistics Cognitive Linguistics Critical Discourse Analysis Literary Theory Literary Criticism"
   },
@@ -5552,6 +6404,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://linguasusastra.ppj.unp.ac.id/index.php/LS",
     "description": "Lingua Susastra received an original manuscript containing studies of Linguistics, Literature, Culture and Language Learning written in Indonesian, Malay, and English.  The field of Linguistics encompasses both macro and micro branches. The field of Literature includes various disciplines such as literary criticism, literary theory, literary history, oral literature, and philology. The field of Culture includes cultural studies and the study of popular culture. The field of Language Learning encompasses learning media and innovations, assessments, learning theories and approaches, as well as BIPA (Bahasa Indonesia untuk Penutur Asing)."
   },
@@ -5565,6 +6419,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Art",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journals.telkomuniversity.ac.id/demandia",
     "description": "Brand & Identity Design: Branding strategies, logo design, corporate identity, and brand experience.  Visual Marketing: Visual communication in marketing, social media, and digital marketing.  Advertising: Advertising campaigns, creative strategy, media planning, and consumer behaviour.  Photography: Photographic techniques, visual storytelling, and documentary photography.  Environmental Graphic Design: Wayfinding systems, signage, and spatial design.  Multimedia: Interactive media, video production, and animation.  Design Management: Design strategy, innovation management, and design leadership.  Creative Industries: Cultural industries, creative economy, and intellectual property."
   },
@@ -5578,6 +6434,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Art",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.isi-padangpanjang.ac.id/index.php/artchive",
     "description": "ARTCHIVE welcomes full research articles in the area of Visual Art and Design from the following subject areas:  Design History, Art History, Visual Culture, Design Methodology, Design Process, Design Discourse, Design and Culture, Sociology Design, Design Management, Art Critism, Anthropology of Art, Artifact Design, Industrial Design, Visual Communication Design, Photography, Interior Design, Craft, Architecture, Film, Multimedia, Creative Industry, Design Policy, and other historical, critical, cultural, psychological, educational and conceptual research in visual art and design."
   },
@@ -5591,6 +6449,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jurnal.ugm.ac.id/lembaran-sejarah",
     "description": "The aim of the journal is to disseminate advancement in the history of Indonesia within a regional and global context, emphasizing texts with new empirical sources and those with new, challenging ideas.  The areas of focus are listed below:   - Indonesian History   - Indonesian Historiography   - Asian and Southeast Asian History   - Global History and Transnational History"
   },
@@ -5604,6 +6464,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/lexicon/about/submissions#authorFees",
     "description": "Lexicon is an open access, peer reviewed, academic journal published by the English Department, Universitas Gadjah Mada in cooperation with the English Studies Association in Indonesia (ESAI). It is devoted primarily to the publication of studies on English linguistics and literature. It covers a broad range of disciplinary fields, including phonology, morphology, syntax, semantics, pragmatics, applied linguistics, sociolinguistics, discourse analysis, translation, modern literature, world literature, children literature and popular literature."
   },
@@ -5617,6 +6479,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/lpustaka/about/editorialPolicies#custom-1",
     "description": "Lentera Pustaka: Jurnal Kajian Ilmu Perpustakaan, Informasi dan Kearsipan presents the latest information of study and research of Library and Information Science. Scientific scope of this journal covers library, documentation, and information science."
   },
@@ -5630,6 +6494,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/v3/DB/PublicationFees",
     "description": "• Structural linguistics • Social linguistics • Applied linguistics (Forensic linguistics, translation, language teaching, psychological linguistics)"
   },
@@ -5643,6 +6509,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/diplomatika/about/submissions#authorFees",
     "description": "Information Governance Records Management Program Standards, Law, Regulations, and Legal Environment Creation, Capture, Classification Inventory, Appraisal, Retention, Disposition Access, Storage, Retrieval Electronic Recordkeeping Social Media and Records Management Disaster Preparedness and Recovery Monitoring, Auditing, Risk Management Inactive Records Management Long-Term Digital Preservation Education, Training, Professional Development Authentication Cultural Heritage: Library, Museum, Gallery Genealogy and Family Archives Community Archives Data Governance Big Data Phenomena Open Government Data"
   },
@@ -5656,6 +6524,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/rubikon/about/submissions#authorFees",
     "description": "American literature and culture American society and minorities American popular culture and globalization American politics and foreign policies American hegemony and cyber culture"
   },
@@ -5669,6 +6539,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/palimpsest/AuthorFees",
     "description": "Library Management Archieve Management Information Management Information Society Information Behaviour Information Policy Information and Disability Knowledge Management ICT in Library Digital Library"
   },
@@ -5682,6 +6554,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/BIOKULTUR/Editorial_Policies#custom-4",
     "description": "Social Anthropology Physical Anthropology Political Anthropology Cultural and Society"
   },
@@ -5695,6 +6569,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://culture.ppj.unp.ac.id/index.php/csjar/feew",
     "description": "Education and learning in community and institution; Social,Political, and Cultural Issues; Community Empowerment on Poverty Reduction and Solution; Social Culture Changes in Community/Society; and Gender, family and kinship"
   },
@@ -5708,6 +6584,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/sju/index.php/rainbow/Fees",
     "description": "Children Literature Cyber Literature Gender Studies Issues in Ecoliterature Literature in the context of Asia Postcolonial Issues in Literature and Culture World Literature Travel Literature Popular Literature Applied Linguistics Discourse Analysis Translation of Literary Works Cultural Studies"
   },
@@ -5721,6 +6599,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/sju/index.php/jsi/EditorialPolicies#openAccessPolicy",
     "description": "Research, consisting of scientific reports that increase knowledge about literature in general, the branch of literature, linguistics, and the branch of linguistics. The Indonesian Literature Journal contains articles that report the results of quantitative or qualitative research studies.  Conceptual Ideas, publishing articles that are conceptually relevant to advancing literature in general, literary, linguistic, and linguistic branches, etc. Articles can take advantage of theories / or material developed in literature and linguistics that are studied in depth."
   },
@@ -5734,6 +6614,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.radenfatah.ac.id/index.php/intizar/Author_Fee",
     "description": "Islamic Education Islamic Law Islamic  economics and Business Qur'anic and Hadith Studies Islamic Philosophy Islamic Thought and Literature Islam and Peace Science & Civilization in Islam  Islam in local/nation Muslim community"
   },
@@ -5747,6 +6629,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Religious",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.radenfatah.ac.id/index.php/intelektualita/Author_Fee_Charge",
     "description": "Islamic Education Islamic Law Islamic economics and business Islamic philosophy Islamic thought and literature Islam and peace Science and civilization in Islam  Islam and science"
   },
@@ -5760,6 +6644,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humanities",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journals.unmul.ac.id/index.php/CALLS/about/editorialPolicies#custom-2",
     "description": "The scope of the journal includes, but is not limited to the following topics: research and learning in language and literature, cultural studies, and arts (especially: music studies and ethnomusicology)."
   },
@@ -5773,6 +6659,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://saripediatri.org/index.php/sari-pediatri/about/editorialPolicies#custom-1",
     "description": "Jurnal Sari Pediatri memuat publikasi naskah ilmiah yang dapat memenuhi tujuan penerbitan jurnal ini, yaitu menyebarkan hasil penelitian, sajian kasus, dan tinjauan pustaka untuk kemajuan di bidang pediatri kepada dokter anak dan dokter umum di seluruh Indonesia. Tulisan hendaknya memberi informasi baru, menarik minat dan dapat memperluas wawasan praktisi pediatri, serta memberi alternatif pemecahan masalah, diagnosis, terapi, dan pencegahan secara evidence-based medicine."
   },
@@ -5786,6 +6674,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal3.undip.ac.id/index.php/medico/about/editorialPolicies#custom-1",
     "description": "Anesthesiology Cardiovascular Child Health Dermatology and Venerology Epidemiology Forensic Medicine Geriatric Histopathology Internal Medicine Obstetrics and Gynecology Ophthalmology Otorhinolaryngology Orthopedics and Traumatology Pharmacology Preventive Medicine Public Health Radiology Reproductive Health Surgery Biomedical Science"
   },
@@ -5799,6 +6689,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unud.ac.id/index.php/eum/AuthorFee",
     "description": "E-Jurnal Medika Udayana is a peer-reviewed scientific journal dedicated to published good quality of research work in all areas of medical sciences. Scope of the journal included: medicine, dentistry, nursing and allied health sciences, pharmacy, pathology, anatomy, pharmacology, toxicology, surgery and physiology."
   },
@@ -5812,6 +6704,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.unissula.ac.id/index.php/sainsmedika/about/submissions#authorFees",
     "description": "Sains Medika: Jurnal Kedokteran dan Kesehatan, is a peer-reviewed and open access journal that considers articles on Biomedical, Public Health, Clinical Sciences, and Medical Education. This journal has a special focus on traditional medicine and aging sciences."
   },
@@ -5825,6 +6719,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.um-surabaya.ac.id/index.php/qanunmedika/index",
     "description": "-Internal medicine (including Pulmonary medicine and cardiovascular medicine) -Surgery (including urology, orthopaedic and traumatologic, plastic surgery, neurosurgery) -Anesthesia and Emergency Medicine -Neurology -Dermatology -Obstetric and Gynecologic -Forensic and Medicolegal -Clinical Pathology -Anatomical Pathology -Psychiatric -Ophthalmology -Otolaryngology -Pediatric -Radiology -Microbiology and parasitology -Basic Science of Medicine (including biochemistry, physiology, anatomy and Histology) -Public health and Health Management"
   },
@@ -5838,6 +6734,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/jaci/about/submissions#authorFees",
     "description": "ACI (Acta Cardiologia Indonesiana) publishes original articles, reviews and case reports on the field of cardiology and vascular medicine. ACI (Acta Cardiologia Indonesiana) is a forum for articles that present the results of research, innovative ideas and new hypotheses that stimulate the original thinking in the field of cardiovascular medicine. ACI (Acta Cardiologia Indonesiana) accepts articles of original research, review articles, case reports and case series that represent the advancement in cardiovascular science and practice. Basic medical research, translational research, clinical research and epidemiology/community research are welcomed to be submitted."
   },
@@ -5851,6 +6749,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.medistra.ac.id/index.php/JFM",
     "description": "1. Pharmacology 2. Pharmacognosy 3. Phytochemicals 4. Pharmaceuticals 5. Pharmaceutical chemistry 6. Molecular biology 7. Biotechnology 8. Clinical pharmacy 9. Community pharmacy 10. Pharmacy education"
   },
@@ -5864,6 +6764,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.ppnijateng.org/index.php/jikk",
     "description": "-"
   },
@@ -5877,6 +6779,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal3.unud.ac.id/index.php/buletinvet/about",
     "description": "Zoonoses, One Health, Epidemiology, Reproduction, Virology, Bacteriology, Parasitology, Mycology, Internal Medicine, Surgery, Orthopedics, Vaccines, Genetics, Molecular Biology, Physiology, Veterinary Public Health, Nutrition and Dietetics, Feed Science, Meat Science, Animal Welfare, Animal Behavior, Endocrinology and Metabolism, Animal Care, Veterinary Education, Livestock Management and Production, Poultry Science, Horse Science, Cattle Science, Small Ruminants, Pig Science, Aquaculture, Fish Diseases, Fisheries Science and Fish Nutrition, Zoo Animal Management, Zoo Animal Disease Studies, Wildlife Diseases, Conservation Science."
   },
@@ -5890,6 +6794,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/journals/miki/about#authorFees",
     "description": "The emphasis of the Journal is on the human sciences, broadly defined and applied to sport and exercise. Besides experimental work in human responses to exercise, the subjects covered will include human responses to technologies such as the design of sports equipment and playing facilities, research in training, selection, performance prediction or modification, and stress reduction or manifestation. Manuscripts considered for publication include those dealing with original investigations of exercise, validation of technological innovations in sport or comprehensive reviews of topics relevant to the scientific study of sport."
   },
@@ -5903,6 +6809,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://kjif.unjani.ac.id/index.php/kjif/index",
     "description": "Ruang lingkup artikel yang diterbitkan adalah: -  Farmasetika -  Kimia Farmasi -  Kimia Analisa -  Farmasi Fisika -  Farmakognosi dan Etnobotani -  Natural Produk -  Farmakologi dan Toksikologi -  Praktik Kefarmasian dan Farmasi Rumah Sakit -  Farmakogenomik -  Farmakoekonomi -  Studi Kasus dan Uji Klinis"
   },
@@ -5916,6 +6824,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.um-palembang.ac.id/syifamedika",
     "description": "Anatomy Biomedicine Pharmacology Microbiology Nutrition Biochemistry Physiology Tropical Medicine Public Health Pediatric Internal Medicine Obstetry and Gynaecology Dermatovenereology Surgery Neurology Family Medicine Medical Education Islamic Medicine"
   },
@@ -5929,6 +6839,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.poltekkesjogja.ac.id/index.php/Sanitasi/",
     "description": "Environmental Epidemiology Environmental Health Risk Assessment Environmental Health Technology Environmental-Based Diseases Environmental Toxicology Water and Sanitation Waste Management Pesticides Exposure Vector and Pests Control Food Safety"
   },
@@ -5942,6 +6854,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://online-journal.unja.ac.id/index.php/kedokteran",
     "description": "Jambi Mecical Journal Jurnal Kedokteran dan Kesehatan is dedicated to advancing knowledge and research in the field of Medical And Health Issues.  The journal focuses on a range of key areas, including medical education, medicine, microbiology, public health, biomedical science, genetics & molecular biology, and community health."
   },
@@ -5955,6 +6869,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.poltekkesjakarta1.ac.id/index.php/gemakes",
     "description": "Dental Nursing Orthotic Prosthetics Nursing  Midwifery Health research in general."
   },
@@ -5968,6 +6884,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/javest",
     "description": "1. Animal Nutrition,  2. Applied Veterinary Reproduction,  3. Veterinary Basic Medical Science,  4. Veterinary Diseases,  5. Veterinary Public Health,   6. Veterinary Clinic.   7. Applied Veterinary Technology"
   },
@@ -5981,6 +6899,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JoViN",
     "description": "Fundamental Nursing Nursing Management Medical-Surgical Nursing Emergency Nursing Community Nursing Occupational Health Nursing Mental Health Nursing Geriatrics and Gerontology Nursing Family Nursing Maternity Nursing Pediatric Nursing Nursing Education Nursing Ethics Nursing Law and Policy"
   },
@@ -5994,6 +6914,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/jain/",
     "description": "The Journal considers any original research that advocates change in, or illuminates, clinical practice. The journal also publishes interesting and informative reviews and opinions pieces on any topics connected with clinical practice. Manuscripts must be solely the work of the author(s) stated, not have been published previously elsewhere, and not be under consideration by another journal. all papers should be written to be clearly understandable to the journal`s readers in a wide range of specialities and countries. Diagrams, figures, and photographs should be used to supplement and enhance the text."
   },
@@ -6007,6 +6929,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/PNJ/editorialPolicies#custom-2",
     "description": "Mental health Care, Holistic Nursing, Management Approaches, Development Policies Mental Health Issues in Clinical Scope and Ethics, Family Care, Psychosocial Care"
   },
@@ -6020,6 +6944,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/aksona/Article_Processing_Charge",
     "description": "Epilepsy, Headache, Movement Disorder, Neurobehavior, Neurodegenerative, Neuroepidemiology, Neuroimmunology, Neuroinfection, Neurooncology, Neuroophthalmology, Neurophysiology, Neurorehabilitation, Neurovascular, Pain and pain intervention, Peripeheral Nerve"
   },
@@ -6033,6 +6959,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/PMNJ/apc",
     "description": "Pediatric Nursing (neonatal, child, and adolescent), Child Growth and Development, Child Nutrition, Child Health and Illness, Maternity Nursing (pregnancy, obstetrics, and gynecology), Women's Health and wellbeing , Women and Sexual Health, Women Reproduction"
   },
@@ -6046,6 +6974,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalmka.fk.unand.ac.id/index.php/art/pages/view/apc",
     "description": "Basic science of medicine, Public health, Medical specialties, Interdisciplinary sub-specialties of medicine"
   },
@@ -6059,6 +6989,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/CIMRJ/editorial_policies#custom-0",
     "description": "Allergy & Immunology, Endocrinology, Gastroenterology, Geriatrics, Hematology, Hepatology, Nephrology, Rheumatology, Tropic Infection"
   },
@@ -6072,6 +7004,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JCMPHR/Editorial_Policies#custom-2",
     "description": "Journal of Community Medicine and Public Health Research (JCMPHR) publishes articles in the field of community medicine and public health focusing on family health care, epidemiology, biostatistics, public health administration, management of health, national health problems, social medicine, nutrition and enviromental and occupational health, as well as a variety of other fields related to those disciplines. The types of the articles published in this journal are original research, case reports and review articles."
   },
@@ -6085,6 +7019,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/CMSNJ/editorial_policies#articleProcessingCharge",
     "description": "Medical-surgical Nursing, Critical Care Nursing, Emergency, Trauma and Disaster Nursing, Oncology Nursing"
   },
@@ -6098,6 +7034,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/IABJ/Article_Processing_Charges",
     "description": "Andrology, Sexology, Anti-aging and male aesthetics, Male physical and mental fitness, Assisted reproductive technology, Biomedicine"
   },
@@ -6111,6 +7049,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/CDJ/editorial_policies#custom-1",
     "description": "-Endodontics and Restorative Dentistry researches -Preventive, curative and rehabilitative related to Endodontics and Restorative Dentistry -Oral health education and promotion related to Endodontics and Restorative Dentistry -Endodontics and Restorative Dentistry clinical research -Basic Medical and Clinical Sciences related to Endodontics and Restorative Dentistry -Pharmacology and Toxicology related to Materials used in Endodontics and Restorative Dentistry -Endodontics and Restorative Dentistry Cases Management -Reviews related to Endodontics and Restorative Dentistry"
   },
@@ -6124,6 +7064,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JPHRECODE/Editorial_Policies#custom-0",
     "description": "Epidemiology, Health Promotion and Behavior Science, Public Health Nutrition , Sexual and Reproductive Health, Environmental Health, Occupational Health and Safety, Health Administration and Policy, Biostatistics and Population Health, Health Care and Hospital Management"
   },
@@ -6137,6 +7079,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/FMNJ/Custom-1",
     "description": "• Fundamentals of nursing; • Teaching and learning in nursing; • Nursing education; • Nursing practice; • Nursing management; • Leadership in nursing; • Nursing informatics; • Instrument testing; • Nursing (miscellaneous)."
   },
@@ -6150,6 +7094,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/gamajpp/about/editorialPolicies#custom-1",
     "description": "Gadjah Mada Journal of Professional Psychology (GamaJPP) publishes articles on the application of psychology, including the scientific underpinnings of the profession of psychology.  All articles for this journal should have clearly stated implications for practicing psychologists; it is recommended that these implications be mentioned in the abstract and discussion section."
   },
@@ -6163,6 +7109,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JPKM/journal-policy#biaya",
     "description": "Psychopatholog, Mental health promotion, Community and public mental health, Mental health in industrial and organizational setting, Mental health in school settings, Inclusive education, Child and adolescent mental health, Quality of mental health services"
   },
@@ -6176,6 +7124,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jip.fk.unand.ac.id/index.php/jip/fees",
     "description": "Clinical Psychology, Developmental Psychology, Social Psychology, Educational Psychology, Industrial-Organizational Psychology, Health Psychology"
   },
@@ -6189,6 +7139,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uin-malang.ac.id/index.php/psiko/about/editorialPolicies#custom-1",
     "description": "1. Psychology: Psychology (Miscellaneous): Empirical and theoretical studies on psychology and its applications in various aspects of life; Development of psychotherapy models and psychological interventions; Mental health studies in personal, family, and societal contexts; The relationship between religiosity, spirituality, and psychological well-being; Developmental psychology, including education and character building; Clinical psychology 2. Arts and Humanities: Religious Studies: Psycho-spiritual studies; Psychological aspects of Islamic values; The influence of Islamic values on psychological well-being, gratitude, engagement, and mental health."
   },
@@ -6202,6 +7154,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psychology",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/journals/intuisi/about#authorFees",
     "description": "Behavioral Psychology Clinical Psychology Cognitive Psychology Counseling Psychology Cultural Psychology Economic Psychology Educational Psychology Environmental Psychology Ethics in Psychology Family Psychology and Couples Psychology Forensic Psychology Health Psychology Industrial and Personnel Psychology Professional Practice Psychology of Religion Psychotherapy School Psychology Social Psychology Sport PsychologyÂ"
   },
@@ -6215,6 +7169,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.ubaya.ac.id/index.php/kesdok/authorFees",
     "description": "This journal aims to disseminate the results of original research, case report, and critical reviews in the fields of health and medicine. This focus and scopes include, but are not limited to a pharmacy, medicine, public health, and health biotechnology fields."
   },
@@ -6228,6 +7184,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://online-journal.unja.ac.id/kedokteran",
     "description": "Medical Education, Farmakology, Microbiology, Public Health, Clinical Patology, Medical Nutrition, Clinical Medicine, Pediatric, Immunology, Patology Anatomy Orthopedy, Obstetri and Gynecology, Internal Medicine, Endocrine and Metabolic, Genetics & Molecular Biology."
   },
@@ -6241,6 +7199,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/jphtr/about/editorialPolicies#custom-0",
     "description": "This focus includes area and scope such as biostatistics, epidemiology, health education and promotion, health policy and administration, environmental health, public health nutrition, sexual and reproductive health, and occupational health and safety."
   },
@@ -6254,6 +7214,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/dimj",
     "description": "Modelling of diagnose and cure of human diseases The scientific underpinning of medicine and pathophysiology Biochemistry and biology molecular solution Decision support systems Biomedicine Any experimental design and statistical analysis The application of new analytical and study methods (including biomolecular studies)"
   },
@@ -6267,6 +7229,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Health",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://altius.ejournal.unsri.ac.id/index.php/altius/Author_Fees",
     "description": "The theme of the paper covers: Physical Education, Sport Pedagogy, Sport Sociology, Sport Psychology, Sports Coaching, Sport Science, Sport Management, Sports Biomechanics, Sport Health, Sport Philosophy, Sports Industry, Sports Medicine, Traditional Sports, Sports Law, Sports History and Sport Physiology."
   },
@@ -6280,6 +7244,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uksw.edu/scholaria/about#publicationFees",
     "description": "SCHOLARIA: Jurnal Pendidikan dan Kebudayaan managed by Program Studi Pendidikan Guru Sekolah Dasar (PGSD) Fakultas Keguruan dan Ilmu Pendidikan (FKIP) Universitas Kristen Satya Wacana (UKSW) Salatiga cooperates with the Association of Indonesian Primary School Teacher Education Lecturers presenting diverse themes, yet still within major themes in education. Particularly about the study of theoretical education and results of classroom action research, experimental research and development research in the development of education including sustainable professionalism."
   },
@@ -6293,6 +7259,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uny.ac.id/index.php/jpka",
     "description": "Journal of Pendidikan Karakter publishes scholarly articles and applied research on issues concerning character development, civic virtue, ethics, values education, and spiritual growth in the community of education and society.  In addition to its primary emphasis on peer-reviewed articles, the journal publishes ongoing columns on current topics related to its mission and invited articles by leading education and character development scholars."
   },
@@ -6306,6 +7274,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ar-raniry.ac.id/index.php/didaktika/about",
     "description": "Scope: JID covers a wide range of important topics in the field of education and teaching, including:  Learning Models  Teaching Methods  Teaching Media  Teaching Strategies  Learning Assessment"
   },
@@ -6319,6 +7289,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unm.ac.id/iap/about",
     "description": "Jurnal Ilmiah Ilmu Administrasi Publik: Jurnal Pemikiran dan Penelitian Administrasi Publik is a publication media to channel the scientific work of lecturers, theoretical, and practitioners in the field of public administration, as well as observers of public administration.  This journal is published by the Public Administration Doctoral Program in Postgraduate State University of Makassar. Publish the results of research, original thinking, development, teaching, popular writing, and book studies in the field of public administration science."
   },
@@ -6332,6 +7304,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unhas.ac.id/index.php/jmsk/about",
     "description": "Jurnal Matematika, Statistika dan Komputasi (JMSK) integrates the papers on current mathematical advances from outstanding Indonesian (title and abstract in English) or English-language publications.  It is an open access journal that publishes research outcomes with significant contributions to the understanding and improvement of the mathematics, statistics, mathematics computation and mathematics education processes."
   },
@@ -6345,6 +7319,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uny.ac.id/index.php/jpip",
     "description": "Jurnal Penelitian Ilmu Pendidikan is a high quality open access peer reviewed journal that is published by Faculty of Education, Universitas negeri Yogyakarta. Jurnal Penelitian Ilmu Pendidikan provides a platform for researchers, academicians, professional, practitioners, and students to impart and share knowledge in the form of high quality empirical and theoretical research papers, and case studies. Jurnal Penelitian Ilmu Pendidikan welcomes and acknowledges high quality theoretical and empirical research papers, case studies, review papers, analytical and simulation models in any topic of education areas."
   },
@@ -6358,6 +7334,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jep.ppj.unp.ac.id/index.php/jep",
     "description": "Jurnal Eksakta Pendidikan (JEP) publishes original articles on Mathematics and Natural Science education. The focus of articles for publication in this journal comes from the fields of Mathematics and Natural Science Education including: Mathematics Education, Biology Edu cation, Physics Education, Chemistry Education, Science Education, and other relevant Sciences."
   },
@@ -6371,6 +7349,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://e-journal.iain-palangkaraya.ac.id/index.php/edusains/index",
     "description": "This journal accepts manuscripts that align with its Focus and Scope, specifically field research on natural science and mathematics education, particularly within the Indonesian community. Starting from Volume 11, Issue 2, December 2023, manuscripts must be written in English, with abstracts provided in both English and Indonesian and must use the Mendeley reference manager to ensure broader accessibility of the information."
   },
@@ -6384,6 +7364,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.ums.ac.id/index.php/suhuf/about",
     "description": "The Suhuf Journal publishes quality and in-depth analysis on current issues within Islamic Economic and Finance, Islamic Education, Qur'an and Sunnah Studies.  Islamic Economic and Finance: Fundamentals, trends and opportunities in Islamic Finance, Islamic banking and financial markets, Risk management, Islamic social finance, Financial planning, and Legal and regulatory issues.  Islamic Education: Pedagogy, Educational technology, Student learning, Education policy, Teacher education.  Qur'an and Sunnah Studies cover the studies of Qur'an, tafsir and hadith in the Muslim World and in the Western countries."
   },
@@ -6397,6 +7379,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ar-raniry.ac.id/index.php/Pionir/index",
     "description": "Pionir Jurnal Pendidikan Focus publishes scholarly articles on Education Science in general and elementary education, based on researches and project reports, book reviews. Scope Jurnal Pionir accepts submission in the field of Education Science in general and elementary education to help spread new insights and concept, as well as highlights best-practices by and for many Islamic educational practitioners, teachers, lectures, and various education policy makers in the field."
   },
@@ -6410,6 +7394,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.um.ac.id/index.php/jph/index",
     "description": "Educational Technology Educational Management Guidance and counseling Non-Formal Education Indonesian Language Education English Language Teaching Geography Education Economic Education Basic Education Sport Education Language Teaching Arabic Language Teaching Fine Art Teaching Accounting Education Primary Education Business and Management Education History Education Civic (law, constitution) Education Education in general"
   },
@@ -6423,6 +7409,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.iainkudus.ac.id/index.php/Quality",
     "description": "The journal publishes empirical research including management Islamic education, Islamic Teaching, Islamic Elementary School Teaching, Islamic Pre-School Teaching,  psychology of Islamic education, Islamic Guidance and Counseling,and intended to communicate about original research and current issues on the subject. Quality journal is open to contributions of experts from related disciplines."
   },
@@ -6436,6 +7424,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jurnal.unimed.ac.id/2012/index.php/jpf/index",
     "description": "Jurnal Pendidikan Fisika is an integrated forum for communicating scientific advances in the field of physics and physics education. The journal reports significant new findings related to physics applications and physics education, including:  Learning Models Media Learning Development Lerning Methods Experimental Research Qualitative Research Quantitative Research Learning Materials Development Learning Evaluation Literature Study Jurnal Pendidikan Fisika aims to promote creativity and innovation in physics education in order to face global challenges such as education in the disruption era, internet of things in education, HOTS-based education, STEAM Education, blended learning, digital literation education, digital class, and other educational innovations."
   },
@@ -6449,6 +7439,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/journals/jipk/about/submissions",
     "description": "Jurnal Inovasi Pendidikan Kimia a scientific periodical published by the Department of Chemistry, Faculty of Mathematics and Natural Sciences, Universitas Negeri Semarang with the aim to promote creativity scholarly professors or academics from various institutions in general and the academic community internÂ Universitas Negeri Semarang in particular. The article published scientific literature contains research results, conceptually, as well as book reviews in the field of chemical technology."
   },
@@ -6462,6 +7454,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.badanbahasa.kemdikbud.go.id/jurnal/index.php/jentera/index",
     "description": "Jentera receives the papers about  oral tradition, philology, contempary literature, cultural studies, multidiciplinary research, and other papers related to literary research."
   },
@@ -6475,6 +7469,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.unp.ac.id/index.php/komposisi/index",
     "description": "Komposisi: Jurnal Pendidikan Bahasa, Sastra, dan Seni is open-access peer-reviewed online journal which provides a forum for the full range of scholarly study of the languages, literarture, and arts education. The editors welcome articles and research reports addressing the innovation and development in languages, literature,  and arts education, including:  Indonesian language education, Bahasa Indonesia bagi Penutur Asing/Indonesian Language for Foreigners (BIPA); second, and foreign language teaching and learning in any languages (Arabic, English, Japanese, etc), language in education, language testing, curriculum and development, multilingualism and multilingual education, discourse analysis, translation, clinical linguistics, literature and teaching; fine art education, performing art education, dance education.    Komposisi: Jurnal Pendidikan Bahasa, Sastra, dan Seni adalah terbit dua kali setahun sejak Maret 2000, merupakan forum bagi ilmuan dalam bidang ilmu pendidikan bahasa, sastra, dan seni. Redaksi menerima artikel dan laporan penelitian mengenai inovasi dan perkembangan dalam pendidikan bahasa, sastra, dan seni, termasuk:  Pendidikan bahasa Indonesia, Bahasa Indonesia bagi Penutur Asing (BIPA); pengajaran dan pembelajaran, bahasa dalam pendidikan, tes bahasa, pengembangan kurikulum, multilingualisme dan pendidikan multilingual, discourse analysis, translation/penerjemahan, clinical linguistics, sastra dan pengajarannya; pendidikan seni rupa, pendidikan sendratasik atau seni pertunjukan, seni tari."
   },
@@ -6488,6 +7484,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://e-journals.unmul.ac.id/index.php/CALLS",
     "description": "CaLLs: Journal of Culture, Arts, Literature, and Linguistics is academic, open access, and peer-reviewed journal. First published in 2015 and managed by Faculty of Cultural Sciences, Universitas Mulawarman, Samarinda, Indonesia. The focus and scope of CaLLs: Journal of Culture, Arts, Literature, and Linguistics include, but are not limited to the following topics: research and learning in culture, language, literature, and arts. Issues are published two times per year in June and December and published in Indonesian and English.  Submissions are open year-round. However, before submitting an article, please ensure that the article fits into CaLLs's focus and scope, and follows our author guidelines."
   },
@@ -6501,6 +7499,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal.upi.edu/index.php/japanedu/",
     "description": "The scopes of this journal include:   1. Japanese language education;  2. Japanese language teaching and learning;  3. Japanese studies;  4. Japanese for specific purposes;   5. Applied linguistics;  6. Language acquisition;  7. Japanese culture"
   },
@@ -6514,6 +7514,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ojs.uhnsugriwa.ac.id/index.php/JPM",
     "description": "The Jurnal Penjaminan Mutu, published by Lembaga Penjaminan Mutu Universitas Hindu Negeri I Gusti Bagus Sugriwa Denpasar, is dedicated to the dissemination of positive ideas, concepts, and inputs related to the improvement of the quality of higher education. This is because the quality assurance process in a higher education institution is not only an activity to ensure that promises are fulfilled, but also includes efforts to improve quality sustainably. The focus of the Jurnal Penjaminan Mutu is on planning, implementation, monitoring/evaluation, and quality development of learning/education."
   },
@@ -6527,6 +7529,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.um.ac.id/index.php/teknologi-kejuruan",
     "description": "Teknologi dan Kejuruan published by the Faculty of Engineering, Universitas Negeri Malang and accept articles containing conceptual ideas, the study of theory, application of the theory, and the study of books on technology and vocational, among others:  Mechanical Engineering Civil Engineering Electrical Engineering Industrial Technology"
   },
@@ -6540,6 +7544,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.iaincurup.ac.id/index.php/belajea/",
     "description": "Scholarly Tradition of Islamic Education from Classical Islam Resources (e.g. Al-Quran, Al-Hadits, Foundation of Economics and Politics from Al-Quran, etc.)  Educational Studies (e.g. Philosophy of Education, Foundation of Education, Politics and Policy of Education, Curriculum and Instruction, Educational Management, etc.)"
   },
@@ -6553,6 +7559,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uinmataram.ac.id/index.php/tatsqif",
     "description": "The focus and scope of Tatsqif Journal are as follows:  1) Research on experimentation of learning methods, strategies or models;  2) Development research on learning activities, materials and media;  3) Classroom action research;  4) Education evaluation and assessment;  5) Study of the thoughts, educational policy, management and leadership"
   },
@@ -6566,6 +7574,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.lppmunindra.ac.id/index.php/Deiksis",
     "description": "Tidak ada deskripsi."
   },
@@ -6579,6 +7589,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://e-journals.unmul.ac.id/index.php/JBSSB",
     "description": "The scope of the Ilmu Budaya: Jurnal Bahasa, Sastra, Seni, dan Budaya is the result of studies in the fields of:  1. Language 2. Literature 3. Culture 4. Arts"
   },
@@ -6592,6 +7604,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/BS_JPBSP/about/editorialPolicies#custom-3",
     "description": "Jurnal Pendidikan Bahasa dan Sastra (JPBS) is issued every April and October since 2001. The scope of the articles include: 1) Foreign, Indonesian, vernacular, and Malay language learning, 2) Linguistics; (3) Applied linguistics, and 4) Literature and its teaching and learning. All articles sent to our journal should have never been published or sent to other journals. For the next volume, Vol. 24(1), April 2024, the articles should be written in English"
   },
@@ -6605,6 +7619,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.stahnmpukuturan.ac.id/index.php/edukasi",
     "description": "Edukasi: Jurnal Pendidikan Dasar menerima naskah dengan topik Curriculums, Teaching, and Learning, Educational Technology, Psychology and Counseling, dan topik lainnya yang relevan dengan Ilmu Keguruan dan Pendidikan."
   },
@@ -6618,6 +7634,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.isimupacitan.ac.id/index.php/tajdid/index",
     "description": "Scope : - Theory of Education                - Religious education                - Curriculum of Education                - History of Education                - Management of Education                - Psycology of Education                - Antropology of Education                - Language Education"
   },
@@ -6631,6 +7649,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/invotec/about/editorialPolicies#custom-4",
     "description": "INVOTEC is a peer-reviewed journal dedicated to publishing innovative research and practical developments in vocational education and technology. The journal emphasizes advancements that bridge theory and practice, enhance vocational learning, and address global challenges in vocational and technical education."
   },
@@ -6644,6 +7664,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unp.ac.id/students/index.php/pek/about/editorialPolicies#custom-3",
     "description": "Learning innovations in economics Improving learning materials in economics Teaching and learning strategies in economics Educational evaluations in the fields of economics and education, Economics, business and accounting, Office administration, Cooperative studies."
   },
@@ -6657,6 +7679,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://pedagogi.ppj.unp.ac.id/index.php/pedagogi/fee",
     "description": "The aim of this journal is to publish articles dedicated to  the latest outstanding developments in the field of education. It includes educational administration, guidance and counceling, educational technology, primary school teacher education, early childhood teacher education, non formal education, special education and psychology."
   },
@@ -6670,6 +7694,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://socius.ppj.unp.ac.id/index.php/socius/fe",
     "description": "Education (values, character, institutions, change, stratification) Religion (religious behavior, rituals) Development and Social Change (economic and social development, urban and regional development) Tourism (community and tourism, tourism policy, impact of tourism on society) Media (Media and society, Cultural studies and media, New Media and Contemporary Societies) Rural and Urban (poverty, rural and urban communities, rural and urban development) Politics (society and politics, policies, public participation in politics) Economics (distribution, economic behavior, social networks, markets, change and globalization) Gender (Urban Culture, Gender bias, and gender inequality) Culture (local wisdom and social culture, unique ethnic culture, inter-ethnic relations, culture and globalization) Environment and disaster (community empowerment, disaster and social emergency response organizations)"
   },
@@ -6683,6 +7709,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unp.ac.id/index.php/jipe/about/editorialPolicies#custom-6",
     "description": "Learning innovations in economics Improving learning materials in economics Teaching and learning strategies in economics Educational evaluations in the fields of economics and education, Economics, business and accounting, Office administration, Cooperative studies.  Section Policies"
   },
@@ -6696,6 +7724,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/pedagogia/about/editorialPolicies#custom-2",
     "description": "Learning and teaching ICT based learning Curriculum development Instructional Media Management of education Teacher education Special education Learning in community education setting Educational psychology Learning resources"
   },
@@ -6709,6 +7739,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://fourier.or.id/index.php/FOURIER/Publication_Fee",
     "description": "Jurnal Fourier covers basic and applied studies of mathematics such as analysis, algebra, applied mathematics, statistics, and its learning which is integrated into interconnection with Islamic values.So that this journal can be filled by academics and researchers in the field of Mathematics and Mathematics Education, or collaboration field of science with other fields of science"
   },
@@ -6722,6 +7754,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/IJoTis/about/editorialPolicies#custom-3",
     "description": "Indonesian Journal of Teaching in Science (IJoTIS) promotes research in the broad field of science and Engineering Education (including such disciplines as Agriculture Education, Environmental Science Education, etc.) with particular respect to Indonesia, but not limited to authorship or topical coverage within the region."
   },
@@ -6735,6 +7769,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/religio/about/submissions#authorFees",
     "description": "Religio Education is an international journal published by the Islamic Religious Education Study Program, Universitas Pendidikan Indonesia, Bandung, West Java, Indonesia. This journal is the best research result that focuses on Islamic Studies, Social Culture, and General Education. The journal scope includes Islamic Studies, Islamic Education, Social Religion, Religion and Culture, General Education and Philosophy of Religion. The editorial team invites researchers, scholars, and Islamic and social observers to submit research articles that have never been published in the media or other journals."
   },
@@ -6748,6 +7784,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jptk.ppj.unp.ac.id/index.php/jptk/ArticleProcessingCharges",
     "description": "The scope of research in the field of Technical and Vocational Education and Training (TVET) encompasses a wide range of topics related to the education and training provided for various technical and vocational skills. This field involves the study and improvement of educational programs, training methodologies, and strategies that prepare individuals for specific careers and industries."
   },
@@ -6761,6 +7799,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unp.ac.id/index.php/bahana/about/submissions#authorFees",
     "description": "Ruang lingkup jurnal ini meliputi perencanaan pendidikan, manajemen pendidikan, supervisi pendidikan, pengawasan pendidikan, manajemen sumber daya manusia, komunikasi organisasi, hubungan masyarakat, kepemimpinan pendidikan, pendidikan (pengajaran, pengembangan pengajaran, proyek dan inovasi pendidikan, metodologi pembelajaran dan teknologi baru dalam pendidikan dan pembelajaran, evaluasi atau penilaian dalam pendidikan)"
   },
@@ -6774,6 +7814,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/BIOEDUCA/AuthorProcessingCharge",
     "description": "Bioeduca : Journal of Biology Education aims to accommodate all the writings of research, development, and application of biological education. This journal is published twice a year. Researchers and educational practitioners are welcome to disseminate their writings through this journal. Scope of writings published in this journal includes: Research, Development, and Application of Biological Learning and Teaching, Technology Application on Biological Education, Research and Development of  Biological Learning Based on Local Wisdom, Study and research based on integrated science and islam of biological education and Laboratory management in science."
   },
@@ -6787,6 +7829,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ftk.uinbanten.ac.id/journals/index.php/primary/policies/APCs",
     "description": "Primary: Jurnal Keilmuan dan Kependidikan Dasar contains publications about reviews, thoughts, and research results on education and teaching at the basic level which includes learning strategies, development of media and learning tools, assessment and development, curriculum implementation, management based on basic education, education entrepreneurship in the field of basic education, and inclusive education at the basic education level ."
   },
@@ -6800,6 +7844,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/civicus/about/editorialPolicies#custom-4",
     "description": "Citizenship Science Value and Norms Education Legal Education Political Education Classroom Action Research (Citizenship Education) Development of teaching and learning Citizenship Education (models, methods, media, sources, evaluations) Development of Citizenship Education textbooks Study of learning content on Citizenship Education Study of Citizenship Education curriculum in school Study of Citizenship Education curriculum in Higher Education"
   },
@@ -6813,6 +7859,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jeal.ppj.unp.ac.id/index.php/jeal/authorfee",
     "description": "This journal is a scientific journal managed by the Department of Educational Administration, Faculty of Education, Universitas Negeri Padang in collaboration with the Association of Bachelor of Educational Administration (ISMAPI), which specifically has the scope of this journal covering educational planning, educational management, educational supervision, educational leadership, school management, school administration, human resource management, educational organizational communication, educational public relations, teaching and learning; (teaching development, teaching, educational projects and innovations, learning methodologies and new technologies in education and learning, assessment)."
   },
@@ -6826,6 +7874,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/mimbardik/about/editorialPolicies#custom-6",
     "description": "(1) Language and literature education; (2) Social sciences and humanities education; (3) Sports and health education; (4) Economy and business education; (5) Math and natural science education; (6) Vocational and engineering education; and (7) Visual arts, dance, music, and design education."
   },
@@ -6839,6 +7889,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.eng.unila.ac.id/index.php/mech/about/submissions#authorFees",
     "description": "MECHANICAL accept original as well as critical review contributions providing insight in the field of manufacturing and industrial mechanics i.e. green manufacturing, analytical and computational of rigid-body mechanics (e.g. dynamics, vibration, stability), structural mechanics, materials processing, metal forming, advanced materials (metals, composite, polymer, ceramics, cellular, smart, etc.), biomaterials and biomechanics, fluid dynamics, tribology, thermodynamics, energy and sustainability, and other related aspects to Mechanical Engineering and Technology."
   },
@@ -6852,6 +7904,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jtk.ejournal.unsri.ac.id/index.php/tumbuhkembang/author-fees",
     "description": "Development of moral and religious values of early childhood education,  Physical motor development of early childhood,  Emotional social development of early childhood,  Cognitive development of early childhood,  Language development of early childhood,  Artistic and creative development of early childhood, Parenting for early childhood education,  Management institution of early childhood education,  Early child development assessment,  Child development psychology,  Child empowerment,  Learning strategy of early childhood education Educational tool play of early childhood education,  Instructional media of early childhood education, Innovation in early childhood education and  Various fields related to Early Childhood Education"
   },
@@ -6865,6 +7919,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jbti.ejournal.unsri.ac.id/index.php/jbti/apc",
     "description": "Approaches, Strategies, Models and Evaluation of Pancasila & Citizenship Education  Media and Learning Resources for Pancasila & Citizenship Education  Pancasila & Citizenship Education Policy and Curriculum  Value/Moral/Character Education  Social and Political Education  Legal Education (National and International)"
   },
@@ -6878,6 +7934,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Education",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/journals/jese/about#authorFees",
     "description": "Journal of Environmental and Science Education publishes original articles on the latest issues and trends occurring internationally in environmental science, environmental education, science curriculum, instruction, learning, policy, and preparation of science teachers with the aim to advance our knowledge of science education theory and practice."
   },
@@ -6891,6 +7949,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jurnaleeccis.ub.ac.id/",
     "description": "Electrics: Renewable Energy High Voltage Engineering Energy Conversion AI in Power Systems Energy Storage Smart Grid  Electronics: VLSI Embedded Systems Sensors IoT Devices Biomedical Circuits Data Converters Mixed-Signal Circuits Microelectronics  Communications: Antenna Network Satellite Image Compression Wireless Sensor Network  Controls: Robotics Industrial Applications Autonomous Vehicles Network Reliability  Informatics: Information Systems Telematics Security ICT Artificial Intelligence Virtual Reality IT in Education  Systems: Biomedical system Power system e-Health system Image Processing Assistive Technology system"
   },
@@ -6904,6 +7964,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.itltrisakti.ac.id/index.php/jmtranslog",
     "description": "The scope of the article includes:  Transport Management Multimodal Transport Management Logistics Management Supply Chain Management  Transport and Tourism Management Transport and Environmental The research is viewed through macro or micro transportation management  perspectives from various aspects, such as: operational, production, human resources, marketing, consumer services, finance, and strategic management."
   },
@@ -6917,6 +7979,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.maranatha.edu/index.php/jutisi",
     "description": "• Artificial Intelligence • Business Intelligence • Cloud & Grid Computing • Computer Networking & Security • Data Analytics • Datawarehouse & Datamining • Decision Support System • E-Systems (E-Gov, E-Health, E-Commerce, etc.) • Enterprise System (SCM, ERP, CRM) • Human-Computer Interaction • Image Processing • Information Retrieval • Information System • Information System Audit • Enterprise Architecture • Knowledge Management • Machine Learning • Mobile Computing & Application • Multimedia System • Open Source System & Technology • Semantic Web & Web 2.0"
   },
@@ -6930,6 +7994,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jurnal.umk.ac.id/index.php/simet",
     "description": "SIMETRIS Seri Teknologi merupakan jurnal ilmiah yang menyajikan artikel orisinal tentang pengetahuan dan informasi riset atau aplikasi riset dan pengembangan terkini dalam bidang teknologi. Ruang lingkup Jurnal Simetris meliputi bidang Informatika, Teknik Mesin, Teknik Elektro, Sistem Informasi dan Teknik Industri."
   },
@@ -6943,6 +8009,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ejournal2.undip.ac.id/index.php/tataloka/issue/archive",
     "description": "focusing mainly on research and studies in the field of urban and regional planning"
   },
@@ -6956,6 +8024,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://juti.if.its.ac.id/index.php/juti",
     "description": "Information Technology Computer Science Information System Computer Network Software Engineering Computer Vision"
   },
@@ -6969,6 +8039,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.maranatha.edu/index.php/jts",
     "description": "The purpose of publication is as a forum for scientific communication and also to disseminate research results, study literature in the field of civil engineering or related sciences."
   },
@@ -6982,6 +8054,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://jurnal.dinarek.unsoed.ac.id/",
     "description": "-"
   },
@@ -6995,6 +8069,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.lldikti4.or.id/index.php/jurnaltekno/",
     "description": "Jurnal Tekno Insentif menerima artikel ilmiah dengan lingkup penelitian pada:  Teknik Fisika Teknik Metalurgi dan Material Teknik Mesin Teknik Ilmu Komputer dan Informatika Teknik Geologi Teknik Elektro Teknik Perminyakan Teknik Arsitektur Teknik Geodesi Teknik Sipil Teknik Kimia Teknik Perencanaan Wilayah dan Kota Teknik Lingkungan Teknik Industri"
   },
@@ -7008,6 +8084,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ojs.unud.ac.id/index.php/lanskap",
     "description": "Landscape science brings landscape ecology and urban ecology together with other disciplines and cross-disciplinary fields to identify patterns and understand social-ecological processes influencing landscape change. Landscape planning brings landscape architecture, urban and regional planning, landscape and ecological engineering, and other practice-oriented fields to bear in processes for identifying problems and analyzing, synthesizing, and evaluating desirable alternatives for landscape change. Landscape design brings plans, designs, management prescriptions, policies and other activities and form-giving products to bear in effecting landscape change. The implementation of landscape planning and design also generates new patterns of evidence and hypotheses for further research, providing an integral link with landscape science and encouraging transdisciplinary collaborations to build robust knowledge and problem solving capacity."
   },
@@ -7021,6 +8099,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://journal.umpo.ac.id/index.php/multitek",
     "description": "The purpose of the publication of this journal is to disseminate conceptual thoughts or ideas and research results that have been achieved in the field of Engineering. MULTITEK INDONESIA, primarily focusing on the main issues in the development of sciences and engineering as follows: 1. Informatics Engineering, 2. Electrical Engineering , 3. Mechanical Engineering  and topics related to the journal."
   },
@@ -7034,6 +8114,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://iptek.its.ac.id/index.php/joae/index",
     "description": "The journal explores the following areas:  Architectural theory, history, and design Architectural science and technology Housing and settlement Landscape architecture and urban design"
   },
@@ -7047,6 +8129,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal2.um.ac.id/index.php/jpse/about",
     "description": "Astrophysics and cosmology     Atomic and molecular physics     Biophysics     Chemical physics     Condensed-matter physics     Electrical and electronic engineering     Electronics and device physics     Engineering micellanouse     Fluid dynamics     Geophysics and nonlinear phenomena     High-energy particle physics     Information theory and computation     Nanotechnology     Nuclear physics     Optical physics and photonics     Plasma physics     Quantum physics"
   },
@@ -7060,6 +8144,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.uajy.ac.id/index.php/IJIEEM",
     "description": "Work Design and Measurement Operation Research and Analysis Decision Analysis Facilities Engineering and Energy Management Quality and Reliability Engineering Ergonomics & Human Factors Operations Engineering and Management Supply Chain Management Engineering Management Information Systems Product Design and Development Systems Design and Engineering  Industrial Automation Business Analytics IJIEEM has been alrea"
   },
@@ -7073,6 +8159,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.brin.go.id/MIPI",
     "description": "Majalah Ilmiah Pengkajian Industri (Journal of Industrial Research and Innovation) is a collection and provide information in term of Industrial technology studies in the form of research and inovation related to the engineering process, manufacturing, transportation, and marine technology industry, as well as the defense and material technology industry.  Majalah Ilmiah Pengkajian Industri (Journal of Industrial Research and Innovation) is oriented towards the results of research and innovation, especially those that have an impact on the government (Central and Regional) and the private sector (Industry and SMEs). Frequency of publication is three times a year in April, August, and December. Currently the Journal has been accredited at national level, and subsequenly we intend to further upgrade into an International with global reputation."
   },
@@ -7086,6 +8174,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ijies.sie.telkomuniversity.ac.id/index.php/IJIES",
     "description": "Information and Computational Engineering Area: Algorithms, Artificial Intelligence & Pattern Recognition, Big Data, Database Management System & Information Retrieval, Data Mining, Human-Computer Interaction, Information Security & Privacy, Internet of Things (IoT), Network & Internet, Software Engineering, etc. Production and Service System Area: Decision Analysis and Methods, Intelligent and Manufacturing Systems, Product and Process Design, Production Planning and Control, Quality Control and Management, Reliability and Maintenance Engineering, Supply Chain Management, Systems Modeling and Simulation, etc. Enterprise Information Systems Area: Business Process Analysis & Design, Business Process Reengineering, Digital Transformation, Economic of Information System, E-Business, E-Commerce, E-Government, E-Learning, Enterprise Architecture, Enterprise Resource Planning (ERP), Enterprise System, ERP Implementation, Internet Governance, IT Governance, IT Service Management, etc. Management and Systems Engineering Area: Engineering Economy and Cost Analysis, Healthcare Systems and Management, Knowledge Management and Organizational Learning, Operations Research, Project Management, Safety, Security and Risk Management, Service Innovation and Management, etc."
   },
@@ -7099,6 +8189,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/journals/ijcs",
     "description": "Indonesian Journal of Chemical Science publishes basic research articles and conceptual of Chemistry"
   },
@@ -7112,6 +8204,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unud.ac.id/index.php/jits",
     "description": "The author welcomes innovative manuscripts from Civil Engineering field. Jurnal Ilmiah Teknik Sipil publishes articles in the following fields:  Building Materials and Structures, Structural,and Bridge Engineering  Geotechnical Engineering,  Transportation & Road Engineering & Policy Constructions Technology, Economy and Management Labour Safety, Procurement, and Legal Aspects in Civil Construction.  Water Resources Engineering & Management Coastal and Port Engineering Information Technologies in Civil Engineering"
   },
@@ -7125,6 +8219,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unp.ac.id/students/index.php/fis/pages/view/fees",
     "description": "This journal publishes original articles on the latest issues and trends occurring internationally in: (1) Geophysics, (2) Electronics and Instrumentation, (3) Material Physics, (4) Computational Physics. Other topics are telated to physics  are most welcome."
   },
@@ -7138,6 +8234,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/JNSMR/about",
     "description": "Journal of Natural Sciences and Mathematics Research, an international journal, provides a forum for publishing the original research articles, review articles from contributors, and the novel technology news related to natural sciences and mathematics research. Scientific articles dealing with fundamental sciences, material sciences, mathematics, materials characterization, etc. are particularly welcome. The journal encompasses research articles, original research report, reviews, short communications and scientific commentaries in fundamental sciences and mathematics including: fundamental sciences, fundamental physics, fundamental chemistry, fundamental biology, mathematics, applied sciences, applied physics, applied chemistry,applied biology,applied mathematics and materials characterization."
   },
@@ -7151,6 +8249,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/jag/pages/view/Publication%20Charge",
     "description": "Journal of Applied Geology processes and publishes excellent quality and original research papers that specifically focus on the applied geology and geosciences with its key objective particularly emphasis on application of basic geological knowledge for addressing environmental, engineering, and geo-hazards problems. The subject covers variety of topics including geodynamics, sedimentology and stratigraphy, volcanology, engineering geology, environmental geology, hydrogeology, geo-hazard and mitigation, mineral resources, energy resources, medical geology, geo-archaeology, as well as applied geophysics and geodesy. This journal was published twice a year by the Geological Engineering Departement, Universitas Gadjah Mada, Yogyakarta."
   },
@@ -7164,6 +8264,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://teknosi.fti.unand.ac.id/index.php/teknosi/fee",
     "description": "Geographical Information System Enterpise Application Bussiness Intelligence Data Warehouse Network Computer Security Data Mining Computer Architecture Design Mobile Computing Computing Theory Embedded system Decision Support System"
   },
@@ -7177,6 +8279,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jitce.fti.unand.ac.id/index.php/JITCE/fees",
     "description": "JITCE's particular emphasis on the Internet of Things (IoT), sensor networks and Artificial Intelligence (AI) positions it at the forefront of technological exploration. As IoT devices, sensor networks and AI become increasingly integrated into our daily lives and industries, the importance of rigorous research in this sphere cannot be overstated. JITCE offers a critical venue for researchers and professionals to share their findings, methodologies, and perspectives on IoT, sensor networks and AI technologies' development, deployment, and societal impact. By fostering a community of leading thinkers and innovators in this domain, JITCE actively shapes the trajectory of technological progress and its implications for the future."
   },
@@ -7190,6 +8294,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.uns.ac.id/region/about/submissions#authorFees",
     "description": "1. regional planning and development; 2. development financing; 3. urban and rural planning issues; 4. disaster resilience; and 5. participatory planning."
   },
@@ -7203,6 +8309,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/modul/about/editorialPolicies#custom-2",
     "description": "architecture design, human settlement, building construction, history of architecture, environmental design and building sciences. architecture education material and behaviour in architecture"
   },
@@ -7216,6 +8324,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/jadu/about/editorialPolicies#custom-2",
     "description": "Architectural Design Building Science Architecture Theory and History Architecture and environment Structure and Construction  Urban Design: Public Participation Revitalization and Conservation Management and policy"
   },
@@ -7229,6 +8339,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/metana/about/editorialPolicies#custom-5",
     "description": "METANA sebagai media komunikasi rekayasa dan proses di bidang teknik kimia, teknologi kimia pangan, pangan lokal, separasi, teknologi  tepat guna, industri dan lingkungan."
   },
@@ -7242,6 +8354,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/jaz/pages/view/articleprocessingcharge",
     "description": "Jurnal Arsitektur Zonasi publishes research studies, criticisms and critical analyses about the creation, use, and evaluation of different types of environments at the macro and micro scales. The journal includes original empirical research papers, analytical case studies, and high-quality position papers that contribute to the advancement of knowledge in architecture and urbanism."
   },
@@ -7255,6 +8369,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uin-malang.ac.id/index.php/saintek/pages/view/SubmissionsFee",
     "description": "Social Systems Informatics     Business Informatics     Natural Systems Informatics     Artificial Systems Informatics     Computing Curriculum     Gaming Technologies     Intelligent Systems Engineering     Complex Systems Modeling and Software Development     Adaptive and Adaptable Information Systems Engineering     Networked Systems Engineering     Emergent and Virtual Systems Engineering     Data Intensive Computing     Semantic Data Analysis and Management     Big Data Analytics     Business Analytics     Social Networks Analytics     High-Performance Computing     High Throughput Computing     Grid Computing     Cloud Computing"
   },
@@ -7268,6 +8384,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/jit/about",
     "description": "Computer Architecture, Parallel and Distributed Computer, Pervasive Computing, Computer Network, Embedded System, Human—Computer Interaction, Virtual/Augmented Reality, Computer Security, Software Engineering (Software: Lifecycle, Management, Engineering Process, Engineering Tools and Methods), Programming (Programming Methodology and Paradigm), Data Engineering (Data and Knowledge level Modeling."
   },
@@ -7281,6 +8399,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/gema_teknologi/about/editorialPolicies#custom-2",
     "description": "Gema Teknologi (pISSN : 0852-0232, eISSN : 2656-582X) publishes articles from various engineering disciplines (the results of original scientific research or new scientific studies of literature) on the scope as follows : Applied Technology, Electrical Engineering, Mechanical Engineering, Mechatronic Engineering, Chemical Engineering, Applied Civil Engineering, Naval Architecture Engineering, Architecture Design Engineering, Applied Regional Planning Engineering."
   },
@@ -7294,6 +8414,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://ojs.pps.unsri.ac.id/index.php/ppsunsri/pages/view/OAP",
     "description": "Environmental Science, Environmental Technology, Environmental Health Environmental ethics Lowland Management Environmental policy Environmental economy"
   },
@@ -7307,6 +8429,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unnes.ac.id/journals/jptm/about#authorFees",
     "description": "This journal serves as a premier platform for disseminating cutting-edge research, innovative practices, and insightful perspectives at the intersection of Mechanical Engineering Education and the broader field of Mechanical Engineering. The journal welcomes high-quality contributions that address theoretical advancements, empirical investigations, and practical applications across these interconnected domains."
   },
@@ -7320,6 +8444,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Computer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/jgt/about/editorialPolicies#custom-0",
     "description": "geology geophysics geotechnical mining environmental geology geodynamics hydrogeology stratigraphy volcanology geothermal petroleum geology"
   },
@@ -7333,6 +8459,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Engineering",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://aijaset.lppm.unand.ac.id/index.php/aijaset/apc",
     "description": "AIJASET covers a broad range of topics in applied science and engineering, including but not limited to:  Energy (Miscellaneous)  Engineering (Miscellaneous)  Environment (Miscellaneous)"
   },
@@ -7346,6 +8474,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Science",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.walisongo.ac.id/index.php/square/about",
     "description": "We aim to disseminate not only research on mathematics education including learning mathematics, evaluating of mathematics learning, mathematics learning methods, developing mathematics props, qualitative studies in mathematics learning, ethnomatematics, content of unity of sciences in learning, and scientific studies, but also research in pure mathematics including real analysis, geometry, algebra, applied mathematics, mathematical computation, and statistics."
   },
@@ -7359,6 +8489,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://online-journal.unja.ac.id/index.php/edusains/index",
     "description": "Edu-Sains: Jurnal Pendidikan Matematika dan Ilmu Pengetahuan Alam is a forum for communicating scientific advances in Mathematics Education, Science Education, Physics Education, Biology education, and Chemistry Education. It publishes comprehensive research articles and invites reviews by leading experts in the field. Papers with high scientific merit will be selected, impart essential new knowledge, and are highly interested in Mathematics Education, Science Education, Physics Education, Biology education, and Chemistry Education."
   },
@@ -7372,6 +8504,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/sosietas/about/editorialPolicies#custom-0",
     "description": "Education; Ethnopedagogy; Ethnic Relations; Culture and Changes; Gender and Human Rights; Childhood, Youth and Adulthood; Communication and Arts; Deviance and Social Control; Economy and Development; Human Rights and Common Good; Identity, Image and Social Cohesion; Social Capital Localization and Globalization; Organizations, Professions and Work; Political Sociology and Law Issues; Social Security and Public Health; Sociology of Marriage and Family; Sociology of Population and Migration; Sociology of Religion; Sociology of Tourism; Sociology of Health; Sociology of Education; Collective Behavior and Social Movements; Theoretical, Sociology and Economics, Comparative and Historical Studies Sociology of Gender Method, Media and Evaluation of Learning Sociology Sociology of Technology Sociology of Disaster"
   },
@@ -7385,6 +8519,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/agapedia/about/editorialPolicies#custom-3",
     "description": "The scope of the Agapedia PAUD journal includes:  1. Early Childhood Education Theory  2. Early Childhood Education Learning Practices  3. Early Childhood Development includes Religious and Moral Values, Cognitive, Language, Socio-Emotional, Physical-Motoric, and Art  4. Policy in Early Childhood 5. Parenting"
   },
@@ -7398,6 +8534,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.uinmataram.ac.id/index.php/schemata/Author_Fee",
     "description": "Schemata: Jurnal Pasca Sarjana IAIN Mataram aims to disseminate the ideas and researches on Interdisciplinary Islamic Studies in various levels of education and field of studies. The scopes of the published articles in prioritized order are (1) Affects and values in Islamic Studies in various disciplines, and (2) The development of Islamic researches in various fields of studies."
   },
@@ -7411,6 +8549,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://online-journal.unja.ac.id/Zaaken/Fee",
     "description": "The scope of articles published in the Journal discusses various topics including (but not limited to): (1) Civil Law, (2) Commercial Law; (3) Engagement Law; (4) Company Law; (5) Islamic Law; ( 6) Islamic Inheritance Law; (7) Civil Inheritance Law; (8) Transportation Law; (9) Bankruptcy Law; (10) Customary Law; (11) Customary Inheritance Law; and (12) Banking Law in the context and study of Indonesian Law in a global perspective."
   },
@@ -7424,6 +8564,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/v3/pswk/fees",
     "description": " Gender dan kemiskinan  Gender dan Ketahanan Pangan  Gender dan Kesehatan   Gender dan Pendidikan   Gender dan sanitasi lingkungan  Gender dan Energi  Gender dan ketenagakerjaan  Gender dan infrastruktur  Gender dan Agama  Kekerasan berbasis Gender Tumbuh kembang dan perlindungan anak  Kesejahteraan keluarga"
   },
@@ -7437,6 +8579,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/MEDKOM/APC",
     "description": "Political communication. Any research related to political-related communication such as political campaign, media effect, campaign ethics, etc. Cross-cultural communication. Any research related to the process of communication between people with different culture (for instance race, ethnic, or socio-economic) Marketing and public relations. Discusses various topics within business, marketing, advertisement, PR, and other communication strategies implemented in contemporary business landscape. Audio-visual culture. Discusses any aspects of modern, ever-changing media. From music, television, video game, to internet. Health communication. Discusses communication strategy to distribute health information within community or society."
   },
@@ -7450,6 +8594,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JPERPUS/editorial_policies#articleProcessingCharge",
     "description": "Focus: Focus on information and library studies.  Scope: contains topics related to libraries, information literacy, information technology, librarian profession, and information management."
   },
@@ -7463,6 +8609,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnalpuitika.fib.unand.ac.id/index.php/jurnalpuitika/about/editorialPolicies#custom-3",
     "description": "Linguistic, in the form of the results of experimental studies and critical thinking relating to language and linguistics. Literature, in the form of the results of experimental and critical thinking relating to literary research. Cultural Studies, in the form of research results in culture, popular culture, ideology, and discourse. Social science, in the form of research result of studies in social science."
   },
@@ -7476,6 +8624,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://online-journal.unja.ac.id/siginjai/ArticleProcessingCharge",
     "description": "Indonesian History in Hindu-Budhish Period Indonesian History in Islam Period Indonesian History in Colonial Period Indonesian History in Japanese Colonization to contemporer Social Studies and Cultural Studies with historical approach"
   },
@@ -7489,6 +8639,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unp.ac.id/students/index.php/epb/about/editorialPolicies#custom-2",
     "description": "1. Development economics  2. Energy economics  3. Environmental economics  4. International trade  5. Public finance  6. Rural development  7. Regional economics  8. Financial development  9. Monetary economics  10. Industrial economics  11. Islamic economics  12. Agricultural economics  13. Labor economics."
   },
@@ -7502,6 +8654,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://accounting.uho.ac.id/index.php/journal/fees",
     "description": "Accounting: Jurnal Pendidikan Akuntansi memiliki Fokus dan Cakupan diantara: Strategi Pembelajaran Akuntansi, Model Pembelajaran Akuntansi, Metode Pembelajaran Akuntansi, Media Pembelajaran Akuntansi, Evaluasi Pembelajaran Akuntansi, Instrumen Pembelajaran Akuntansi, Akuntansi, Manajemen, Kewirausahaan."
   },
@@ -7515,6 +8669,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.feb.unila.ac.id/index.php/jbm/AuthorFees",
     "description": "Organization Strategic Management Human Resource Management Marketing Finance Entrepreneurship"
   },
@@ -7528,6 +8684,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/jfi/about/editorialPolicies#openAccessPolicy",
     "description": "Jurnal Fisika Indonesia menerbitkan hasil-hasil penelitian yang orisnil dalam bidang fisika, baik itu berupa kajian teoretik, maupun terapan, dan dalam segala bentuk, seperti paper riset, catatan pendek, maupun hasil telaah (review). Fokus dari jurnal ini meliputi pengembangan ilmu dari:  1. Fisika Atom Inti (Atomic and Nuclear Physics)  2. Fisika Dasar (Theoretical, Experimental and Physics Education)  3. Fisika Material dan Instrumentasi (Material and Instrumentation)  4. Geofisika (Geophysics)"
   },
@@ -7541,6 +8699,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/CONMATHA/editorial_policies#custom-0",
     "description": "Contemporary Mathematics and Applications (ConMathA) is open access journal providing publication in the area which focuses on mathematical sciences. Authors are invited to submit articles that have not been published previously and are not under consideration elsewhere. Areas of interest in analysis, algebra, optimization, mathematical modeling and its applications include but are not limited to the following topics:general mathematics, mathematical physics, numerical analysis, combinatorics, optimization and control, operation research,statistical modeling, mathematical finance and computational mathematics."
   },
@@ -7554,6 +8714,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/DC/editorial_policies#custom-2",
     "description": "Darmabakti Cendekia: Journal of Community Service and Engagements focus on community service and engagements. This journal has scopes such as :  - Health fields (health promotion, radiology, traditional medicine, medicine laboratory technology, occupational health and safety, dental laboratory technique, physiotherapy, public health, and veterinary public health) - Social-economic fields (applied business and economy, taxation, banking, tourism and hospitality) - Applied sciences (training and education, management of information systems and library science)"
   },
@@ -7567,6 +8729,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uin-malang.ac.id/index.php/jrce/about/submissions#authorGuidelines",
     "description": "Journal of Research on Community Engagement (JRCE) merupakan jurnal enam bulanan yang memuat naskah di bidang pengabdian masyarakat. JRCE sudah terakreditasi KEMENRISTEK DIKTI. Ruang lingkup dari JRCE berupa proses dan hasil penelitian sains terapan, teknologi tepat guna sebagai penunjang pengabdian masyarakat dan kajian analitis-kritis pada pengabdian masyarakat serta research on community development"
   },
@@ -7580,6 +8744,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jss.lppm.unila.ac.id/index.php/ojs/about",
     "description": "Jurnal Sakai Sambayan (JSS)  memuat hasil kegiatan pengabdian kepada masyarakat yang berfokus pada revitalisasi nilai-nilai kearifan lokal Sakai Sambayan, sebuah falsafah hidup masyarakat adat Lampung yang mengedepankan semangat gotong royong, solidaritas, dan kerja sama sosial. Melalui pendekatan partisipatif dan transformatif, program pengabdian ini mengintegrasikan nilai budaya lokal ke dalam berbagai kegiatan pemberdayaan masyarakat, seperti penguatan kelompok usaha bersama, pelatihan kewirausahaan berbasis komunitas, serta pengelolaan lingkungan secara kolektif."
   },
@@ -7593,6 +8759,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.mandalanursa.org/index.php/PB/pages/view/Author%20Fees",
     "description": "Jurnal ini menerima artikel hasil pengabdian maupun pemberdayaan masyarakat pada semua bidang baik pendidikan, seni, sosial budaya, ekonomi, hukum, pertanian, perikanan, dll baik yang berbentuk penyuluhan, pendampingan, bimbingan teknis, dan jenis kegiatan lain yang relevan."
   },
@@ -7606,6 +8774,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uin-suka.ac.id/febi/JIECEM/authorfees",
     "description": "The Journal aims to publish research articles in the fields of Islamic economics, business, management, and accounting related to community services and development. The scope of this journal includes local Muslim communities, such as specific ethnic groups, cultural customs, or particular regions on a global scale. Implementation of service activities, as well as community participation and work partners. Activities are organised into activities that improve community welfare."
   },
@@ -7619,6 +8789,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.maranatha.edu/index.php/ice/about/submissions",
     "description": "Journal of Innovation and Community Engagement (Journal of ICE) is a community service journal managed by the Faculty of Engineering, Universitas Kristen Maranatha, with national and international scope. This journal focused on dissemination of community based research and innovation, applicable technology, and practical solution, to be implemented in society to solve everyday issue, to develop community potential, and to improve general welfare through public participation and partnership."
   },
@@ -7632,6 +8804,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.isas.or.id/index.php/JACE/apchttps://journal.isas.or.id/index.php/JACE/apc",
     "description": "JACE, particularly focuses on the main problems in the development of the sciences of community services areas as follows:  Community Services, Local Food Security; Training, Marketing, Appropriate Technology, Design; Community Empowerment, Social Access; Education for Sustainable Development."
   },
@@ -7645,6 +8819,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Farmasi",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JFK/editorialPolicies#custom-1",
     "description": "The aim of Jurnal Farmasi Komunitas (JFK) is to publish exciting, empirical research, recent science development, and high-quality science that addresses fundamental questions in pharmacy practice. JFK publishes articles in pharmacy practice area including:  1. Social and Administrative Pharmacy 2. Clinical Pharmacy 3. Community Pharmacy."
   },
@@ -7658,6 +8834,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Farmasi",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/BIKFAR/editorialPolicies#custom-1",
     "description": "Berkala Ilmiah Kimia Farmasi (BIKF) aims to facilitate interaction, discussion, and updating of research ideas in the fields of pharmacy, Pharmaceutical Chemistry, Medicinal Chemistry, Drug Development, Organic synthesis, Analytical chemistry, Pharmaceutical Technology, Pharmaceutical Microbiology and Biotechnology, Pharmacology and Toxicology, Nutraceutical / functional foods."
   },
@@ -7671,6 +8849,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/jmasif/about/editorialPolicies#custom-2",
     "description": "JMASIF Topics include, but are not limited to  Applied Computer Science, Artificial Intelligence, Text and Natural Language Processing, Image Processing and Pattern Recognition, Computer Vision, Data Mining, Cryptography, Cybersecurity, Computer Network, Computational Theory and Mathematics, Game Technology, Human and Computer Interaction or UI/UX, Information System, Software Engineering."
   },
@@ -7684,6 +8864,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/POLINDO/Editorial_Policies#custom-1",
     "description": "This journal specifically covers areas of research in Democracy, Governance, Political Thought, Contemporary Politics, Ethics, and Discourse on Justice. Articles that discuss the theoretical aspects of Political Philosophy, Theories of Democracy, Governance and Discourse on Justice are welcome, as well as pieces that engage in the discussion of democratic governance practices, election, and contemporary national and international politics."
   },
@@ -7697,6 +8879,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JGAR/Article_Processing_Charge",
     "description": "Journal of Governance and Administrative Reform (JGAR) focuses on Governance and Administrative Reform. This journal has scopes such as  a. public policy  b. governance  c. administrative reform  d. government reform  e. public service  f. electronic governance  covers themes related to administration and governance."
   },
@@ -7710,6 +8894,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://arsnet.architecture.ui.ac.id/index.php/ojs/journalpolicy",
     "description": "ARSNET is a scholarly journal dedicated to creative exploration in design disciplines, from architecture, interior, and other spatial design discourses. The journal focuses on contemporary design approaches and practices in Indonesia informed by its social, cultural, and environmental contexts, in parallel to the development of design discourses globally."
   },
@@ -7723,6 +8909,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Pariwisata",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/jsht/styleguide.html",
     "description": "tourism, communication and media, digital humanities, advertising, and promotion management, with a particular emphasis on the Indonesian context and a global perspective."
   },
@@ -7736,6 +8924,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/jvi/policies.html",
     "description": "The journal embraces the broad range of settings and ways in which vocational and occupational learning takes place and, hence, is not restricted by institutional boundaries or structures in relation to national systems of education and training. It is interested in the study of curriculum, pedagogy, and assessment, as well as economic, cultural and political aspects related to the role of vocational and occupational education and training in society."
   },
@@ -7749,6 +8939,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://scholarhub.ui.ac.id/jipk/",
     "description": "Librarians’ and Archivists’ Professional Ethics Library Management, including Public Libraries, Special Libraries, School Libraries and Academic Libraries Information Literacy Library and Archival Services Preservation and Conservation of Information Media (Library and Archival Materials) Information Technology in Libraries and Archives Libraries and Social Media Big Data and Data Analytics Collection Management in Libraries and Archives Open Access, Open Data and Data Management Other topics related to the field of information, library and archival science."
   },
@@ -7762,6 +8954,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://gramaswara.ub.ac.id/index.php/gramaswara/authorfees",
     "description": "Jurnal Gramaswara publishes the outcomes of community service and research findings in various fields such as education, language, literature, culture, arts, and other relevant issues."
   },
@@ -7775,6 +8969,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://kusalawa.ub.ac.id/index.php/kusalawa/fees",
     "description": "Art Fine arts studies Creation of works Graphic print and digital media Art and environment Arts management Creative industry Arts education Visual semiotics Popular art Postmodern art Art and Markets  Cultural Anthropology anthropological specialization studies (law, economics, population, media and visuals, development, gender, tourism, festivals) regional studies study of ethnographic research methods"
   },
@@ -7788,6 +8984,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://just-si.ub.ac.id/index.php/just-si/kebijakan-editorial",
     "description": "Ruang lingkup JUST-SI dapat dibagi menjadi tiga cakupan secara umum :  Sistem Informasi secara umum. Pendidikan di Sistem Informasi. Integrasi pada Sistem Informasi."
   },
@@ -7801,6 +8999,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://mrj.ub.ac.id/index.php/mrj/about",
     "description": "The objective of this journal is to publish the selected clinical and basic research relevant to Pulmonology and Respiratory. It covers the following topics: infection; thoracic oncology; asthma and COPD; interventional pulmonology and respiratory emergency; occupational and environmental pulmonology; and clinical immunology. It is an international journal dedicated to providing new information that could give new insight for alternative solutions, diagnosis, therapy, and prevention for researchers and practitioners in Pulmonology Respiratory Medicine."
   },
@@ -7814,6 +9014,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://islamicinsights.ub.ac.id/index.php/insights/about",
     "description": "IIJ is dedicated to the scholarly study of Islam and its society. The journal gives special attention to scripts related with religion, history, politics, economics, sociology, culture, law, literature, philosophy, international relations, and other issues that deal with Islam and its civilization. It particularly welcomes interdisciplinary works on Islam in Indonesia and South East Asia."
   },
@@ -7827,6 +9029,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jsbn.ub.ac.id/index.php/sbn/journalpolicies",
     "description": "Jurnal Studi Budaya Nusantara (SBN) adalah media komunikasi ilmiah yang diterbitkan oleh Jurusan Seni dan Antropologi Budaya, Fakultas Ilmu Budaya, Universitas Brawijaya Malang. Jurnal ini dimaksudkan untuk mewadahi hasil penelitian dan kajian ilmiah di bidang seni dan budaya Nusantara sebagai bentuk sumbangan masyarakat ilmiah bagi pengembangan wawasan seni dan budaya dalam kehidupan masyarakat yang lebih luas."
   },
@@ -7840,6 +9044,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://iptek.its.ac.id/index.php/jdi/about/editorialPolicies#custom-2",
     "description": "Design History,  Interior History,  Visual Culture in Interior,  Design Methodology,  Design Process,  Interior Discourse,  Interior Design and Culture,  Sociology of Design,  Design Management,  Interior and Art Critique,  Anthropology of Interior Design,  Interior Artifacts,  Industrial Design,  Craft, Architecture,  Creative Industry,  Policies in Design,  Psychology,  Spatial Behavior,  Design Psychology,  Ergonomic,  Interior Science,  Education and Conceptual in Interior Design"
   },
@@ -7853,6 +9059,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://iptek.its.ac.id/index.php/idea/about/submissions#authorGuidelines",
     "description": "Jurnal Desain IDEA berfokus pada publikasi bidang ilmu desain produk, desain komunikasi visual, interior arsitektur dan manajemen desain."
   },
@@ -7866,6 +9074,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/ABMAS/about/editorialPolicies#custom-9",
     "description": "This journal serves as a scholarly platform for the critical advancement of theory and praxis in community engagement, societal empowerment, and the transformative deployment of academic expertise for public benefit. We seek original research, rigorously contextualized case studies, and analytically robust best practices that exhibit substantive, enduring partnerships with communities and generate demonstrable, sustainable societal impact. Manuscripts should elucidate the integration of disciplinary knowledge, innovation, and applied service, with explicit articulation of participatory methodologies, reciprocal learning, and the co-production of solutions addressing multifaceted, real-world challenges."
   },
@@ -7879,6 +9089,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/JAFN/about/editorialPolicies#custom-4",
     "description": "Sport Nutrition Nutrition Education Clinical Nutrition and Dietation Food Process Food Security and Food Safety Food Preservation Current Issue of Food and Nutrition Nutrition Community"
   },
@@ -7892,6 +9104,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/JEM/about/editorialPolicies#custom-3",
     "description": "The below mentioned areas are just indicative. The editorial board also welcomes innovative articles that redefine any Mathematics, Science and Technology field.  Mathematics Analysist Theory Number Algebra Statistics Crypthographic Combinatorics Discrete Mathematics Numeric Methods"
   },
@@ -7905,6 +9119,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.upi.edu/index.php/pips/about/editorialPolicies#custom-5",
     "description": "Social learning media of social science education; Social science education teaching materials; Learning method of social science education; Learning resources of social science education; Evaluation of social science education learning; Social science education curriculum; Social phenomenon of social science education; Phenomenon Culture of social science education"
   },
@@ -7918,6 +9134,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unhas.ac.id/index.php/hjph/ArticleProcessingCharge",
     "description": "Hasanuddin Journal of Public Health accepts scientific papers in the form of research reports (original article research papers) with focus and scope including: Epidemiology, Health Education and Promotion, Environmental Health, Occupational Health and Safety, Health Administration and Policy, Biostatistics, Reproductive Health, Hospital Management, Nutrition Sciene, Health Information System."
   },
@@ -7931,6 +9149,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://cot.unhas.ac.id/journals/index.php/jpe/navigationMenu/view/publicationfee",
     "description": "Berbagai bidang ilmu yang sangat popular, menarik dan spesifik dalam rumpun ilmu keteknikan seperti Teknik Arsitektur dan Pengembangan Wilayah Kota; Teknik Elektro dan Informatika; Teknik Geologi dan Pertambangan; Teknik Mesin dan Industri; Teknik Perkapalan dan Ilmu Kelautan; serta Teknik Sipil dan Lingkungan merupakan disiplin ilmu-disiplin ilmu yang menjadi topik utama dan konsen publikasi JPE."
   },
@@ -7944,6 +9164,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unhas.ac.id/index.php/jlb/about",
     "description": "Lensa Budaya: Jurnal Ilmiah Ilmu-ilmu Budaya merupakan jurnal yang memiliki fokus pada kajian bahasa, sastra, budaya dan sejarah dari hasil penelitian, review buku dan artikel dari pemikiran ilmu-ilmu budaya."
   },
@@ -7957,6 +9179,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Lingkungan, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.itb.ac.id/index.php/jtl/fee",
     "description": "The Environmental Engineering Journal or Jurnal Teknik Lingkungan accepts articles in Bahasa as well as English covering several topics of environmental engineering, including:  1. Water Teatment and Management (Pengelolaan dan Pengolahan Air Bersih)  2. Wastewater Treatment and Management (Pengelolaan dan Pengolahan Air Limbah)  3. Air Polution Control and Management (Pengelolaan dan Pengendalian Kualitas Udara)  4. Solid Waste Treatment and Management (Pengelolaan dan Pengolahan Persampahan)  5. Hazardous Waste Treatment and Management (Pengelolaan dan Pengoahan Limbah Bahan Berbahaya dan Beracun)  6. Environmental Policy (Kebijakan Lingkungan)  7. Environental Management Technology (Teknologi Pengelolaan Lingkungan)  8. Health and Safety (Kesehatan dan Keselamatan Kerja)"
   },
@@ -7970,6 +9194,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pariwisata",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journals.itb.ac.id/index.php/wpar/tentangjurnal",
     "description": "Warta Pariwisata adalah jurnal yang menerima berbagai artikel yang berkaitan dengan pariwisata.  Jurnal ini menyediakan wahana untuk meningkatkan kesadaran, pertimbangan dan analisis isu-isu di bidang pariwisata, dan juga mempromosikan pertukaran ide."
   },
@@ -7983,6 +9209,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal2.um.ac.id/index.php/jpaud/about/submissions#authorFees",
     "description": "Jurnal PAUD memuat artikel hasil Kajian Teori dan Praktik di bidang Pendidikan Anak Usia Dini."
   },
@@ -7996,6 +9224,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal2.um.ac.id/index.php/jpsi/pages/view/authorfees",
     "description": "Pendidikan sains yang tercakup dalam fokus JPS tidak hanya terbatas pada pendidikan IPA di tingkat Sekolah Menengah Pertama (SMP) saja. JPS juga mempublikasikan artikel akademik terkait hasil penelitian di bidang pendidikan kimia, pendidikan fisika, dan pendidikan biologi untuk tingkat pendidikan dasar hingga pendidikan tinggi. JPS juga tidak menutup diri untuk mempublikasikan artikel akademik yang berkaitan dengan integrasi pendidikan IPA/sains dengan disiplin ilmu lainnya, seperti STEM (Science, Technology, Engineering, and Mathematics), geografi, pendidikan sosial (IPS), dan seni. Namun, artikel akademik yang berkaitan dengan penelitian di bidang ilmu sains murni dan pendidikan secara umum (tidak terkait pendidikan IPA/Sains) tidak akan dipertimbangkan untuk dipublikasikan oleh JPS."
   },
@@ -8009,6 +9239,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal2.um.ac.id/index.php/jko/about/editorialPolicies#custom-2",
     "description": "Exercise and Health Physical Activity Sport Psychology Sport Biomechanics Sport Pedagogy Sport History Sport Management Sport Tourism Sport Participation and Performance"
   },
@@ -8022,6 +9254,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal2.um.ac.id/index.php/jfik/about/editorialPolicies#custom-1",
     "description": "Sport Science and Health is published every month. The first issue was in October 2019. The publication contained research articles and research results in the fields of Sports, Physical Education, Sports Coaching, Physical and Health Education, Physical Education and Recreation, Sports Health, Public Health  The focus and scope of the journal covers Sport Management, Exercise and Fitness, Sports Participation and Performance, Physical Therapy, Sport Biomechanics, Sports Health, Teacher Professional Development, Physical Education Assessment and Evaluation, Blended Learning Physical Education, AKK, Occupational Health and Environmental Safety, Health Promotion and Behavioral Sciences, Biostatistics, Population Sciences, and Reproductive Health, Community Nutrition, Epidemiology"
   },
@@ -8035,6 +9269,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal3.undip.ac.id/index.php/jiab/about/submissions#authorFees",
     "description": "Administrasi Bisnis Manajemen Keuangan Sumberdaya manusia Pemasaran Sistem informasi manajemen Produksi operasi Metode penelitian Organisasi Kebijakan bisnis Strategi bisnis"
   },
@@ -8048,6 +9284,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/culturalistics/about/editorialPolicies#custom-1",
     "description": "Culturalistics: Journal of Cultural, Literary, and Linguistic Studies publishes articles on cultural studies, literary, and language. The journal accepts manuscripts on fields of studies as cultural studies, literature, language, semiotics, folklore, popular culture, multiculturalism, digital culture, post-colonialism, semantics, diaspora, linguistics, linguistic lanscape, sociolinguistics, syntax, pragmatics, phonology, morphology, anthropolinguistics, language and gender, discourse analysis, corpus analysis, media studies, digital humanities, and film studies."
   },
@@ -8061,6 +9299,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.undip.ac.id/index.php/gp/about/editorialPolicies#custom-1",
     "description": "Gema Publica provides media to publish scientific articles as a result of research and development in public administration study.  Gema Publica limited to published the scope of public policy analysis, public organization management, public sector innovation, citizen participation, sustainability and environment.  We accept contributions of research articles and conceptual (non-research) articles from authors in English (preferable). We put more emphasis on research articles."
   },
@@ -8074,6 +9314,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Farmasi",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal2.undip.ac.id/index.php/generics",
     "description": "Pharmacy Practice, Pharmacy Education, Social Pharmacy, Clinical Pharmacy, Phytochemistry, Pharmacoeconomics, Pharmacokinetics, Pharmacology, Pharmaceutics, Pharmaceutical Pharmacy, Biology Pharmacy, Medicinal Chemistry, and related topics in Pharmacy"
   },
@@ -8087,6 +9329,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://universe.ppj.unp.ac.id/index.php/universe/authorfees",
     "description": "This journal aim is to publish articles include opinions, insights, analysis and research report from various kind of research, such as experimental, descriptive, research and development (R&D), and action research on Education."
   },
@@ -8100,6 +9344,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://irsaj.ppj.unp.ac.id/index.php/IRSAJ/af",
     "description": "This journal covers the scope of remote sensing which includes: (1) data acquisition; (2) processing data; (3) data storage and distribution; (4) application and utilization of information from remote sensing data. The focus of this journal includes: 1. Remote sensing applications 2. Multi-spectral and hyperspectral remote sensing 3. Active and passive microwave remote sensing 4. Lidar and laser scanning 5. Geometric reconstruction 6. Physical modeling and signatures 7. Change detection 8. Image processing and pattern recognition 9. Data fusion and data assimilation 10. Dedicated satellite missions 11. Operational processing facilities 12. Spaceborne, airborne and terrestrial platforms"
   },
@@ -8113,6 +9359,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unp.ac.id/index.php/dkv/about/submissions#authorFees",
     "description": "desain merek & identitas pemasaran visual periklanan fotografi desain grafis lingkungan multimedia manajemen desain industri kreatif"
   },
@@ -8126,6 +9374,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://infobibliotheca.ppj.unp.ac.id/index.php/infobibliotheca/apc",
     "description": "The coverage of the discussion in librarianship may be viewed from various perspectives of disciplines."
   },
@@ -8139,6 +9389,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.uns.ac.id/equilibrium/pages/view/Author%20Fee",
     "description": "Biochemical Process Exploration and Optimization  Bioprocess Technology  Chemical Education  Chemical Reaction Kinetics and Catalysis  Chemurgy Technology  Designing, Modeling, and Process Optimization  Energy and Conversion Technology  Food Technology  Material Development  Membrane Technology  Natural Dyes Technology  Process System Engineering and products  Separation and Purification Technology  Thermodynamics  Waste Treatment Technology"
   },
@@ -8152,6 +9404,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.uns.ac.id/hsb/about/editorialPolicies#custom-5",
     "description": "Haluan Satra Budaya (HSB) is biannual scientific journal of humanities published by the Faculty of Cultural Sciences, Universitas Sebelas Maret, Indonesia. This journal issues research papers, conceptual frameworks, and case studies drawn from a wide range of disciplines, Language and Linguistics, Art, Literature, as well as Culture (anthropology, history, and archeology). This journal is available in both printed and online versions."
   },
@@ -8165,6 +9419,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.uns.ac.id/pjl/about/editorialPolicies#custom-4",
     "description": "The journal contents are managed by the Doctoral Program of Postgraduate of Universitas Sebelas Maret, Solo Indonesia. The journal serves as a forum to promote and disseminate the students' ideas on such fields of study for any language as the object, such as English, Arabics, Indonesian, as well as local language in Indonesia (Descriptive Linguistics, Pragmatics, and Translation Studies)."
   },
@@ -8178,6 +9434,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unm.ac.id/sosialisasi/about/submissions#authorFees",
     "description": "Jurnal Sosialisasi: Jurnal Hasil Pemikiran, Penelitian dan Pengembangan Keilmuan Sosiologi Pendidikan. Intended as a media of information and arena of philosophical, theoretical, methodological debates related to sociological issues and their teaching. Journal of Socialization: a journal of the results of thought, research, and development in the science of educational sociology. invited scientists, activists, and public officials to write issues related to sociology and teaching. Articles can be research or conceptual"
   },
@@ -8191,6 +9449,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unm.ac.id/index.php/JE3S/authorfee",
     "description": "This scientific journal contains research articles related to education, economics, as well as business and entrepreneurship studies. The scope of the published articles contained in the Journal of Economic Education and Entrepreneurship Studies includes economics, business, and entrepreneurship in the perspective of education and economic literacy as well as entrepreneurial education and literacy, both in the context of economic education and entrepreneurship education which are in the forms of formal education, non-formal education, and informal."
   },
@@ -8204,6 +9464,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unm.ac.id/pir/about/editorialPolicies?guidena=Author+Fee#custom-1",
     "description": "Phinisi integration review menerima artikel atau tulisan ilmiah dalam bentuk hasil-hasil kajian analitis, penelitian, aplikasi teori, dan pembahasan perpustakaan tentang ilmu pengetahuan sosial terdiri dari: Pendidikan IPS terpadu Pendidikan ekonomi IPS Ke SD-an Pendidikan Administrasi Umum Pendidikan Hukum dan Kewarganegaraan, Pendidikan sosiologi Pendidikan Antropologi"
   },
@@ -8217,6 +9479,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unm.ac.id/PBAR/about/editorialPolicies#custom-6",
     "description": "Pinisi Business Administration Review is a publication media to channel scientific work of lecturers, theoretical, and practitioners in the fields of business administration, economics, management and observers of business administration."
   },
@@ -8230,6 +9494,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unm.ac.id/CER/about/editorialPolicies#custom-1",
     "description": "Chemistry Education Review is an-Opened Access journal and published twice a year every September and March. It publishes the research (no longer than 5 years after the draft proposed) in term of Chemistry Education which relate to chemistry study and learning, theory and educational practice, educational policy, curriculum development and learning material, cultural education and national character, teacher education and training, technology and learning media, or every relevant activity."
   },
@@ -8243,6 +9509,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unesa.ac.id/index.php/jpd/AuthorFees",
     "description": "EduStream is a scientific journal dedicated to various aspects of elementary education, aimed at providing a platform for academics, researchers, educators, and practitioners to publish the latest research and innovations in the field of elementary education. We invite contributions in the form of research articles, literature reviews, and best practice reports relevant to the development of elementary education both in Indonesia and globally.  EduStream welcomes submissions on a wide range of topics that are integral to elementary education"
   },
@@ -8256,6 +9524,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik, Humaniora, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unesa.ac.id/index.php/metafora/AUTHOR-FEES",
     "description": "Metafora discuss about education, social and humanities in the form of field research, literature research, and reflection both theoretical and methodological.  1. In education includes research in the form of classroom action research and study theory about education and learning.  2. In social studies and humanities encompassing theoretical studies addressing social and humanities issues."
   },
@@ -8269,6 +9539,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unesa.ac.id/index.php/jinacs//about/submissions#authorGuidelines",
     "description": "JINACS merupakan jurnal ilmiah dalam bidang Teknik Informatika dan Computer Science. Jurnal ini mencakup bidang ilmu Rekayasa Perangkat Lunak, Jaringan dan Arsitektur Komputer, Komputasi Bergerak, Sistem Temu Kembali Informasi, Kecerdasan Buatan, Pengolahan Citra Digital, Data Mining dll."
   },
@@ -8282,6 +9554,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unesa.ac.id/index.php/sosearch/biayapublikasi",
     "description": "Results of research into social studies education practices (integration): social studies learning innovation, classroom action research, assessment and evaluation research in social studies education, values ​​and character education in social studies, mitigation and environmental learning in social studies. Social Sciences research results that contribute to Social Sciences Education: All social sciences research results that are related to the content of Social Sciences Education, and there must be an explanation in the text, what the benefits of the research findings are for Social Sciences education."
   },
@@ -8295,6 +9569,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unesa.ac.id/index.php/inovasi-fisika-indonesia/apc",
     "description": "Jurnal Inovasi Fisika Indonesia menerbitkan di seluruh artikel fisika, meliputi penelitian terapan, teoritis dan eksperimental, pada topik Fisika Material, Fisika Bumi dan Fisika Instrumentasi"
   },
@@ -8308,6 +9584,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.unesa.ac.id/index.php/jurnal-pendidikan-sendratasik/AuthorFee",
     "description": "This journal includes original research articles, review articles, and performance analysis, including:  *Theatre Education  *Dance Education  *Music Education  *Educational Theater  *Educational Dance  *Educational Music  *Performing Arts Education Management (Drama, Dance, and Music)  *Performing Arts Education Technology (Drama, Dance, and Music)"
   },
@@ -8321,6 +9599,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unesa.ac.id/index.php/geter/AuthorFee",
     "description": "Focus dan Scope :  · Drama, dance and music education  · Critical thoughts/ideas about Performing Arts  · Creation of performing arts"
   },
@@ -8334,6 +9614,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Teknologi dan Komputer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unesa.ac.id/index.php/etj/AuthorFees",
     "description": "The innovative work of the teachers and lecturers of the development of the education sector which is able to make a positive contribution to the schools and educational institutions the focus of this journal. 1. Educational Technology 2. Curriculum 3. Learning Media 4. Learning Material 5. Learning Environment 6. Learning Methods 7. Learning Theory 8. Learning Design 9. Learning Approach 10. Learning Model 11. Learning Strategies 12. Techniques in Learning"
   },
@@ -8347,6 +9629,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.student.uny.ac.id/ojs/index.php/pok/about/submissions#authorFees",
     "description": "Physical Education Sports Tourism Sports Coaching Physical Activity Sports History Sports Biomechanics Sports Pedagogy Sports Physiology Sport Facilities Sociology of Sport Sports Law Sports Management Philosophy of Sport Motor Learning and Control Sports Medicine Traditional Sports"
   },
@@ -8360,6 +9644,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pariwisata, Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jtc.jurnal.unej.ac.id/index.php/tourismjournal/Article",
     "description": "The Journal of Tourism and Creativity (JTC) is purely bring a new insight on tourism. Especially on tourism policy, creative tourism, sustainable tourism, tourism management and organization, travel and tourism, leisure and recreation. And other diciplines, such as sociology of tourism, anthropology of tourism, psychology of tourism, law tourism,  technology and information of tourism, geography of tourism, tourism education. It also encompases of any applied tourism, such as marine tourism, eco tourism,  tourism empowernment of local community, man made tourism, agrotourism, etc."
   },
@@ -8373,6 +9659,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Lingkungan, Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://geosfera.jurnal.unej.ac.id/index.php/GEOSI/fees",
     "description": "1. Physical Geography : Spatial dimension on the earth surface, climate, soil, landform, and water.  2. Human Geography : Spatial dimension on economic, urban, social, and cultural  issues  3. Geographic Information System, Remote Sensing, and these application  4. Environmental change, environmental education, environmental monitoring, waste management, environmental sciences and sustainable development  5. Geography Education  6. Disaster Risk Reduction"
   },
@@ -8386,6 +9674,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora, Sosial dan Politik, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jim.usk.ac.id/sejarah/pages/view/Author%20Fees",
     "description": "☛ History of Education,        ☛ Historiography,        ☛ Social education,        ☛ Historycal Studies, and        ☛ Study of Conflict"
   },
@@ -8399,6 +9689,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psikologi, Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.usk.ac.id/seurune/about/submissions#authorFees",
     "description": "Seurune, Unsyiah Psychology Journal receives manuscripts that focused on psychological research and applied psychology.  Humanities studies related to psychological science are the scope that also considered in Seurune: Jurnal Psikologi Unsyiah."
   },
@@ -8412,6 +9704,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.usk.ac.id/JAcPS/about/submissions#authorFees",
     "description": "Focus of Journal of Aceh Physics Society (JAcPS) provides a forum for original paper works that enhances understanding of physics and their application."
   },
@@ -8425,6 +9719,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jim.usk.ac.id/CES/about/submissions#authorFees",
     "description": "Journal of The Civil Engineering Student (JOCES) mempublikasikan makalah ilmiah mahasiswa dan dosen pada Bidang Ilmu Teknik Sipil yang meliputi: Rekayasa Struktur, Hidroteknik, Rekayasa Transportasi dan Material Jalan Raya, Geoteknik, dan Manajemen Rekayasa Konstruksi serta Kebencanaan."
   },
@@ -8438,6 +9734,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pariwisata",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unud.ac.id/index.php/jkh/AuthorFee",
     "description": "The Journal focuses on the publication of studies on various topics including hospitality , tourism and travel management, leisure and recreation studies and the emerging field of event management."
   },
@@ -8451,6 +9749,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ojs.unud.ac.id/index.php/linguistika/AuthorFee",
     "description": "Linguistika is multi-disciplinary and serves both academic and practitioner audience, any subject in the area of language and communication is involved. The topical areas (but not limited to) relevant to the journal are as follows:  1 Comparative studies 2 Gesture and sign language 3 Any subject in theoretical and applied linguistic 4 Linguistic culture 5 Language learning 6 Language education"
   },
@@ -8464,6 +9764,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uin-suka.ac.id/tarbiyah/index.php/SKIJIER/Publication_Fee",
     "description": "Published every May and November, SKIJIER welcomes submissions from scholars, researchers, educators, and professionals examining Islamic education from diverse perspectives—including curriculum development, educational philosophy, management and leadership, institutional history, Islamic theology, sociology, anthropology, political science, and other interdisciplinary approaches."
   },
@@ -8477,6 +9779,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.untan.ac.id/index.php/jiapora/pages/view/AuthorFee",
     "description": "Manajemen Publik. Kebijakan Publik. Administrasi Pembangunan. Manajemen Sumber Daya Manusia. Pemberdayaan Masyarakat. Sosiologi Pembangunan"
   },
@@ -8490,6 +9794,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.untan.ac.id/index.php/jmdb/about/editorialPolicies#custom-0",
     "description": "The field of management includes research results in corporate governance, financial management, human resource management, marketing management, production and operations management, strategic management, information technology management, consumer behavior, service marketing, financial accounting, management accounting, auditing, tax planning, and behavior aspects in business.  The field of economics includes empirical and theoretical research in the fields of economic theory, econometrics, industrial economics, international economics, monetary economics, development economics, community economics, urban and border economics, health economics, agricultural economics, human resource economics and Islamic economics.  The field of entrepreneurship focuses on small business management, retail trade, MSM enterprises, and  trade in goods and services."
   },
@@ -8503,6 +9809,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jos.unsoed.ac.id/index.php/jlitera/authorfees",
     "description": "J-Litera: Jurnal Kajian Bahasa, Sastra dan Budaya Jepang, published twice a year every June and December, consists of paper-based articles, fresh ideas about Japanese language, literature, and culture which have never been published before."
   },
@@ -8516,6 +9824,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora, Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.fib-unmul.id/index.php/mebang/fees",
     "description": "Jurnal Mebang: Kajian Budaya Musik dan Pendidikan Musik contains the results of music research, such as:  1. Ethnomusicology 2. Traditional music / Folk music / Nusantara music 3. Music performance 4. Music creation  5. Music education 6. Musicology 7. Music culture study 8. Traditional music for therapy 9. Technology and digitization of traditional music 10. Religious music"
   },
@@ -8529,6 +9839,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journals.unmul.ac.id/index.php/TG/about/editorialPolicies#custom-3",
     "description": "focuses on the applied geology and geosciences with its key objective particularly emphasis on application of basic geological knowledge for addressing environmental, engineering, and geo-hazards problems. The subject covers variety of topics including geodynamics, sedimentology and stratigraphy, volcanology, engineering geology, environmental geology, hydrogeology, geo-hazard mitigation, mineral resources, energy resources, medical geology, geo-archaeology, as well as applied mining, petroleum, geophysics and geodesy."
   },
@@ -8542,6 +9854,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journals.unmul.ac.id/index.php/jadbis/about/editorialPolicies#custom-3",
     "description": "Marketing Management Information System Human resources Entrepreneurship Operation Management Consumer Behavior Financial Strategic Management Taxation Corporate Governance Auditing Business Ethics Knowledge Management"
   },
@@ -8555,6 +9869,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jsp.fisip-unmul.ac.id/site/index.php/jsp/publicationfee",
     "description": "JSP accepts articles on the themes of politics and government, public administration, international relations and politics, media and communication, social development, and economics and business."
   },
@@ -8568,6 +9884,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan, Humaniora",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.fkip.unmul.ac.id/index.php/adjektiva/authorfees",
     "description": "Adjektiva: Educational Languages and Literature Studies accepts research articles related to language, literature, and language and literature education, whose data are from the local languages in Indonesia, Indonesian languages, and foreign languages"
   },
@@ -8581,6 +9899,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journals.unmul.ac.id/index.php/JParadigma/about/editorialPolicies#custom-3",
     "description": "Lingkup dan fokus naskah Jurnal Paradigma mencakup bidang Administrasi Publik. Tujuan dari penerbitan Jurnal Paradigma adalah sebagai media publikasi ilmiah dalam rangka pengembangan khasanah ilmu pengetahuan di bidang Administrasi Publik. Jurnal Paradigma memuat tulisan ilmiah yang berasal dari hasil penelitian yang terkait dengan administrasi publik, serta tulisan ilmiah di bidang pemerintahan, birokrasi, pelayanan publik, manajemen, organisasi, dan politik dari kalangan akademisi, praktisi serta para profesional di bidang Administrasi Publik."
   },
@@ -8594,6 +9914,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 2.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "1-2 MINGGU",
     "url": "https://jutif.if.unsoed.ac.id/index.php/jurnal/faq",
     "description": "Jurnal Teknik Informatika (JUTIF) is a journal, that publishes high-quality research papers in the broad field of Informatics, Information Systems, and Computer Science, which encompasses software engineering, computer systems, computer network, algorithms and computation, and social impact of information and telecommunication technology."
   },
@@ -8607,6 +9929,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 1.000.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "1-2 MINGGU",
     "url": "http://ijcs.net/ijcs/index.php/ijcs/fasttrack",
     "description": "The scope of IJCS includes general computer science, information system, information technology, artificial intelligence, big data, industrial revolution 4.0, and general engineering. The articles will be published in English and Bahasa Indonesia."
   },
@@ -8620,6 +9944,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Rp 50",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.unilak.ac.id/index.php/dinamisia/authorFees",
     "description": "Education and Literacy      Health and Well-being      Social and Cultural Development      Economic Empowerment      Environmental Sustainability      Technology for Community Development      Policy and Governance      Disaster Management and Preparedness"
   },
@@ -8633,6 +9959,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 250.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "1-2 MINGGU",
     "url": "https://ejournal.jak-stik.ac.id/index.php/komputasi/fast_review",
     "description": "Jurnal Ilmiah KOMPUTASI ISSN : 1412-9434 dan e-ISSN:  2549-7227 adalah jurnal ilmiah di bidang sistem Informasi Komputer dan Teknologi yang memuat tulisan ilmiah mengenai penelitian di bidang: perangkat lunak, rekayasa perangkat lunak, teknologi informasi, pengembangan perangakat lunak dan tata kelola sistem informasi."
   },
@@ -8646,6 +9974,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.um-palembang.ac.id/balance/about/submissions",
     "description": "Akuntansi Keuangan     Akuntansi Sektor Publik     Manajemen akunting     Akuntansi Syariah dan Manajemen Keuangan     Auditing     Akuntansi Perilaku (Termasuk Etika dan Profesionalisme)     Manajemen keuangan     Akuntansi (Etika) Pendidikan     Perpajakan     Pasar Modal dan Investasi     Akuntansi Perbankan dan asuransi     Sistem Informasi Akuntansi"
   },
@@ -8659,6 +9989,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Rp 1.000.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "Maksimal 4 Minggu",
     "url": "https://journals2.ums.ac.id/index.php/warta/authorfees",
     "description": "Warta LPM merupakan salah satu jurnal yang bertujuan sebagai media komunikasi dan informasi ilmiah hasil pengabdian kepada masyarakat dan juga penelitian dengan tema pemberdayaan masyarakat. Cakupan artikel yang diterbitkan meliputi kajian pemberdayaan masyarakat dalam bidang ekonomi, sosial maupun kesehatan serta teknologi rekayasa"
   },
@@ -8672,6 +10004,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Rp 1.250.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://diglosiaunmul.com/index.php/diglosia/announcement/view/37",
     "description": "1. The study of language and literature learning 2. Experimental research on language and Literature Education 3. Language studies 4. Literary studies 5. Tradition and oral literature 6. Philology and classical manuscript studies 7. Film studies (related to language and literary studies)"
   },
@@ -8685,6 +10019,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 1.750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "1-4 MINGGU",
     "url": "https://ejournal.instiki.ac.id/index.php/sintechjournal/fasttrackreview",
     "description": "(a) Artificial Intelligence, (b) Image Processing and Pattern Recognition, (c) Data Mining, (d) Data Warehouse, (e) Big Data, (f) Data Analytics, (g) Data Science, (h) Natural language processing, (i) Software Engineering, (j) Information System, (k) Information Retrieval, (l) Mobile and Web Technology, (m) Geographical Information System, (n) Decission Support System, (o) Virtual Reality, (v) Augmented Reality, (q) IT Incubation, (r) IT Governance."
   },
@@ -8698,6 +10034,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 450.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "1 MINGGU",
     "url": "https://ejurnalunsam.id/index.php/jicom/fast",
     "description": "Sistem Cerdas, Big Data, Internet Of Thing, Cloud Computing, Sistem Terdistribusi, Multimedia, Keamanan Multimedia, Visi Komputer, Sistem Informasi, Teknologi Jaringan, Keamanan Jaringan Komputer, Teknologi Komunikasi Optik, E-commarce & E-Learning, Rekayasa Perangkat Lunak, Data Mining, Mobile Application, Knowledge Based Management System, Sinyal Digital, Image Processing,  Robotik, dan lain-lain yang berhubungan dengan teknologi."
   },
@@ -8711,6 +10049,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Rp 1.000.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ejurnal.itats.ac.id/jpp-iptek/pages/view/fast-track-review",
     "description": "pelatihan dan pemasaran yang digunakan untuk pemberdayaan masyarakat, pemberdayaan UKM dan masyarakat lokal, peningkatan akses sosial, kegiatan pengabdian dan penerapan Iptek kepada masyarakat oleh siswa/mahasiswa, pemberdayaan komunitas daerah, pendidikan untuk pembangunan berkelanjutan, serta desain dan implementasi teknologi tepat guna untuk masyarakat."
   },
@@ -8724,6 +10064,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 800.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://ejournal.stai-tbh.ac.id/index.php/asatiza/APCs",
     "description": "Asatiza: Jurnal Pendidikan is a peer-reviewed journal publishing high-impact research at the intersection of Islamic education, innovative pedagogies, and global educational challenges. We bridge faith-based and secular perspectives to advance SDG-aligned education in Indonesia and Muslim-majority contexts, while welcoming comparative global insights."
   },
@@ -8737,6 +10079,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 600.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ejournal.upi.edu/index.php/edukid/about/submissions",
     "description": "Edukids: Journal of Growth, Development and Early Childhood Education is a scientific journal of early childhood education Teacher Education Study Program for Early Childhood Education at the Indonesian University of Education, which contains research articles processed through blind peer reviewed. The Edukids Journal receives articles on child education, child development, curriculum and learning, science and technology for children, policies related to children, teacher education for early childhood, parenting, science and technology for children, and other fields that are related to early childhood. The Edukids Journal can accommodate researchers, lecturers, observers of children's education, students, practitioners in the field of early childhood education to publicize their work widely."
   },
@@ -8750,6 +10094,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "2 MINGGU",
     "url": "http://jtiulm.ti.ft.ulm.ac.id/index.php/jtiulm/fastrack",
     "description": "Jurnal Teknologi Informasi Universitas Lambung Mangkurat (JTIULM), with a registered number ISSN 2527-5399 (Print),  2528-2514 (Online) is a journal in Computer Sciences, Computer Engineering, and Information Technology. This journal is available to researchers who wish to improve their knowledge in a particular field, and intend to disseminate knowledge as a result of research"
   },
@@ -8763,6 +10109,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://e-journals.dinamika.ac.id/index.php/society/fast-track",
     "description": "Society : Journal Pengabdian dan Pemberdayaan Masyarakat is a journal that scientific publication media in the form of conceptual paper and field research related to community service."
   },
@@ -8776,6 +10124,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psikologi",
     "apc": "Rp 450.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://scholar.ummetro.ac.id/index.php/sanak/FastTract",
     "description": "Jurnal Kajian Anak (J-Sanak) is earlychildhood study journal, are articles of research results such as research and development, quantitative, qualitative, experiment, literature studies, application of theory, critical analysis studies, and islamic studies of children's education in PAUD and children's growth and development"
   },
@@ -8789,6 +10139,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.ubaya.ac.id/index.php/jeb/authorfees",
     "description": "Ekonomi dan Bisnis: Berkala Publikasi Gagasan Konseptual, Hasil Penelitian, Kajian, dan Terapan Teori is a journal publisher that aim to provide an international platform for knowledge sharing, discussion and networking on the various aspects related to developing economies through publications of original research including theoretical and empirical papers. The journal's coverage includes the following subject areas: globalization and foreign trade, social economics, and economic development."
   },
@@ -8802,6 +10154,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan",
     "apc": "Rp 700",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://pasca.jurnalikhac.ac.id/index.php/munaddhomah/fast",
     "description": "Munaddhomah: Jurnal Manajemen Pendidikan Islam (Islamic Education Management) is the leading journal in Islamic educational institutions concerning Islamic Education Management. The journal promotes research and scholarly discussion concerning the Progressive Management of Islamic Education in Academic disciplines and Institutions, focusing on the advancement of scholarship in both formal and non-formal education. Topics might be about the management of Islamic education, Islamic Leadership, and teacher professional development in Islamic Schools."
   },
@@ -8815,6 +10169,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Rp 1.000.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.lppmunindra.ac.id/index.php/Jurnal_Desain/pages/view/fasttrack",
     "description": "Jurnal Desain focused to publish high-quality articles dedicated to all aspects of the latest outstanding research reports, conceptual ideas, studies, theories, using the qualitative approach in Design and Visual Communications, Interior Design, Fashion Design, Product Design, Fine Art, Photography, Animation and other related fields of Visual Art."
   },
@@ -8828,6 +10184,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan",
     "apc": "Rp 100.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.stfsp.ac.id/index.php/media/fasttrack",
     "description": "MEDIA: Jurnal Filsafat dan Teologi menerima manuskrip hasil  penelitian filsafat dan teologi: pemikiran filsafat dan teologi kontekstual-aktual, kajian public philosophy dan public theology, dan studi interdisipliner untuk memperkaya dan mengkontekstualisasi diskursus filsafat dan teologi."
   },
@@ -8841,6 +10199,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 800.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.stmikjayakarta.ac.id/index.php/jisamar/about/submissions",
     "description": "Information System, Applied, Management, Accounting"
   },
@@ -8854,6 +10214,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 1.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "1 MINGGU",
     "url": "https://ejournal.widyamataram.ac.id/index.php/j-mae/AuthorCharge",
     "description": "The Journal E-BISMA in particular focuses on the main issues in the development of management science, accounting, entrepreneurship, and related issues"
   },
@@ -8867,6 +10229,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 1.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "2 MINGGU",
     "url": "https://ojs.unik-kediri.ac.id/index.php/ekonika/AuthorFees",
     "description": "Economic Development Management Human Resource Accounting Entrepreneurship Finance Business"
   },
@@ -8880,6 +10244,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 900.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.murnisadar.ac.id/index.php/Tekinkom/Biaya_Publikasi",
     "description": "Pemrograman Jaringan, Jaringan Komputer, Teknik Komputer, Ilmu Komputer/Informatika, Sistem Informasi, dan Multi Disiplin Penunjang Domain Penelitian Komputasi, Sistem dan Teknologi Informasi dan Komunikasi, dan lain-lain yang terkait."
   },
@@ -8893,6 +10259,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Rp 1.200.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "2 - 3 MINGGU",
     "url": "https://ejournal.uniramalang.ac.id/index.php/dialektika/APC",
     "description": "This journal has specifications as a medium for communicating research results and conceptual thoughts related to the field of Economics and Social Science. Including results of original scientific research and new scientific review articles from various academics and researchers that have not been published elsewhere."
   },
@@ -8906,6 +10274,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://ojs.unpkediri.ac.id/index.php/PPM/information",
     "description": "This Scientific Periodic Issue is a scientific publication in the field of community service and empowerment with coverage in the fields of Education, Economics, Technology, Science, and Health."
   },
@@ -8919,6 +10289,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 600.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.um-palembang.ac.id/dikbio/about/submissions#authorFees",
     "description": "Didaktika Biologi: Jurnal Penelitian Pendidikan Biologi (Didaktika Biologi as a short name; Biology Didactics, in english) is a journal that contains scientific articles of research results in the field of biological education."
   },
@@ -8932,6 +10304,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 600.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "1 MINGGU",
     "url": "https://journalstkippgrisitubondo.ac.id/index.php/EDUSAINTEK/Article_Processing_Charge",
     "description": "The purpose of this journal publication is to spread conceptual thoughts or ideas and research results that have been achieved in the field of Education, Science, and Technology. Writing forms favor the reader's ease to see the applied research methods, processing, and data analysis, discussion of the main theories underlying, and recommendations submitted based on the results of the study."
   },
@@ -8945,6 +10319,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psikologi",
     "apc": "Rp 1.600.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://journal2.um.ac.id/index.php/JSPsi",
     "description": "JSP includes topics related to the theme of clinical psychology, industry and organization, education, development, and social. In this journal, we are welcoming any works regarding the problems found in society studied based on Psychology or any form of psychoeducation in various fields of psychology. We encourage author(s) to submit the manuscripts with various study quantitatives methods such as meta-analysis, experimental study, and non-experimental study (correlational, comparison, path analysis, etc)."
   },
@@ -8958,6 +10334,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.isdikkieraha.ac.id/index.php/jimat",
     "description": "Jurnal Ilmiah Matematika (JIMAT) adalah terbitan berkala ilmiah (e-ISSN: 2774-1729) yang menyajikan informasi-informasi terkini di bidang Pendidikan Matematika dan Sains Matematika, melalui artikel-artikel baik yang berbasis penelitian lapangan maupun kajian literatur."
   },
@@ -8971,6 +10349,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.polibatam.ac.id/index.php/JAIC/apc",
     "description": "Applied Informatics Applied Computing Applied Mathematics Applied Network Computing Applied Cybersecurity"
   },
@@ -8984,6 +10364,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 400.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://jipp.unram.ac.id/index.php/jipp/about",
     "description": "The journal publishes research and conceptual articles in the field of education focusing on the teaching and learning theories and activities on science education; social science education; and  linguistics and literature education."
   },
@@ -8997,6 +10379,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 1.000.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://jim.usk.ac.id/EKA/pages/view/faq",
     "description": "Jimeka menerima artikel ilmiah yang belum dipublikasikan pada tempat lain. JIMEKA berfokus pada isu-isu pengembangan ilmu akuntansi yaitu: Akuntansi Keuangan, Akuntansi Manajemen, Akuntansi Sektor Publik, Akuntansi Syariah, dan Sistem Informasi Akuntansi, yang mencakup berbagai pendekatan penelitian, yaitu: kuantitatif, kualitatif dan metode campuran, baik dalam Bahasa Indonesia maupun Bahasa Inggris."
   },
@@ -9010,6 +10394,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://publikasi.mercubuana.ac.id/index.php/fifo/about/submissions",
     "description": "Big Data IT Infrastructure Computer Network Computer Network Security Information Systems Data Mining Strategic Information Systems Data Centers Multimedia Applications Pattern Recognition Computer Vision Parallel Computing Database Management Software Engineering Cloud Computing Mobile Applications Geographic Information Systems Mobile Technology"
   },
@@ -9023,6 +10409,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Rp 200.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.uia.ac.id/biosains/AUTHORFEES",
     "description": "Biosains merupakan jurnal yang ditelaah oleh mitra bestari yang mempublikasikan jenis artikel penelitian, short communications, dan artikel telaah/ review dari disiplin ilmu Biologi dari wilayah tropis meliputi botani, zoologi, biosistematika, genetika molekuler, bioteknologi, biodiversitas, mikrobiologi, ekologi, ilmu lingkungan, Biospeleology, teknologi pangan, pertanian, farmakologi, dan biomedik. Jurnal ini menerbitkan naskah yang ditulis dalam Bahasa Indonesia."
   },
@@ -9036,6 +10424,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Rp 700.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.unived.ac.id/index.php/prof/biayapublikasi",
     "description": "Profesional: Jurnal Ilmu Komunikasi dan Administrasi Publik dimaksudkan sebagai media hasil penelitian, pemikiran dan kajian kritis mengenai berbagai isu tentang ilmu komunikasi dan administrasi publik yang dapat dimanfaatkan baik secara nasional maupun internasional. Artikel ilmiah dimaksud berupa kajian teori (theoritical review) dan kajian empiris dari ilmu terkait, serta dapat dipertanggungjawabkan dan disebarluaskan secara nasional maupun internasional."
   },
@@ -9049,6 +10439,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Rp 400.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ejournal.unsrat.ac.id/v2/index.php/elekdankom/about/editorialPolicies#custom-1",
     "description": "Electronics engineering, Computer engineering, Computer science, Power engineering, Control engineering"
   },
@@ -9062,6 +10454,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Rp 1.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4-6 MINGGU",
     "url": "https://ejournal.uinsalatiga.ac.id/index.php/jopr/authorfees",
     "description": "Journal of Pragmatics Research, E-ISSN: 2656-8020, is published by Universitas Islam Negeri Salatiga, Central Java, Indonesia. It is a scientific forum published every April and October and aimed at developing all aspects of scholarly theories and research on pragmatics, Pragma-linguistics, socio-pragmatics within the Indonesian context of political, and socio-cultural aspects."
   },
@@ -9075,6 +10469,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agrikultur",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.lppm-unasman.ac.id/index.php/agrovital/about/editorialPolicies",
     "description": "AGROVITAL : Jurnal Ilmu Pertanian adalah jurnal Fakultas Ilmu Pertanian Universitas Al Asyariah Mandar. Sebagai wahana komunikasi insan akademik dalam bidang Budidaya Tanaman, Ilmu Tanah Hama dan Penyakit Tanaman, Sosial Ekonomi Pertanian, Produksi Ternak, Nutrisi dan Makanan Ternak, Kesehatan Ternak, dan Sosial Ekonomi Peternakan."
   },
@@ -9088,6 +10484,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "Tidak Disebutkan",
     "url": "https://journal.unesa.ac.id/index.php/jrpipm/AuthorFee",
     "description": "JRPIPM is a medium for researchers, teachers, students, and lecturers who will publish their research results or theoretical studies about education and/or mathematics learning. The focus and scope of articles published by JRPIPM are related to innovation in ICT-based mathematics learning, ethnomathematics, assessment and evaluation, and learning psychology."
   },
@@ -9101,6 +10499,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Rp 1.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://e-journal.unair.ac.id/JAKI/announcement/view/199",
     "description": "Indonesian Journal of Health Administration (Jurnal Administrasi Kesehatan Indonesia) is a scientific journal that contains commentary, original articles, literature reviews, and short communications related to the scope of management, organization, and leadership in health institutions. This journal is supported by practitioners and scientists from various institutions which involve expertise in health management and health organization."
   },
@@ -9114,6 +10514,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Rp 2.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "45780",
     "url": "https://journal.iaimnumetrolampung.ac.id/index.php/mantiqutayr/articleprocessingcharge",
     "description": "Mantiqu Tayr: Journal of Arabic Language invites scholars, researchers, and students to contribute the result of their studies and researches in the areas related to Education, which covers textual and fieldwork investigation with special reference of Arabic History, Strategy of Arabic Teaching, Technology of Arabic Teaching, Arabic Language Education, Micro Linguistic Studies, Macro Linguistic Studies, Linguistic Comparative Studies."
   },
@@ -9127,6 +10529,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "45812",
     "url": "https://jurnal.faperta-unras.ac.id/index.php/pakdemas/AUTHORFEEANDSUBSCRIPTION",
     "description": "PAKDEMAS : : Jurnal Pengabdian kepada Masyarakat accepts manuscripts or article manuscripts in the service of the results of the application of research and the downstreaming of community-based quantitative and qualitative scientific research results into a community service format covering relevant scientific fields including: Agriculture, Health,Engineering, Social Humanities, Education, Science, Sports, Language, Business and Economics, Engineering and Vocational, and Arts."
   },
@@ -9140,6 +10544,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://e-journal.metrouniv.ac.id/index.php/istinbath/Authorfee",
     "description": "Civil & Criminal Law Constitutional & Administrative Law Economic & Business Law Procedural Law (Criminal, Civil, State Administration, and Constitutional Court) Human Rights Law International Law Public Law and Policy"
   },
@@ -9153,6 +10559,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Rp 2.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://citeus.um.ac.id/jbs/policies.html",
     "description": "The Bahasa dan Seni: Jurnal Bahasa, Sastra, Seni, dan Pengajarannya is an international, peer-reviewed, open-access journal that reports on all aspects language, literature, arts, and their relation to teaching, the aim of this journal is to highlight research and development leading to an advancement in the field of language, literature, arts, and teaching methods. It publishes scientific articles on language, literature, and art, as well as their relation to teaching, including empirical and theoretical studies, original research, case studies, research or book reviews, and innovation in teaching and learning with various perspectives."
   },
@@ -9166,6 +10574,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Rp 4.000.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.ukwms.ac.id/index.php/KOMUNIKATIF/fees",
     "description": "Komunikatif is issued by Fakultas Ilmu Komunikasi Universitas Katolik Widya Mandala Surabaya since 2012. Komunikatif is a peer-reviewed journal. Komunikatif publishes an article from selected topics in communication studies; those are media studies, public relations, and human communication."
   },
@@ -9179,6 +10589,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.uns.ac.id/SMedJour/announcement/view/605",
     "description": "Smart Medical Journal (SMedJour) publishes original research articles or systematic review in the  basic medical sciences, clinic medical sciences, medical education and public health"
   },
@@ -9192,6 +10604,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 1.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://e-journal.umc.ac.id/index.php/JPK/ArticlePublicationCharge",
     "description": "Jurnal Proaksi accepts articles from Indonesia authors and other countries. Jurnal Proaksi covered various research approaches, namely: quantitative, qualitative and mixed methods. Jurnal Proaksi focuses related on various themes, topics and aspects of accounting and investment"
   },
@@ -9205,6 +10619,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agrikultur",
     "apc": "Rp 700.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.umg.ac.id/index.php/jpp/Fees",
     "description": "Artikel berisikan topik tentang pengembangan budidaya perairan, pengelolaan air, pemanfaatan budidaya perikanan, teknologi hasil budidaya, bioteknologi budidaya dan perikanan berkelanjutan secara sosial ekonomi."
   },
@@ -9218,6 +10634,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Rp 1.000.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.stikosa-aws.ac.id/index.php/spektrum/author_fee",
     "description": "Communications and media theories Broadcasting Journalism Public Relations Advertisings Tourism Popular Cultures Communication Politics Creative industries Arts and designs Research methodologies in communications and media studies Communication and media policy Internet and social media activisms Cyberculture TV and Film Media, Gender, and Sexualities Media and Identities Mass Communication Effects"
   },
@@ -9231,6 +10649,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.unpas.ac.id/index.php/pendas/AuthorFees",
     "description": "This journal publishes research articles results in field of: - Mathematics for primary education level - Natural Science for primary education level - Indonesian languange for primary education level - Social studies for primary education level - Civic Education for primary education level"
   },
@@ -9244,6 +10664,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jom.fti.budiluhur.ac.id/index.php/SKANIKA/biayapublikasi",
     "description": "Computer Science and IT, Control & System Engineering, Electrical & Electronic Engineering, Networking, Artificial Intelligence, Data Processing"
   },
@@ -9257,6 +10679,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "http://medikakartika.unjani.ac.id/medikakartika/index.php/mk/authorFee",
     "description": "Medika Kartika: Journal of Medicine and Health is a scientific journal that publishes research articles, case reports, literature reviews, and other relevant topics in medicine and health."
   },
@@ -9270,6 +10694,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ejournal.unsuda.ac.id/index.php/kpi/AuthorFees",
     "description": "Busyro : Jurnal Dakwah dan Komunikasi Islam adalah jurnal Fakultas Dakwah yang fokus kajian Ilmu Dakwah (Konsep Dakwah, Media Dakwah, Da’i, Pesan Dakwah) komunikasi yang mengintegrasikan pesan-pesan agama Islam, yaitu Komunikasi Islam Harmonis, Komunikasi Media, Komunikasi Pesantren, Komunikasi Budaya, Conten Media, Komunikasi Massa, Komunikasi Politik, dan isu-isu kontemporer terkait bidang Komunikasi Islam dan Bimbingan Konseling kajian dan nilai-nilai ajaran Islam yang rahmatan lil alamin."
   },
@@ -9283,6 +10709,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Teknologi dan Komputer",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ejournal.unkhair.ac.id/index.php/jiko/pages/view/fasttrack",
     "description": "This journal contains the results of research on Intelligent Systems, Image Processing, Computer Systems, Social Informatics, Digital Forensic, Health Informatics, Game Media and Mobile Technology, Data Mining, Human and Computer Interaction, Machine Learning, Natural Language Processing, Virtual Reality, E-Learning and related fields of computer science."
   },
@@ -9296,6 +10724,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ojs.unud.ac.id/index.php/jmat/fee",
     "description": "The scope of Jurnal Matematika includingAnalysis, algebra, topology, graph, approach of numerical simulation or known by the term of numerical analysis, optimum controls, queuing issues, optimization, finance, biomatematics, industrial mathematics, financial mathematics, and others."
   },
@@ -9309,6 +10739,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ejournal.undiksha.ac.id/index.php/JPPII/Authorfees",
     "description": "As an international, multi-disciplinary, peer-refereed journal, the scope of this journal is in learning and instruction area which provides a platform for the publication of the most advanced scientific researches in the areas of learning, development, instruction and teaching at Science Education"
   },
@@ -9322,6 +10754,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Hukum",
     "apc": "Rp 500",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://e-journal.uingusdur.ac.id/jhi/PublicationFee",
     "description": "Focuses on the issue of study Contemporary Islamic Law practices in Indonesia by multidisciplinary approach. This Journal specializes in studying the theory and practice of various topics are Islamic family law, Islamic criminal law, Islamic constitutional law, Islamic private law, Islamic economic law, in the framework of Indonesian legal studies in the global context."
   },
@@ -9335,6 +10769,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.untar.ac.id/index.php/jmistki/about/submissions",
     "description": "Sains, Teknologi, dan Ilmu Kesehatan"
   },
@@ -9348,6 +10784,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 600.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "1 MINGGU",
     "url": "https://jurnal.dharmawangsa.ac.id/index.php/bisnet/pages/view/Biaya%20Publikasi",
     "description": "Manajemen Pemasaran  Manajemen Sumber Daya Manusia  Manajemen Keuangan  Manajemen Operasional   Kewirausahaan   Sistem Informasi Manajemen  Akuntansi Keuangan  Akuntansi Manajemen  Akuntansi Pemerintahan  Sistem Informasi Akuntansi  Akuntansi Perpajakan"
   },
@@ -9361,6 +10799,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://e-jurnal.unisda.ac.id/index.php/MADANI/Author_Fess",
     "description": "Public Administration  Political Science  International Relations  Communication Science  Leadership  Social Welfare  The Science Of Government  Public Policy  Sociology  Development Studies"
   },
@@ -9374,6 +10814,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Rp 700.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ejournal.undiksha.ac.id/index.php/JPTM/about",
     "description": "Mechanical Engineering Education (Learning Media Development, Class Experiments) Mechanical Engineering (Energy Conversion, Materials, New and Renewable Energy, Design and Development, Mechanics, Manufacturing)"
   },
@@ -9387,6 +10829,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://e-journal.metrouniv.ac.id/index.php/JBPI/AuthorFees",
     "description": "The Islamic Counseling Guidance Journal publishes scientific works resulting from conceptual studies as well as research in developing concepts and theories related to the study of Islamic counseling, Islamic educational counseling, Islamic educational counseling, guidance counseling, social religious counseling, Islamic counseling, counseling psychology, mental health, rehabilitation counseling, Islamic psychology, and multicultural & religious counseling."
   },
@@ -9400,6 +10844,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.stkipsubang.ac.id/index.php/didaktik/AuthorFees",
     "description": "This journal publishes research articles results and conceptual studies in field of elementary mathematics education, science, Indonesian languange and social studies for primary education level.  Journal of Primary Education publishes research studies employing a variety of qualitative and/or quantitative methods and approaches in the field of primary education"
   },
@@ -9413,6 +10859,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Agrikultur",
     "apc": "Rp 350.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ojs.umb-bungo.ac.id/index.php/SEMAHJPSP/about/submissions#authorFees",
     "description": "Jurnal Pengelolaan Pengelolaan Sumberdaya Perairan mencakup kajian Ekonomi Perikanan, Budidaya Perikanan dan Pemasaran Hasil Peikanan, Kajian Konservasi sumberdaya Perairan, Reservat, Kearifan Lokal Lubuk Laranagan, Kawasan Konservasi Perairan, Bioekologi Perairan, Kajian Pengolahan Hasil Perikanan, Mutu Produk Perikanan, Kajian Exploitasi Perikanan, Alat tangkap Ramah lingkungan, Kontruksi alat tangkap dan hasil Tangkap"
   },
@@ -9426,6 +10874,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Keagamaan",
     "apc": "Rp 1.500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "45718",
     "url": "https://journal.unugiri.ac.id/index.php/al-ulya/Author_Fee",
     "description": "This journal focuses its scope on the issue of Islamic Education in Southeast Asia. We invite scientists, scholars, researchers, and professionals in the field of Islamic Education in Southeast Asia to publish their research results in our journal. This journal publishes high quality empirical and theoretical research covering all aspects of Islamic Education in Southeast Asia."
   },
@@ -9439,6 +10889,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Rp 2.000.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "8 MINGGU",
     "url": "https://ejournal.poltekkesaceh.ac.id/index.php/gikes/about/submissions",
     "description": "Journal of SAGO Gizi dan Kesehatan (Nutrition and Health) is a peer-reviewed journal of a scientific nature contained in the Polytechnic of Health Ministry of Health of Aceh, who publish high quality of nutrition and health-related individuals, populations, groups and communities who are vulnerable to malnutrition and health and risk issues. The scope of the journal study associated issues of nutrition, food technology, nutrition and maternal and child health, environmental health, hygiene and sanitation, oral health, treatment of individuals/families and communities, and safety of medical drugs."
   },
@@ -9452,6 +10904,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal1.uad.ac.id/index.php/JRKPF/author_fee",
     "description": "The JRKPF welcomes high-quality manuscripts resulting from the results of research and studies in the field of physics education in the scope of physics education, which includes, but is not limited to, the following topics: ICT in Physics Education, Physics learning: models and methods of learning, Development of physics teaching materials, Assessment and Evaluation in Physics Education, Conceptions and Misconceptions in Physics, Physics experiment, Physics and its applications, Astronomy."
   },
@@ -9465,6 +10919,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 300.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://openjournal.unpam.ac.id/index.php/PKn/fee",
     "description": "Pancasila dan kewarganegaraan Pendidikan pancasila dan kewarganegaraan Hukum dan ketatanegaraan Perundang-undangan dan kebijakan publik Pendidikan dan pembelajaran"
   },
@@ -9478,6 +10934,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ojs.poltekkes-malang.ac.id/index.php/JIKI/Publicationfee",
     "description": "JIKI particularly focuses on the main problems in the health development areas as follows Medical Records, Management Information, Health Insurance, Health Policy and any Specifics Issues of Public Health."
   },
@@ -9491,6 +10949,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://e-journal.lp2m.uinjambi.ac.id/ojp/index.php/ijoieb/aothorfee",
     "description": "This Journal specializes in Islamic economics thought, research, and is intended to communicate original research and current issues on the subject. This journal warmly welcomes contributions from scholars of related disciplines"
   },
@@ -9504,6 +10964,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 650.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.untan.ac.id/index.php/jvip/about/editorialPolicies#custom-2",
     "description": "Jurnal Visi Ilmu Pendidikan published manuscripts on research in education, particularly related to teaching and learning, theory and practice in education, education policy, curriculum and materials development, education on culture and characters of nation, teacher education, and other relevant activities."
   },
@@ -9517,6 +10979,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Ekonomi dan Bisnis",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://akurasi.unram.ac.id/index.php/akurasi/apcs",
     "description": "Financial Accounting; Public Sector Accounting; Management Accounting; Auditing; Tax Accounting; Accounting and Information Systems; Social and Environmental Accounting; Governance and Ethics; Fraud and Forensic Accounting; Capital Market Research; Behavioral Accounting dan CSR and Sustainability Accounting"
   },
@@ -9530,6 +10994,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Psikologi",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://jurnal.unmer.ac.id/index.php/jpt/about",
     "description": "Jurnal Psikologi Tabularasa (JPT) is an open access journal issued by the Faculty of Psychology, University of Merdeka Malang. It is published twice a year, in April and October. The journal's scopes include clinical psychology, developmental psychology, educational psychology, and industrial & organizational psychology."
   },
@@ -9543,6 +11009,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.iaincurup.ac.id/index.php/JSMPI/APC",
     "description": "(1). Innovation in Islamic Educational Management across the spectrum, (2). The development of management in Islamic Educational Institution, (3). Creation of an environment in which the management of resources provides the most efficient outputs, (4). Sharing of new initiatives in managing Islamic Educational Institution, with global application, (5). Leadership, (6). School based management, (7). The development of educational leadership for managing Islamic Educational Institution with global application, (8). Innovation in educational administration, such as involving technology in educational. administration."
   },
@@ -9556,6 +11024,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://ejournal.uin-suka.ac.id/isoshum/sosiologireflektif/article-processing-charge",
     "description": "Jurnal Sosiologi Reflektif (JSR) focuses on disseminating research on social and religious issues within Muslim society, particularly those related to strengthening civil society across various dimensions. Additionally, JSR receives articles based on literature reviews aimed at developing integrated sociological theories with Islamic Studies, such as discourses on prophetic social sciences, women in Islam, rituals, traditions, and other related perspectives."
   },
@@ -9569,6 +11039,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Contact Admin",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.fte.uniba-bpn.ac.id/index.php/JTE/Author_Fees",
     "description": "Jurnal Teknik Elektro (JTE) UNIBA meliputi topik: Teknologi Informasi, Sistem Komunikasi, Sistem Ketenagaan, dan Isyarat Sistem Elektronika."
   },
@@ -9582,6 +11054,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 900.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://drive.google.com/file/d/13EjMjpXUrxJ4tWuBp0uJMarm3y7kjKzp/view",
     "description": "This Journal provides space for academic debate and critical thinking to explore social studies learning. This Journal covers original research articles, review articles, and short papers on the subjects that include but are not limited to social studies education, learning media issues in social studies, learning model issues in Social studies, innovation in social studies learning, Integrated technology in social studies, current issue in social studies, and other related subjects."
   },
@@ -9595,6 +11069,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Kesehatan",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journals2.ums.ac.id/index.php/abdigeomedisains/announcement/view/129",
     "description": "Abdi Geomedisains (E-ISSN 2746-1157, P-ISSN 2746-1165) is an open access, blind peer-reviewed journal published by LPMPP Universitas Muhammadiyah Surakarta (UMS). Abdi Geomedisains focuses on disseminating original articles based on community engagement activities conducted by academic entities, such as students, lecturers, and researches. The focus and scope of this journal are geography, dentistry, pharmacy, health sciences, and other related disciplines."
   },
@@ -9608,6 +11084,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://jurnal.isdikkieraha.ac.id/index.php/kuantum",
     "description": "KUANTUM menerbitkan artikel-artikel ilmiah baik yang berbasis penelitian maupun yang berbasis kajian kepustakaan dengan fokus dan lingkup sebagai berikut:  Pendidikan Ilmu Fisika Sains Fisika Fisika Kuantum Ilmu Pengetahuan Alam"
   },
@@ -9621,6 +11099,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Humaniora",
     "apc": "Rp 350.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journals.usm.ac.id/index.php/jdsb/Article_Processing_Charge",
     "description": "Ilmu Sosial Ilmu Budaya  Manajemen Akuntansi Hukum Psikologi Ilmu Komunikasi"
   },
@@ -9634,6 +11114,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 500.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "4 MINGGU",
     "url": "https://ejournal2.undiksha.ac.id/index.php/jurnal_ep/Authorfees",
     "description": "The Educational research and evaluation  aims to provide a forum for scholarly understanding of the field of education and plays an important role in promoting the process that accumulated knowledge, values, and skills are transmitted from one generation to another; and to make methods and contents of evaluation and research in education available to teachers, administrators and research workers. The journal encompasses a variety of topics, including child development, curriculum, reading comprehension, philosophies of education and educational approaches, etc."
   },
@@ -9647,6 +11129,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sosial dan Politik",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": true,
+    "responseTime": "-",
     "url": "https://journal.untar.ac.id/index.php/jmishumsen/about",
     "description": "Jurnal Muara Ilmu Sosial, Humaniora, dan Seni (P-ISSN 2579-6348 dan E-ISSN 2579-6356) merupakan jurnal yang menjadi wadah bagi penerbitan artikel-artikel ilmiah hasil penelitian dalam bidang Ilmu Sosial (seperti Ilmu Psikologi dan Ilmu Komunikasi), Humaniora (seperti Ilmu Hukum, Ilmu Budaya, Ilmu Bahasa), dan Seni (seperti Seni Rupa dan Design)."
   },
@@ -9660,6 +11144,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pendidikan",
     "apc": "Rp 750.000",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "2-4 MINGGU",
     "url": "http://jiip.stkipyapisdompu.ac.id/jiip/index.php/JIIP/authorfee",
     "description": "JIIP (Jurnal Ilmiah Ilmu Pendidikan), covers research and study in the field of education and culture, such as, education management, education best practice, curriculum, education assessment, education policy, education technology, language, archeology, educatioan etc ."
   },
@@ -9673,6 +11159,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Sains dan Teknik",
     "apc": "Rp 50",
     "isFree": false,
+    "isFastTrack": true,
+    "responseTime": "10-20 HARI",
     "url": "https://journal.unilak.ac.id/index.php/dz/Faq",
     "description": "Artificial Intelligence & Data Science: AI, Machine Learning, NLP, Computer Vision, Data Mining, Robotics, Bioinformatics  Systems & Computing: Network Security, Cloud & Grid Computing, Mobile Apps, E-Commerce, Virtual/Augmented Reality  ICT Applications in Society: E-Government, Business Information Systems, Geographic Information Systems"
   },
@@ -9686,6 +11174,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ugm.ac.id/v3/BAKTI/fee",
     "description": "Bakti Budaya: Jurnal Pengabdian kepada Masyarakat [BB] bertujuan untuk menerbitkan naskah hasil kegiatan pengabdian kepada masyarakat (PkM). Tulisan yang dimuat berupa analisis temuan atau reﬂeksi kegiatan PkM yang terhilirkan untuk pemanfaatan secara lebih luas oleh masyarakat. Hilirisasi dalam kegiatan pengabdian kepada masyarakat tidak terbatas pada konsep, metode, sasaran PkM, hasil luaran PkM, dan refleksi kegiatan, tetapi juga aspek-aspek penguatan kapasitas masyarakat dalam mengidentifikasi dan menyelesaikan permasalahan.  Cakupan BB adalah naskah luaran kegiatan PkM dengan tema kajian budaya dalam perspektif Indonesia."
   },
@@ -9699,6 +11189,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.unair.ac.id/JPMK/Article_Processing_Charge",
     "description": "Development and application of scientific knowledge and technology in the field of nursing or related health professions.  - Human resource development in nursing and health - Community empowerment in nursing and health - Rural health development - Health promotion - Technology application in nursing and health - Business application in nursing and health"
   },
@@ -9712,6 +11204,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://abdi.ppj.unp.ac.id/index.php/abdi/feew",
     "description": "ABDI: Jurnal Pengabdian dan Pemberdayaan Masyarakat publishes scholarship in the area of community service, covering a wide variety of disciplines, including education, human resource development, poverty alleviation based on local resources; management of rural and coastal areas based on local resources, economic development, entrepreneurship, cooperatives, creative industries, the development of environmentally sound technology, health, nutrition, arts, literature, and culture."
   },
@@ -9725,6 +11219,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "http://pelitaeksakta.ppj.unp.ac.id/index.php/pelitaeksakta/Article_Processing_Charges",
     "description": "Journal containing the results of community service on the latest issues and trends occurring national and internationally that written in English and bahasa. Our specific focuses and scopes  are: 1. Mathematics, Mathematics Education,2. Biology, Biology Education, 3. Physics, Physics Education, 4. Chemistry, Chemistry Education, 5. Science Education, 6. Statistics."
   },
@@ -9738,6 +11234,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jscs.ejournal.unsri.ac.id/index.php/jscs/articleprocessingcharge",
     "description": "Sricommerce: Journal of Sriwijaya Community Services, particularly focuses on the main problems in the development of the sciences of community services areas as follows: Socio-economy and business; Training, Marketing, Financial and Design; Community Empowerment and Community Services; Social Aspect and Sustainable Development; Education, Science and Appropriate Technology; Applicative Research Results."
   },
@@ -9751,6 +11249,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://e-journal.trisakti.ac.id/index.php/jamin/JBM",
     "description": "The broad scope of JAMIN covers various aspects of community service, generally consisting of:  Social Empowerment, Socialization, Knowledge Sharing, and Implementation of Eco-Friendly Technology Activities aimed at raising awareness and increasing community involvement through social empowerment, counseling, and sharing information and knowledge about eco-friendly technology. Medical Treatment, Free Consultations (for various aspects), Community Involvement, and Local Wisdom Providing health services such as medical treatment and free consultations, while encouraging community participation in programs that utilize local wisdom to improve quality of life. Craft Training, Marketing Assistance, Facilitating Social Access, and Other Services Related to Eco-Friendly Design Instruments Conducting training to develop craft skills, providing marketing assistance, facilitating social access, and offering other services that support the use of eco-friendly design. Education, Health, and Entrepreneurial Skills for Sustainable Community Development Focusing on enhancing education, health, and entrepreneurial skills within the community to promote better sustainable development in the future."
   },
@@ -9764,6 +11264,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.ipb.ac.id/index.php/j-agrokreatif/Publication-Fee",
     "description": "Artikel yang dimuat meliputi hasil-hasil pengabdian kepada masyarakat yang berhubungan dengan biosains, kelautan dan pertanian tropika dalam arti luas; mencakup biologi, klimatologi, agronomi, ilmu tanah, arsitektur lanskap, proteksi tanaman, kedokteran hewan, gizi dan kesehatan masyarakat, keluarga dan konsumen, teknologi industri, teknologi pangan, keteknikan pertanian, peternakan, perikanan, kehutanan, konservasi, lingkungan, sosial-ekonomi, dan kewirausahaan yang telah dipertimbangkan dan disetujui oleh Dewan Editor."
   },
@@ -9777,6 +11279,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.uinib.ac.id/jurnal/index.php/turast/about/editorialPolicies#custom-3",
     "description": "Turast publishes the results of research and service in various fields of science, namely social and cultural sciences such as sociology, anthropology, politic, law, education, psychology, history, economics, philosophy, and literature. Natural sciences such as biology, physics, chemistry, and mathematics. Religious studies such as multiculturalism, religion and peace, religion and politics, religion and the environment, religion and gender. Islamic studies such as the Qur'an, hadith, Sufism, theology, sharia, preaching, Islamic philosophy."
   },
@@ -9790,6 +11294,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.iaimbima.ac.id/index.php/taroa/PublicationFee",
     "description": "Ruang lingkup jurnal Taroa meliputi beberapa aspek kegiatan pengabdian masyarakat diantaranya; 1) Pengembangan Dan Pemberdayaan Sosial Budaya Masyarakat, 2) Pendampingan Usaha Dan Ekonomi Kreatif Bagi Masyarakat, 3) Pemberdayaan Masyarakat Berbasis Komunitas/Mitra. 4) Peningkatan Mutu Pendidikan Dan Pembelajaran, 5) Peningkatan Kapasitas Kesadaran Hukum Dan Politik Bagi Masyarakat, 6) Pengembangan Kegiatan Keislaman dan Kemuhammadiyahan."
   },
@@ -9803,6 +11309,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://ejournal.utdi.ac.id/index.php/JPM/about/submissions#authorFees",
     "description": "Jurnal Pengabdian Masyarakat - Teknologi Digital Indonesia is here to provide a forum for National researchers in the field of Applied Technology and Digital Technology to handle and manage various potentials, obstacles, challenges, and problems that exist in society and to publish original articles from community service activities."
   },
@@ -9816,6 +11324,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://journal.unram.ac.id/index.php/darmadiksani/Authorfee",
     "description": "Darma Diksani: Jurnal Pengabdian Ilmu Pendidikan, Sosial, dan Humaniora merupakan wahana untuk menerbitkan dan menyebarluaskan hasil dari program pengabdian atau layanan kepada masyarakat dalam pengembangan teori keilmuan, konsep pemikiran, model, atau hasil penelitian yang ditujukan untuk meningkatkan kualitas hidup masyarakat."
   },
@@ -9829,6 +11339,8 @@ const JOURNAL_DATABASE = [
     "keilmuan": "Pengabdian Masyarakat",
     "apc": "Gratis (No APC)",
     "isFree": true,
+    "isFastTrack": false,
+    "responseTime": null,
     "url": "https://jurnal.ut.ac.id/index.php/diseminasi/articleprocessingcharges",
     "description": "Diseminasi, particularly focuses on the main problems in the development of the sciences of community services areas as follows:  Social Education Science Sports Languages Business and Economy Engineering and Vocational Arts others"
   }
