@@ -369,6 +369,7 @@ body {
 }
 
 .match-box-wrapper {
+  scroll-margin-top: 5.5rem;
   background: linear-gradient(135deg, rgba(255, 113, 25, 0.12) 0%, rgba(255, 255, 255, 0.035) 100%);
   border: 1px solid rgba(255, 113, 25, 0.24);
   border-radius: var(--radius-lg);
