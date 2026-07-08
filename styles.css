@@ -466,6 +466,17 @@ body {
   flex: 0 0 auto;
 }
 
+.match-results-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.match-result-card {
+  border-color: rgba(255, 113, 25, 0.22);
+  background: rgba(12, 12, 12, 0.9);
+}
+
 .search-input-group {
   position: relative;
   display: flex;
@@ -825,14 +836,26 @@ body {
 .match-score-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.65rem;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid rgba(255, 113, 25, 0.34);
-  border-radius: 30px;
+  border-radius: 12px;
   color: #ffcfad;
   background: rgba(255, 113, 25, 0.13);
-  font-size: 0.72rem;
   font-weight: 800;
+}
+
+.match-score-number {
+  color: #fff;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.match-score-label {
+  color: #ffcfad;
+  font-size: 0.78rem;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .journal-desc {
@@ -1220,6 +1243,10 @@ body {
   .match-clear-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .match-results-grid {
+    grid-template-columns: 1fr;
   }
 
   #searchInput {
