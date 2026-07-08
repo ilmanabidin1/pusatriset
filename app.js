@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultsContainer = document.getElementById('resultsContainer');
   const loadMoreContainer = document.getElementById('loadMoreContainer');
   const loadMoreBtn = document.getElementById('loadMoreBtn');
+  const articleTitle = document.getElementById('articleTitle');
+  const articleKeywords = document.getElementById('articleKeywords');
+  const articleAbstract = document.getElementById('articleAbstract');
+  const runMatchBtn = document.getElementById('runMatch');
+  const clearMatchBtn = document.getElementById('clearMatch');
+  const matchSummary = document.getElementById('matchSummary');
   
   const viewGridBtn = document.getElementById('viewGrid');
   const viewListBtn = document.getElementById('viewList');
@@ -32,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentLayout = 'grid'; // 'grid' atau 'list'
   let visibleCount = 30;     // Jumlah kartu awal yang dirender (lazy-loading)
   let activeJournals = [];   // Menyimpan hasil filter saat ini
+  let isMatchMode = false;
 
   // --- 1. TAMPILAN MENYELURUH (RENDERING) ---
   
@@ -40,14 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContainer.innerHTML = '';
     
     // Update label jumlah hasil pencarian keseluruhan
-    resultsCount.textContent = `Menampilkan ${activeJournals.length} jurnal`;
+    resultsCount.textContent = isMatchMode
+      ? `Rekomendasi match: ${activeJournals.length} jurnal`
+      : `Menampilkan ${activeJournals.length} jurnal`;
 
     if (activeJournals.length === 0) {
       resultsContainer.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
           <h3>Jurnal Tidak Ditemukan</h3>
-          <p>Coba gunakan kata kunci lain, bersihkan filter, atau periksa ejaan Anda.</p>
+          <p>${isMatchMode ? 'Coba tambahkan keyword, bidang, atau abstrak yang lebih spesifik.' : 'Coba gunakan kata kunci lain, bersihkan filter, atau periksa ejaan Anda.'}</p>
         </div>
       `;
       loadMoreContainer.style.display = 'none';
@@ -66,14 +75,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const typeBadgeClass = journal.type === 'Scopus' ? 'type-scopus' : 'type-sinta';
       const rankBadgeClass = `rank-${journal.rank.toLowerCase()}`;
       const apcClass = journal.isFree ? 'free' : 'paid';
+      const matchBadge = journal.matchScore ? `
+        <span class="match-score-badge">
+          <i class="fa-solid fa-chart-simple"></i> ${journal.matchScore}% cocok
+        </span>
+      ` : '';
 
       card.innerHTML = `
         <div>
           <div class="card-header">
-            <span class="card-type-tag ${typeBadgeClass}">
-              <i class="${journal.type === 'Scopus' ? 'fa-solid fa-globe' : 'fa-solid fa-medal'}"></i>
-              ${journal.type}
-            </span>
+            <div class="card-badge-group">
+              <span class="card-type-tag ${typeBadgeClass}">
+                <i class="${journal.type === 'Scopus' ? 'fa-solid fa-globe' : 'fa-solid fa-medal'}"></i>
+                ${journal.type}
+              </span>
+              ${matchBadge}
+            </div>
             <span class="rank-badge ${rankBadgeClass}">${journal.rank}</span>
           </div>
           
@@ -144,8 +161,101 @@ document.addEventListener('DOMContentLoaded', () => {
     const matchedWords = queryWords.filter(word => normalizedTitle.includes(word)).length;
     return matchedWords > 0 ? Math.round((matchedWords / queryWords.length) * 40) : 0;
   }
+
+  const stopWords = new Set([
+    'yang', 'dan', 'atau', 'dengan', 'untuk', 'pada', 'dalam', 'dari', 'ke', 'di',
+    'the', 'and', 'or', 'of', 'in', 'to', 'for', 'a', 'an', 'by', 'on', 'is',
+    'ini', 'itu', 'terhadap', 'tentang', 'analisis', 'studi', 'study', 'analysis'
+  ]);
+
+  function getWords(value) {
+    return normalizeText(value)
+      .replace(/[^a-z0-9\s&]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.has(word));
+  }
+
+  function countMatches(sourceWords, targetText) {
+    if (sourceWords.length === 0) return 0;
+    const normalizedTarget = normalizeText(targetText);
+    return sourceWords.filter(word => normalizedTarget.includes(word)).length;
+  }
+
+  function calculateJournalMatchScore(journal, articleText, keywordText) {
+    const articleWords = getWords(articleText);
+    const keywordWords = getWords(keywordText);
+    const allWords = [...new Set([...articleWords, ...keywordWords])];
+
+    if (allWords.length === 0) return 0;
+
+    const journalTitle = normalizeText(journal.title);
+    const journalSubject = normalizeText(`${journal.subject} ${journal.keilmuan}`);
+    const journalProfile = normalizeText(`${journal.title} ${journal.publisher} ${journal.subject} ${journal.keilmuan} ${journal.description}`);
+
+    const titleHits = countMatches(allWords, journalTitle);
+    const subjectHits = countMatches(allWords, journalSubject);
+    const profileHits = countMatches(allWords, journalProfile);
+    const keywordHits = countMatches(keywordWords, journalProfile);
+
+    const titleScore = Math.min(35, titleHits * 9);
+    const subjectScore = Math.min(30, subjectHits * 10);
+    const profileScore = Math.min(25, Math.round((profileHits / allWords.length) * 55));
+    const keywordScore = Math.min(10, keywordHits * 4);
+    const freeBonus = journal.isFree ? 3 : 0;
+    const fastTrackBonus = journal.isFastTrack ? 2 : 0;
+
+    return Math.min(100, titleScore + subjectScore + profileScore + keywordScore + freeBonus + fastTrackBonus);
+  }
+
+  function runJournalMatch() {
+    const titleValue = articleTitle.value.trim();
+    const keywordValue = articleKeywords.value.trim();
+    const abstractValue = articleAbstract.value.trim();
+    const articleText = `${titleValue} ${abstractValue}`;
+
+    if (!titleValue && !keywordValue && !abstractValue) {
+      matchSummary.textContent = 'Isi minimal judul artikel atau keyword untuk menghitung rekomendasi jurnal.';
+      articleTitle.focus();
+      return;
+    }
+
+    const ranked = JOURNAL_DATABASE
+      .map((journal, index) => ({
+        ...journal,
+        matchScore: calculateJournalMatchScore(journal, articleText, keywordValue),
+        originalIndex: index
+      }))
+      .filter(journal => journal.matchScore > 0)
+      .sort((a, b) => {
+        if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+        return a.originalIndex - b.originalIndex;
+      });
+
+    isMatchMode = true;
+    activeJournals = ranked;
+    visibleCount = 30;
+    clearMatchBtn.style.display = 'inline-flex';
+    matchSummary.textContent = ranked.length > 0
+      ? `Ditemukan ${ranked.length} rekomendasi. Hasil diurutkan dari match score tertinggi.`
+      : 'Belum ada jurnal yang cocok. Coba tambahkan keyword atau abstrak yang lebih spesifik.';
+    renderCards();
+    document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function clearJournalMatch() {
+    isMatchMode = false;
+    articleTitle.value = '';
+    articleKeywords.value = '';
+    articleAbstract.value = '';
+    clearMatchBtn.style.display = 'none';
+    matchSummary.textContent = 'Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.';
+    filterJournals();
+  }
   
   function filterJournals() {
+    isMatchMode = false;
+    clearMatchBtn.style.display = 'none';
+    matchSummary.textContent = 'Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.';
     const query = normalizeText(searchInput.value);
     const typeValue = filterType.value;
     const subjectValue = filterSubject.value;
@@ -246,6 +356,17 @@ document.addEventListener('DOMContentLoaded', () => {
   loadMoreBtn.addEventListener('click', () => {
     visibleCount += 30;
     renderCards();
+  });
+
+  runMatchBtn.addEventListener('click', runJournalMatch);
+  clearMatchBtn.addEventListener('click', clearJournalMatch);
+
+  [articleTitle, articleKeywords, articleAbstract].forEach(field => {
+    field.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && event.ctrlKey) {
+        runJournalMatch();
+      }
+    });
   });
 
   // Deteksi Input Pencarian

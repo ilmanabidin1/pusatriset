@@ -99,6 +99,38 @@
         <p class="section-subtitle">Masukkan judul jurnal secara langsung, atau gunakan kata kunci dan filter bidang keilmuan untuk menemukan jurnal yang sesuai.</p>
       </div>
 
+      <div class="match-box-wrapper" id="matchBoxWrapper">
+        <div class="match-header">
+          <div>
+            <span class="match-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score</span>
+            <h3>Temukan jurnal yang paling cocok untuk artikel Anda</h3>
+          </div>
+          <button id="clearMatch" class="reset-btn match-clear-btn" type="button" style="display: none;">
+            <i class="fa-solid fa-xmark"></i> Bersihkan Match
+          </button>
+        </div>
+        <div class="match-form">
+          <div class="match-field">
+            <label for="articleTitle">Judul Artikel</label>
+            <input type="text" id="articleTitle" placeholder="Contoh: Perlindungan hukum terhadap konsumen digital">
+          </div>
+          <div class="match-field">
+            <label for="articleKeywords">Keyword / Bidang</label>
+            <input type="text" id="articleKeywords" placeholder="Contoh: hukum bisnis, perlindungan konsumen, ekonomi digital">
+          </div>
+          <div class="match-field match-field-wide">
+            <label for="articleAbstract">Abstrak Singkat</label>
+            <textarea id="articleAbstract" rows="4" placeholder="Tempel abstrak atau ringkasan artikel agar rekomendasi jurnal lebih akurat."></textarea>
+          </div>
+        </div>
+        <div class="match-actions">
+          <button id="runMatch" class="btn btn-primary" type="button">
+            <i class="fa-solid fa-chart-line"></i> Hitung Match Score
+          </button>
+          <p id="matchSummary" class="match-summary">Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.</p>
+        </div>
+      </div>
+
       <!-- Search Controls -->
       <div class="search-box-wrapper" id="searchBoxWrapper">
         <div class="search-input-group">
