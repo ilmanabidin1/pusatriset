@@ -107,7 +107,7 @@ body {
 .nav-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.25rem 2rem;
+  padding: 0.85rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -122,8 +122,9 @@ body {
 
 .brand-logo {
   display: block;
-  width: 156px;
+  width: 148px;
   max-width: 42vw;
+  max-height: 34px;
   height: auto;
   object-fit: contain;
 }
@@ -1100,7 +1101,7 @@ body {
   }
 
   .nav-container {
-    padding: 0.85rem 1rem;
+    padding: 0.7rem 1rem;
   }
 
   .nav-logo {
@@ -1108,8 +1109,9 @@ body {
   }
 
   .brand-logo {
-    width: 132px;
+    width: 124px;
     max-width: 54vw;
+    max-height: 30px;
   }
 
   .nav-links {
