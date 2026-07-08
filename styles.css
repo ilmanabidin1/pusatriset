@@ -123,9 +123,9 @@ body {
 
 .brand-logo {
   display: block;
-  width: 148px;
+  width: 118px;
   max-width: 42vw;
-  max-height: 34px;
+  max-height: 46px;
   height: auto;
   object-fit: contain;
 }
@@ -1064,7 +1064,7 @@ body {
 
 .footer-brand-logo {
   display: block;
-  width: 210px;
+  width: 230px;
   max-width: 80vw;
   height: auto;
   object-fit: contain;
@@ -1111,9 +1111,9 @@ body {
   }
 
   .brand-logo {
-    width: 124px;
+    width: 102px;
     max-width: 54vw;
-    max-height: 30px;
+    max-height: 40px;
   }
 
   .nav-links {
