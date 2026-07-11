@@ -14,27 +14,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    /* Theme Variables matching styles.css */
     :root {
-      --bg-primary: #ffffff;
-      --bg-secondary: #f6f9fc;
-      --bg-card: #ffffff;
-      --border-color: rgba(8, 34, 64, 0.08);
-      --border-hover: rgba(255, 112, 24, 0.5);
-      
-      --text-main: #0a2540;
-      --text-muted: #5f6f82;
-      --text-muted-dark: #8a96a5;
-      
       --primary-color: #ff7417;
       --primary-hover: #e85f00;
       --brand-blue: #0787dc;
       --brand-navy: #082240;
-      
-      --primary-glow: rgba(255, 113, 25, 0.15);
       --font-outfit: 'Outfit', sans-serif;
       --font-primary: 'Plus Jakarta Sans', sans-serif;
-      --transition-smooth: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     * {
@@ -45,90 +32,161 @@
 
     body {
       font-family: var(--font-primary);
-      background-color: var(--bg-secondary);
-      background-image: radial-gradient(at 0% 0%, rgba(7, 135, 220, 0.05) 0px, transparent 50%),
-                        radial-gradient(at 100% 100%, rgba(255, 116, 23, 0.05) 0px, transparent 50%);
-      color: var(--text-main);
+      /* Full-bleed rich blue gradient background */
+      background: radial-gradient(circle at 80% 20%, #0e2b5c 0%, #051329 100%);
+      color: #ffffff;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 2rem;
+      padding: 2rem 1.5rem;
       overflow-x: hidden;
+      position: relative;
     }
 
-    /* Container Split Layout */
+    /* Subtle background glow effect */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 40vw;
+      height: 40vw;
+      top: 10%;
+      right: 5%;
+      background: radial-gradient(circle, rgba(7, 135, 220, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 50vw;
+      height: 50vw;
+      bottom: -10%;
+      left: -10%;
+      background: radial-gradient(circle, rgba(255, 116, 23, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Layout Split */
     .auth-page-container {
       width: 100%;
-      max-width: 1000px;
+      max-width: 1100px;
       display: grid;
       grid-template-columns: 1.1fr 0.9fr;
-      gap: 3rem;
+      gap: 4rem;
       align-items: center;
       z-index: 10;
+      position: relative;
     }
 
-    /* Left Column: Branding / Info */
+    /* Left Column: Branding */
     .auth-branding {
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      padding: 1rem;
+      padding: 1rem 0;
     }
 
     .branding-logo {
-      max-width: 280px;
+      max-width: 200px;
       height: auto;
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
       object-fit: contain;
+      /* Invert logo to white for dark gradient background compatibility */
+      filter: brightness(0) invert(1);
+    }
+
+    .branding-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      color: #fbbf24;
+      padding: 0.4rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      align-self: flex-start;
     }
 
     .branding-title {
       font-family: var(--font-outfit);
-      font-size: 2.75rem;
+      font-size: 3.25rem;
       font-weight: 800;
       line-height: 1.2;
-      color: var(--brand-navy);
+      color: #ffffff;
       margin-bottom: 1.5rem;
     }
 
     .branding-title span {
-      background: linear-gradient(135deg, var(--brand-blue) 0%, var(--primary-color) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: var(--primary-color);
+      text-shadow: 0 0 30px rgba(255, 116, 23, 0.2);
     }
 
     .branding-description {
-      font-size: 1.05rem;
-      color: var(--text-muted);
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.7);
       line-height: 1.6;
-      max-width: 480px;
+      margin-bottom: 3rem;
+      max-width: 520px;
     }
 
-    /* Right Column: Premium Card */
+    /* Stats Info Row */
+    .branding-stats {
+      display: flex;
+      gap: 3rem;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .stat-value {
+      font-family: var(--font-outfit);
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+    }
+
+    /* Right Column: Floating Glass Card */
     .auth-card-wrapper {
       width: 100%;
     }
 
     .auth-container {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 24px;
       padding: 2.75rem 2.25rem;
-      box-shadow: 0 15px 35px rgba(8, 34, 64, 0.05);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
       transition: var(--transition-smooth);
     }
 
     .auth-container:hover {
-      border-color: rgba(8, 34, 64, 0.12);
-      box-shadow: 0 20px 45px rgba(8, 34, 64, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
     }
 
     /* Premium Tabs */
     .auth-tabs-wrapper {
-      background: rgba(8, 34, 64, 0.03);
-      border: 1px solid rgba(8, 34, 64, 0.05);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       padding: 4px;
       border-radius: 12px;
       display: flex;
@@ -142,7 +200,7 @@
       padding: 0.7rem 0.5rem;
       background: none;
       border: none;
-      color: var(--text-muted);
+      color: rgba(255, 255, 255, 0.6);
       font-weight: 600;
       font-size: 0.9rem;
       font-family: var(--font-primary);
@@ -153,15 +211,14 @@
     }
 
     .auth-tab.active {
-      color: var(--text-main);
+      color: #051329;
       background: #ffffff;
-      box-shadow: 0 4px 10px rgba(8, 34, 64, 0.06);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .auth-tab[data-target="accessForm"].active {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.08) 100%);
-      color: #d97706;
-      border: 1px solid rgba(245, 158, 11, 0.15);
+      background: #fbbf24;
+      color: #051329;
     }
 
     /* Form Layout */
@@ -175,7 +232,7 @@
     }
 
     @keyframes formFadeIn {
-      0% { opacity: 0; transform: translateY(6px); }
+      0% { opacity: 0; transform: translateY(8px); }
       100% { opacity: 1; transform: translateY(0); }
     }
 
@@ -187,9 +244,11 @@
     .form-group label {
       display: block;
       margin-bottom: 0.5rem;
-      color: var(--text-main);
+      color: rgba(255, 255, 255, 0.9);
       font-weight: 600;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .input-wrapper {
@@ -201,37 +260,42 @@
     .input-icon {
       position: absolute;
       left: 1rem;
-      color: var(--text-muted);
+      color: rgba(255, 255, 255, 0.4);
       font-size: 0.95rem;
       transition: var(--transition-smooth);
     }
 
     .form-group input {
       width: 100%;
-      padding: 0.8rem 1rem 0.8rem 2.5rem;
-      background-color: #ffffff;
-      border: 1px solid var(--border-color);
+      padding: 0.85rem 1rem 0.85rem 2.5rem;
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 10px;
-      color: var(--text-main);
+      color: #ffffff;
       font-family: inherit;
       font-size: 0.95rem;
       outline: none;
       transition: var(--transition-smooth);
     }
 
+    .form-group input::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
     .form-group input:focus {
-      border-color: var(--brand-blue);
-      box-shadow: 0 0 0 3px rgba(7, 135, 220, 0.1);
+      border-color: var(--primary-color);
+      background-color: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 12px rgba(255, 116, 23, 0.25);
     }
 
     .form-group input:focus ~ .input-icon {
-      color: var(--brand-blue);
+      color: var(--primary-color);
     }
 
     .password-toggle {
       position: absolute;
       right: 1rem;
-      color: var(--text-muted);
+      color: rgba(255, 255, 255, 0.4);
       cursor: pointer;
       font-size: 0.9rem;
       transition: var(--transition-smooth);
@@ -243,14 +307,14 @@
     }
 
     .password-toggle:hover {
-      color: var(--text-main);
+      color: #ffffff;
     }
 
     /* Buttons */
     .auth-btn {
       width: 100%;
-      padding: 0.85rem;
-      margin-top: 1.25rem;
+      padding: 0.9rem;
+      margin-top: 1.5rem;
       font-size: 0.95rem;
       font-weight: 700;
       border-radius: 10px;
@@ -265,40 +329,29 @@
     }
 
     .btn-main {
-      background: var(--brand-blue);
+      background: linear-gradient(135deg, var(--primary-color) 0%, #ff8e3c 100%);
       color: #ffffff;
+      box-shadow: 0 4px 15px rgba(255, 116, 23, 0.3);
     }
 
     .btn-main:hover {
-      background: #0672ba;
       transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(255, 116, 23, 0.45);
     }
 
     .btn-premium {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      color: #ffffff;
+      color: #051329;
+      font-weight: 800;
     }
 
     .btn-premium:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
-    }
-
-    .premium-badge {
-      display: inline-block;
-      background: #fef3c7;
-      color: #d97706;
-      font-size: 0.7rem;
-      font-weight: 800;
-      padding: 0.15rem 0.4rem;
-      border-radius: 4px;
-      margin-left: 0.5rem;
-      border: 1px solid rgba(217, 119, 6, 0.15);
-      vertical-align: middle;
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
     }
 
     .auth-error {
-      color: #ef4444;
+      color: #f87171;
       font-size: 0.85rem;
       font-weight: 600;
       margin-top: 1rem;
@@ -310,58 +363,75 @@
       gap: 0.4rem;
     }
 
-    .auth-help-link {
+    /* Under-button register switch info */
+    .register-switch-info {
       text-align: center;
-      margin-top: 1.5rem;
+      margin-top: 1.25rem;
       font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.6);
     }
 
-    .auth-help-link a {
-      color: var(--brand-blue);
+    .register-switch-info a {
+      color: var(--primary-color);
       text-decoration: none;
       font-weight: 600;
-      transition: var(--transition-smooth);
     }
 
-    .auth-help-link a:hover {
-      color: var(--brand-navy);
+    .register-switch-info a:hover {
       text-decoration: underline;
     }
 
-    .premium-icon-box {
-      background: rgba(245, 158, 11, 0.08);
-      border: 1px solid rgba(245, 158, 11, 0.15);
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+    /* Bottom Access Code Box inside Card */
+    .card-footer-access {
+      margin-top: 1.75rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      margin: 0 auto 0.75rem auto;
-      color: #d97706;
-      font-size: 1.25rem;
+      font-size: 0.85rem;
+    }
+
+    .access-link {
+      color: #fbbf24;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: var(--transition-smooth);
+    }
+
+    .access-link:hover {
+      opacity: 0.9;
+      transform: translateX(2px);
     }
 
     /* Responsive styling */
-    @media (max-width: 900px) {
+    @media (max-width: 992px) {
       body {
         padding: 1.5rem;
       }
       .auth-page-container {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 3rem;
         text-align: center;
       }
       .auth-branding {
         align-items: center;
       }
-      .branding-title {
-        font-size: 2.25rem;
+      .branding-badge {
+        align-self: center;
       }
-      .branding-logo {
-        margin-bottom: 1.5rem;
+      .branding-title {
+        font-size: 2.5rem;
+      }
+      .branding-description {
+        margin-bottom: 2rem;
+      }
+      .branding-stats {
+        justify-content: center;
+        gap: 2.5rem;
       }
     }
   </style>
@@ -370,31 +440,48 @@
 
   <div class="auth-page-container">
     
-    <!-- Left Column: Branding -->
+    <!-- Left Column: Branding (matches 1b layout) -->
     <div class="auth-branding">
       <img src="assets/jurnalhub-logo.png" alt="JurnalHub" class="branding-logo">
+      
+      <div class="branding-badge">
+        <i class="fa-solid fa-graduation-cap"></i> Portal Riset Terpadu
+      </div>
+      
       <h1 class="branding-title">
-        Pencarian dan Penulisan Jurnal dalam <span>Satu Portal</span>
+        Satu portal untuk semua kebutuhan <span>publikasi jurnal</span> Anda
       </h1>
+      
       <p class="branding-description">
-        Temukan rekomendasi jurnal Scopus dan Sinta secara mudah, cepat, dan terintegrasi dengan asisten penulisan AI.
+        Cari, bandingkan, dan cocokkan artikel Anda dengan ribuan jurnal Scopus & Sinta — dibantu AI Match Score.
       </p>
+
+      <div class="branding-stats">
+        <div class="stat-item">
+          <span class="stat-value">12rb+</span>
+          <span class="stat-label">Jurnal terdaftar</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">100%</span>
+          <span class="stat-label">Gratis untuk mulai</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Right Column: Auth Form Card -->
+    <!-- Right Column: Glassmorphism Card (matches 1b layout) -->
     <div class="auth-card-wrapper">
       <div class="auth-container">
         
         <div class="auth-tabs-wrapper">
           <button class="auth-tab active" data-target="loginForm">Masuk</button>
           <button class="auth-tab" data-target="registerForm">Daftar</button>
-          <button class="auth-tab" data-target="accessForm">Kode Akses</button>
+          <button class="auth-tab" data-target="accessForm">Akses</button>
         </div>
 
         <!-- Form Login -->
         <form id="loginForm" class="auth-form active">
           <div class="form-group">
-            <label for="loginEmail">Alamat Email</label>
+            <label for="loginEmail">Email</label>
             <div class="input-wrapper">
               <i class="fa-regular fa-envelope input-icon"></i>
               <input type="email" id="loginEmail" placeholder="nama@email.com" required>
@@ -413,13 +500,22 @@
           <button type="submit" class="auth-btn btn-main">
             <i class="fa-solid fa-right-to-bracket"></i> Masuk Sekarang
           </button>
+          <div class="register-switch-info">
+            Belum punya akun? <a href="#" id="toRegisterLink">Daftar gratis</a>
+          </div>
+          <div class="card-footer-access">
+            <span style="color: rgba(255,255,255,0.5);">Punya kode akses?</span>
+            <a href="#" class="access-link" id="toAccessLink">
+              <i class="fa-solid fa-crown" style="font-size: 0.8rem;"></i> Aktifkan &rarr;
+            </a>
+          </div>
           <p class="auth-error" id="loginError"></p>
         </form>
 
         <!-- Form Register -->
         <form id="registerForm" class="auth-form">
           <div class="form-group">
-            <label for="registerEmail">Alamat Email</label>
+            <label for="registerEmail">Email</label>
             <div class="input-wrapper">
               <i class="fa-regular fa-envelope input-icon"></i>
               <input type="email" id="registerEmail" placeholder="nama@email.com" required>
@@ -438,6 +534,9 @@
           <button type="submit" class="auth-btn btn-main">
             <i class="fa-solid fa-user-plus"></i> Buat Akun Baru
           </button>
+          <div class="register-switch-info">
+            Sudah punya akun? <a href="#" id="toLoginLink">Masuk di sini</a>
+          </div>
           <p class="auth-error" id="registerError"></p>
         </form>
 
@@ -447,13 +546,13 @@
             <div class="premium-icon-box">
               <i class="fa-solid fa-crown"></i>
             </div>
-            <h3 style="margin: 0; font-size: 1.1rem; font-family: var(--font-outfit); font-weight: 700; color: var(--text-main);">Akses Premium</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.4;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-family: var(--font-outfit); font-weight: 700; color: #ffffff;">Akses Premium</h3>
+            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 0.5rem; line-height: 1.4;">
               Masukkan kode akses khusus untuk langsung menggunakan fitur premium tanpa perlu mendaftar.
             </p>
           </div>
           <div class="form-group">
-            <label for="accessCode">Kode Rahasia <span class="premium-badge">PREMIUM</span></label>
+            <label for="accessCode">Kode Rahasia <span class="premium-badge" style="background: #fbbf24; color: #051329;">PREMIUM</span></label>
             <div class="input-wrapper">
               <i class="fa-solid fa-key input-icon"></i>
               <input type="password" id="accessCode" autocomplete="off" placeholder="Masukkan kode akses premium" required>
@@ -466,7 +565,7 @@
             <i class="fa-solid fa-unlock-keyhole"></i> Aktifkan Premium
           </button>
           
-          <p class="auth-help-link" style="margin-top: 1.25rem;">
+          <p class="register-switch-info" style="margin-top: 1.25rem;">
             Belum memiliki kode akses? <br>
             <a href="https://drilman.my.id/drilmanabidin/nvj3wrm97zdw" target="_blank" rel="noopener">
               Dapatkan Kode Akses di Sini <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; margin-left: 2px;"></i>
@@ -495,22 +594,47 @@
       const tabs = document.querySelectorAll('.auth-tab');
       const forms = document.querySelectorAll('.auth-form');
 
+      function switchTab(targetId) {
+        tabs.forEach(t => {
+          if (t.getAttribute('data-target') === targetId) {
+            t.classList.add('active');
+          } else {
+            t.classList.remove('active');
+          }
+        });
+        forms.forEach(f => {
+          if (f.id === targetId) {
+            f.classList.add('active');
+          } else {
+            f.classList.remove('active');
+          }
+        });
+        // Bersihkan semua error
+        document.querySelectorAll('.auth-error').forEach(e => {
+          e.innerHTML = '';
+        });
+      }
+
       tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-          // Hapus status aktif dari semua tab & form
-          tabs.forEach(t => t.classList.remove('active'));
-          forms.forEach(f => f.classList.remove('active'));
-
-          // Tambahkan status aktif ke tab yang diklik dan form terkait
-          tab.classList.add('active');
-          const targetForm = document.getElementById(tab.getAttribute('data-target'));
-          targetForm.classList.add('active');
-
-          // Bersihkan semua error
-          document.querySelectorAll('.auth-error').forEach(e => {
-            e.innerHTML = '';
-          });
+          switchTab(tab.getAttribute('data-target'));
         });
+      });
+
+      // Links inside form switches
+      document.getElementById('toRegisterLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('registerForm');
+      });
+
+      document.getElementById('toLoginLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('loginForm');
+      });
+
+      document.getElementById('toAccessLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('accessForm');
       });
 
       // Show/Hide Password Toggle
@@ -532,7 +656,7 @@
       });
 
       // Helper function for API calls
-      async function handleAuth(url, bodyData, errorElement, btnElement, btnIcon, btnText, isPremium = false) {
+      async function handleAuth(url, bodyData, errorElement, btnElement, btnIcon, btnText) {
         errorElement.innerHTML = '';
         btnElement.disabled = true;
         btnElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses...`;
@@ -568,7 +692,7 @@
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        const btn = loginForm.querySelector('button');
+        const btn = loginForm.querySelector('button[type="submit"]');
         handleAuth('/api/login', { email, password }, document.getElementById('loginError'), btn, 'fa-solid fa-right-to-bracket', 'Masuk Sekarang');
       });
 
@@ -578,7 +702,7 @@
         e.preventDefault();
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
-        const btn = registerForm.querySelector('button');
+        const btn = registerForm.querySelector('button[type="submit"]');
         handleAuth('/api/register', { email, password }, document.getElementById('registerError'), btn, 'fa-solid fa-user-plus', 'Buat Akun Baru');
       });
 
@@ -587,8 +711,8 @@
       accessForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const code = document.getElementById('accessCode').value;
-        const btn = accessForm.querySelector('button');
-        handleAuth('/api/access', { code }, document.getElementById('accessError'), btn, 'fa-solid fa-unlock-keyhole', 'Aktifkan Premium', true);
+        const btn = accessForm.querySelector('button[type="submit"]');
+        handleAuth('/api/access', { code }, document.getElementById('accessError'), btn, 'fa-solid fa-unlock-keyhole', 'Aktifkan Premium');
       });
     });
   </script>
