@@ -148,6 +148,10 @@ app.post('/api/register', async (req, res) => {
       email,
       password: hashedPassword,
       type: 'free', // Default account type is free
+      name: '',
+      faculty: '',
+      university: '',
+      profilePic: '',
       savedJournals: [],
       createdAt: new Date().toISOString()
     };
@@ -217,6 +221,10 @@ app.get('/api/me', (req, res) => {
       user: {
         email: req.session.email || 'Premium User',
         type: req.session.userType,
+        name: user ? (user.name || '') : '',
+        faculty: user ? (user.faculty || '') : '',
+        university: user ? (user.university || '') : '',
+        profilePic: user ? (user.profilePic || '') : '',
         savedJournals: user ? (user.savedJournals || []) : []
       }
     });
@@ -292,6 +300,40 @@ app.post('/api/change-password', requireAccess, async (req, res) => {
   saveUsers(users);
 
   res.json({ ok: true, message: 'Kata sandi berhasil diperbarui.' });
+});
+
+// Endpoint untuk memperbarui profil pengguna
+app.post('/api/update-profile', requireAccess, (req, res) => {
+  const { name, faculty, university, profilePic } = req.body;
+
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === req.session.userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
+  }
+
+  const user = users[userIndex];
+  if (name !== undefined) user.name = String(name).trim();
+  if (faculty !== undefined) user.faculty = String(faculty).trim();
+  if (university !== undefined) user.university = String(university).trim();
+  if (profilePic !== undefined) user.profilePic = profilePic; // base64 data URL
+
+  users[userIndex] = user;
+  saveUsers(users);
+
+  res.json({
+    ok: true,
+    message: 'Profil berhasil diperbarui.',
+    user: {
+      email: user.email,
+      type: user.type,
+      name: user.name,
+      faculty: user.faculty,
+      university: user.university,
+      profilePic: user.profilePic,
+      savedJournals: user.savedJournals || []
+    }
+  });
 });
 
 

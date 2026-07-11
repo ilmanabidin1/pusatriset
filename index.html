@@ -1179,6 +1179,10 @@
     .bookmark-btn.active {
       color: #eab308;
     }
+
+    #avatarUploadTrigger:hover #avatarHoverOverlay {
+      opacity: 1 !important;
+    }
   </style>
 </head>
 <body>
@@ -1470,16 +1474,47 @@
                 <i class="fa-regular fa-user" style="color: var(--brand-blue);"></i> Profil & Keanggotaan
               </h3>
               
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
-                <div style="background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #f1f5f9;">
-                  <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.25rem; text-transform: uppercase;">Alamat Email</span>
-                  <span style="font-size: 1rem; font-weight: 800; color: var(--text-main);" id="settingsEmail">-</span>
+              <!-- Avatar Upload & Info Row -->
+              <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                <!-- Avatar Circle -->
+                <div style="position: relative; width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: #e2e8f0; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--border-light-hover); flex-shrink: 0;" id="avatarUploadTrigger" title="Klik untuk ganti foto">
+                  <!-- Initials (fallback) -->
+                  <span id="settingsAvatarInitials" style="font-size: 1.75rem; font-weight: 800; color: #64748b;">U</span>
+                  <!-- Image -->
+                  <img id="settingsAvatarImg" src="" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                  <!-- Hover Overlay -->
+                  <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: #ffffff; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" id="avatarHoverOverlay">
+                    <i class="fa-solid fa-camera"></i>
+                  </div>
                 </div>
-                <div style="background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #f1f5f9; position: relative; overflow: hidden;">
-                  <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.25rem; text-transform: uppercase;">Tipe Akun</span>
-                  <span style="font-size: 1rem; font-weight: 800; color: var(--text-main);" id="settingsAccountType">Free Account</span>
+                <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+                
+                <div>
+                  <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.25rem; text-transform: uppercase;">Tipe Keanggotaan</span>
+                  <span style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); display: inline-flex; align-items: center; gap: 0.5rem;" id="settingsAccountType">Free Account</span>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.2rem;" id="settingsEmail">email@domain.com</span>
                 </div>
               </div>
+
+              <!-- Form Details -->
+              <form id="profileForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+                <div class="filter-dropdown-item" style="grid-column: span 2;">
+                  <label>Nama Lengkap</label>
+                  <input type="text" id="profileName" placeholder="Masukkan nama lengkap Anda" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+                </div>
+                <div class="filter-dropdown-item">
+                  <label>Fakultas</label>
+                  <input type="text" id="profileFaculty" placeholder="Contoh: Fakultas Teknik" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+                </div>
+                <div class="filter-dropdown-item">
+                  <label>Universitas / Instansi</label>
+                  <input type="text" id="profileUniversity" placeholder="Contoh: Universitas Indonesia" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+                </div>
+                <div id="profileMessage" style="font-size: 0.88rem; display: none; font-weight: 600; grid-column: span 2;"></div>
+                <div style="grid-column: span 2; margin-top: 0.5rem;">
+                  <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.75rem; font-size: 0.88rem;">Simpan Perubahan Profil</button>
+                </div>
+              </form>
             </div>
 
             <!-- Section 2: Preferensi Pencarian -->

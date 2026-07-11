@@ -65,9 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentUser.user) {
           const emailPrefix = currentUser.user.email.split('@')[0];
-          if (profileEmail) profileEmail.textContent = emailPrefix;
+          const displayName = currentUser.user.name ? currentUser.user.name : emailPrefix;
+          if (profileEmail) profileEmail.textContent = displayName;
+          
           if (profileAvatar) {
-            profileAvatar.textContent = emailPrefix.substring(0, 2).toUpperCase();
+            if (currentUser.user.profilePic) {
+              profileAvatar.innerHTML = `<img src="${currentUser.user.profilePic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            } else {
+              profileAvatar.innerHTML = emailPrefix.substring(0, 2).toUpperCase();
+            }
           }
 
           // Update settings fields
@@ -78,6 +84,33 @@ document.addEventListener('DOMContentLoaded', () => {
             settingsAccountType.textContent = currentUser.user.type === 'premium' ? 'Akun Premium' : 'Akun Free';
             settingsAccountType.style.color = currentUser.user.type === 'premium' ? '#fbbf24' : 'var(--text-main)';
           }
+
+          // Set settings avatar fields
+          const settingsAvatarImg = document.getElementById('settingsAvatarImg');
+          const settingsAvatarInitials = document.getElementById('settingsAvatarInitials');
+          if (currentUser.user.profilePic) {
+            if (settingsAvatarImg) {
+              settingsAvatarImg.src = currentUser.user.profilePic;
+              settingsAvatarImg.style.display = 'block';
+            }
+            if (settingsAvatarInitials) {
+              settingsAvatarInitials.style.display = 'none';
+            }
+          } else {
+            if (settingsAvatarImg) settingsAvatarImg.style.display = 'none';
+            if (settingsAvatarInitials) {
+              settingsAvatarInitials.style.display = 'block';
+              settingsAvatarInitials.textContent = emailPrefix.substring(0, 2).toUpperCase();
+            }
+          }
+
+          // Populate inputs in profile form
+          const profileNameInput = document.getElementById('profileName');
+          const profileFacultyInput = document.getElementById('profileFaculty');
+          const profileUniversityInput = document.getElementById('profileUniversity');
+          if (profileNameInput) profileNameInput.value = currentUser.user.name || '';
+          if (profileFacultyInput) profileFacultyInput.value = currentUser.user.faculty || '';
+          if (profileUniversityInput) profileUniversityInput.value = currentUser.user.university || '';
 
           if (currentUser.user.type === 'premium') {
             if (profileType) profileType.textContent = 'Akun Premium';
@@ -1046,6 +1079,106 @@ document.addEventListener('DOMContentLoaded', () => {
           changePasswordMessage.style.color = '#ef4444';
           changePasswordMessage.textContent = 'Gagal memperbarui kata sandi.';
           changePasswordMessage.style.display = 'block';
+        }
+      });
+    }
+
+    // --- LOGIKA UPDATE PROFIL & UPLOAD FOTO ---
+    const avatarUploadTrigger = document.getElementById('avatarUploadTrigger');
+    const profilePicInput = document.getElementById('profilePicInput');
+    const profileForm = document.getElementById('profileForm');
+    const profileMessage = document.getElementById('profileMessage');
+    let selectedBase64Pic = '';
+
+    if (avatarUploadTrigger && profilePicInput) {
+      avatarUploadTrigger.addEventListener('click', () => {
+        profilePicInput.click();
+      });
+    }
+
+    if (profilePicInput) {
+      profilePicInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          if (file.size > 1024 * 1024) {
+            alert('Ukuran foto terlalu besar. Maksimal 1MB.');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            selectedBase64Pic = reader.result;
+            const settingsAvatarImg = document.getElementById('settingsAvatarImg');
+            const settingsAvatarInitials = document.getElementById('settingsAvatarInitials');
+            if (settingsAvatarImg) {
+              settingsAvatarImg.src = selectedBase64Pic;
+              settingsAvatarImg.style.display = 'block';
+            }
+            if (settingsAvatarInitials) {
+              settingsAvatarInitials.style.display = 'none';
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    if (profileForm) {
+      profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('profileName').value;
+        const faculty = document.getElementById('profileFaculty').value;
+        const university = document.getElementById('profileUniversity').value;
+        
+        const payload = {
+          name,
+          faculty,
+          university
+        };
+        
+        if (selectedBase64Pic) {
+          payload.profilePic = selectedBase64Pic;
+        }
+        
+        try {
+          const response = await fetch('/api/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const resData = await response.json();
+          if (response.ok) {
+            profileMessage.style.color = '#10b981';
+            profileMessage.textContent = resData.message;
+            profileMessage.style.display = 'block';
+            
+            // Perbarui state currentUser lokal
+            currentUser.user = resData.user;
+            selectedBase64Pic = '';
+            
+            // Sinkronisasi avatar & nama di sidebar secara real-time
+            const emailPrefix = currentUser.user.email.split('@')[0];
+            const displayName = currentUser.user.name ? currentUser.user.name : emailPrefix;
+            const profileEmail = document.getElementById('profileEmail');
+            const profileAvatar = document.getElementById('profileAvatar');
+            
+            if (profileEmail) profileEmail.textContent = displayName;
+            if (profileAvatar) {
+              if (currentUser.user.profilePic) {
+                profileAvatar.innerHTML = `<img src="${currentUser.user.profilePic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+              } else {
+                profileAvatar.innerHTML = emailPrefix.substring(0, 2).toUpperCase();
+              }
+            }
+          } else {
+            profileMessage.style.color = '#ef4444';
+            profileMessage.textContent = resData.message;
+            profileMessage.style.display = 'block';
+          }
+        } catch (error) {
+          console.error('Update profile error:', error);
+          profileMessage.style.color = '#ef4444';
+          profileMessage.textContent = 'Gagal memperbarui profil.';
+          profileMessage.style.display = 'block';
         }
       });
     }
