@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akses JurnalHub - Login & Daftar</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom Styles (using existing styles.css + some auth specific) -->
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background-color: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .auth-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+      z-index: 10;
+    }
+
+    .auth-logo {
+      display: block;
+      margin: 0 auto 2rem auto;
+      height: 45px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 0.75rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      color: var(--text-main);
+      border-bottom-color: var(--primary-color);
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 0.85rem;
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+
+    .auth-error {
+      color: #ef4444;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .premium-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: #000;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero-background" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
+    <div class="glow-sphere sphere-1"></div>
+    <div class="glow-sphere sphere-2"></div>
+  </div>
+
+  <div class="auth-container">
+    <img src="assets/jurnalhub-logo.png" alt="JurnalHub" class="auth-logo">
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-target="loginForm">Masuk</button>
+      <button class="auth-tab" data-target="registerForm">Daftar</button>
+      <button class="auth-tab" data-target="accessForm">Kode Akses</button>
+    </div>
+
+    <!-- Form Login -->
+    <form id="loginForm" class="auth-form active">
+      <div class="form-group">
+        <label for="loginEmail">Alamat Email</label>
+        <input type="email" id="loginEmail" placeholder="nama@email.com" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary auth-btn">
+        <i class="fa-solid fa-right-to-bracket"></i> Masuk
+      </button>
+      <p class="auth-error" id="loginError"></p>
+    </form>
+
+    <!-- Form Register -->
+    <form id="registerForm" class="auth-form">
+      <div class="form-group">
+        <label for="registerEmail">Alamat Email</label>
+        <input type="email" id="registerEmail" placeholder="nama@email.com" required>
+      </div>
+      <div class="form-group">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" placeholder="Minimal 6 karakter" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary auth-btn">
+        <i class="fa-solid fa-user-plus"></i> Daftar Akun (Gratis)
+      </button>
+      <p class="auth-error" id="registerError"></p>
+    </form>
+
+    <!-- Form Kode Akses -->
+    <form id="accessForm" class="auth-form">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <i class="fa-solid fa-crown" style="color: #fbbf24; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+        <h3 style="margin: 0; font-size: 1.1rem;">Akses Premium</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Masukkan kode akses lama untuk mendapatkan hak istimewa Premium tanpa login.</p>
+      </div>
+      <div class="form-group">
+        <label for="accessCode">Kode Rahasia <span class="premium-badge">PREMIUM</span></label>
+        <input type="password" id="accessCode" autocomplete="off" placeholder="Masukkan kode akses" required>
+      </div>
+      <button type="submit" class="btn btn-primary auth-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
+        <i class="fa-solid fa-unlock-keyhole"></i> Buka Akses Premium
+      </button>
+      <p class="access-help" style="text-align: center; margin-top: 1rem; font-size: 0.85rem;">
+        Belum punya kode akses? <br>
+        <a href="https://drilman.my.id/drilmanabidin/nvj3wrm97zdw" target="_blank" rel="noopener" style="color: var(--primary-color);">Dapatkan di sini</a>
+      </p>
+      <p class="auth-error" id="accessError"></p>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Periksa apakah pengguna sudah login, jika ya, lempar ke beranda
+      fetch('/api/me')
+        .then(res => res.json())
+        .then(data => {
+          if (data.loggedIn) {
+            window.location.href = '/';
+          }
+        });
+
+      // Tab Switching Logic
+      const tabs = document.querySelectorAll('.auth-tab');
+      const forms = document.querySelectorAll('.auth-form');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Hapus status aktif dari semua tab & form
+          tabs.forEach(t => t.classList.remove('active'));
+          forms.forEach(f => f.classList.remove('active'));
+
+          // Tambahkan status aktif ke tab yang diklik dan form terkait
+          tab.classList.add('active');
+          const targetForm = document.getElementById(tab.getAttribute('data-target'));
+          targetForm.classList.add('active');
+
+          // Bersihkan semua error
+          document.querySelectorAll('.auth-error').forEach(e => e.textContent = '');
+        });
+      });
+
+      // Helper function for API calls
+      async function handleAuth(url, bodyData, errorElement, btnElement, btnIcon, btnText) {
+        errorElement.textContent = '';
+        btnElement.disabled = true;
+        btnElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses...`;
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData)
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            errorElement.textContent = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
+          } else {
+            // Berhasil login/register, redirect ke index
+            window.location.href = '/';
+          }
+        } catch (err) {
+          errorElement.textContent = 'Gagal menghubungi server. Periksa koneksi Anda.';
+        } finally {
+          if (errorElement.textContent !== '') {
+            btnElement.disabled = false;
+            btnElement.innerHTML = `<i class="${btnIcon}"></i> ${btnText}`;
+          }
+        }
+      }
+
+      // Handle Login
+      const loginForm = document.getElementById('loginForm');
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const btn = loginForm.querySelector('button');
+        handleAuth('/api/login', { email, password }, document.getElementById('loginError'), btn, 'fa-solid fa-right-to-bracket', 'Masuk');
+      });
+
+      // Handle Register
+      const registerForm = document.getElementById('registerForm');
+      registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const btn = registerForm.querySelector('button');
+        handleAuth('/api/register', { email, password }, document.getElementById('registerError'), btn, 'fa-solid fa-user-plus', 'Daftar Akun (Gratis)');
+      });
+
+      // Handle Access Code
+      const accessForm = document.getElementById('accessForm');
+      accessForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const code = document.getElementById('accessCode').value;
+        const btn = accessForm.querySelector('button');
+        handleAuth('/api/access', { code }, document.getElementById('accessError'), btn, 'fa-solid fa-unlock-keyhole', 'Buka Akses Premium');
+      });
+    });
+  </script>
+</body>
+</html>

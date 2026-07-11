@@ -22,21 +22,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="access-overlay" id="accessOverlay" aria-modal="true" role="dialog">
-    <form class="access-modal" id="accessForm">
-      <div class="access-icon"><i class="fa-solid fa-lock"></i></div>
-      <h2>Akses JurnalHub</h2>
-      <p>Masukkan kode akses untuk membuka database jurnal dan fitur pencarian.</p>
-      <label for="accessCode">Kode Rahasia</label>
-      <input type="password" id="accessCode" name="code" autocomplete="off" placeholder="Masukkan kode akses" required>
-      <button type="submit" class="btn btn-primary">
-        <i class="fa-solid fa-unlock-keyhole"></i> Buka Akses
-      </button>
-      <p class="access-help">Belum punya kode akses? <a href="https://drilman.my.id/drilmanabidin/nvj3wrm97zdw" target="_blank" rel="noopener">Silahkan dapatkan di sini</a>.</p>
-      <p class="access-error" id="accessError" role="alert"></p>
-    </form>
-  </div>
-
   <!-- Navigation Bar -->
   <header class="navbar" id="navbar">
     <div class="nav-container">
@@ -47,6 +32,15 @@
         <a href="#hero" class="nav-link active">Beranda</a>
         <a href="#matchBoxWrapper" class="nav-link">Match Score</a>
         <a href="#search-section" class="nav-link">Cari Jurnal</a>
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 1rem;">
+          <span id="userBadge" style="display: none; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+            <i class="fa-solid fa-user"></i> <span id="userEmailText">User</span>
+            <span id="userTypeTag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.3rem;">FREE</span>
+          </span>
+          <button id="logoutBtn" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.85rem; display: none;">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
+          </button>
+        </div>
       </nav>
       <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Menu">
         <i class="fa-solid fa-bars"></i>
@@ -99,10 +93,20 @@
         <p class="section-subtitle">Masukkan judul jurnal secara langsung, atau gunakan kata kunci dan filter bidang keilmuan untuk menemukan jurnal yang sesuai.</p>
       </div>
 
-      <div class="match-box-wrapper" id="matchBoxWrapper">
+      <div class="match-box-wrapper" id="matchBoxWrapper" style="position: relative;">
+        <!-- Overlay Lock untuk User Free -->
+        <div id="matchPremiumLock" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 9, 14, 0.85); z-index: 10; border-radius: 16px; backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
+          <i class="fa-solid fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1rem;"></i>
+          <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Fitur Premium Khusus Pelanggan</h3>
+          <p style="color: var(--text-muted); max-width: 400px; margin-bottom: 1.5rem;">Tingkatkan akun Anda ke Premium atau gunakan Kode Akses untuk membuka fitur AI Match Score.</p>
+          <button id="btnUpgradeLock" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
+            <i class="fa-solid fa-unlock-keyhole"></i> Upgrade Sekarang
+          </button>
+        </div>
+
         <div class="match-header">
           <div>
-            <span class="match-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score</span>
+            <span class="match-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score <span class="premium-badge" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #000; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.5rem; vertical-align: middle;">PREMIUM</span></span>
             <h3>Temukan jurnal yang paling cocok untuk artikel Anda</h3>
           </div>
           <button id="clearMatch" class="reset-btn match-clear-btn" type="button" style="display: none;">
@@ -250,66 +254,6 @@
   </footer>
 
   <!-- Scripts -->
-  <script>
-    (function () {
-      const overlay = document.getElementById('accessOverlay');
-      const form = document.getElementById('accessForm');
-      const input = document.getElementById('accessCode');
-      const error = document.getElementById('accessError');
-
-      function lockPage() {
-        overlay.classList.remove('is-hidden');
-        document.body.classList.add('access-locked');
-        input.focus();
-      }
-
-      function unlockPage() {
-        overlay.classList.add('is-hidden');
-        document.body.classList.remove('access-locked');
-      }
-
-      fetch('/api/access-status')
-        .then(response => response.json())
-        .then(data => {
-          if (data.hasAccess) {
-            unlockPage();
-          } else {
-            lockPage();
-          }
-        })
-        .catch(lockPage);
-
-      form.addEventListener('submit', async event => {
-        event.preventDefault();
-        error.textContent = '';
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa...';
-
-        try {
-          const response = await fetch('/api/access', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: input.value })
-          });
-
-          if (!response.ok) {
-            error.textContent = 'Kode akses salah. Silakan coba lagi.';
-            input.select();
-            return;
-          }
-
-          window.location.reload();
-        } catch (err) {
-          error.textContent = 'Tidak bisa memeriksa kode. Coba lagi.';
-        } finally {
-          submitButton.disabled = false;
-          submitButton.innerHTML = '<i class="fa-solid fa-unlock-keyhole"></i> Buka Akses';
-        }
-      });
-    })();
-  </script>
   <script src="database.js"></script>
   <script src="app.js"></script>
 </body>
