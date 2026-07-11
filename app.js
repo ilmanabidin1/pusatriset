@@ -148,20 +148,20 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
 
-        // Upgrade triggers handlers (all upgrade buttons)
-        document.querySelectorAll('.btn-upgrade-trigger').forEach(btn => {
-          // Prevent multiple bindings
-          if (!btn.dataset.bound) {
-            btn.dataset.bound = "true";
-            btn.addEventListener('click', (e) => {
+        // Global event delegation untuk semua tombol upgrade premium (mendukung elemen dinamis)
+        if (!window.upgradeTriggersBound) {
+          window.upgradeTriggersBound = true;
+          document.addEventListener('click', (e) => {
+            const trigger = e.target.closest('.btn-upgrade-trigger');
+            if (trigger) {
               e.preventDefault();
               const upgradeModal = document.getElementById('upgradeModal');
               if (upgradeModal) {
                 upgradeModal.classList.add('active');
               }
-            });
-          }
-        });
+            }
+          });
+        }
       } else {
          window.location.href = '/auth.html';
       }
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
          <i class="fa-solid fa-lock" style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 1rem;"></i>
          <h3 style="margin-bottom: 0.5rem;">${activeJournals.length - 1} Jurnal Lainnya Disembunyikan</h3>
          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Akun Free hanya dapat melihat 1 rekomendasi teratas. Tingkatkan ke Premium untuk melihat semua hasil.</p>
-         <button onclick="alert('Silakan gunakan Kode Akses di halaman login untuk mengaktifkan Premium.'); fetch('/api/logout', {method:'POST'}).then(() => window.location.href='/auth.html');" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
+         <button class="btn btn-primary btn-upgrade-trigger" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
            Upgrade Premium
          </button>
        `;
