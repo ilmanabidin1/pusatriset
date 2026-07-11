@@ -772,17 +772,24 @@
     }
 
     #matchPremiumLock {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      background: rgba(11, 26, 48, 0.96);
+      border-radius: var(--card-radius);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 4rem 2rem;
-      background: rgba(11, 26, 48, 0.95);
-      border-radius: var(--card-radius);
+      padding: 2rem;
       color: #ffffff;
       border: 1px solid rgba(255,255,255,0.08);
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(4px);
     }
 
     .match-card-content {
