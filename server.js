@@ -553,7 +553,7 @@ ${JSON.stringify(candidates)}
         body: JSON.stringify({
           model: claudeModel,
           max_tokens: 1024,
-          system: "Anda adalah asisten rekomendasi jurnal ilmiah untuk JurnalHub. Anda wajib membalas HANYA dengan JSON valid dalam format array objek tanpa menyertakan penjelasan teks atau markdown (no ```json). Format JSON: [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Alasan singkat dalam Bahasa Indonesia\"}]",
+          system: process.env.CLAUDE_SYSTEM_PROMPT || "Anda adalah asisten rekomendasi jurnal ilmiah untuk JurnalHub. Anda wajib membalas HANYA dengan JSON valid dalam format array objek tanpa menyertakan penjelasan teks atau markdown (no ```json). Format JSON: [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Alasan singkat dalam Bahasa Indonesia\"}]",
           messages: [
             {
               role: 'user',
