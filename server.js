@@ -536,7 +536,49 @@ ${JSON.stringify(candidates)}
   const modelNames = [...new Set([GEMINI_MODEL, ...GEMINI_MODEL_FALLBACKS])];
   let lastError = null;
 
-  // Coba pakai Google AI Studio Developer API terlebih dahulu jika API Key tersedia
+  // Coba pakai Anthropic Claude API terlebih dahulu jika ANTHROPIC_API_KEY tersedia
+  if (process.env.ANTHROPIC_API_KEY) {
+    console.log("[AI API] Menggunakan Anthropic Claude API...");
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022';
+    
+    try {
+      const response = await fetchFn('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: claudeModel,
+          max_tokens: 1024,
+          system: "Anda adalah asisten rekomendasi jurnal ilmiah untuk JurnalHub. Anda wajib membalas HANYA dengan JSON valid dalam format array objek tanpa menyertakan penjelasan teks atau markdown (no ```json). Format JSON: [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Alasan singkat dalam Bahasa Indonesia\"}]",
+          messages: [
+            {
+              role: 'user',
+              content: `Pilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul artikel, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}`
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Claude API Error Status: ${response.status} - ${errText}`);
+      }
+
+      const resData = await response.json();
+      const text = resData?.content?.[0]?.text || '[]';
+      const cleanedJsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanedJsonText);
+    } catch (error) {
+      lastError = error;
+      console.error(`[AI API] Anthropic Claude model ${claudeModel} gagal:`, error.message);
+    }
+  }
+
+  // Coba pakai Google AI Studio Developer API jika API Key tersedia
   if (process.env.GEMINI_API_KEY) {
     console.log("[Gemini API] Menggunakan Google AI Studio Developer API...");
     const fetchFn = globalThis.fetch || require('node-fetch');
@@ -600,7 +642,7 @@ ${JSON.stringify(candidates)}
     }
   }
 
-  throw lastError || new Error('Tidak ada API Key (GEMINI_API_KEY) atau Kredensial Vertex AI yang terkonfigurasi.');
+  throw lastError || new Error('Tidak ada API Key (ANTHROPIC_API_KEY / GEMINI_API_KEY) atau Kredensial Vertex AI yang terkonfigurasi.');
 }
 
 app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
@@ -620,14 +662,15 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     return;
   }
 
+  const hasClaudeKey = !!process.env.ANTHROPIC_API_KEY;
   const hasApiKey = !!process.env.GEMINI_API_KEY;
   const hasVertex = !!(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 
-  if (!hasApiKey && !hasVertex) {
+  if (!hasClaudeKey && !hasApiKey && !hasVertex) {
     res.json({
       ok: true,
       source: 'local',
-      warning: 'Kredensial Gemini API Key (GEMINI_API_KEY) atau Vertex AI belum dikonfigurasi. Menggunakan kalkulasi kecocokan lokal.',
+      warning: 'Kredensial Claude (ANTHROPIC_API_KEY), Gemini (GEMINI_API_KEY), atau Vertex AI belum dikonfigurasi. Menggunakan kalkulasi kecocokan lokal.',
       recommendations: normalizeAiRecommendations(
         candidates.slice(0, 3).map((candidate, index) => ({
           id: candidate.id,
