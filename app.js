@@ -1021,78 +1021,121 @@ document.addEventListener('DOMContentLoaded', () => {
         resData.templates.forEach(tpl => {
           const card = document.createElement('div');
           card.className = 'filter-box-card';
-          card.style.padding = '1.5rem';
+          card.style.padding = '1.25rem';
           card.style.display = 'flex';
           card.style.flexDirection = 'column';
-          card.style.justifyContent = 'space-between';
           card.style.height = '100%';
           card.style.border = '1px solid rgba(8,34,64,0.08)';
-          card.style.position = 'relative';
+          card.style.borderRadius = '12px';
+          card.style.cursor = 'pointer';
+          card.style.transition = 'all 0.3s ease';
           
+          card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-4px)';
+            card.style.boxShadow = '0 8px 24px rgba(8,34,64,0.06)';
+            card.style.borderColor = 'var(--brand-blue)';
+          });
+          card.addEventListener('mouseleave', () => {
+            card.style.transform = 'none';
+            card.style.boxShadow = 'none';
+            card.style.borderColor = 'rgba(8,34,64,0.08)';
+          });
+
           const sizeKb = Math.round(tpl.size / 1024);
           const isPremiumUser = currentUser.user && currentUser.user.type === 'premium';
           const canDownload = tpl.isFree || isPremiumUser;
           
-          if (!canDownload) {
-            // Tampilan kartu terkunci untuk user free
-            card.style.background = '#fafbfc';
-            card.innerHTML = `
-              <div>
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                  <div style="width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
-                    <i class="fa-solid fa-lock" style="color: #94a3b8;"></i>
-                  </div>
-                  <div style="overflow: hidden; flex-grow: 1;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
-                      <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;" title="${tpl.displayName}">${tpl.displayName}</h4>
-                      <span style="font-size: 0.65rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-crown" style="font-size: 0.6rem;"></i> PRO</span>
-                    </div>
-                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Format: Word (.docx) · ${sizeKb} KB</span>
-                  </div>
+          const dummyLinesHtml = `
+            <div style="width: 100%;">
+              <div style="height: 4px; background: #e2e8f0; border-radius: 2px; margin-bottom: 6px; width: 40%;"></div>
+              <div style="height: 8px; background: #cbd5e1; border-radius: 4px; margin-bottom: 12px; width: 85%;"></div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div>
+                  <div style="height: 3px; background: #f1f5f9; border-radius: 2px; margin-bottom: 4px;"></div>
+                  <div style="height: 3px; background: #f1f5f9; border-radius: 2px; margin-bottom: 4px;"></div>
+                  <div style="height: 3px; background: #f1f5f9; border-radius: 2px; margin-bottom: 4px;"></div>
                 </div>
-                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; margin-top: 0.5rem;">Template format manuskrip standar untuk penulisan jurnal ilmiah internasional.</p>
+                <div>
+                  <div style="height: 3px; background: #f1f5f9; border-radius: 2px; margin-bottom: 4px;"></div>
+                  <div style="height: 3px; background: #f1f5f9; border-radius: 2px; margin-bottom: 4px;"></div>
+                  <div style="height: 3px; background: #f1f5f9; border-radius: 2px; margin-bottom: 4px;"></div>
+                </div>
               </div>
-              <button class="btn btn-upgrade-trigger" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.65rem; display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white;">
-                <i class="fa-solid fa-crown"></i> Buka dengan Premium
-              </button>
+            </div>
+          `;
+
+          let thumbnailHtml = '';
+          if (!canDownload) {
+            thumbnailHtml = `
+              <div style="aspect-ratio: 1 / 1.25; background: #f8fafc; border-radius: 8px; border: 1px dashed rgba(8,34,64,0.1); margin-bottom: 1rem; padding: 1rem; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; width: 100%;">
+                ${dummyLinesHtml}
+                <div style="position: absolute; inset: 0; background: rgba(255,255,255,0.75); backdrop-filter: blur(1.5px); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <i class="fa-solid fa-lock" style="font-size: 1.5rem; color: #d97706; margin-bottom: 0.5rem;"></i>
+                  <span style="font-size: 0.65rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-crown" style="font-size: 0.65rem;"></i> PREMIUM</span>
+                </div>
+              </div>
             `;
           } else {
-            // Tampilan kartu terbuka untuk free (Wiley) / premium user (semua)
-            const badgeHtml = tpl.isFree ? 
-              `<span style="font-size: 0.65rem; background: #e0f2fe; color: #0284c7; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700;">GRATIS</span>` :
-              `<span style="font-size: 0.65rem; background: #fef3c7; color: #d97706; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-crown" style="font-size: 0.6rem;"></i> AKSES PRO</span>`;
-              
-            card.innerHTML = `
-              <div>
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                  <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(7, 135, 220, 0.1); color: var(--brand-blue); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
-                    <i class="fa-regular fa-file-word"></i>
-                  </div>
-                  <div style="overflow: hidden; flex-grow: 1;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
-                      <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;" title="${tpl.displayName}">${tpl.displayName}</h4>
-                      ${badgeHtml}
-                    </div>
-                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Format: Word (.docx) · ${sizeKb} KB</span>
-                  </div>
+            thumbnailHtml = `
+              <div style="aspect-ratio: 1 / 1.25; background: #f8fafc; border-radius: 8px; border: 1px solid rgba(8,34,64,0.05); margin-bottom: 1rem; padding: 1rem; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; width: 100%;">
+                ${dummyLinesHtml}
+                <div style="position: absolute; inset: 0; background: rgba(7, 135, 220, 0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" class="hover-overlay-docx">
+                  <i class="fa-regular fa-eye" style="font-size: 1.75rem; color: var(--brand-blue);"></i>
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--brand-blue); margin-top: 0.4rem;">Pratinjau Dokumen</span>
                 </div>
-                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; margin-top: 0.5rem;">Template format manuskrip standar untuk penulisan jurnal ilmiah internasional.</p>
+                <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; margin-top: auto; z-index: 2;">
+                  <i class="fa-regular fa-file-word" style="font-size: 2.2rem; color: #2b579a;"></i>
+                  <span style="font-size: 0.65rem; background: #e2e8f0; color: #475569; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700;">Word</span>
+                </div>
               </div>
-              <a href="${tpl.url}" download class="btn btn-primary" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.65rem; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fa-solid fa-download"></i> Unduh Berkas
-              </a>
             `;
           }
-          grid.appendChild(card);
-        });
-        
-        // Re-bind modal trigger
-        grid.querySelectorAll('.btn-upgrade-trigger').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const upgradeModal = document.getElementById('upgradeModal');
-            if (upgradeModal) upgradeModal.classList.add('active');
+
+          const badgeHtml = tpl.isFree ? 
+            `<span style="font-size: 0.65rem; background: #e0f2fe; color: #0284c7; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700;">GRATIS</span>` :
+            `<span style="font-size: 0.65rem; background: #fef3c7; color: #d97706; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-crown" style="font-size: 0.6rem;"></i> PRO</span>`;
+
+          card.innerHTML = `
+            ${thumbnailHtml}
+            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.25rem;">
+                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.02rem; color: ${canDownload ? 'var(--text-main)' : '#94a3b8'}; margin: 0; line-height: 1.3;" title="${tpl.displayName}">${tpl.displayName}</h4>
+                  ${badgeHtml}
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Word (.docx) · ${sizeKb} KB</span>
+              </div>
+              
+              ${canDownload ? 
+                `<button class="btn btn-primary btn-preview-docx" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.6rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 8px;">
+                   <i class="fa-regular fa-eye"></i> Lihat & Unduh
+                 </button>` :
+                `<button class="btn btn-upgrade-trigger" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.6rem; display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white; border-radius: 8px;">
+                   <i class="fa-solid fa-crown"></i> Buka Premium
+                 </button>`
+              }
+            </div>
+          `;
+
+          const overlay = card.querySelector('.hover-overlay-docx');
+          if (overlay) {
+            card.addEventListener('mouseenter', () => overlay.style.opacity = '1');
+            card.addEventListener('mouseleave', () => overlay.style.opacity = '0');
+          }
+
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-upgrade-trigger') || !canDownload) {
+              e.preventDefault();
+              e.stopPropagation();
+              const upgradeModal = document.getElementById('upgradeModal');
+              if (upgradeModal) upgradeModal.classList.add('active');
+            } else {
+              e.preventDefault();
+              openDocxViewer(tpl.displayName, tpl.url, tpl.url);
+            }
           });
+
+          grid.appendChild(card);
         });
       } else {
         grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i><p>Gagal memuat: ${resData.message || 'Kesalahan server'}</p></div>`;
@@ -1101,6 +1144,63 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error fetching templates:', error);
       grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i><p>Gagal memuat berkas template.</p></div>';
     }
+  }
+
+  // --- LOGIKA DOCX VIEWER MODAL ---
+  async function openDocxViewer(title, url, downloadUrl) {
+    const modal = document.getElementById('docxViewerModal');
+    const docxViewerTitle = document.getElementById('docxViewerTitle');
+    const docxViewerDownloadBtn = document.getElementById('docxViewerDownloadBtn');
+    const container = document.getElementById('docxRenderContainer');
+    
+    if (!modal || !container) return;
+    
+    modal.style.display = 'flex';
+    docxViewerTitle.textContent = title;
+    docxViewerDownloadBtn.href = downloadUrl;
+    
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--text-muted);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--brand-blue); margin-bottom: 1rem;"></i>
+        <p style="font-family: var(--font-outfit); font-weight: 700; color: var(--text-main);">Mengunduh & Merender Dokumen...</p>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Proses ini dilakukan 100% aman di browser Anda</p>
+      </div>
+    `;
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Gagal mengunduh file template dari server.');
+      const blob = await response.blob();
+      
+      container.innerHTML = '';
+      await docx.renderAsync(blob, container);
+    } catch (error) {
+      console.error('docx-preview error:', error);
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: #ef4444; text-align: center; padding: 2rem;">
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+          <h4 style="font-family: var(--font-outfit); font-weight: 800; margin-bottom: 0.5rem; color: var(--text-main);">Gagal Memuat Pratinjau</h4>
+          <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 400px; margin: 0 auto; line-height: 1.5;">
+            ${error.message || 'File docx rusak atau terjadi kesalahan rendering. Anda masih dapat mengunduh berkas langsung via tombol "Unduh" di pojok kanan atas.'}
+          </p>
+        </div>
+      `;
+    }
+  }
+
+  // Bind close event viewer
+  const closeDocxViewerBtn = document.getElementById('closeDocxViewerBtn');
+  const docxViewerModal = document.getElementById('docxViewerModal');
+  if (closeDocxViewerBtn && docxViewerModal) {
+    const closeFn = () => {
+      docxViewerModal.style.display = 'none';
+      const container = document.getElementById('docxRenderContainer');
+      if (container) container.innerHTML = '';
+    };
+    closeDocxViewerBtn.addEventListener('click', closeFn);
+    docxViewerModal.addEventListener('click', (e) => {
+      if (e.target === docxViewerModal) closeFn();
+    });
   }
 
   // Expose function to window

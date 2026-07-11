@@ -1205,6 +1205,10 @@
       backdrop-filter: blur(4px);
     }
   </style>
+
+  <!-- CDNs for client-side docx rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.15/dist/docx-preview.min.js"></script>
 </head>
 <body>
 
@@ -1833,6 +1837,40 @@
         <p class="modal-footer-text">
           Sudah punya kode akses? <a href="#" id="modalActivateLink">Aktifkan di sini</a>
         </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCX VIEWER MODAL -->
+  <div id="docxViewerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(8, 34, 64, 0.6); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; padding: 1rem;">
+    <div class="modal-card" style="max-width: 1000px; width: 95%; height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 16px; background: #ffffff; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+      <!-- Modal Header -->
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 2rem; border-bottom: 1px solid #f1f5f9; background: #ffffff; flex-shrink: 0; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; overflow: hidden; max-width: 60%;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(7, 135, 220, 0.1); color: var(--brand-blue); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+            <i class="fa-regular fa-file-word"></i>
+          </div>
+          <div style="overflow: hidden;">
+            <h3 id="docxViewerTitle" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; color: var(--text-main); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Pratinjau Template Jurnal</h3>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; display: block;">Format berkas: Word (.docx)</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem; flex-shrink: 0;">
+          <a id="docxViewerDownloadBtn" href="" download class="btn btn-primary" style="padding: 0.55rem 1.25rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px;">
+            <i class="fa-solid fa-download"></i> Unduh
+          </a>
+          <button id="closeDocxViewerBtn" style="background: #f1f5f9; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; width: 36px; height: 36px; outline: none; transition: background-color 0.2s;">&times;</button>
+        </div>
+      </div>
+      <!-- Modal Body (Viewer container) -->
+      <div id="docxViewerBody" style="flex-grow: 1; overflow-y: auto; padding: 2rem; background: #f8fafc; display: flex; justify-content: center;">
+        <div id="docxRenderContainer" style="width: 100%; max-width: 800px; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 2.5rem; border-radius: 8px; min-height: 100%; border: 1px solid rgba(8,34,64,0.05);">
+          <!-- Rendering output from docx-preview will go here -->
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--text-muted);">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+            <p>Menyiapkan pratinjau dokumen...</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>

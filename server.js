@@ -338,10 +338,6 @@ app.post('/api/update-profile', requireAccess, (req, res) => {
 
 // Endpoint untuk mendapatkan daftar template jurnal internasional (.docx)
 app.get('/api/templates', requireAccess, (req, res) => {
-  if (req.session.userType !== 'premium') {
-    return res.status(403).json({ ok: false, message: 'Akses ditolak. Fitur khusus pengguna Premium.' });
-  }
-
   const templatesDir = path.join(__dirname, 'templates');
   try {
     if (!fs.existsSync(templatesDir)) {
@@ -351,6 +347,7 @@ app.get('/api/templates', requireAccess, (req, res) => {
     const files = fs.readdirSync(templatesDir)
       .filter(file => file.endsWith('.docx') || file.endsWith('.doc'))
       .map(file => {
+        const isWiley = file.toLowerCase().includes('wiley');
         const displayName = file
           .replace(/\.[^/.]+$/, "") // Hapus ekstensi
           .replace(/_/g, ' ')       // Ubah underscore jadi spasi
@@ -360,7 +357,8 @@ app.get('/api/templates', requireAccess, (req, res) => {
           filename: file,
           displayName: displayName,
           url: `/templates/${file}`,
-          size: fs.statSync(path.join(templatesDir, file)).size
+          size: fs.statSync(path.join(templatesDir, file)).size,
+          isFree: isWiley
         };
       });
 
