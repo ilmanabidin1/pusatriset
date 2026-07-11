@@ -45,7 +45,8 @@ Fitur AI menggunakan Vertex AI. Di Railway, tambahkan variable berikut:
 GOOGLE_APPLICATION_CREDENTIALS_JSON='isi JSON service account Google Cloud'
 VERTEX_PROJECT_ID='fourth-cirrus-314106'
 VERTEX_LOCATION='us-central1'
-GEMINI_MODEL='gemini-1.5-flash'
+GEMINI_MODEL='gemini-1.5-flash-002'
+GEMINI_MODEL_FALLBACKS='gemini-2.0-flash-001,gemini-1.5-flash-001'
 ```
 
 Service account perlu memiliki akses Vertex AI pada project Google Cloud tersebut.

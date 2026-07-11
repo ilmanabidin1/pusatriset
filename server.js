@@ -12,7 +12,11 @@ const ACCESS_CODE = process.env.ACCESS_CODE;
 const ACCESS_COOKIE = 'jurnalhub_access';
 const VERTEX_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.VERTEX_PROJECT_ID || 'fourth-cirrus-314106';
 const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'us-central1';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-002';
+const GEMINI_MODEL_FALLBACKS = (process.env.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash-001,gemini-1.5-flash-001')
+  .split(',')
+  .map(model => model.trim())
+  .filter(Boolean);
 
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   const credentialsPath = path.join(os.tmpdir(), 'jurnalhub-google-credentials.json');
@@ -20,21 +24,22 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON && !process.env.GOOGLE_APPLI
   process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsPath;
 }
 
-let generativeModel = null;
+const generativeModels = new Map();
 
-function getVertexModel() {
-  if (generativeModel) return generativeModel;
+function getVertexModel(modelName = GEMINI_MODEL) {
+  if (generativeModels.has(modelName)) return generativeModels.get(modelName);
 
   const vertexAI = new VertexAI({
     project: VERTEX_PROJECT_ID,
     location: VERTEX_LOCATION
   });
 
-  generativeModel = vertexAI.getGenerativeModel({
-    model: GEMINI_MODEL
+  const model = vertexAI.getGenerativeModel({
+    model: modelName
   });
 
-  return generativeModel;
+  generativeModels.set(modelName, model);
+  return model;
 }
 
 app.use(express.json());
@@ -74,7 +79,8 @@ app.get('/api/ai-status', requireAccess, (req, res) => {
     provider: 'vertexai',
     project: VERTEX_PROJECT_ID,
     location: VERTEX_LOCATION,
-    model: GEMINI_MODEL
+    model: GEMINI_MODEL,
+    fallbacks: GEMINI_MODEL_FALLBACKS
   });
 });
 
@@ -216,22 +222,34 @@ Kandidat jurnal:
 ${JSON.stringify(candidates)}
 `;
 
-  const model = getVertexModel();
-  const result = await model.generateContent({
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: prompt }]
-      }
-    ],
-    generationConfig: {
-      temperature: 0.2,
-      responseMimeType: 'application/json'
-    }
-  });
+  const modelNames = [...new Set([GEMINI_MODEL, ...GEMINI_MODEL_FALLBACKS])];
+  let lastError = null;
 
-  const text = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-  return JSON.parse(text);
+  for (const modelName of modelNames) {
+    try {
+      const model = getVertexModel(modelName);
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json'
+        }
+      });
+
+      const text = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      return JSON.parse(text);
+    } catch (error) {
+      lastError = error;
+      console.error(`Vertex AI model ${modelName} failed`, error);
+    }
+  }
+
+  throw lastError || new Error('All Vertex AI models failed');
 }
 
 app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
