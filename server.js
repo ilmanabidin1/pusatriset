@@ -545,20 +545,51 @@ ${JSON.stringify(candidates)}
     if (process.env.ANTHROPIC_AGENT_ID) {
       console.log(`[AI API] Menggunakan Anthropic Managed Agents dengan Agent ID: ${process.env.ANTHROPIC_AGENT_ID}`);
       try {
-        const response = await fetchFn('https://api.anthropic.com/v1/beta/agents/sessions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': process.env.ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01',
-            'anthropic-beta': 'managed-agents-2026-04-01'
-          },
-          body: JSON.stringify({
-            agent_id: process.env.ANTHROPIC_AGENT_ID,
-            recipient: { type: "agent" },
-            prompt: `Pilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul artikel, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}`
-          })
-        });
+        let response;
+        const promptContent = `Pilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul artikel, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}`;
+        
+        try {
+          // 1. Coba endpoint v1/agents/sessions (format standar beta)
+          response = await fetchFn('https://api.anthropic.com/v1/agents/sessions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': process.env.ANTHROPIC_API_KEY,
+              'anthropic-version': '2023-06-01',
+              'anthropic-beta': 'managed-agents-2026-04-01'
+            },
+            body: JSON.stringify({
+              agent_id: process.env.ANTHROPIC_AGENT_ID,
+              recipient: { type: "agent" },
+              prompt: promptContent
+            })
+          });
+          
+          if (response.status === 404) {
+            throw new Error("404");
+          }
+        } catch (err) {
+          if (err.message === "404") {
+            console.log("[AI API] Menggunakan endpoint alternatif /v1/sessions...");
+            // 2. Coba endpoint alternatif v1/sessions jika v1/agents/sessions menghasilkan 404
+            response = await fetchFn('https://api.anthropic.com/v1/sessions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01',
+                'anthropic-beta': 'managed-agents-2026-04-01'
+              },
+              body: JSON.stringify({
+                agent_id: process.env.ANTHROPIC_AGENT_ID,
+                recipient: { type: "agent" },
+                prompt: promptContent
+              })
+            });
+          } else {
+            throw err;
+          }
+        }
 
         if (!response.ok) {
           const errText = await response.text();
@@ -735,13 +766,15 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   try {
     const aiItems = await getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates);
     const recommendations = normalizeAiRecommendations(aiItems, candidates);
-    res.json({ ok: true, source: 'gemini', recommendations });
+    const sourceName = hasClaudeKey ? 'claude' : 'gemini';
+    res.json({ ok: true, source: sourceName, recommendations });
   } catch (error) {
     console.error(error);
+    const activeProvider = hasClaudeKey ? 'Claude' : 'Gemini';
     res.json({
       ok: true,
       source: 'local',
-      warning: `Gemini tidak tersedia, memakai fallback lokal. ${error.message.slice(0, 180)}`,
+      warning: `Layanan ${activeProvider} tidak tersedia, memakai fallback lokal. ${error.message.slice(0, 180)}`,
       recommendations: normalizeAiRecommendations(
         candidates.slice(0, 3).map((candidate, index) => ({
           id: candidate.id,
