@@ -50,6 +50,9 @@ function getVertexModel(modelName = GEMINI_MODEL) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Trust proxy untuk Railway (supaya cookie secure bisa diset kalau dibelakang load balancer HTTPS)
+app.set('trust proxy', 1);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'jurnalhub_super_secret_key',
   resave: false,
