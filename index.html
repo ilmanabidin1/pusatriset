@@ -3,258 +3,1254 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JurnalHub - Cari Jurnal Scopus & Sinta Gratis</title>
+  <title>JurnalHub - Portal Riset Terpadu Scopus & Sinta</title>
   
   <!-- SEO Meta Tags -->
-  <meta name="description" content="JurnalHub - Platform pencarian dan rekomendasi jurnal Scopus gratis dan jurnal Sinta berdasarkan judul, bidang keilmuan, dan kata kunci Anda.">
+  <meta name="description" content="JurnalHub - Portal pencarian dan rekomendasi jurnal Scopus dan Sinta secara terpadu berdasarkan judul, rumpun keilmuan, dan kata kunci Anda.">
   <meta name="keywords" content="JurnalHub, Jurnal Scopus, Jurnal Sinta, Jurnal Gratis, No APC, Publikasi Ilmiah, Rekomendasi Jurnal">
   <meta name="author" content="JurnalHub">
   
-  <!-- Google Fonts: Plus Jakarta Sans -->
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- FontAwesome Icons for modern UI -->
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Custom Styles -->
+  <!-- Core styles (we will override specific layout styles below) -->
   <link rel="stylesheet" href="styles.css">
+
+  <style>
+    /* Dashboard Specific Theme and Layout Overrides */
+    :root {
+      --bg-sidebar: #0b1a30;
+      --bg-sidebar-hover: #172a45;
+      --bg-sidebar-active: #1d2c42;
+      --sidebar-width: 260px;
+      
+      --bg-body: #f4f7fc;
+      --bg-card: #ffffff;
+      --text-main: #0a2540;
+      --text-muted: #5f6f82;
+      --text-white: #ffffff;
+      
+      --brand-blue: #0787dc;
+      --brand-blue-glow: rgba(7, 135, 220, 0.1);
+      --primary-color: #ff7417;
+      --primary-hover: #e85f00;
+      
+      --border-light: rgba(8, 34, 64, 0.05);
+      --border-light-hover: rgba(8, 34, 64, 0.1);
+      --card-radius: 16px;
+      
+      --font-outfit: 'Outfit', sans-serif;
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Reset global layout for Dashboard view */
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      font-family: var(--font-primary);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Layout */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--bg-sidebar);
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem;
+      z-index: 100;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-logo {
+      padding: 0.5rem;
+      margin-bottom: 2.25rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-logo img {
+      max-width: 110px;
+      height: auto;
+      filter: brightness(0) invert(1); /* Make logo white in dark sidebar */
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex-grow: 1;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.65);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+    }
+
+    .sidebar-link i {
+      font-size: 1.1rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-link:hover {
+      color: #ffffff;
+      background-color: var(--bg-sidebar-hover);
+    }
+
+    .sidebar-link.active {
+      color: #ffffff;
+      background-color: var(--bg-sidebar-active);
+    }
+
+    .pro-badge {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: #000;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      margin-left: auto;
+      letter-spacing: 0.5px;
+    }
+
+    /* Sidebar Promo Card */
+    .sidebar-upgrade-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upgrade-crown-icon {
+      color: #fbbf24;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      animation: pulseCrown 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseCrown {
+      0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(251,191,36,0.2)); }
+      50% { transform: scale(1.1); filter: drop-shadow(0 0 10px rgba(251,191,36,0.6)); }
+      100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(251,191,36,0.2)); }
+    }
+
+    .sidebar-upgrade-card h4 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.25rem;
+    }
+
+    .sidebar-upgrade-card p {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 1rem;
+      line-height: 1.3;
+    }
+
+    .upgrade-btn {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      background: linear-gradient(135deg, #e65f00, #ff7417);
+      border: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.25s ease;
+    }
+
+    .upgrade-btn:hover {
+      background: linear-gradient(135deg, #cc5400, #e85f00);
+      transform: translateY(-1px);
+    }
+
+    /* Sidebar Profile block */
+    .user-profile-section {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 0.5rem;
+    }
+
+    .profile-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      font-family: var(--font-outfit);
+    }
+
+    .profile-details {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .profile-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #ffffff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .profile-type {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .logout-icon-btn {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.45);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .logout-icon-btn:hover {
+      color: #ef4444;
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Main Content Wrapper */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex-grow: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Header Styling */
+    .dashboard-header {
+      height: 70px;
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border-light);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+
+    .header-left h2 {
+      font-family: var(--font-outfit);
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+
+    .header-center {
+      flex-grow: 1;
+      max-width: 480px;
+      margin: 0 2rem;
+    }
+
+    .header-search-bar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .header-search-bar i {
+      position: absolute;
+      left: 1rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .header-search-bar input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.5rem;
+      border: 1px solid var(--border-light-hover);
+      background-color: #f8fafc;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    .header-search-bar input:focus {
+      border-color: var(--brand-blue);
+      background-color: #ffffff;
+      box-shadow: 0 0 0 3px var(--brand-blue-glow);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .bell-icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .bell-icon-btn:hover {
+      background-color: #f1f5f9;
+      color: var(--text-main);
+    }
+
+    .upgrade-header-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background-color: #fef3c7;
+      border: 1px solid #fde68a;
+      color: #d97706;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+
+    .upgrade-header-btn:hover {
+      background-color: #fde68a;
+      color: #b45309;
+    }
+
+    /* Dashboard Body */
+    .dashboard-body {
+      padding: 2rem;
+      flex-grow: 1;
+    }
+
+    /* Tab Contents */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: contentFadeIn 0.3s ease-out;
+    }
+
+    @keyframes contentFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Banner Card Styling */
+    .match-banner-card {
+      background: linear-gradient(105deg, #0787dc 0%, #00539c 60%, #082240 100%);
+      border-radius: var(--card-radius);
+      padding: 2.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      color: #ffffff;
+      box-shadow: 0 10px 30px rgba(7, 135, 220, 0.15);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .match-banner-card::before {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 300px;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .banner-text {
+      flex-grow: 1;
+      max-width: 700px;
+    }
+
+    .banner-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      padding: 0.35rem 0.75rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 1rem;
+    }
+
+    .match-banner-card h3 {
+      font-family: var(--font-outfit);
+      font-size: 1.75rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 0.5rem;
+    }
+
+    .match-banner-card p {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.5;
+    }
+
+    .banner-upgrade-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #ff7417;
+      color: #ffffff;
+      border: none;
+      padding: 0.85rem 1.5rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 116, 23, 0.3);
+      font-family: inherit;
+      transition: all 0.25s ease;
+    }
+
+    .banner-upgrade-btn:hover {
+      background: #e85f00;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 116, 23, 0.45);
+    }
+
+    /* Stats Grid Row */
+    .stats-row-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stats-row-container .stat-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--card-radius);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      box-shadow: 0 4px 12px rgba(8, 34, 64, 0.02);
+      transition: all 0.3s ease;
+    }
+
+    .stats-row-container .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-light-hover);
+      box-shadow: 0 8px 20px rgba(8, 34, 64, 0.05);
+    }
+
+    .stat-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .scopus-icon {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+
+    .sinta-icon {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: #f59e0b;
+    }
+
+    .free-icon {
+      background-color: rgba(7, 135, 220, 0.1);
+      color: #0787dc;
+    }
+
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .stats-row-container .stat-value {
+      font-family: var(--font-outfit);
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.1;
+      background: none;
+      -webkit-text-fill-color: initial;
+    }
+
+    .stats-row-container .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Filter Card Panel */
+    .filter-box-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--card-radius);
+      padding: 1.75rem;
+      box-shadow: 0 4px 15px rgba(8, 34, 64, 0.02);
+      margin-bottom: 2rem;
+    }
+
+    .filter-dropdowns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-dropdown-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .filter-dropdown-item label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .filter-dropdown-item select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background-color: #ffffff;
+      border: 1px solid var(--border-light-hover);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1rem;
+      padding-right: 2.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .filter-dropdown-item select:focus {
+      border-color: var(--brand-blue);
+      box-shadow: 0 0 0 3px var(--brand-blue-glow);
+    }
+
+    .filter-checkboxes-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-light);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      gap: 1.75rem;
+    }
+
+    /* Custom Checkbox Design matching dashboard image */
+    .custom-checkbox-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .custom-checkbox-wrapper input {
+      display: none;
+    }
+
+    .checkbox-indicator {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid var(--text-muted-dark);
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      background-color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .checkbox-indicator::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background-color: var(--primary-color);
+      border-radius: 2px;
+      transform: scale(0);
+      transition: transform 0.2s ease;
+    }
+
+    .custom-checkbox-wrapper input:checked + .checkbox-indicator {
+      border-color: var(--primary-color);
+    }
+
+    .custom-checkbox-wrapper input:checked + .checkbox-indicator::after {
+      transform: scale(1);
+    }
+
+    .custom-checkbox-wrapper input:checked ~ span:not(.checkbox-indicator) {
+      color: var(--text-main);
+    }
+
+    .reset-filter-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      padding: 0.4rem;
+    }
+
+    .reset-filter-btn:hover {
+      color: #ef4444;
+    }
+
+    /* Meta bar results counts & controls */
+    .results-meta-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .results-count-text {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .layout-toggle-btns {
+      display: flex;
+      background-color: #e2e8f0;
+      padding: 3px;
+      border-radius: 8px;
+    }
+
+    .layout-toggle-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .layout-toggle-btn.active {
+      background-color: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Override dynamic result grid styles */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Load more buttons styling */
+    .load-more-wrapper {
+      text-align: center;
+      margin-top: 3rem;
+    }
+
+    .load-more-btn {
+      background-color: #ffffff;
+      border: 1px solid var(--border-light-hover);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.8rem 2.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 10px rgba(8, 34, 64, 0.02);
+      transition: all 0.25s ease;
+    }
+
+    .load-more-btn:hover {
+      background-color: #f8fafc;
+      border-color: rgba(8, 34, 64, 0.18);
+      transform: translateY(-1px);
+    }
+
+    /* Dedicated Match Score tab containers */
+    .match-score-main-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    #matchPremiumLock {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4rem 2rem;
+      background: rgba(11, 26, 48, 0.95);
+      border-radius: var(--card-radius);
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .match-card-content {
+      background-color: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--card-radius);
+      padding: 2.25rem 2rem;
+      box-shadow: 0 4px 15px rgba(8, 34, 64, 0.02);
+    }
+
+    /* Responsive style adaptations */
+    .mobile-header-bar {
+      display: none;
+      height: 60px;
+      background-color: var(--bg-sidebar);
+      padding: 0 1rem;
+      align-items: center;
+      justify-content: space-between;
+      color: #ffffff;
+      position: sticky;
+      top: 0;
+      z-index: 110;
+    }
+
+    .mobile-menu-btn {
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 1.35rem;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        left: -100%;
+        top: 60px;
+        width: 260px;
+        box-shadow: none;
+      }
+      .sidebar.show {
+        left: 0;
+      }
+      .mobile-header-bar {
+        display: flex;
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .dashboard-header {
+        display: none; /* Hide desktop header on mobile */
+      }
+      .dashboard-body {
+        padding: 1.25rem;
+      }
+      .match-banner-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+      }
+      .banner-upgrade-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      .stats-row-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .filter-dropdowns {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .filter-checkboxes-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .checkbox-group {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .reset-filter-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <header class="navbar" id="navbar">
-    <div class="nav-container">
-      <a href="#" class="nav-logo" id="navLogo">
-        <img src="assets/jurnalhub-logo.png" alt="JurnalHub" class="brand-logo">
-      </a>
-      <nav class="nav-links">
-        <a href="#hero" class="nav-link active">Beranda</a>
-        <a href="#matchBoxWrapper" class="nav-link">Match Score</a>
-        <a href="#search-section" class="nav-link">Cari Jurnal</a>
-        <div style="margin-left: auto; display: flex; align-items: center; gap: 1rem;">
-          <span id="userBadge" style="display: none; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
-            <i class="fa-solid fa-user"></i> <span id="userEmailText">User</span>
-            <span id="userTypeTag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.3rem;">FREE</span>
-          </span>
-          <button id="logoutBtn" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.85rem; display: none;">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
-          </button>
-        </div>
-      </nav>
-      <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Menu">
+
+  <!-- Mobile Header Bar -->
+  <div class="mobile-header-bar">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">
         <i class="fa-solid fa-bars"></i>
       </button>
+      <span style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; letter-spacing: 0.5px;">JurnalHub</span>
     </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="hero-section" id="hero" style="min-height: 95vh; padding-bottom: 6rem;">
-    <div class="hero-background">
-      <div class="glow-sphere sphere-1"></div>
-      <div class="glow-sphere sphere-2"></div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <button class="mobile-menu-btn btn-upgrade-trigger" style="color: #fbbf24; font-size: 1.1rem;">
+        <i class="fa-solid fa-crown"></i>
+      </button>
     </div>
-    <div class="hero-container" style="display: flex; flex-direction: column; align-items: center;">
-      <span class="hero-tagline"><i class="fa-solid fa-graduation-cap"></i> Created by Dr. M Ilman Abidin, S.H., M.H.</span>
-      <h1 class="hero-title">Temukan Jurnal <span class="gradient-text">Scopus</span> & <span class="gradient-text">Sinta</span> Terbaik</h1>
-      <p class="hero-subtitle">Cari rekomendasi jurnal internasional dan nasional dengan mudah. Saring berdasarkan bidang keilmuan, tingkatan kuartil, dan temukan opsi gratis (tanpa biaya publikasi/APC).</p>
-      <div class="hero-actions" style="margin-bottom: 3rem;">
-        <a href="#search-section" class="btn btn-primary" id="btnExplore">
-          <i class="fa-solid fa-magnifying-glass"></i> Mulai Pencarian
-        </a>
-      </div>
+  </div>
 
-      <!-- Statistics Grid directly on Homepage Hero -->
-      <div class="stats-grid" style="width: 100%; max-width: 900px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1rem;">
-        <div class="stat-card">
-          <div class="stat-icon"><i class="fa-solid fa-globe"></i></div>
-          <div class="stat-value" id="statScopusVal">0</div>
-          <div class="stat-label">Jurnal Scopus Terindeks</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon"><i class="fa-solid fa-medal"></i></div>
-          <div class="stat-value" id="statSintaVal">0</div>
-          <div class="stat-label">Jurnal Sinta Terakreditasi</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-          <div class="stat-value" id="statFreeVal">0</div>
-          <div class="stat-label">Jurnal Tanpa Biaya (No APC)</div>
-        </div>
-      </div>
+  <!-- Left Sidebar (matches layout in dashboard screenshot) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="assets/jurnalhub-logo.png" alt="JurnalHub">
     </div>
-  </section>
+    
+    <nav class="sidebar-nav">
+      <a href="#" class="sidebar-link active" data-tab="beranda">
+        <i class="fa-solid fa-house"></i> <span>Beranda</span>
+      </a>
+      <a href="#" class="sidebar-link" data-tab="cari-jurnal">
+        <i class="fa-solid fa-magnifying-glass"></i> <span>Cari Jurnal</span>
+      </a>
+      <a href="#" class="sidebar-link" data-tab="match-score">
+        <i class="fa-solid fa-percent"></i> <span>Match Score AI</span>
+        <span class="pro-badge">PRO</span>
+      </a>
+      <a href="#" class="sidebar-link" data-tab="tersimpan">
+        <i class="fa-solid fa-bookmark"></i> <span>Tersimpan</span>
+      </a>
+      <a href="#" class="sidebar-link" data-tab="pengaturan">
+        <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
+      </a>
+    </nav>
+    
+    <!-- Sidebar Upgrade Card -->
+    <div class="sidebar-upgrade-card" id="sidebarUpgradeCard">
+      <i class="fa-solid fa-crown upgrade-crown-icon"></i>
+      <h4>Upgrade ke Premium</h4>
+      <p>Buka AI Match Score & filter tanpa batas</p>
+      <button class="upgrade-btn btn-upgrade-trigger">Upgrade Sekarang</button>
+    </div>
 
-  <!-- Search & Database Section -->
-  <section class="search-section" id="search-section">
-    <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">Database Jurnal Interaktif</h2>
-        <p class="section-subtitle">Masukkan judul jurnal secara langsung, atau gunakan kata kunci dan filter bidang keilmuan untuk menemukan jurnal yang sesuai.</p>
+    <!-- User Profile Section -->
+    <div class="user-profile-section">
+      <div class="profile-avatar" id="profileAvatar">U</div>
+      <div class="profile-details">
+        <span class="profile-name" id="profileEmail">user</span>
+        <span class="profile-type" id="profileType">Akun Free</span>
       </div>
+      <button class="logout-icon-btn" id="sidebarLogoutBtn" title="Keluar">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      </button>
+    </div>
+  </aside>
 
-      <div class="match-box-wrapper" id="matchBoxWrapper" style="position: relative;">
-        <!-- Overlay Lock untuk User Free -->
-        <div id="matchPremiumLock" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 9, 14, 0.85); z-index: 10; border-radius: 16px; backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
-          <i class="fa-solid fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1rem;"></i>
-          <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Fitur Premium Khusus Pelanggan</h3>
-          <p style="color: var(--text-muted); max-width: 400px; margin-bottom: 1.5rem;">Tingkatkan akun Anda ke Premium atau gunakan Kode Akses untuk membuka fitur AI Match Score.</p>
-          <button id="btnUpgradeLock" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
-            <i class="fa-solid fa-unlock-keyhole"></i> Upgrade Sekarang
-          </button>
-        </div>
-
-        <div class="match-header">
-          <div>
-            <span class="match-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score <span class="premium-badge" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #000; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.5rem; vertical-align: middle;">PREMIUM</span></span>
-            <h3>Temukan jurnal yang paling cocok untuk artikel Anda</h3>
-          </div>
-          <button id="clearMatch" class="reset-btn match-clear-btn" type="button" style="display: none;">
-            <i class="fa-solid fa-xmark"></i> Bersihkan Match
-          </button>
-        </div>
-        <div class="match-form">
-          <div class="match-field">
-            <label for="articleTitle">Judul Artikel</label>
-            <input type="text" id="articleTitle" placeholder="Contoh: Perlindungan hukum terhadap konsumen digital">
-          </div>
-          <div class="match-field">
-            <label for="articleKeywords">Keyword / Bidang</label>
-            <input type="text" id="articleKeywords" placeholder="Contoh: hukum bisnis, perlindungan konsumen, ekonomi digital">
-          </div>
-          <div class="match-field match-field-wide">
-            <label for="articleAbstract">Abstrak Singkat</label>
-            <textarea id="articleAbstract" rows="4" placeholder="Tempel abstrak atau ringkasan artikel agar rekomendasi jurnal lebih akurat."></textarea>
-          </div>
-        </div>
-        <div class="match-actions">
-          <button id="runMatch" class="btn btn-primary" type="button">
-            <i class="fa-solid fa-chart-line"></i> Hitung Match Score
-          </button>
-          <p id="matchSummary" class="match-summary">Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.</p>
-        </div>
-        <div class="match-results-grid" id="matchResultsContainer" style="display: none;"></div>
+  <!-- Right Main Content Panel -->
+  <main class="main-content">
+    <header class="dashboard-header">
+      <div class="header-left">
+        <h2 id="pageTitle">Beranda</h2>
       </div>
-
-      <!-- Search Controls -->
-      <div class="search-box-wrapper" id="searchBoxWrapper">
-        <div class="search-input-group">
-          <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input type="search" id="searchInput" placeholder="Masukkan judul jurnal, contoh: Jurnal Hukum, Accounting, Medicine..." aria-label="Cari berdasarkan judul jurnal">
-          <button id="clearSearch" class="clear-search-btn" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        
-        <div class="filter-group">
-          <!-- Filter Type -->
-          <div class="filter-item">
-            <label for="filterType"><i class="fa-solid fa-tags"></i> Kategori</label>
-            <select id="filterType">
-              <option value="all">Semua Jurnal</option>
-              <option value="Scopus">Scopus Only</option>
-              <option value="Sinta">Sinta Only</option>
-            </select>
-          </div>
-
-          <!-- Filter Subject -->
-          <div class="filter-item">
-            <label for="filterSubject"><i class="fa-solid fa-book-open"></i> Rumpun Keilmuan</label>
-            <select id="filterSubject">
-              <option value="all">Semua Rumpun</option>
-              <option value="Sains & Teknologi">Sains & Teknologi</option>
-              <option value="Sosial & Humaniora">Sosial & Humaniora</option>
-              <option value="Kesehatan">Kesehatan</option>
-              <option value="Ekonomi & Bisnis">Ekonomi & Bisnis</option>
-            </select>
-          </div>
-
-          <!-- Filter Rank -->
-          <div class="filter-item">
-            <label for="filterRank"><i class="fa-solid fa-award"></i> Tingkatan / Rank</label>
-            <select id="filterRank">
-              <option value="all">Semua Tingkat</option>
-              <option value="Q1">Scopus Q1</option>
-              <option value="Q2">Scopus Q2</option>
-              <option value="Q3">Scopus Q3</option>
-              <option value="Q4">Scopus Q4</option>
-              <option value="S1">Sinta S1</option>
-              <option value="S2">Sinta S2</option>
-              <option value="S3">Sinta S3</option>
-              <option value="S4">Sinta S4</option>
-              <option value="S5">Sinta S5</option>
-              <option value="S6">Sinta S6</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="filter-footer">
-          <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-            <div class="checkbox-wrapper">
-              <input type="checkbox" id="checkFreeOnly">
-              <label for="checkFreeOnly" class="checkbox-label">
-                <span class="custom-checkbox"><i class="fa-solid fa-check"></i></span>
-                Tampilkan Hanya Jurnal Gratis (No APC)
-              </label>
-            </div>
-            <div class="checkbox-wrapper">
-              <input type="checkbox" id="checkFastTrackOnly">
-              <label for="checkFastTrackOnly" class="checkbox-label">
-                <span class="custom-checkbox"><i class="fa-solid fa-check"></i></span>
-                Tampilkan Hanya Jurnal Fast Track (Berbayar)
-              </label>
-            </div>
-          </div>
-          <button id="resetFilters" class="reset-btn">
-            <i class="fa-solid fa-rotate-left"></i> Reset Filter
-          </button>
+      <div class="header-center">
+        <div class="header-search-bar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <!-- searchInput ID is kept to directly map with app.js filter functions -->
+          <input type="search" id="searchInput" placeholder="Cari jurnal, penerbit, keyword...">
+          <button id="clearSearch" style="position: absolute; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; display: none;"><i class="fa-solid fa-xmark"></i></button>
         </div>
       </div>
-
-      <!-- Stats Bar & Mode View Toggle -->
-      <div class="results-meta">
-        <span class="results-count" id="resultsCount">Menampilkan 0 jurnal</span>
-        <div class="view-toggle">
-          <button class="view-btn active" id="viewGrid" aria-label="Tampilan Grid"><i class="fa-solid fa-grip"></i></button>
-          <button class="view-btn" id="viewList" aria-label="Tampilan List"><i class="fa-solid fa-list"></i></button>
-        </div>
-      </div>
-
-      <!-- Results Container -->
-      <div class="results-grid" id="resultsContainer">
-        <!-- Cards will be dynamically inserted here via app.js -->
-      </div>
-
-      <!-- Load More Button -->
-      <div class="load-more-wrapper" id="loadMoreContainer" style="text-align: center; margin-top: 3.5rem; display: none;">
-        <button id="loadMoreBtn" class="btn btn-secondary" style="padding: 0.85rem 2.5rem;">
-          <i class="fa-solid fa-spinner"></i> Muat Lebih Banyak
+      <div class="header-right">
+        <button class="bell-icon-btn" title="Notifikasi"><i class="fa-regular fa-bell"></i></button>
+        <button class="upgrade-header-btn btn-upgrade-trigger" id="headerUpgradeBtn">
+          <i class="fa-solid fa-crown"></i> Upgrade
         </button>
       </div>
-    </div>
-  </section>
+    </header>
 
+    <div class="dashboard-body">
+      
+      <!-- TAB 1: BERANDA (MAIN VIEW) -->
+      <div id="tabContentBeranda" class="tab-content active">
+        
+        <!-- Banner Card matching mock style -->
+        <div class="match-banner-card" id="matchBannerCard">
+          <div class="banner-text">
+            <span class="banner-badge"><i class="fa-solid fa-percent"></i> AI Match Score</span>
+            <h3>Temukan jurnal paling cocok untuk artikel Anda</h3>
+            <p>Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.</p>
+          </div>
+          <button class="banner-upgrade-btn btn-upgrade-trigger" id="bannerUpgradeBtn">
+            <i class="fa-solid fa-lock"></i> Upgrade Sekarang
+          </button>
+        </div>
 
+        <!-- Statistics Row Container (Dynamic from database.js) -->
+        <div class="stats-row-container">
+          <div class="stat-card">
+            <div class="stat-icon-wrapper scopus-icon">
+              <i class="fa-solid fa-globe"></i>
+            </div>
+            <div class="stat-info">
+              <!-- statScopusVal, statSintaVal, and statFreeVal IDs map directly with app.js statistics counters -->
+              <span class="stat-value" id="statScopusVal">0</span>
+              <span class="stat-label">Jurnal Scopus</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrapper sinta-icon">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="statSintaVal">0</span>
+              <span class="stat-label">Jurnal Sinta</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrapper free-icon">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="statFreeVal">0</span>
+              <span class="stat-label">Tanpa Biaya (No APC)</span>
+            </div>
+          </div>
+        </div>
 
+        <!-- Filter Box Card matching mock style -->
+        <div class="filter-box-card">
+          <div class="filter-dropdowns">
+            <div class="filter-dropdown-item">
+              <label>KATEGORI</label>
+              <!-- IDs map directly with app.js filters -->
+              <select id="filterType">
+                <option value="all">Semua Jurnal</option>
+                <option value="Scopus">Scopus Only</option>
+                <option value="Sinta">Sinta Only</option>
+              </select>
+            </div>
+            <div class="filter-dropdown-item">
+              <label>RUMPUN KEILMUAN</label>
+              <select id="filterSubject">
+                <option value="all">Semua Rumpun</option>
+                <option value="Sains & Teknologi">Sains & Teknologi</option>
+                <option value="Sosial & Humaniora">Sosial & Humaniora</option>
+                <option value="Kesehatan">Kesehatan</option>
+                <option value="Ekonomi & Bisnis">Ekonomi & Bisnis</option>
+              </select>
+            </div>
+            <div class="filter-dropdown-item">
+              <label>TINGKATAN / RANK</label>
+              <select id="filterRank">
+                <option value="all">Semua Tingkat</option>
+                <option value="Q1">Scopus Q1</option>
+                <option value="Q2">Scopus Q2</option>
+                <option value="Q3">Scopus Q3</option>
+                <option value="Q4">Scopus Q4</option>
+                <option value="S1">Sinta S1</option>
+                <option value="S2">Sinta S2</option>
+                <option value="S3">Sinta S3</option>
+                <option value="S4">Sinta S4</option>
+                <option value="S5">Sinta S5</option>
+                <option value="S6">Sinta S6</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-checkboxes-bar">
+            <div class="checkbox-group">
+              <label class="custom-checkbox-wrapper">
+                <input type="checkbox" id="checkFreeOnly">
+                <span class="checkbox-indicator"></span>
+                <span>Hanya Gratis (No APC)</span>
+              </label>
+              <label class="custom-checkbox-wrapper">
+                <input type="checkbox" id="checkFastTrackOnly">
+                <span class="checkbox-indicator"></span>
+                <span>Fast Track (Berbayar)</span>
+              </label>
+            </div>
+            <button class="reset-filter-btn" id="resetFilters">
+              <i class="fa-solid fa-rotate-left"></i> Reset Filter
+            </button>
+          </div>
+        </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-container">
-      <div class="footer-brand">
-        <a href="#" class="footer-logo">
-          <img src="assets/jurnalhub-logo.png" alt="JurnalHub" class="footer-brand-logo">
-        </a>
-        <p>Aplikasi pencarian referensi jurnal ilmiah nasional dan internasional terbaik untuk mendukung riset anak bangsa.</p>
-        <p style="margin-top: 1.25rem; font-size: 0.95rem; font-weight: 600; color: var(--text-main);">
-          Created by Dr. M Ilman Abidin, S.H., M.H.
-        </p>
+        <!-- Meta Results Header -->
+        <div class="results-meta-header">
+          <span class="results-count-text" id="resultsCount">Menampilkan 0 jurnal</span>
+          <div class="layout-toggle-btns">
+            <button class="layout-toggle-btn active" id="viewGrid" title="Grip View"><i class="fa-solid fa-grip"></i></button>
+            <button class="layout-toggle-btn" id="viewList" title="List View"><i class="fa-solid fa-list"></i></button>
+          </div>
+        </div>
+
+        <!-- Results Grid Container (dynamically loaded) -->
+        <div class="results-grid" id="resultsContainer"></div>
+
+        <!-- Load More Container -->
+        <div class="load-more-wrapper" id="loadMoreContainer" style="display: none;">
+          <button id="loadMoreBtn" class="load-more-btn">
+            <i class="fa-solid fa-spinner fa-spin" style="display: none;"></i> Muat Lebih Banyak
+          </button>
+        </div>
+
       </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 JurnalHub. Created by Dr. M Ilman Abidin, S.H., M.H. Dibuat untuk mendukung iklim riset terbuka di Indonesia.</p>
-      </div>
-    </div>
-  </footer>
 
-  <!-- Scripts -->
+      <!-- TAB 2: MATCH SCORE (DEDICATED VIEW) -->
+      <div id="tabContentMatchScore" class="tab-content">
+        <div class="match-score-main-container">
+          <div class="match-box-wrapper" id="matchBoxWrapper" style="position: relative;">
+            
+            <!-- Overlay Lock for Free User -->
+            <div id="matchPremiumLock" style="display: none;">
+              <i class="fa-solid fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
+              <h3>Fitur Premium Khusus Pelanggan</h3>
+              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
+                Tingkatkan akun Anda ke Premium atau masukkan Kode Akses di halaman login untuk membuka AI Match Score.
+              </p>
+              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fa-solid fa-unlock-keyhole"></i> Upgrade Sekarang
+              </button>
+            </div>
+
+            <!-- Form Content -->
+            <div class="match-card-content">
+              <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                <div>
+                  <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score</span>
+                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Temukan rekomendasi jurnal paling cocok</h3>
+                </div>
+                <button id="clearMatch" class="reset-filter-btn" type="button" style="display: none;">
+                  <i class="fa-solid fa-xmark"></i> Bersihkan Match
+                </button>
+              </div>
+              <div class="match-form" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem;">
+                <div class="filter-dropdown-item" style="grid-column: span 1;">
+                  <label for="articleTitle">JUDUL ARTIKEL</label>
+                  <input type="text" id="articleTitle" placeholder="Contoh: Perlindungan hukum terhadap konsumen digital" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none;">
+                </div>
+                <div class="filter-dropdown-item" style="grid-column: span 1;">
+                  <label for="articleKeywords">KEYWORD / BIDANG</label>
+                  <input type="text" id="articleKeywords" placeholder="Contoh: hukum bisnis, perlindungan konsumen" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none;">
+                </div>
+                <div class="filter-dropdown-item" style="grid-column: span 2;">
+                  <label for="articleAbstract">ABSTRAK SINGKAT</label>
+                  <textarea id="articleAbstract" rows="6" placeholder="Tempel abstrak atau ringkasan artikel agar rekomendasi jurnal lebih akurat." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+                </div>
+              </div>
+              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem;">
+                <button id="runMatch" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: var(--brand-blue); color: #ffffff;">
+                  <i class="fa-solid fa-chart-line"></i> Hitung Match Score
+                </button>
+                <p id="matchSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+                  Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.
+                </p>
+              </div>
+              <div class="match-results-grid" id="matchResultsContainer" style="display: none; margin-top: 2rem;"></div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: SAVED (TERSIMPAN) -->
+      <div id="tabContentTersimpan" class="tab-content">
+        <div class="empty-state" style="padding: 5rem 2rem; text-align: center; background: #ffffff; border-radius: var(--card-radius); border: 1px dashed rgba(8,34,64,0.1);">
+          <div class="empty-icon" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"><i class="fa-solid fa-bookmark"></i></div>
+          <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem;">Belum Ada Jurnal Tersimpan</h3>
+          <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">Fitur penanda / menyimpan rekomendasi jurnal akan segera hadir.</p>
+        </div>
+      </div>
+
+      <!-- TAB 4: SETTINGS (PENGATURAN) -->
+      <div id="tabContentPengaturan" class="tab-content">
+        <div class="empty-state" style="padding: 5rem 2rem; text-align: center; background: #ffffff; border-radius: var(--card-radius); border: 1px dashed rgba(8,34,64,0.1);">
+          <div class="empty-icon" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"><i class="fa-solid fa-gear"></i></div>
+          <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem;">Pengaturan Portal</h3>
+          <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">Konfigurasi profil dan pengaturan portal akan segera hadir.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Core Scripts -->
   <script src="database.js"></script>
   <script src="app.js"></script>
+
+  <!-- Sidebar Tab Navigation Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const pageTitle = document.getElementById('pageTitle');
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const sidebar = document.getElementById('sidebar');
+
+      // Helper function to capitalize tab names
+      function capitalizeTabName(str) {
+        return str.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+      }
+
+      function switchTab(tabName) {
+        // Close mobile menu if open
+        sidebar.classList.remove('show');
+        const mobileMenuIcon = mobileMenuBtn.querySelector('i');
+        if (mobileMenuIcon) {
+          mobileMenuIcon.className = 'fa-solid fa-bars';
+        }
+
+        // Clean link state and activate target
+        sidebarLinks.forEach(link => {
+          if (link.getAttribute('data-tab') === tabName) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+
+        // Hide all tabs and show active
+        tabContents.forEach(content => {
+          content.classList.remove('active');
+        });
+
+        if (tabName === 'cari-jurnal') {
+          // 'Cari Jurnal' focuses on main dashboard's search input
+          const berandaLink = document.querySelector('.sidebar-link[data-tab="beranda"]');
+          if (berandaLink) berandaLink.classList.add('active');
+          
+          const berandaContent = document.getElementById('tabContentBeranda');
+          if (berandaContent) berandaContent.classList.add('active');
+          
+          pageTitle.textContent = 'Beranda';
+          
+          const searchInput = document.getElementById('searchInput');
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          const contentId = 'tabContent' + capitalizeTabName(tabName);
+          const activeContent = document.getElementById(contentId);
+          if (activeContent) {
+            activeContent.classList.add('active');
+          }
+          
+          // Update Page Title
+          const currentLink = document.querySelector(`.sidebar-link[data-tab="${tabName}"]`);
+          if (currentLink) {
+            pageTitle.textContent = currentLink.querySelector('span').textContent;
+          }
+        }
+      }
+
+      sidebarLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          switchTab(link.getAttribute('data-tab'));
+        });
+      });
+
+      // Mobile Menu Toggle
+      mobileMenuBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('show');
+        const icon = mobileMenuBtn.querySelector('i');
+        if (sidebar.classList.contains('show')) {
+          icon.className = 'fa-solid fa-xmark';
+        } else {
+          icon.className = 'fa-solid fa-bars';
+        }
+      });
+    });
+  </script>
 </body>
 </html>

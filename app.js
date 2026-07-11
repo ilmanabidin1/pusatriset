@@ -54,50 +54,72 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Update UI based on user type
-        const userBadge = document.getElementById('userBadge');
-        const userEmailText = document.getElementById('userEmailText');
-        const userTypeTag = document.getElementById('userTypeTag');
-        const logoutBtn = document.getElementById('logoutBtn');
+        // Update UI based on user type (sidebar profile & locks)
+        const profileEmail = document.getElementById('profileEmail');
+        const profileType = document.getElementById('profileType');
+        const profileAvatar = document.getElementById('profileAvatar');
+        const sidebarUpgradeCard = document.getElementById('sidebarUpgradeCard');
+        const headerUpgradeBtn = document.getElementById('headerUpgradeBtn');
+        const bannerUpgradeBtn = document.getElementById('bannerUpgradeBtn');
         const matchPremiumLock = document.getElementById('matchPremiumLock');
 
-        if (userBadge && logoutBtn) {
-          userBadge.style.display = 'inline-flex';
-          logoutBtn.style.display = 'inline-flex';
-          userEmailText.textContent = currentUser.user.email.split('@')[0];
+        if (currentUser.user) {
+          const emailPrefix = currentUser.user.email.split('@')[0];
+          if (profileEmail) profileEmail.textContent = emailPrefix;
+          if (profileAvatar) {
+            profileAvatar.textContent = emailPrefix.substring(0, 2).toUpperCase();
+          }
 
           if (currentUser.user.type === 'premium') {
-            userTypeTag.textContent = 'PREMIUM';
-            userTypeTag.style.background = '#fbbf24';
-            userTypeTag.style.color = '#000';
+            if (profileType) profileType.textContent = 'Akun Premium';
+            if (profileType) profileType.style.color = '#fbbf24';
+            if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'none';
+            if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'none';
+            if (bannerUpgradeBtn) {
+              bannerUpgradeBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Mulai AI Match';
+              bannerUpgradeBtn.style.background = 'var(--brand-blue)';
+              bannerUpgradeBtn.style.boxShadow = '0 4px 15px rgba(7, 135, 220, 0.3)';
+              // Change click to go to match tab
+              bannerUpgradeBtn.className = 'banner-upgrade-btn'; 
+              bannerUpgradeBtn.onclick = (e) => {
+                e.preventDefault();
+                const matchTabLink = document.querySelector('.sidebar-link[data-tab="match-score"]');
+                if (matchTabLink) matchTabLink.click();
+              };
+            }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
           } else {
-            userTypeTag.textContent = 'FREE';
-            userTypeTag.style.background = 'rgba(255,255,255,0.2)';
-            userTypeTag.style.color = '#fff';
+            if (profileType) profileType.textContent = 'Akun Free';
+            if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'block';
+            if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'flex';
             if (matchPremiumLock) matchPremiumLock.style.display = 'flex';
           }
         }
 
         // Logout handler
-        if (logoutBtn) {
-          logoutBtn.addEventListener('click', async () => {
+        const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+        if (sidebarLogoutBtn) {
+          sidebarLogoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
             await fetch('/api/logout', { method: 'POST' });
             window.location.href = '/auth.html';
           });
         }
 
-        // Upgrade button handler
-        const btnUpgradeLock = document.getElementById('btnUpgradeLock');
-        if (btnUpgradeLock) {
-           btnUpgradeLock.addEventListener('click', () => {
-             // For now, redirect to auth to enter access code
-             alert("Silakan masukkan Kode Akses di halaman login untuk mengaktifkan Premium.");
-             fetch('/api/logout', { method: 'POST' }).then(() => {
+        // Upgrade triggers handlers (all upgrade buttons)
+        document.querySelectorAll('.btn-upgrade-trigger').forEach(btn => {
+          // Prevent multiple bindings
+          if (!btn.dataset.bound) {
+            btn.dataset.bound = "true";
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+              alert("Silakan masukkan Kode Akses di halaman login untuk mengaktifkan Premium.");
+              fetch('/api/logout', { method: 'POST' }).then(() => {
                 window.location.href = '/auth.html';
-             });
-           });
-        }
+              });
+            });
+          }
+        });
       } else {
          window.location.href = '/auth.html';
       }
@@ -578,21 +600,22 @@ document.addEventListener('DOMContentLoaded', () => {
     animateValue(statFreeVal, 0, freeCount, 1000);
   }
 
-  // Efek animasi angka bertambah (counter up)
+  // Efek animasi angka bertambah (counter up) dengan format pemisah ribuan titik
   function animateValue(element, start, end, duration) {
     if (start === end) {
-      element.textContent = end;
+      element.textContent = end.toLocaleString('id-ID');
       return;
     }
     let startTimestamp = null;
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      element.textContent = Math.floor(progress * (end - start) + start);
+      const val = Math.floor(progress * (end - start) + start);
+      element.textContent = val.toLocaleString('id-ID');
       if (progress < 1) {
         window.requestAnimationFrame(step);
       } else {
-        element.textContent = end;
+        element.textContent = end.toLocaleString('id-ID');
       }
     };
     window.requestAnimationFrame(step);
@@ -707,29 +730,33 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Mobile Hamburger Toggle
-  mobileToggle.addEventListener('click', () => {
-    navLinks.classList.toggle('show');
-    const isShowing = navLinks.classList.contains('show');
-    mobileToggle.innerHTML = isShowing ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
-  });
+  if (mobileToggle && navLinks) {
+    mobileToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('show');
+      const isShowing = navLinks.classList.contains('show');
+      mobileToggle.innerHTML = isShowing ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+    });
+  }
 
   // Tutup menu mobile ketika link di-klik
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
-      navLinks.classList.remove('show');
-      mobileToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+      if (navLinks) navLinks.classList.remove('show');
+      if (mobileToggle) mobileToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
     });
   });
 
   // Efek Glass Navbar saat digeser (Scroll)
   window.addEventListener('scroll', () => {
     const navbar = document.getElementById('navbar');
-    if (window.scrollY > 50) {
-      navbar.style.padding = '0.75rem 2rem';
-      navbar.style.backgroundColor = 'rgba(7, 9, 14, 0.9)';
-    } else {
-      navbar.style.padding = '1.25rem 2rem';
-      navbar.style.backgroundColor = 'rgba(7, 9, 14, 0.75)';
+    if (navbar) {
+      if (window.scrollY > 50) {
+        navbar.style.padding = '0.75rem 2rem';
+        navbar.style.backgroundColor = 'rgba(7, 9, 14, 0.9)';
+      } else {
+        navbar.style.padding = '1.25rem 2rem';
+        navbar.style.backgroundColor = 'rgba(7, 9, 14, 0.75)';
+      }
     }
   });
 
