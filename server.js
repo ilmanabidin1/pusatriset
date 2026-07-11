@@ -606,8 +606,11 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
 });
 
 app.use((req, res, next) => {
-  // File statis yang diizinkan tanpa login (terutama untuk halaman auth)
-  const publicFiles = ['/auth.html', '/styles.css', '/app.js', '/database.js'];
+  // File statis yang diizinkan tanpa login (terutama untuk halaman auth dan informasi)
+  const publicFiles = [
+    '/auth.html', '/styles.css', '/app.js', '/database.js',
+    '/terms.html', '/refund.html', '/faq.html', '/contact.html'
+  ];
 
   if (publicFiles.includes(req.path) || req.path.startsWith('/assets/')) {
     next();

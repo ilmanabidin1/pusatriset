@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequently Asked Questions (FAQ) - JurnalHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --brand-blue: #0787dc;
+      --brand-dark: #0b1a30;
+      --bg-gradient: linear-gradient(135deg, #0b1a30 0%, #082240 100%);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-light: rgba(8, 34, 64, 0.08);
+      --font-outfit: 'Outfit', sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+      background: #f8fafc;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--bg-gradient);
+      color: #ffffff;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .header-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header-content h1 {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .header-content p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--brand-blue);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s;
+    }
+    .back-link:hover {
+      transform: translateX(-4px);
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 20px rgba(8,34,64,0.02);
+    }
+    .faq-item {
+      border-bottom: 1px solid var(--border-light);
+      padding: 1.5rem 0;
+    }
+    .faq-item:first-of-type {
+      padding-top: 0;
+    }
+    .faq-item:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .faq-question {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--brand-dark);
+      margin-bottom: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .faq-question i {
+      color: var(--brand-blue);
+      margin-top: 0.2rem;
+    }
+    .faq-answer {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      padding-left: 1.6rem;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-light);
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>Pertanyaan Umum (FAQ)</h1>
+      <p>Temukan jawaban cepat untuk pertanyaan populer seputar JurnalHub</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <a href="/auth.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Login</a>
+    
+    <div class="card">
+      
+      <div class="faq-item">
+        <div class="faq-question">
+          <i class="fa-solid fa-circle-question"></i>
+          <h4>Apa itu JurnalHub?</h4>
+        </div>
+        <div class="faq-answer">
+          <p>JurnalHub adalah platform pintar untuk membantu dosen, mahasiswa, dan peneliti menemukan jurnal ilmiah (Scopus/Sinta) yang paling sesuai dengan manuskrip artikel mereka menggunakan algoritma kecerdasan buatan (Match Score AI).</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <i class="fa-solid fa-circle-question"></i>
+          <h4>Bagaimana cara kerja Match Score AI?</h4>
+        </div>
+        <div class="faq-answer">
+          <p>Anda cukup menempelkan Judul, Keyword, dan Abstrak artikel riset Anda di tab Match Score AI. Sistem AI kami akan menganalisis kecocokan semantik manuskrip Anda dengan profil, deskripsi, rumpun ilmu, dan riwayat penerbitan ratusan jurnal di database kami, lalu menampilkan persentase kecocokan secara real-time.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <i class="fa-solid fa-circle-question"></i>
+          <h4>Apa perbedaan Akun Free dan Premium?</h4>
+        </div>
+        <div class="faq-answer">
+          <p>Pengguna Free dapat mencari database jurnal dan melihat 1 rekomendasi teratas hasil pencarian. Pengguna Premium membuka seluruh rekomendasi hasil pencarian, dapat menggunakan fitur Match Score AI tanpa batas, dan dapat mengunduh berkas template jurnal internasional (.docx) resmi.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <i class="fa-solid fa-circle-question"></i>
+          <h4>Bagaimana cara mengaktifkan Akun Premium?</h4>
+        </div>
+        <div class="faq-answer">
+          <p>Klik tombol "Upgrade Premium" di dalam aplikasi, pilih paket tahunan atau bulanan, lalu selesaikan administrasi pembelian. Setelah pembayaran terverifikasi, Anda akan mendapatkan Kode Akses Premium yang dapat dimasukkan di halaman login untuk mengaktifkan fitur secara permanen.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <i class="fa-solid fa-circle-question"></i>
+          <h4>Saya sudah membayar, mengapa akun belum premium?</h4>
+        </div>
+        <div class="faq-answer">
+          <p>Pastikan Anda telah memasukkan Kode Akses yang dikirimkan ke email Anda di kolom "Aktifkan Kode Akses" di halaman login. Jika mengalami kendala, hubungi dukungan admin kami di admin@jurnalhub.id.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 JurnalHub. All rights reserved.</p>
+  </footer>
+</body>
+</html>
