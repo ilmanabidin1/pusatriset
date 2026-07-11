@@ -113,10 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.dataset.bound = "true";
             btn.addEventListener('click', (e) => {
               e.preventDefault();
-              alert("Silakan masukkan Kode Akses di halaman login untuk mengaktifkan Premium.");
-              fetch('/api/logout', { method: 'POST' }).then(() => {
-                window.location.href = '/auth.html';
-              });
+              const upgradeModal = document.getElementById('upgradeModal');
+              if (upgradeModal) {
+                upgradeModal.classList.add('active');
+              }
             });
           }
         });

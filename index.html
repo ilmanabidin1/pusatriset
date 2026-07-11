@@ -877,6 +877,282 @@
         justify-content: center;
       }
     }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeInOverlay 0.25s ease-out;
+    }
+
+    @keyframes fadeInOverlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Modal Card */
+    .modal-card {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+      animation: slideInCard 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideInCard {
+      from { transform: translateY(20px) scale(0.95); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      right: 1.25rem;
+      top: 1.25rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #ffffff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      transition: all 0.2s;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.05);
+    }
+
+    /* Modal Header */
+    .modal-header {
+      background: linear-gradient(135deg, #0f2b5c 0%, #0787dc 100%);
+      padding: 2.5rem 2rem 2rem;
+      color: #ffffff;
+      text-align: center;
+      position: relative;
+    }
+
+    .modal-header::before {
+      content: '';
+      position: absolute;
+      right: -10%;
+      top: -20%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .modal-crown-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem auto;
+      color: #fbbf24;
+      font-size: 1.35rem;
+      box-shadow: 0 0 15px rgba(251, 191, 36, 0.15);
+    }
+
+    .modal-header h3 {
+      font-family: var(--font-outfit);
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .modal-header p {
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    /* Modal Body */
+    .modal-body {
+      padding: 2rem;
+    }
+
+    /* Switcher styles */
+    .billing-switcher-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .billing-switcher {
+      display: flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      width: 100%;
+    }
+
+    .switcher-btn {
+      flex: 1;
+      padding: 0.65rem 0.5rem;
+      border-radius: 9px;
+      border: none;
+      background: none;
+      font-weight: 700;
+      font-size: 0.88rem;
+      font-family: inherit;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .switcher-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .save-badge {
+      background: #059669;
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    /* Pricing styles */
+    .price-display-box {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .price-title {
+      font-family: var(--font-outfit);
+      font-size: 2.85rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .price-period {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #64748b;
+      font-family: var(--font-primary);
+    }
+
+    .price-detail {
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* Features list styles */
+    .modal-features-box {
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: left;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.88rem;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    .feature-item i {
+      color: #10b981;
+      font-size: 1rem;
+      margin-top: 2px;
+    }
+
+    /* CTA button styles */
+    .modal-cta-btn {
+      width: 100%;
+      padding: 0.95rem;
+      background: linear-gradient(135deg, #e65f00 0%, #ff7417 100%);
+      border: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 116, 23, 0.3);
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.25s;
+    }
+
+    .modal-cta-btn:hover {
+      background: linear-gradient(135deg, #cc5400 0%, #e85f00 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(255, 116, 23, 0.45);
+    }
+
+    .cta-subtext {
+      text-align: center;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    /* Modal footer styles */
+    .modal-footer-text {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.88rem;
+      color: #64748b;
+      font-weight: 500;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 1.25rem;
+    }
+
+    .modal-footer-text a {
+      color: var(--brand-blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .modal-footer-text a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -1257,7 +1533,138 @@
           icon.className = 'fa-solid fa-bars';
         }
       });
+
+      // Modal Upgrade Pop-up Logic
+      const upgradeModal = document.getElementById('upgradeModal');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const switchMonthly = document.getElementById('switchMonthly');
+      const switchYearly = document.getElementById('switchYearly');
+      const modalPriceTitle = document.getElementById('modalPriceTitle');
+      const modalPriceDetail = document.getElementById('modalPriceDetail');
+      const modalCtaBtn = document.getElementById('modalCtaBtn');
+      const modalActivateLink = document.getElementById('modalActivateLink');
+
+      function closeModal() {
+        if (upgradeModal) upgradeModal.classList.remove('active');
+      }
+
+      if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+      }
+
+      // Close modal on click outside content
+      if (upgradeModal) {
+        upgradeModal.addEventListener('click', (e) => {
+          if (e.target === upgradeModal) {
+            closeModal();
+          }
+        });
+      }
+
+      // Switch to Monthly Plan
+      if (switchMonthly) {
+        switchMonthly.addEventListener('click', () => {
+          switchMonthly.classList.add('active');
+          if (switchYearly) switchYearly.classList.remove('active');
+          if (modalPriceTitle) modalPriceTitle.innerHTML = 'Rp49rb <span class="price-period">/bulan</span>';
+          if (modalPriceDetail) modalPriceDetail.textContent = 'Ditagih bulanan, batalkan kapan saja';
+          if (modalCtaBtn) modalCtaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Upgrade Sekarang — Rp49.000/bulan';
+        });
+      }
+
+      // Switch to Yearly Plan
+      if (switchYearly) {
+        switchYearly.addEventListener('click', () => {
+          switchYearly.classList.add('active');
+          if (switchMonthly) switchMonthly.classList.remove('active');
+          if (modalPriceTitle) modalPriceTitle.innerHTML = 'Rp33rb <span class="price-period">/bulan</span>';
+          if (modalPriceDetail) modalPriceDetail.innerHTML = '<span style="text-decoration: line-through;">Rp49.000</span> ditagih Rp400.000/tahun';
+          if (modalCtaBtn) modalCtaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Upgrade Sekarang — Rp400.000/tahun';
+        });
+      }
+
+      // CTA Button Click (open WhatsApp/purchase instructions)
+      if (modalCtaBtn) {
+        modalCtaBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.open('https://drilman.my.id/drilmanabidin/nvj3wrm97zdw', '_blank');
+        });
+      }
+
+      // Activate Code Footer Link (directs to auth access tab)
+      if (modalActivateLink) {
+        modalActivateLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          closeModal();
+          // Log out and redirect to auth.html access code form
+          fetch('/api/logout', { method: 'POST' }).then(() => {
+            window.location.href = '/auth.html';
+          });
+        });
+      }
     });
   </script>
+
+  <!-- Premium Upgrade Modal HTML -->
+  <div class="modal-overlay" id="upgradeModal">
+    <div class="modal-card">
+      <button class="modal-close-btn" id="closeModalBtn">&times;</button>
+      
+      <div class="modal-header">
+        <div class="modal-crown-circle">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <h3>Upgrade ke JurnalHub Premium</h3>
+        <p>Buka AI Match Score tanpa batas & filter penuh</p>
+      </div>
+
+      <div class="modal-body">
+        <!-- Switcher -->
+        <div class="billing-switcher-wrapper">
+          <div class="billing-switcher">
+            <button class="switcher-btn" id="switchMonthly">Bulanan</button>
+            <button class="switcher-btn active" id="switchYearly">Tahunan <span class="save-badge">HEMAT 32%</span></button>
+          </div>
+        </div>
+
+        <!-- Pricing Display -->
+        <div class="price-display-box">
+          <h2 class="price-title" id="modalPriceTitle">Rp33rb <span class="price-period">/bulan</span></h2>
+          <p class="price-detail" id="modalPriceDetail"><span style="text-decoration: line-through;">Rp49.000</span> ditagih Rp400.000/tahun</p>
+        </div>
+
+        <!-- Features Box -->
+        <div class="modal-features-box">
+          <div class="feature-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>AI Match Score tanpa batas</span>
+          </div>
+          <div class="feature-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Filter & pencarian tanpa batas harian</span>
+          </div>
+          <div class="feature-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Simpan jurnal favorit tanpa batas</span>
+          </div>
+          <div class="feature-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Prioritas dukungan & update fitur baru</span>
+          </div>
+        </div>
+
+        <!-- CTA Button -->
+        <button class="modal-cta-btn" id="modalCtaBtn">
+          <i class="fa-solid fa-lock"></i> Upgrade Sekarang — Rp400.000/tahun
+        </button>
+        <p class="cta-subtext">Batal kapan saja · Pembayaran aman</p>
+
+        <!-- Footer link -->
+        <p class="modal-footer-text">
+          Sudah punya kode akses? <a href="#" id="modalActivateLink">Aktifkan di sini</a>
+        </p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
