@@ -7,7 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ACCESS_CODE = process.env.ACCESS_CODE;
 const ACCESS_COOKIE = 'jurnalhub_access';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 app.use(express.json());
@@ -39,6 +39,13 @@ function requireAccess(req, res, next) {
 
 app.get('/api/access-status', (req, res) => {
   res.json({ hasAccess: hasAccess(req) });
+});
+
+app.get('/api/ai-status', requireAccess, (req, res) => {
+  res.json({
+    configured: Boolean(GEMINI_API_KEY),
+    model: GEMINI_MODEL
+  });
 });
 
 app.post('/api/access', (req, res) => {
@@ -229,6 +236,7 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     res.json({
       ok: true,
       source: 'local',
+      warning: 'GEMINI_API_KEY belum terbaca di server Railway.',
       recommendations: normalizeAiRecommendations(
         candidates.slice(0, 3).map((candidate, index) => ({
           id: candidate.id,
@@ -250,7 +258,7 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     res.json({
       ok: true,
       source: 'local',
-      warning: 'Gemini tidak tersedia, memakai fallback lokal.',
+      warning: `Gemini tidak tersedia, memakai fallback lokal. ${error.message.slice(0, 180)}`,
       recommendations: normalizeAiRecommendations(
         candidates.slice(0, 3).map((candidate, index) => ({
           id: candidate.id,

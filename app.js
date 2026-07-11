@@ -373,9 +373,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (recommendations.length === 0) {
         matchSummary.textContent = 'Belum ada jurnal yang cocok. Coba tambahkan keyword atau abstrak yang lebih spesifik.';
       } else {
-        matchSummary.textContent = data.source === 'gemini'
-          ? 'Berikut 3 rekomendasi terbaik dari Gemini AI berdasarkan database JurnalHub.'
-          : 'Berikut 3 rekomendasi terbaik dari sistem lokal JurnalHub.';
+        if (data.source === 'gemini') {
+          matchSummary.textContent = 'Berikut 3 rekomendasi terbaik dari Gemini AI berdasarkan database JurnalHub.';
+        } else {
+          matchSummary.textContent = data.warning || 'Berikut 3 rekomendasi terbaik dari sistem lokal JurnalHub.';
+        }
       }
 
       renderMatchCards(recommendations);
