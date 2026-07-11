@@ -651,4 +651,18 @@ app.get('*', requireAccess, (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server JurnalHub berjalan di port ${PORT}`);
+
+  // Deteksi IP Outbound Publik dari server (untuk registrasi iPaymu)
+  const https = require('https');
+  https.get('https://api.ipify.org', (resp) => {
+    let data = '';
+    resp.on('data', (chunk) => { data += chunk; });
+    resp.on('end', () => {
+      console.log(`\n==================================================`);
+      console.log(`[Outbound IP Check] Server Outbound IP: ${data}`);
+      console.log(`==================================================\n`);
+    });
+  }).on("error", (err) => {
+    console.error("[Outbound IP Check] Gagal mendeteksi IP Outbound: " + err.message);
+  });
 });
