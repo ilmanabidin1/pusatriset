@@ -630,9 +630,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Route statis aman untuk file template jurnal (hanya premium)
+// Route statis aman untuk file template jurnal (hanya premium, kecuali Wiley)
 app.use('/templates', requireAccess, (req, res, next) => {
-  if (req.session.userType !== 'premium') {
+  const isWiley = req.path.toLowerCase().includes('wiley');
+  if (!isWiley && req.session.userType !== 'premium') {
     return res.status(403).send('Akses ditolak. Fitur ini khusus pengguna Premium.');
   }
   next();
