@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (profileFacultyInput) profileFacultyInput.value = currentUser.user.faculty || '';
           if (profileUniversityInput) profileUniversityInput.value = currentUser.user.university || '';
 
+          const templatePremiumLock = document.getElementById('templatePremiumLock');
           if (currentUser.user.type === 'premium') {
             if (profileType) profileType.textContent = 'Akun Premium';
             if (profileType) profileType.style.color = '#fbbf24';
@@ -130,11 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
               };
             }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
+            if (templatePremiumLock) templatePremiumLock.style.display = 'none';
           } else {
             if (profileType) profileType.textContent = 'Akun Free';
             if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'block';
             if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'flex';
             if (matchPremiumLock) matchPremiumLock.style.display = 'flex';
+            if (templatePremiumLock) templatePremiumLock.style.display = 'flex';
           }
         }
 
@@ -996,8 +999,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  async function renderTemplatesTab() {
+    const grid = document.getElementById('templatesGridContainer');
+    if (!grid) return;
+    
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i><p>Memuat daftar template...</p></div>';
+    
+    try {
+      const response = await fetch('/api/templates');
+      const resData = await response.json();
+      if (response.ok && resData.templates) {
+        if (resData.templates.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem 2rem; border: 1px dashed rgba(8,34,64,0.1); border-radius: var(--card-radius); width: 100%;">
+              <i class="fa-solid fa-folder-open" style="font-size: 2.5rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"></i>
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.25rem;">Belum Ada Berkas Template</h4>
+              <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 320px; margin: 0 auto;">Letakkan file template (.docx) di dalam folder <code>templates/</code> di server untuk menampilkannya di sini.</p>
+            </div>
+          `;
+          return;
+        }
+        
+        grid.innerHTML = '';
+        resData.templates.forEach(tpl => {
+          const card = document.createElement('div');
+          card.className = 'filter-box-card';
+          card.style.padding = '1.5rem';
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.justifyContent = 'space-between';
+          card.style.height = '100%';
+          card.style.border = '1px solid rgba(8,34,64,0.08)';
+          
+          // Format file size
+          const sizeKb = Math.round(tpl.size / 1024);
+          
+          card.innerHTML = `
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(7, 135, 220, 0.1); color: var(--brand-blue); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                  <i class="fa-regular fa-file-word"></i>
+                </div>
+                <div style="overflow: hidden;">
+                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;" title="${tpl.displayName}">${tpl.displayName}</h4>
+                  <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Format: Word (.docx) · ${sizeKb} KB</span>
+                </div>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; margin-top: 0.5rem;">Template format manuskrip standar untuk penulisan jurnal ilmiah internasional.</p>
+            </div>
+            <a href="${tpl.url}" download class="btn btn-primary" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.65rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-download"></i> Unduh Berkas
+            </a>
+          `;
+          grid.appendChild(card);
+        });
+      } else {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i><p>Gagal memuat: ${resData.message || 'Kesalahan server'}</p></div>`;
+      }
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i><p>Gagal memuat berkas template.</p></div>';
+    }
+  }
+
   // Expose function to window
   window.renderBookmarksTab = renderBookmarksTab;
+  window.renderTemplatesTab = renderTemplatesTab;
 
   // --- 5. INITIALIZATION ---
   async function init() {

@@ -336,6 +336,41 @@ app.post('/api/update-profile', requireAccess, (req, res) => {
   });
 });
 
+// Endpoint untuk mendapatkan daftar template jurnal internasional (.docx)
+app.get('/api/templates', requireAccess, (req, res) => {
+  if (req.session.userType !== 'premium') {
+    return res.status(403).json({ ok: false, message: 'Akses ditolak. Fitur khusus pengguna Premium.' });
+  }
+
+  const templatesDir = path.join(__dirname, 'templates');
+  try {
+    if (!fs.existsSync(templatesDir)) {
+      fs.mkdirSync(templatesDir, { recursive: true });
+    }
+
+    const files = fs.readdirSync(templatesDir)
+      .filter(file => file.endsWith('.docx') || file.endsWith('.doc'))
+      .map(file => {
+        const displayName = file
+          .replace(/\.[^/.]+$/, "") // Hapus ekstensi
+          .replace(/_/g, ' ')       // Ubah underscore jadi spasi
+          .replace(/-/g, ' ');      // Ubah dash jadi spasi
+        
+        return {
+          filename: file,
+          displayName: displayName,
+          url: `/templates/${file}`,
+          size: fs.statSync(path.join(templatesDir, file)).size
+        };
+      });
+
+    res.json({ ok: true, templates: files });
+  } catch (error) {
+    console.error('Error reading templates directory:', error);
+    res.status(500).json({ ok: false, message: 'Gagal membaca daftar template.' });
+  }
+});
+
 
 app.get('/api/ai-status', requireAccess, (req, res) => {
   res.json({
@@ -596,6 +631,14 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Route statis aman untuk file template jurnal (hanya premium)
+app.use('/templates', requireAccess, (req, res, next) => {
+  if (req.session.userType !== 'premium') {
+    return res.status(403).send('Akses ditolak. Fitur ini khusus pengguna Premium.');
+  }
+  next();
+}, express.static(path.join(__dirname, 'templates')));
 
 app.use(express.static(path.join(__dirname, '.')));
 

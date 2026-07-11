@@ -1183,6 +1183,27 @@
     #avatarUploadTrigger:hover #avatarHoverOverlay {
       opacity: 1 !important;
     }
+
+    #templatePremiumLock {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      background: rgba(11, 26, 48, 0.96);
+      border-radius: var(--card-radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(4px);
+    }
   </style>
 </head>
 <body>
@@ -1218,6 +1239,10 @@
       </a>
       <a href="#" class="sidebar-link" data-tab="tersimpan">
         <i class="fa-solid fa-bookmark"></i> <span>Tersimpan</span>
+      </a>
+      <a href="#" class="sidebar-link" data-tab="templates">
+        <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
+        <span class="pro-badge">PRO</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="pengaturan">
         <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
@@ -1461,6 +1486,41 @@
         </div>
       </div>
 
+      <!-- TAB 5: TEMPLATE JURNAL (PREMIUM ONLY) -->
+      <div id="tabContentTemplates" class="tab-content">
+        <div class="match-score-main-container">
+          <div class="match-box-wrapper" id="templateBoxWrapper" style="position: relative; min-height: 400px;">
+            
+            <!-- Overlay Lock for Free User -->
+            <div id="templatePremiumLock" style="display: none;">
+              <i class="fa-solid fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
+              <h3>Fitur Premium Khusus Pelanggan</h3>
+              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
+                Tingkatkan akun Anda ke Premium atau masukkan Kode Akses di halaman login untuk membuka & mengunduh template jurnal internasional (.docx).
+              </p>
+              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fa-solid fa-unlock-keyhole"></i> Upgrade Sekarang
+              </button>
+            </div>
+  
+            <!-- Content for Premium Users -->
+            <div class="match-card-content" id="templatePremiumContent">
+              <div style="margin-bottom: 2rem;">
+                <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-file-word"></i> Template Jurnal Internasional</span>
+                <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Unduh Template Jurnal (.docx)</h3>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Gunakan template resmi ini untuk memformat manuskrip Anda sesuai standar penerbit internasional.</p>
+              </div>
+              
+              <!-- Template Grid -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;" id="templatesGridContainer">
+                <!-- Berkas di-render secara dinamis dari API -->
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+
       <!-- TAB 4: SETTINGS (PENGATURAN) -->
       <div id="tabContentPengaturan" class="tab-content">
         <div class="settings-container" style="max-width: 800px; margin: 0 auto;">
@@ -1633,6 +1693,11 @@
         // Call renderBookmarksTab if saved tab is selected
         if (tabName === 'tersimpan' && window.renderBookmarksTab) {
           window.renderBookmarksTab();
+        }
+
+        // Call renderTemplatesTab if templates tab is selected
+        if (tabName === 'templates' && window.renderTemplatesTab) {
+          window.renderTemplatesTab();
         }
       }
 
