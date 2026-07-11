@@ -2,6 +2,9 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const bcrypt = require('bcryptjs');
+const session = require('express-session');
+const { v4: uuidv4 } = require('uuid');
 const { VertexAI } = require('@google-cloud/vertexai');
 const JOURNAL_DATABASE = require('./database');
 const app = express();
@@ -9,7 +12,9 @@ const app = express();
 // Tentukan port dari environment variable (Railway menyediakannya lewat PORT) atau port 3000 secara lokal
 const PORT = process.env.PORT || 3000;
 const ACCESS_CODE = process.env.ACCESS_CODE;
-const ACCESS_COOKIE = 'jurnalhub_access';
+const ACCESS_COOKIE = 'jurnalhub_session';
+const DATA_DIR = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const VERTEX_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.VERTEX_PROJECT_ID || 'fourth-cirrus-314106';
 const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'us-central1';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-002';
@@ -45,6 +50,47 @@ function getVertexModel(modelName = GEMINI_MODEL) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'jurnalhub_super_secret_key',
+  resave: false,
+  saveUninitialized: false,
+  name: ACCESS_COOKIE,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 2592000000, // 30 hari
+    sameSite: 'lax'
+  }
+}));
+
+// Fungsi helper untuk user database
+function getUsers() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(USERS_FILE)) {
+      fs.writeFileSync(USERS_FILE, '[]');
+    }
+    const data = fs.readFileSync(USERS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Gagal membaca users.json:', error);
+    return [];
+  }
+}
+
+function saveUsers(users) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  } catch (error) {
+    console.error('Gagal menyimpan users.json:', error);
+  }
+}
+
 function parseCookies(cookieHeader = '') {
   return cookieHeader.split(';').reduce((cookies, item) => {
     const [key, ...valueParts] = item.trim().split('=');
@@ -55,9 +101,12 @@ function parseCookies(cookieHeader = '') {
 }
 
 function hasAccess(req) {
-  if (!ACCESS_CODE) return false;
-  const cookies = parseCookies(req.headers.cookie);
-  return cookies[ACCESS_COOKIE] === ACCESS_CODE;
+  // Check if session exists and user is authenticated
+  if (req.session && req.session.userId) {
+    return true;
+  }
+  // Check old cookie for backward compatibility temporarily if needed, though session is preferred now.
+  return false;
 }
 
 function requireAccess(req, res, next) {
@@ -66,12 +115,109 @@ function requireAccess(req, res, next) {
     return;
   }
 
-  res.status(403).send('Kode akses diperlukan.');
+  if (req.accepts('html')) {
+     res.redirect('/auth.html');
+     return;
+  }
+
+  res.status(401).json({ ok: false, message: 'Harap login terlebih dahulu.' });
 }
 
-app.get('/api/access-status', (req, res) => {
-  res.json({ hasAccess: hasAccess(req) });
+// User Authentication API Endpoints
+app.post('/api/register', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ ok: false, message: 'Email dan password wajib diisi.' });
+  }
+
+  const users = getUsers();
+  const existingUser = users.find(u => u.email === email);
+
+  if (existingUser) {
+    return res.status(409).json({ ok: false, message: 'Email sudah terdaftar.' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = {
+      id: uuidv4(),
+      email,
+      password: hashedPassword,
+      type: 'free', // Default account type is free
+      createdAt: new Date().toISOString()
+    };
+
+    users.push(newUser);
+    saveUsers(users);
+
+    // Auto login after register
+    req.session.userId = newUser.id;
+    req.session.userType = newUser.type;
+    req.session.email = newUser.email;
+
+    res.json({ ok: true, user: { email: newUser.email, type: newUser.type } });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ ok: false, message: 'Terjadi kesalahan pada server.' });
+  }
 });
+
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ ok: false, message: 'Email dan password wajib diisi.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.email === email);
+
+  if (!user) {
+    return res.status(401).json({ ok: false, message: 'Email atau password salah.' });
+  }
+
+  try {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ ok: false, message: 'Email atau password salah.' });
+    }
+
+    req.session.userId = user.id;
+    req.session.userType = user.type || 'free';
+    req.session.email = user.email;
+
+    res.json({ ok: true, user: { email: user.email, type: user.type } });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ ok: false, message: 'Terjadi kesalahan pada server.' });
+  }
+});
+
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ ok: false, message: 'Gagal logout.' });
+    }
+    res.clearCookie(ACCESS_COOKIE);
+    res.json({ ok: true });
+  });
+});
+
+app.get('/api/me', (req, res) => {
+  if (hasAccess(req)) {
+    res.json({
+      loggedIn: true,
+      user: {
+        email: req.session.email || 'Premium User',
+        type: req.session.userType
+      }
+    });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
+
 
 app.get('/api/ai-status', requireAccess, (req, res) => {
   res.json({
@@ -97,11 +243,11 @@ app.post('/api/access', (req, res) => {
     return;
   }
 
-  const secureCookie = req.secure || req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
-  res.setHeader(
-    'Set-Cookie',
-    `${ACCESS_COOKIE}=${encodeURIComponent(ACCESS_CODE)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${secureCookie}`
-  );
+  // Jika kode akses benar, beri sesi premium
+  req.session.userId = 'access_code_user';
+  req.session.userType = 'premium';
+  req.session.email = 'Premium User';
+
   res.json({ ok: true });
 });
 
@@ -309,20 +455,34 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
 });
 
 app.use((req, res, next) => {
-  const protectedFiles = ['/app.js', '/database.js', '/convert.js'];
-  const isProtectedFile = protectedFiles.includes(req.path) || req.path.toLowerCase().endsWith('.xlsx');
+  // File statis yang diizinkan tanpa login (terutama untuk halaman auth)
+  const publicFiles = ['/auth.html', '/styles.css', '/app.js', '/database.js'];
 
-  if (!isProtectedFile) {
+  if (publicFiles.includes(req.path) || req.path.startsWith('/assets/')) {
     next();
     return;
   }
 
-  requireAccess(req, res, next);
+  // Semua akses ke file root (seperti index.html) membutuhkan akses
+  if (req.path === '/' || req.path === '/index.html') {
+    requireAccess(req, res, next);
+    return;
+  }
+
+  // Untuk file sensitif
+  const isProtectedFile = req.path.toLowerCase().endsWith('.xlsx') || req.path === '/convert.js';
+  if (isProtectedFile) {
+    requireAccess(req, res, next);
+    return;
+  }
+
+  next();
 });
+
 app.use(express.static(path.join(__dirname, '.')));
 
-// Arahkan semua request lainnya ke index.html
-app.get('*', (req, res) => {
+// Arahkan semua request lainnya ke index.html (tapi sudah dilindungi oleh middleware di atas)
+app.get('*', requireAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 

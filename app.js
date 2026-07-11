@@ -39,6 +39,73 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentLayout = 'grid'; // 'grid' atau 'list'
   let visibleCount = 30;     // Jumlah kartu awal yang dirender (lazy-loading)
   let activeJournals = [];   // Menyimpan hasil filter saat ini
+  let currentUser = { loggedIn: false, type: 'free' };
+
+  // --- 0. AUTHENTICATION & USER STATE ---
+  async function checkAuthState() {
+    try {
+      const response = await fetch('/api/me');
+      if (response.ok) {
+        const data = await response.json();
+        currentUser = data;
+
+        if (!currentUser.loggedIn) {
+          window.location.href = '/auth.html';
+          return;
+        }
+
+        // Update UI based on user type
+        const userBadge = document.getElementById('userBadge');
+        const userEmailText = document.getElementById('userEmailText');
+        const userTypeTag = document.getElementById('userTypeTag');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const matchPremiumLock = document.getElementById('matchPremiumLock');
+
+        if (userBadge && logoutBtn) {
+          userBadge.style.display = 'inline-flex';
+          logoutBtn.style.display = 'inline-flex';
+          userEmailText.textContent = currentUser.user.email.split('@')[0];
+
+          if (currentUser.user.type === 'premium') {
+            userTypeTag.textContent = 'PREMIUM';
+            userTypeTag.style.background = '#fbbf24';
+            userTypeTag.style.color = '#000';
+            if (matchPremiumLock) matchPremiumLock.style.display = 'none';
+          } else {
+            userTypeTag.textContent = 'FREE';
+            userTypeTag.style.background = 'rgba(255,255,255,0.2)';
+            userTypeTag.style.color = '#fff';
+            if (matchPremiumLock) matchPremiumLock.style.display = 'flex';
+          }
+        }
+
+        // Logout handler
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', async () => {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/auth.html';
+          });
+        }
+
+        // Upgrade button handler
+        const btnUpgradeLock = document.getElementById('btnUpgradeLock');
+        if (btnUpgradeLock) {
+           btnUpgradeLock.addEventListener('click', () => {
+             // For now, redirect to auth to enter access code
+             alert("Silakan masukkan Kode Akses di halaman login untuk mengaktifkan Premium.");
+             fetch('/api/logout', { method: 'POST' }).then(() => {
+                window.location.href = '/auth.html';
+             });
+           });
+        }
+      } else {
+         window.location.href = '/auth.html';
+      }
+    } catch (error) {
+      console.error('Auth check failed', error);
+      window.location.href = '/auth.html';
+    }
+  }
 
   // --- 1. TAMPILAN MENYELURUH (RENDERING) ---
   
@@ -62,7 +129,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Ambil data sebagian sesuai visibleCount
-    const chunk = activeJournals.slice(0, visibleCount);
+    let chunk = activeJournals.slice(0, visibleCount);
+
+    // LIMITATION FOR FREE USERS
+    let isLimited = false;
+    if (currentUser.user && currentUser.user.type === 'free') {
+       chunk = activeJournals.slice(0, 1);
+       isLimited = activeJournals.length > 1;
+    }
 
     chunk.forEach((journal, index) => {
       const card = document.createElement('div');
@@ -130,8 +204,34 @@ document.addEventListener('DOMContentLoaded', () => {
       resultsContainer.appendChild(card);
     });
 
+    // Tampilkan pesan batasan untuk Free User
+    if (isLimited) {
+       const promoCard = document.createElement('div');
+       promoCard.className = `journal-card`;
+       promoCard.style.cssText = `
+         background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(7,9,14,0.9));
+         border: 1px solid rgba(251, 191, 36, 0.3);
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         justify-content: center;
+         text-align: center;
+         padding: 3rem 2rem;
+         min-height: 100%;
+       `;
+       promoCard.innerHTML = `
+         <i class="fa-solid fa-lock" style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 1rem;"></i>
+         <h3 style="margin-bottom: 0.5rem;">${activeJournals.length - 1} Jurnal Lainnya Disembunyikan</h3>
+         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Akun Free hanya dapat melihat 1 rekomendasi teratas. Tingkatkan ke Premium untuk melihat semua hasil.</p>
+         <button onclick="alert('Silakan gunakan Kode Akses di halaman login untuk mengaktifkan Premium.'); fetch('/api/logout', {method:'POST'}).then(() => window.location.href='/auth.html');" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
+           Upgrade Premium
+         </button>
+       `;
+       resultsContainer.appendChild(promoCard);
+    }
+
     // Atur visibilitas tombol "Muat Lebih Banyak"
-    if (visibleCount < activeJournals.length) {
+    if (visibleCount < activeJournals.length && (!currentUser.user || currentUser.user.type !== 'free')) {
       loadMoreContainer.style.display = 'block';
     } else {
       loadMoreContainer.style.display = 'none';
@@ -634,7 +734,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- 5. INITIALIZATION ---
-  function init() {
+  async function init() {
+    await checkAuthState();
     activeJournals = JOURNAL_DATABASE;
     renderCards();
     calculateStats();
