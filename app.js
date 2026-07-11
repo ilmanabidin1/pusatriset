@@ -112,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
           if (profileFacultyInput) profileFacultyInput.value = currentUser.user.faculty || '';
           if (profileUniversityInput) profileUniversityInput.value = currentUser.user.university || '';
 
-          const templatePremiumLock = document.getElementById('templatePremiumLock');
           if (currentUser.user.type === 'premium') {
             if (profileType) profileType.textContent = 'Akun Premium';
             if (profileType) profileType.style.color = '#fbbf24';
@@ -131,13 +130,11 @@ document.addEventListener('DOMContentLoaded', () => {
               };
             }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
-            if (templatePremiumLock) templatePremiumLock.style.display = 'none';
           } else {
             if (profileType) profileType.textContent = 'Akun Free';
             if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'block';
             if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'flex';
             if (matchPremiumLock) matchPremiumLock.style.display = 'flex';
-            if (templatePremiumLock) templatePremiumLock.style.display = 'flex';
           }
         }
 
@@ -1030,28 +1027,72 @@ document.addEventListener('DOMContentLoaded', () => {
           card.style.justifyContent = 'space-between';
           card.style.height = '100%';
           card.style.border = '1px solid rgba(8,34,64,0.08)';
+          card.style.position = 'relative';
           
-          // Format file size
           const sizeKb = Math.round(tpl.size / 1024);
+          const isPremiumUser = currentUser.user && currentUser.user.type === 'premium';
+          const canDownload = tpl.isFree || isPremiumUser;
           
-          card.innerHTML = `
-            <div>
-              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(7, 135, 220, 0.1); color: var(--brand-blue); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
-                  <i class="fa-regular fa-file-word"></i>
+          if (!canDownload) {
+            // Tampilan kartu terkunci untuk user free
+            card.style.background = '#fafbfc';
+            card.innerHTML = `
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                  <div style="width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-lock" style="color: #94a3b8;"></i>
+                  </div>
+                  <div style="overflow: hidden; flex-grow: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
+                      <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;" title="${tpl.displayName}">${tpl.displayName}</h4>
+                      <span style="font-size: 0.65rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-crown" style="font-size: 0.6rem;"></i> PRO</span>
+                    </div>
+                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Format: Word (.docx) · ${sizeKb} KB</span>
+                  </div>
                 </div>
-                <div style="overflow: hidden;">
-                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;" title="${tpl.displayName}">${tpl.displayName}</h4>
-                  <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Format: Word (.docx) · ${sizeKb} KB</span>
-                </div>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; margin-top: 0.5rem;">Template format manuskrip standar untuk penulisan jurnal ilmiah internasional.</p>
               </div>
-              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; margin-top: 0.5rem;">Template format manuskrip standar untuk penulisan jurnal ilmiah internasional.</p>
-            </div>
-            <a href="${tpl.url}" download class="btn btn-primary" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.65rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i class="fa-solid fa-download"></i> Unduh Berkas
-            </a>
-          `;
+              <button class="btn btn-upgrade-trigger" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.65rem; display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white;">
+                <i class="fa-solid fa-crown"></i> Buka dengan Premium
+              </button>
+            `;
+          } else {
+            // Tampilan kartu terbuka untuk free (Wiley) / premium user (semua)
+            const badgeHtml = tpl.isFree ? 
+              `<span style="font-size: 0.65rem; background: #e0f2fe; color: #0284c7; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700;">GRATIS</span>` :
+              `<span style="font-size: 0.65rem; background: #fef3c7; color: #d97706; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-crown" style="font-size: 0.6rem;"></i> AKSES PRO</span>`;
+              
+            card.innerHTML = `
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                  <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(7, 135, 220, 0.1); color: var(--brand-blue); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                    <i class="fa-regular fa-file-word"></i>
+                  </div>
+                  <div style="overflow: hidden; flex-grow: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
+                      <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;" title="${tpl.displayName}">${tpl.displayName}</h4>
+                      ${badgeHtml}
+                    </div>
+                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Format: Word (.docx) · ${sizeKb} KB</span>
+                  </div>
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; margin-top: 0.5rem;">Template format manuskrip standar untuk penulisan jurnal ilmiah internasional.</p>
+              </div>
+              <a href="${tpl.url}" download class="btn btn-primary" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.65rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-download"></i> Unduh Berkas
+              </a>
+            `;
+          }
           grid.appendChild(card);
+        });
+        
+        // Re-bind modal trigger
+        grid.querySelectorAll('.btn-upgrade-trigger').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const upgradeModal = document.getElementById('upgradeModal');
+            if (upgradeModal) upgradeModal.classList.add('active');
+          });
         });
       } else {
         grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i><p>Gagal memuat: ${resData.message || 'Kesalahan server'}</p></div>`;

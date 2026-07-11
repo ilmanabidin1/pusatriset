@@ -1486,35 +1486,20 @@
         </div>
       </div>
 
-      <!-- TAB 5: TEMPLATE JURNAL (PREMIUM ONLY) -->
+      <!-- TAB 5: TEMPLATE JURNAL -->
       <div id="tabContentTemplates" class="tab-content">
         <div class="match-score-main-container">
-          <div class="match-box-wrapper" id="templateBoxWrapper" style="position: relative; min-height: 400px;">
+          <div class="match-box-wrapper" id="templateBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
-            <!-- Overlay Lock for Free User -->
-            <div id="templatePremiumLock" style="display: none;">
-              <i class="fa-solid fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
-              <h3>Fitur Premium Khusus Pelanggan</h3>
-              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
-                Tingkatkan akun Anda ke Premium atau masukkan Kode Akses di halaman login untuk membuka & mengunduh template jurnal internasional (.docx).
-              </p>
-              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
-                <i class="fa-solid fa-unlock-keyhole"></i> Upgrade Sekarang
-              </button>
+            <div style="margin-bottom: 2rem;">
+              <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-file-word"></i> Template Jurnal Internasional</span>
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Unduh Template Jurnal (.docx)</h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Gunakan template resmi ini untuk memformat manuskrip Anda sesuai standar penerbit internasional.</p>
             </div>
-  
-            <!-- Content for Premium Users -->
-            <div class="match-card-content" id="templatePremiumContent">
-              <div style="margin-bottom: 2rem;">
-                <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-file-word"></i> Template Jurnal Internasional</span>
-                <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Unduh Template Jurnal (.docx)</h3>
-                <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Gunakan template resmi ini untuk memformat manuskrip Anda sesuai standar penerbit internasional.</p>
-              </div>
-              
-              <!-- Template Grid -->
-              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;" id="templatesGridContainer">
-                <!-- Berkas di-render secara dinamis dari API -->
-              </div>
+            
+            <!-- Template Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;" id="templatesGridContainer">
+              <!-- Berkas di-render secara dinamis dari API -->
             </div>
             
           </div>
