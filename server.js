@@ -559,7 +559,7 @@ ${JSON.stringify(candidates)}
               'anthropic-beta': 'managed-agents-2026-04-01'
             },
             body: JSON.stringify({
-              agent_id: process.env.ANTHROPIC_AGENT_ID,
+              agent: process.env.ANTHROPIC_AGENT_ID,
               recipient: { type: "agent" },
               prompt: promptContent
             })
@@ -581,7 +581,7 @@ ${JSON.stringify(candidates)}
                 'anthropic-beta': 'managed-agents-2026-04-01'
               },
               body: JSON.stringify({
-                agent_id: process.env.ANTHROPIC_AGENT_ID,
+                agent: process.env.ANTHROPIC_AGENT_ID,
                 recipient: { type: "agent" },
                 prompt: promptContent
               })
