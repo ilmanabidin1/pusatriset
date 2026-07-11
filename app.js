@@ -70,6 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
             profileAvatar.textContent = emailPrefix.substring(0, 2).toUpperCase();
           }
 
+          // Update settings fields
+          const settingsEmail = document.getElementById('settingsEmail');
+          const settingsAccountType = document.getElementById('settingsAccountType');
+          if (settingsEmail) settingsEmail.textContent = currentUser.user.email;
+          if (settingsAccountType) {
+            settingsAccountType.textContent = currentUser.user.type === 'premium' ? 'Akun Premium' : 'Akun Free';
+            settingsAccountType.style.color = currentUser.user.type === 'premium' ? '#fbbf24' : 'var(--text-main)';
+          }
+
           if (currentUser.user.type === 'premium') {
             if (profileType) profileType.textContent = 'Akun Premium';
             if (profileType) profileType.style.color = '#fbbf24';
@@ -960,8 +969,89 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 5. INITIALIZATION ---
   async function init() {
     await checkAuthState();
+
+    // Load default preferences from localStorage if exists
+    const defaultSubject = localStorage.getItem('defaultSubject') || 'all';
+    const defaultType = localStorage.getItem('defaultType') || 'all';
+    
+    if (filterSubject) filterSubject.value = defaultSubject;
+    if (filterType) {
+      filterType.value = defaultType;
+      adjustRankOptions(defaultType);
+    }
+    
+    // Set settings default values
+    const settingsDefaultSubject = document.getElementById('settingsDefaultSubject');
+    const settingsDefaultType = document.getElementById('settingsDefaultType');
+    if (settingsDefaultSubject) settingsDefaultSubject.value = defaultSubject;
+    if (settingsDefaultType) settingsDefaultType.value = defaultType;
+
+    // Preferences Save Button Handler
+    const savePreferencesBtn = document.getElementById('savePreferencesBtn');
+    if (savePreferencesBtn) {
+      savePreferencesBtn.addEventListener('click', () => {
+        const defaultSubjectVal = settingsDefaultSubject ? settingsDefaultSubject.value : 'all';
+        const defaultTypeVal = settingsDefaultType ? settingsDefaultType.value : 'all';
+        
+        localStorage.setItem('defaultSubject', defaultSubjectVal);
+        localStorage.setItem('defaultType', defaultTypeVal);
+        
+        // Sync immediately to search filters
+        if (filterSubject) filterSubject.value = defaultSubjectVal;
+        if (filterType) {
+          filterType.value = defaultTypeVal;
+          adjustRankOptions(defaultTypeVal);
+        }
+        
+        filterJournals();
+        alert('Preferensi riset default berhasil disimpan!');
+      });
+    }
+
+    // Change Password Form Handler
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const changePasswordMessage = document.getElementById('changePasswordMessage');
+    if (changePasswordForm) {
+      changePasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const oldPassword = document.getElementById('oldPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+        
+        if (newPassword !== confirmNewPassword) {
+          changePasswordMessage.style.color = '#ef4444';
+          changePasswordMessage.textContent = 'Konfirmasi password baru tidak cocok.';
+          changePasswordMessage.style.display = 'block';
+          return;
+        }
+        
+        try {
+          const response = await fetch('/api/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldPassword, newPassword })
+          });
+          const resData = await response.json();
+          if (response.ok) {
+            changePasswordMessage.style.color = '#10b981';
+            changePasswordMessage.textContent = resData.message;
+            changePasswordForm.reset();
+          } else {
+            changePasswordMessage.style.color = '#ef4444';
+            changePasswordMessage.textContent = resData.message;
+          }
+          changePasswordMessage.style.display = 'block';
+        } catch (error) {
+          console.error('Password change error:', error);
+          changePasswordMessage.style.color = '#ef4444';
+          changePasswordMessage.textContent = 'Gagal memperbarui kata sandi.';
+          changePasswordMessage.style.display = 'block';
+        }
+      });
+    }
+
     activeJournals = JOURNAL_DATABASE;
-    renderCards();
+    filterJournals(); // Apply preferences automatically
     calculateStats();
   }
 

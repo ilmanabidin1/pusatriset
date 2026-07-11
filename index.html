@@ -1459,10 +1459,84 @@
 
       <!-- TAB 4: SETTINGS (PENGATURAN) -->
       <div id="tabContentPengaturan" class="tab-content">
-        <div class="empty-state" style="padding: 5rem 2rem; text-align: center; background: #ffffff; border-radius: var(--card-radius); border: 1px dashed rgba(8,34,64,0.1);">
-          <div class="empty-icon" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"><i class="fa-solid fa-gear"></i></div>
-          <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem;">Pengaturan Portal</h3>
-          <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">Konfigurasi profil dan pengaturan portal akan segera hadir.</p>
+        <div class="settings-container" style="max-width: 800px; margin: 0 auto;">
+          
+          <!-- Grid Pengaturan -->
+          <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+            
+            <!-- Section 1: Profil Akun -->
+            <div class="filter-box-card" style="padding: 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-regular fa-user" style="color: var(--brand-blue);"></i> Profil & Keanggotaan
+              </h3>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #f1f5f9;">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.25rem; text-transform: uppercase;">Alamat Email</span>
+                  <span style="font-size: 1rem; font-weight: 800; color: var(--text-main);" id="settingsEmail">-</span>
+                </div>
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #f1f5f9; position: relative; overflow: hidden;">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.25rem; text-transform: uppercase;">Tipe Akun</span>
+                  <span style="font-size: 1rem; font-weight: 800; color: var(--text-main);" id="settingsAccountType">Free Account</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Preferensi Pencarian -->
+            <div class="filter-box-card" style="padding: 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-sliders" style="color: var(--brand-blue);"></i> Preferensi Riset Default
+              </h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;">Setel rumpun keilmuan bawaan agar aplikasi langsung menyaring daftar jurnal sesuai bidang Anda saat dibuka.</p>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+                <div class="filter-dropdown-item">
+                  <label>RUMPUN UTAMA</label>
+                  <select id="settingsDefaultSubject">
+                    <option value="all">Semua Rumpun</option>
+                    <option value="Sains & Teknologi">Sains & Teknologi</option>
+                    <option value="Sosial & Humaniora">Sosial & Humaniora</option>
+                    <option value="Kesehatan">Kesehatan</option>
+                    <option value="Ekonomi & Bisnis">Ekonomi & Bisnis</option>
+                  </select>
+                </div>
+                <div class="filter-dropdown-item">
+                  <label>KATEGORI JURNAL</label>
+                  <select id="settingsDefaultType">
+                    <option value="all">Semua Jurnal</option>
+                    <option value="Scopus">Scopus Only</option>
+                    <option value="Sinta">Sinta Only</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary" id="savePreferencesBtn" style="padding: 0.7rem 1.75rem; font-size: 0.88rem;">Simpan Preferensi</button>
+            </div>
+
+            <!-- Section 3: Keamanan (Ganti Password) -->
+            <div class="filter-box-card" style="padding: 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-shield-halved" style="color: var(--brand-blue);"></i> Keamanan & Kata Sandi
+              </h3>
+              
+              <form id="changePasswordForm" style="display: grid; gap: 1.25rem; max-width: 500px;">
+                <div class="filter-dropdown-item">
+                  <label>Kata Sandi Lama</label>
+                  <input type="password" id="oldPassword" placeholder="Masukkan kata sandi saat ini" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+                </div>
+                <div class="filter-dropdown-item">
+                  <label>Kata Sandi Baru</label>
+                  <input type="password" id="newPassword" placeholder="Kata sandi baru (minimal 6 karakter)" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+                </div>
+                <div class="filter-dropdown-item">
+                  <label>Konfirmasi Kata Sandi Baru</label>
+                  <input type="password" id="confirmNewPassword" placeholder="Ulangi kata sandi baru" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+                </div>
+                <div id="changePasswordMessage" style="font-size: 0.88rem; display: none; font-weight: 600;"></div>
+                <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.75rem; font-size: 0.88rem; width: fit-content; margin-top: 0.5rem;">Perbarui Kata Sandi</button>
+              </form>
+            </div>
+
+          </div>
         </div>
       </div>
 

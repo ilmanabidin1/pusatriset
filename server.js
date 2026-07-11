@@ -262,6 +262,38 @@ app.post('/api/bookmarks/toggle', requireAccess, (req, res) => {
   res.json({ ok: true, bookmarked: isBookmarked, savedJournals: user.savedJournals });
 });
 
+// Endpoint fungsional untuk ganti password di tab Pengaturan
+app.post('/api/change-password', requireAccess, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ ok: false, message: 'Password lama dan baru wajib diisi.' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ ok: false, message: 'Password baru minimal 6 karakter.' });
+  }
+
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === req.session.userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
+  }
+
+  const user = users[userIndex];
+  // Verifikasi password lama
+  const match = await bcrypt.compare(oldPassword, user.password);
+  if (!match) {
+    return res.status(401).json({ ok: false, message: 'Password lama salah.' });
+  }
+
+  // Hash password baru
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  users[userIndex] = user;
+  saveUsers(users);
+
+  res.json({ ok: true, message: 'Kata sandi berhasil diperbarui.' });
+});
+
 
 app.get('/api/ai-status', requireAccess, (req, res) => {
   res.json({
