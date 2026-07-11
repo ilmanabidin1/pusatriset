@@ -15,7 +15,21 @@ const ACCESS_CODE = process.env.ACCESS_CODE;
 const ACCESS_COOKIE = 'jurnalhub_session';
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const VERTEX_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.VERTEX_PROJECT_ID || 'fourth-cirrus-314106';
+
+let detectedProjectId = 'fourth-cirrus-314106';
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+  try {
+    const creds = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+    if (creds.project_id) {
+      detectedProjectId = creds.project_id;
+      console.log(`[Vertex AI Init] Mendeteksi project_id dari service account json: ${detectedProjectId}`);
+    }
+  } catch (e) {
+    console.error("[Vertex AI Init] Gagal mengurai kredensial JSON:", e.message);
+  }
+}
+
+const VERTEX_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.VERTEX_PROJECT_ID || detectedProjectId;
 const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'us-central1';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-002';
 const GEMINI_MODEL_FALLBACKS = (process.env.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash-001,gemini-1.5-flash-001')
@@ -522,31 +536,59 @@ ${JSON.stringify(candidates)}
   const modelNames = [...new Set([GEMINI_MODEL, ...GEMINI_MODEL_FALLBACKS])];
   let lastError = null;
 
-  for (const modelName of modelNames) {
-    try {
-      const model = getVertexModel(modelName);
-      const result = await model.generateContent({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: 'application/json'
-        }
-      });
+  // Coba pakai Google AI Studio Developer API terlebih dahulu jika API Key tersedia
+  if (process.env.GEMINI_API_KEY) {
+    console.log("[Gemini API] Menggunakan Google AI Studio Developer API...");
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    for (const modelName of modelNames) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+        const response = await fetchFn(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+          })
+        });
 
-      const text = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-      return JSON.parse(text);
-    } catch (error) {
-      lastError = error;
-      console.error(`Vertex AI model ${modelName} failed`, error);
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Status: ${response.status} - ${errText}`);
+        }
+
+        const resData = await response.json();
+        const text = resData?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+        return JSON.parse(text);
+      } catch (error) {
+        lastError = error;
+        console.error(`[Gemini API] Google AI Studio model ${modelName} gagal:`, error.message);
+      }
     }
   }
 
-  throw lastError || new Error('All Vertex AI models failed');
+  // Coba pakai Vertex AI jika kredensial terkonfigurasi
+  const hasVertexCreds = !!(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+  if (hasVertexCreds) {
+    console.log("[Gemini API] Menggunakan Vertex AI Cloud API...");
+    for (const modelName of modelNames) {
+      try {
+        const model = getVertexModel(modelName);
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+        });
+
+        const text = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+        return JSON.parse(text);
+      } catch (error) {
+        lastError = error;
+        console.error(`[Gemini API] Vertex AI model ${modelName} gagal:`, error.message || error);
+      }
+    }
+  }
+
+  throw lastError || new Error('Tidak ada API Key (GEMINI_API_KEY) atau Kredensial Vertex AI yang terkonfigurasi.');
 }
 
 app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
@@ -566,11 +608,14 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     return;
   }
 
-  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS && !process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+  const hasApiKey = !!process.env.GEMINI_API_KEY;
+  const hasVertex = !!(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+
+  if (!hasApiKey && !hasVertex) {
     res.json({
       ok: true,
       source: 'local',
-      warning: 'Kredensial Vertex AI belum terbaca. Set GOOGLE_APPLICATION_CREDENTIALS_JSON di Railway.',
+      warning: 'Kredensial Gemini API Key (GEMINI_API_KEY) atau Vertex AI belum dikonfigurasi. Menggunakan kalkulasi kecocokan lokal.',
       recommendations: normalizeAiRecommendations(
         candidates.slice(0, 3).map((candidate, index) => ({
           id: candidate.id,
