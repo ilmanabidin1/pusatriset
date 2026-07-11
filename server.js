@@ -540,7 +540,19 @@ ${JSON.stringify(candidates)}
   if (process.env.GEMINI_API_KEY) {
     console.log("[Gemini API] Menggunakan Google AI Studio Developer API...");
     const fetchFn = globalThis.fetch || require('node-fetch');
-    for (const modelName of modelNames) {
+    
+    const studioModels = [...new Set([
+      'gemini-1.5-flash',
+      'gemini-2.0-flash',
+      ...modelNames.map(name => {
+        if (name.startsWith('gemini-1.5-flash')) return 'gemini-1.5-flash';
+        if (name.startsWith('gemini-2.0-flash')) return 'gemini-2.0-flash';
+        if (name.startsWith('gemini-1.5-pro')) return 'gemini-1.5-pro';
+        return name;
+      })
+    ])];
+
+    for (const modelName of studioModels) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY}`;
         const response = await fetchFn(url, {
