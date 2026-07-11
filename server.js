@@ -148,6 +148,7 @@ app.post('/api/register', async (req, res) => {
       email,
       password: hashedPassword,
       type: 'free', // Default account type is free
+      savedJournals: [],
       createdAt: new Date().toISOString()
     };
 
@@ -209,16 +210,56 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/me', (req, res) => {
   if (hasAccess(req)) {
+    const users = getUsers();
+    const user = users.find(u => u.id === req.session.userId);
     res.json({
       loggedIn: true,
       user: {
         email: req.session.email || 'Premium User',
-        type: req.session.userType
+        type: req.session.userType,
+        savedJournals: user ? (user.savedJournals || []) : []
       }
     });
   } else {
     res.json({ loggedIn: false });
   }
+});
+
+// Endpoint untuk menambahkan/menghapus bookmark jurnal
+app.post('/api/bookmarks/toggle', requireAccess, (req, res) => {
+  const { journalId } = req.body;
+  if (!journalId) {
+    return res.status(400).json({ ok: false, message: 'Journal ID wajib diisi.' });
+  }
+
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === req.session.userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
+  }
+
+  const user = users[userIndex];
+  if (!user.savedJournals) {
+    user.savedJournals = [];
+  }
+
+  const parsedId = Number(journalId);
+  const bookmarkIndex = user.savedJournals.indexOf(parsedId);
+  let isBookmarked = false;
+
+  if (bookmarkIndex > -1) {
+    // Hapus bookmark
+    user.savedJournals.splice(bookmarkIndex, 1);
+  } else {
+    // Tambah bookmark
+    user.savedJournals.push(parsedId);
+    isBookmarked = true;
+  }
+
+  users[userIndex] = user;
+  saveUsers(users);
+
+  res.json({ ok: true, bookmarked: isBookmarked, savedJournals: user.savedJournals });
 });
 
 

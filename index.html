@@ -1153,6 +1153,32 @@
     .modal-footer-text a:hover {
       text-decoration: underline;
     }
+
+    /* Bookmark Button on Card */
+    .bookmark-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.35rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .bookmark-btn:hover {
+      background-color: #f1f5f9;
+      color: #eab308;
+      transform: scale(1.1);
+    }
+
+    .bookmark-btn.active {
+      color: #eab308;
+    }
   </style>
 </head>
 <body>
@@ -1181,9 +1207,6 @@
     <nav class="sidebar-nav">
       <a href="#" class="sidebar-link active" data-tab="beranda">
         <i class="fa-solid fa-house"></i> <span>Beranda</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="cari-jurnal">
-        <i class="fa-solid fa-magnifying-glass"></i> <span>Cari Jurnal</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="match-score">
         <i class="fa-solid fa-percent"></i> <span>Match Score AI</span>
@@ -1225,12 +1248,6 @@
         <h2 id="pageTitle">Beranda</h2>
       </div>
       <div class="header-center">
-        <div class="header-search-bar">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <!-- searchInput ID is kept to directly map with app.js filter functions -->
-          <input type="search" id="searchInput" placeholder="Cari jurnal, penerbit, keyword...">
-          <button id="clearSearch" style="position: absolute; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; display: none;"><i class="fa-solid fa-xmark"></i></button>
-        </div>
       </div>
       <div class="header-right">
         <button class="bell-icon-btn" title="Notifikasi"><i class="fa-regular fa-bell"></i></button>
@@ -1291,6 +1308,12 @@
 
         <!-- Filter Box Card matching mock style -->
         <div class="filter-box-card">
+          <!-- Search Input moved above Category, Rumpun, and Rank dropdowns -->
+          <div class="header-search-bar" style="margin-bottom: 1.5rem; max-width: 100%;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" id="searchInput" placeholder="Cari jurnal, penerbit, keyword...">
+            <button id="clearSearch" style="position: absolute; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; display: none;"><i class="fa-solid fa-xmark"></i></button>
+          </div>
           <div class="filter-dropdowns">
             <div class="filter-dropdown-item">
               <label>KATEGORI</label>
@@ -1486,33 +1509,21 @@
           content.classList.remove('active');
         });
 
-        if (tabName === 'cari-jurnal') {
-          // 'Cari Jurnal' focuses on main dashboard's search input
-          const berandaLink = document.querySelector('.sidebar-link[data-tab="beranda"]');
-          if (berandaLink) berandaLink.classList.add('active');
-          
-          const berandaContent = document.getElementById('tabContentBeranda');
-          if (berandaContent) berandaContent.classList.add('active');
-          
-          pageTitle.textContent = 'Beranda';
-          
-          const searchInput = document.getElementById('searchInput');
-          if (searchInput) {
-            searchInput.focus();
-            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        } else {
-          const contentId = 'tabContent' + capitalizeTabName(tabName);
-          const activeContent = document.getElementById(contentId);
-          if (activeContent) {
-            activeContent.classList.add('active');
-          }
-          
-          // Update Page Title
-          const currentLink = document.querySelector(`.sidebar-link[data-tab="${tabName}"]`);
-          if (currentLink) {
-            pageTitle.textContent = currentLink.querySelector('span').textContent;
-          }
+        const contentId = 'tabContent' + capitalizeTabName(tabName);
+        const activeContent = document.getElementById(contentId);
+        if (activeContent) {
+          activeContent.classList.add('active');
+        }
+        
+        // Update Page Title
+        const currentLink = document.querySelector(`.sidebar-link[data-tab="${tabName}"]`);
+        if (currentLink) {
+          pageTitle.textContent = currentLink.querySelector('span').textContent;
+        }
+
+        // Call renderBookmarksTab if saved tab is selected
+        if (tabName === 'tersimpan' && window.renderBookmarksTab) {
+          window.renderBookmarksTab();
         }
       }
 
