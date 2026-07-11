@@ -327,6 +327,21 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
+  function renderMatchCards(journals) {
+    matchResultsContainer.innerHTML = '';
+
+    if (journals.length === 0) {
+      matchResultsContainer.innerHTML = `
+        <div class="empty-state match-empty-state">
+          <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
+          <h3>Belum Ada Rekomendasi Cocok</h3>
+          <p>Coba tambahkan keyword, bidang, atau abstrak yang lebih spesifik.</p>
+        </div>
+      `;
+      matchResultsContainer.style.display = 'grid';
+      return;
+    }
+
     journals.forEach((journal, index) => {
       const card = document.createElement('div');
       card.className = `journal-card match-result-card ${journal.type.toLowerCase()}-card`;
