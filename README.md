@@ -38,6 +38,18 @@ ACCESS_CODE="kode-rahasia-anda" npm start
 
 Di Railway, tambahkan variable `ACCESS_CODE` pada menu Variables project, lalu isi dengan kode rahasia yang ingin dibagikan ke pembeli.
 
+### Konfigurasi Journal Match Score AI
+Fitur AI menggunakan Vertex AI. Di Railway, tambahkan variable berikut:
+
+```bash
+GOOGLE_APPLICATION_CREDENTIALS_JSON='isi JSON service account Google Cloud'
+VERTEX_PROJECT_ID='fourth-cirrus-314106'
+VERTEX_LOCATION='us-central1'
+GEMINI_MODEL='gemini-1.5-flash'
+```
+
+Service account perlu memiliki akses Vertex AI pada project Google Cloud tersebut.
+
 ### Opsi 1: Buka Langsung (Tanpa Server)
 1. Unduh atau clone repositori ini ke komputer Anda.
 2. Klik ganda (double-click) file `index.html` untuk langsung membukanya di browser favorit Anda (Google Chrome, Firefox, Edge, Safari, dll).

@@ -1,5 +1,8 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
+const { VertexAI } = require('@google-cloud/vertexai');
 const JOURNAL_DATABASE = require('./database');
 const app = express();
 
@@ -7,8 +10,32 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ACCESS_CODE = process.env.ACCESS_CODE;
 const ACCESS_COOKIE = 'jurnalhub_access';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const VERTEX_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.VERTEX_PROJECT_ID || 'fourth-cirrus-314106';
+const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'us-central1';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  const credentialsPath = path.join(os.tmpdir(), 'jurnalhub-google-credentials.json');
+  fs.writeFileSync(credentialsPath, process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsPath;
+}
+
+let generativeModel = null;
+
+function getVertexModel() {
+  if (generativeModel) return generativeModel;
+
+  const vertexAI = new VertexAI({
+    project: VERTEX_PROJECT_ID,
+    location: VERTEX_LOCATION
+  });
+
+  generativeModel = vertexAI.getGenerativeModel({
+    model: GEMINI_MODEL
+  });
+
+  return generativeModel;
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -43,7 +70,10 @@ app.get('/api/access-status', (req, res) => {
 
 app.get('/api/ai-status', requireAccess, (req, res) => {
   res.json({
-    configured: Boolean(GEMINI_API_KEY),
+    configured: Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON),
+    provider: 'vertexai',
+    project: VERTEX_PROJECT_ID,
+    location: VERTEX_LOCATION,
     model: GEMINI_MODEL
   });
 });
@@ -186,32 +216,21 @@ Kandidat jurnal:
 ${JSON.stringify(candidates)}
 `;
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': GEMINI_API_KEY
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [{ text: prompt }]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        responseMimeType: 'application/json'
+  const model = getVertexModel();
+  const result = await model.generateContent({
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }]
       }
-    })
+    ],
+    generationConfig: {
+      temperature: 0.2,
+      responseMimeType: 'application/json'
+    }
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini request failed: ${response.status} ${errorText}`);
-  }
-
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+  const text = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
   return JSON.parse(text);
 }
 
@@ -232,11 +251,11 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     return;
   }
 
-  if (!GEMINI_API_KEY) {
+  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS && !process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
     res.json({
       ok: true,
       source: 'local',
-      warning: 'GEMINI_API_KEY belum terbaca di server Railway.',
+      warning: 'Kredensial Vertex AI belum terbaca. Set GOOGLE_APPLICATION_CREDENTIALS_JSON di Railway.',
       recommendations: normalizeAiRecommendations(
         candidates.slice(0, 3).map((candidate, index) => ({
           id: candidate.id,
