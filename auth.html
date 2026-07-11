@@ -14,20 +14,24 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    /* Premium Theme Variables for Auth Page */
+    /* Theme Variables matching styles.css */
     :root {
-      --bg-dark: #070913;
-      --bg-card: rgba(13, 17, 34, 0.7);
-      --border-color: rgba(255, 255, 255, 0.08);
-      --border-hover: rgba(255, 116, 23, 0.4);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f6f9fc;
+      --bg-card: #ffffff;
+      --border-color: rgba(8, 34, 64, 0.08);
+      --border-hover: rgba(255, 112, 24, 0.5);
+      
+      --text-main: #0a2540;
+      --text-muted: #5f6f82;
+      --text-muted-dark: #8a96a5;
       
       --primary-color: #ff7417;
-      --primary-glow: rgba(255, 113, 25, 0.35);
-      --secondary-color: #0787dc;
-      --secondary-glow: rgba(7, 135, 220, 0.3);
+      --primary-hover: #e85f00;
+      --brand-blue: #0787dc;
+      --brand-navy: #082240;
       
+      --primary-glow: rgba(255, 113, 25, 0.15);
       --font-outfit: 'Outfit', sans-serif;
       --font-primary: 'Plus Jakarta Sans', sans-serif;
       --transition-smooth: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -41,147 +45,101 @@
 
     body {
       font-family: var(--font-primary);
-      background-color: var(--bg-dark);
+      background-color: var(--bg-secondary);
+      background-image: radial-gradient(at 0% 0%, rgba(7, 135, 220, 0.05) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(255, 116, 23, 0.05) 0px, transparent 50%);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
+      padding: 2rem;
       overflow-x: hidden;
-      position: relative;
     }
 
-    /* Animated Ambient Lights */
-    .ambient-glow {
-      position: fixed;
-      top: 0;
-      left: 0;
+    /* Container Split Layout */
+    .auth-page-container {
       width: 100%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .glow-sphere {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(140px);
-      opacity: 0.28;
-      mix-blend-mode: screen;
-      animation: floatGlow 12s infinite alternate ease-in-out;
-    }
-
-    .sphere-1 {
-      top: -10%;
-      left: -10%;
-      width: 50vw;
-      height: 50vw;
-      background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%);
-    }
-
-    .sphere-2 {
-      bottom: -15%;
-      right: -10%;
-      width: 55vw;
-      height: 55vw;
-      background: radial-gradient(circle, var(--secondary-color) 0%, transparent 70%);
-      animation-delay: -4s;
-    }
-
-    .sphere-3 {
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 35vw;
-      height: 35vw;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, transparent 70%);
-      opacity: 0.12;
-      animation-duration: 18s;
-    }
-
-    @keyframes floatGlow {
-      0% {
-        transform: translate(0, 0) scale(1);
-      }
-      100% {
-        transform: translate(8%, 8%) scale(1.15);
-      }
-    }
-
-    /* Auth Wrapper & Premium Card */
-    .auth-wrapper {
-      width: 100%;
-      max-width: 480px;
-      position: relative;
+      max-width: 1000px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 3rem;
+      align-items: center;
       z-index: 10;
-      animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    @keyframes cardEntrance {
-      0% {
-        opacity: 0;
-        transform: translateY(30px) scale(0.96);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+    /* Left Column: Branding / Info */
+    .auth-branding {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .branding-logo {
+      max-width: 280px;
+      height: auto;
+      margin-bottom: 2rem;
+      object-fit: contain;
+    }
+
+    .branding-title {
+      font-family: var(--font-outfit);
+      font-size: 2.75rem;
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--brand-navy);
+      margin-bottom: 1.5rem;
+    }
+
+    .branding-title span {
+      background: linear-gradient(135deg, var(--brand-blue) 0%, var(--primary-color) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .branding-description {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 480px;
+    }
+
+    /* Right Column: Premium Card */
+    .auth-card-wrapper {
+      width: 100%;
     }
 
     .auth-container {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 24px;
-      padding: 3rem 2.5rem;
-      box-shadow: 
-        0 4px 30px rgba(0, 0, 0, 0.4),
-        inset 0 1px 1px rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      padding: 2.75rem 2.25rem;
+      box-shadow: 0 15px 35px rgba(8, 34, 64, 0.05);
       transition: var(--transition-smooth);
     }
 
     .auth-container:hover {
-      border-color: rgba(255, 255, 255, 0.12);
+      border-color: rgba(8, 34, 64, 0.12);
+      box-shadow: 0 20px 45px rgba(8, 34, 64, 0.08);
     }
 
-    /* Logo & Branding Area */
-    .auth-header {
-      text-align: center;
-      margin-bottom: 2.25rem;
-    }
-
-    .auth-logo {
-      display: block;
-      margin: 0 auto 0.75rem auto;
-      height: 48px;
-      filter: drop-shadow(0 0 12px rgba(255, 116, 23, 0.15));
-    }
-
-    .auth-subtitle {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-      font-weight: 500;
-    }
-
-    /* Premium Sliding Tabs */
+    /* Premium Tabs */
     .auth-tabs-wrapper {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: rgba(8, 34, 64, 0.03);
+      border: 1px solid rgba(8, 34, 64, 0.05);
       padding: 4px;
-      border-radius: 14px;
+      border-radius: 12px;
       display: flex;
       position: relative;
-      margin-bottom: 2.25rem;
+      margin-bottom: 2rem;
     }
 
     .auth-tab {
       flex: 1;
       text-align: center;
-      padding: 0.75rem 0.5rem;
+      padding: 0.7rem 0.5rem;
       background: none;
       border: none;
       color: var(--text-muted);
@@ -190,20 +148,20 @@
       font-family: var(--font-primary);
       cursor: pointer;
       z-index: 2;
-      border-radius: 10px;
+      border-radius: 9px;
       transition: var(--transition-smooth);
     }
 
     .auth-tab.active {
       color: var(--text-main);
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(8, 34, 64, 0.06);
     }
 
     .auth-tab[data-target="accessForm"].active {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.25);
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.08) 100%);
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.15);
     }
 
     /* Form Layout */
@@ -213,23 +171,17 @@
 
     .auth-form.active {
       display: block;
-      animation: formFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: formFadeIn 0.35s ease-out;
     }
 
     @keyframes formFadeIn {
-      0% {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      0% { opacity: 0; transform: translateY(6px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
-    /* Form Fields & Premium Focus State */
+    /* Form Fields */
     .form-group {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
     }
 
     .form-group label {
@@ -250,16 +202,16 @@
       position: absolute;
       left: 1rem;
       color: var(--text-muted);
-      font-size: 1rem;
+      font-size: 0.95rem;
       transition: var(--transition-smooth);
     }
 
     .form-group input {
       width: 100%;
-      padding: 0.85rem 1rem 0.85rem 2.75rem;
-      background-color: rgba(255, 255, 255, 0.02);
+      padding: 0.8rem 1rem 0.8rem 2.5rem;
+      background-color: #ffffff;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: 10px;
       color: var(--text-main);
       font-family: inherit;
       font-size: 0.95rem;
@@ -268,22 +220,20 @@
     }
 
     .form-group input:focus {
-      border-color: var(--primary-color);
-      background-color: rgba(255, 255, 255, 0.04);
-      box-shadow: 0 0 16px rgba(255, 116, 23, 0.15);
+      border-color: var(--brand-blue);
+      box-shadow: 0 0 0 3px rgba(7, 135, 220, 0.1);
     }
 
     .form-group input:focus ~ .input-icon {
-      color: var(--primary-color);
+      color: var(--brand-blue);
     }
 
-    /* Eye toggle password */
     .password-toggle {
       position: absolute;
       right: 1rem;
       color: var(--text-muted);
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       transition: var(--transition-smooth);
       background: none;
       border: none;
@@ -296,82 +246,59 @@
       color: var(--text-main);
     }
 
-    /* Buttons with neon hover & shine */
+    /* Buttons */
     .auth-btn {
       width: 100%;
-      padding: 0.9rem;
+      padding: 0.85rem;
       margin-top: 1.25rem;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
-      border-radius: 12px;
+      border-radius: 10px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
       font-family: var(--font-primary);
       transition: var(--transition-smooth);
       border: none;
-      position: relative;
-      overflow: hidden;
     }
 
     .btn-main {
-      background: linear-gradient(135deg, var(--primary-color) 0%, #ff8c3a 100%);
-      color: #fff;
-      box-shadow: 0 4px 20px var(--primary-glow);
+      background: var(--brand-blue);
+      color: #ffffff;
     }
 
     .btn-main:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(255, 116, 23, 0.5);
-    }
-
-    .btn-main::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -60%;
-      width: 30%;
-      height: 200%;
-      background: rgba(255, 255, 255, 0.18);
-      transform: rotate(35deg);
-      transition: var(--transition-smooth);
-      pointer-events: none;
-    }
-
-    .btn-main:hover::after {
-      left: 130%;
-      transition: all 0.7s ease-in-out;
+      background: #0672ba;
+      transform: translateY(-1px);
     }
 
     .btn-premium {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      color: #000;
-      font-weight: 800;
-      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+      color: #ffffff;
     }
 
     .btn-premium:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.55);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
     }
 
     .premium-badge {
       display: inline-block;
-      background: rgba(0, 0, 0, 0.12);
-      color: inherit;
+      background: #fef3c7;
+      color: #d97706;
       font-size: 0.7rem;
       font-weight: 800;
       padding: 0.15rem 0.4rem;
       border-radius: 4px;
       margin-left: 0.5rem;
-      border: 1px solid rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(217, 119, 6, 0.15);
       vertical-align: middle;
     }
 
     .auth-error {
-      color: #f87171;
+      color: #ef4444;
       font-size: 0.85rem;
       font-weight: 600;
       margin-top: 1rem;
@@ -392,21 +319,20 @@
     }
 
     .auth-help-link a {
-      color: var(--primary-color);
+      color: var(--brand-blue);
       text-decoration: none;
       font-weight: 600;
       transition: var(--transition-smooth);
     }
 
     .auth-help-link a:hover {
-      color: #ff9b4a;
+      color: var(--brand-navy);
       text-decoration: underline;
     }
 
-    /* Key Premium Header Icons */
     .premium-icon-box {
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.2);
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.15);
       width: 48px;
       height: 48px;
       border-radius: 50%;
@@ -414,120 +340,144 @@
       align-items: center;
       justify-content: center;
       margin: 0 auto 0.75rem auto;
-      color: #fbbf24;
+      color: #d97706;
       font-size: 1.25rem;
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+    }
+
+    /* Responsive styling */
+    @media (max-width: 900px) {
+      body {
+        padding: 1.5rem;
+      }
+      .auth-page-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+      }
+      .auth-branding {
+        align-items: center;
+      }
+      .branding-title {
+        font-size: 2.25rem;
+      }
+      .branding-logo {
+        margin-bottom: 1.5rem;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Ambient Glowing Background Spheres -->
-  <div class="ambient-glow">
-    <div class="glow-sphere sphere-1"></div>
-    <div class="glow-sphere sphere-2"></div>
-    <div class="glow-sphere sphere-3"></div>
-  </div>
-
-  <div class="auth-wrapper">
-    <div class="auth-container">
-      
-      <div class="auth-header">
-        <img src="assets/jurnalhub-logo.png" alt="JurnalHub" class="auth-logo">
-        <p class="auth-subtitle">Riset Terbuka & Rekomendasi Jurnal Ilmiah</p>
-      </div>
-
-      <div class="auth-tabs-wrapper">
-        <button class="auth-tab active" data-target="loginForm">Masuk</button>
-        <button class="auth-tab" data-target="registerForm">Daftar</button>
-        <button class="auth-tab" data-target="accessForm">Kode Akses</button>
-      </div>
-
-      <!-- Form Login -->
-      <form id="loginForm" class="auth-form active">
-        <div class="form-group">
-          <label for="loginEmail">Alamat Email</label>
-          <div class="input-wrapper">
-            <i class="fa-regular fa-envelope input-icon"></i>
-            <input type="email" id="loginEmail" placeholder="nama@email.com" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="loginPassword">Password</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-lock input-icon"></i>
-            <input type="password" id="loginPassword" placeholder="••••••••" required>
-            <button type="button" class="password-toggle" data-input="loginPassword">
-              <i class="fa-regular fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <button type="submit" class="auth-btn btn-main">
-          <i class="fa-solid fa-right-to-bracket"></i> Masuk Sekarang
-        </button>
-        <p class="auth-error" id="loginError"></p>
-      </form>
-
-      <!-- Form Register -->
-      <form id="registerForm" class="auth-form">
-        <div class="form-group">
-          <label for="registerEmail">Alamat Email</label>
-          <div class="input-wrapper">
-            <i class="fa-regular fa-envelope input-icon"></i>
-            <input type="email" id="registerEmail" placeholder="nama@email.com" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="registerPassword">Password</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-lock input-icon"></i>
-            <input type="password" id="registerPassword" placeholder="Minimal 6 karakter" required minlength="6">
-            <button type="button" class="password-toggle" data-input="registerPassword">
-              <i class="fa-regular fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <button type="submit" class="auth-btn btn-main">
-          <i class="fa-solid fa-user-plus"></i> Buat Akun Baru
-        </button>
-        <p class="auth-error" id="registerError"></p>
-      </form>
-
-      <!-- Form Kode Akses -->
-      <form id="accessForm" class="auth-form">
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-          <div class="premium-icon-box">
-            <i class="fa-solid fa-crown"></i>
-          </div>
-          <h3 style="margin: 0; font-size: 1.15rem; font-family: var(--font-outfit); font-weight: 700; color: #fff;">Buka Akses Premium</h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.4;">
-            Gunakan kode akses khusus untuk langsung membuka fitur premium tanpa perlu membuat akun.
-          </p>
-        </div>
-        <div class="form-group">
-          <label for="accessCode">Kode Rahasia <span class="premium-badge" style="background: #fbbf24; color: #000;">PREMIUM</span></label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-key input-icon"></i>
-            <input type="password" id="accessCode" autocomplete="off" placeholder="Masukkan kode akses premium" required>
-            <button type="button" class="password-toggle" data-input="accessCode">
-              <i class="fa-regular fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <button type="submit" class="auth-btn btn-premium">
-          <i class="fa-solid fa-unlock-keyhole"></i> Aktifkan Premium
-        </button>
-        
-        <p class="auth-help-link" style="margin-top: 1.25rem;">
-          Belum memiliki kode akses? <br>
-          <a href="https://drilman.my.id/drilmanabidin/nvj3wrm97zdw" target="_blank" rel="noopener">
-            Dapatkan Kode Akses di Sini <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; margin-left: 2px;"></i>
-          </a>
-        </p>
-        <p class="auth-error" id="accessError"></p>
-      </form>
-
+  <div class="auth-page-container">
+    
+    <!-- Left Column: Branding -->
+    <div class="auth-branding">
+      <img src="assets/jurnalhub-logo.png" alt="JurnalHub" class="branding-logo">
+      <h1 class="branding-title">
+        Pencarian dan Penulisan Jurnal dalam <span>Satu Portal</span>
+      </h1>
+      <p class="branding-description">
+        Temukan rekomendasi jurnal Scopus dan Sinta secara mudah, cepat, dan terintegrasi dengan asisten penulisan AI.
+      </p>
     </div>
+
+    <!-- Right Column: Auth Form Card -->
+    <div class="auth-card-wrapper">
+      <div class="auth-container">
+        
+        <div class="auth-tabs-wrapper">
+          <button class="auth-tab active" data-target="loginForm">Masuk</button>
+          <button class="auth-tab" data-target="registerForm">Daftar</button>
+          <button class="auth-tab" data-target="accessForm">Kode Akses</button>
+        </div>
+
+        <!-- Form Login -->
+        <form id="loginForm" class="auth-form active">
+          <div class="form-group">
+            <label for="loginEmail">Alamat Email</label>
+            <div class="input-wrapper">
+              <i class="fa-regular fa-envelope input-icon"></i>
+              <input type="email" id="loginEmail" placeholder="nama@email.com" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="loginPassword" placeholder="••••••••" required>
+              <button type="button" class="password-toggle" data-input="loginPassword">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="auth-btn btn-main">
+            <i class="fa-solid fa-right-to-bracket"></i> Masuk Sekarang
+          </button>
+          <p class="auth-error" id="loginError"></p>
+        </form>
+
+        <!-- Form Register -->
+        <form id="registerForm" class="auth-form">
+          <div class="form-group">
+            <label for="registerEmail">Alamat Email</label>
+            <div class="input-wrapper">
+              <i class="fa-regular fa-envelope input-icon"></i>
+              <input type="email" id="registerEmail" placeholder="nama@email.com" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="registerPassword">Password</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="registerPassword" placeholder="Minimal 6 karakter" required minlength="6">
+              <button type="button" class="password-toggle" data-input="registerPassword">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="auth-btn btn-main">
+            <i class="fa-solid fa-user-plus"></i> Buat Akun Baru
+          </button>
+          <p class="auth-error" id="registerError"></p>
+        </form>
+
+        <!-- Form Kode Akses -->
+        <form id="accessForm" class="auth-form">
+          <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div class="premium-icon-box">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+            <h3 style="margin: 0; font-size: 1.1rem; font-family: var(--font-outfit); font-weight: 700; color: var(--text-main);">Akses Premium</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.4;">
+              Masukkan kode akses khusus untuk langsung menggunakan fitur premium tanpa perlu mendaftar.
+            </p>
+          </div>
+          <div class="form-group">
+            <label for="accessCode">Kode Rahasia <span class="premium-badge">PREMIUM</span></label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-key input-icon"></i>
+              <input type="password" id="accessCode" autocomplete="off" placeholder="Masukkan kode akses premium" required>
+              <button type="button" class="password-toggle" data-input="accessCode">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="auth-btn btn-premium">
+            <i class="fa-solid fa-unlock-keyhole"></i> Aktifkan Premium
+          </button>
+          
+          <p class="auth-help-link" style="margin-top: 1.25rem;">
+            Belum memiliki kode akses? <br>
+            <a href="https://drilman.my.id/drilmanabidin/nvj3wrm97zdw" target="_blank" rel="noopener">
+              Dapatkan Kode Akses di Sini <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; margin-left: 2px;"></i>
+            </a>
+          </p>
+          <p class="auth-error" id="accessError"></p>
+        </form>
+
+      </div>
+    </div>
+
   </div>
 
   <script>
