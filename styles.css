@@ -1400,6 +1400,17 @@ body {
   overflow: hidden;
 }
 
+.match-reason {
+  margin: 0.75rem 0 1.25rem;
+  padding: 0.75rem;
+  border-left: 3px solid var(--primary-color);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 116, 23, 0.08);
+  color: var(--text-main);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
 .access-overlay {
   position: fixed;
   inset: 0;

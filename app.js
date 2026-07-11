@@ -188,6 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const typeBadgeClass = journal.type === 'Scopus' ? 'type-scopus' : 'type-sinta';
       const rankBadgeClass = `rank-${journal.rank.toLowerCase()}`;
       const apcClass = journal.isFree ? 'free' : 'paid';
+      const matchReason = journal.matchReason ? `<p class="match-reason">${journal.matchReason}</p>` : '';
 
       card.innerHTML = `
         <div>
@@ -207,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <i class="fa-regular fa-building"></i> ${journal.publisher}
             </span>
             <p class="journal-desc">${journal.description}</p>
+            ${matchReason}
           </div>
         </div>
         <div class="card-footer-wrapper">
@@ -297,6 +299,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const ranked = getLocalMatchRecommendations(titleValue, keywordValue, abstractValue);
+
+    clearMatchBtn.style.display = 'inline-flex';
+    matchSummary.textContent = ranked.length > 0
+      ? 'Berikut 3 rekomendasi jurnal paling cocok berdasarkan database JurnalHub.'
+      : 'Belum ada jurnal yang cocok. Coba tambahkan keyword atau abstrak yang lebih spesifik.';
+    renderMatchCards(ranked);
+    matchResultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function getLocalMatchRecommendations(titleValue, keywordValue, abstractValue) {
+    const articleText = `${titleValue} ${abstractValue}`;
     const ranked = JOURNAL_DATABASE
       .map((journal, index) => ({
         ...journal,
@@ -316,12 +330,65 @@ document.addEventListener('DOMContentLoaded', () => {
       matchScore: Math.min(98, Math.max(72 - (index * 6), Math.round(74 + ((journal.matchScore / Math.max(topScore, 1)) * 22) - (index * 3))))
     }));
 
+    return displayRanked;
+  }
+
+  async function runJournalMatchWithAi() {
+    const titleValue = articleTitle.value.trim();
+    const keywordValue = articleKeywords.value.trim();
+    const abstractValue = articleAbstract.value.trim();
+
+    if (!titleValue && !keywordValue && !abstractValue) {
+      matchSummary.textContent = 'Isi minimal judul artikel atau keyword untuk menghitung rekomendasi jurnal.';
+      articleTitle.focus();
+      return;
+    }
+
     clearMatchBtn.style.display = 'inline-flex';
-    matchSummary.textContent = displayRanked.length > 0
-      ? 'Berikut 3 rekomendasi jurnal paling cocok berdasarkan database JurnalHub.'
-      : 'Belum ada jurnal yang cocok. Coba tambahkan keyword atau abstrak yang lebih spesifik.';
-    renderMatchCards(displayRanked);
-    matchResultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    runMatchBtn.disabled = true;
+    runMatchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menganalisis...';
+    matchSummary.textContent = 'Gemini AI sedang membaca artikel dan mencocokkan jurnal terbaik...';
+
+    try {
+      const response = await fetch('/api/match-journals-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: titleValue,
+          keywords: keywordValue,
+          abstract: abstractValue
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('AI match request failed');
+      }
+
+      const data = await response.json();
+      const recommendations = (data.recommendations || []).map(item => ({
+        ...item,
+        url: JOURNAL_DATABASE.find(journal => String(journal.id) === String(item.id))?.url || '#'
+      }));
+
+      if (recommendations.length === 0) {
+        matchSummary.textContent = 'Belum ada jurnal yang cocok. Coba tambahkan keyword atau abstrak yang lebih spesifik.';
+      } else {
+        matchSummary.textContent = data.source === 'gemini'
+          ? 'Berikut 3 rekomendasi terbaik dari Gemini AI berdasarkan database JurnalHub.'
+          : 'Berikut 3 rekomendasi terbaik dari sistem lokal JurnalHub.';
+      }
+
+      renderMatchCards(recommendations);
+      matchResultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (error) {
+      const fallback = getLocalMatchRecommendations(titleValue, keywordValue, abstractValue);
+      matchSummary.textContent = 'Gemini belum tersedia, jadi hasil ini memakai sistem lokal JurnalHub.';
+      renderMatchCards(fallback);
+      matchResultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } finally {
+      runMatchBtn.disabled = false;
+      runMatchBtn.innerHTML = '<i class="fa-solid fa-chart-line"></i> Hitung Match Score';
+    }
   }
 
   function clearJournalMatch() {
@@ -437,13 +504,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCards();
   });
 
-  runMatchBtn.addEventListener('click', runJournalMatch);
+  runMatchBtn.addEventListener('click', runJournalMatchWithAi);
   clearMatchBtn.addEventListener('click', clearJournalMatch);
 
   [articleTitle, articleKeywords, articleAbstract].forEach(field => {
     field.addEventListener('keydown', event => {
       if (event.key === 'Enter' && event.ctrlKey) {
-        runJournalMatch();
+        runJournalMatchWithAi();
       }
     });
   });
