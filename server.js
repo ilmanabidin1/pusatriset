@@ -515,6 +515,33 @@ function normalizeAiRecommendations(aiItems, candidates) {
     .slice(0, 3);
 }
 
+function cleanAndParseAIResponse(text) {
+  let cleaned = String(text || '').trim();
+  
+  // 1. Coba hapus blok kode markdown (```json ... ``` atau ``` ... ```)
+  const jsonBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
+  const match = cleaned.match(jsonBlockRegex);
+  if (match && match[1]) {
+    cleaned = match[1].trim();
+  }
+  
+  // 2. Jika tidak berawal dengan '[', cari bracket array pertama '[' dan terakhir ']'
+  if (!cleaned.startsWith('[')) {
+    const startIndex = cleaned.indexOf('[');
+    const endIndex = cleaned.lastIndexOf(']');
+    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+      cleaned = cleaned.substring(startIndex, endIndex + 1).trim();
+    }
+  }
+
+  // 3. Parse JSON
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    throw new Error(`Gagal memparsing JSON hasil rekomendasi AI. Pastikan AI mengembalikan format JSON valid yang diinstruksikan. Error: ${e.message}`);
+  }
+}
+
 async function getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates) {
   const prompt = `
 Anda adalah asisten rekomendasi jurnal ilmiah untuk JurnalHub.
@@ -570,8 +597,7 @@ ${JSON.stringify(candidates)}
 
       const resData = await response.json();
       const text = resData?.content?.[0]?.text || '[]';
-      const cleanedJsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      return JSON.parse(cleanedJsonText);
+      return cleanAndParseAIResponse(text);
     } catch (error) {
       lastError = error;
       console.error(`[AI API] Anthropic Claude model ${claudeModel} gagal:`, error.message);
@@ -613,7 +639,7 @@ ${JSON.stringify(candidates)}
 
         const resData = await response.json();
         const text = resData?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-        return JSON.parse(text);
+        return cleanAndParseAIResponse(text);
       } catch (error) {
         lastError = error;
         console.error(`[Gemini API] Google AI Studio model ${modelName} gagal:`, error.message);
@@ -634,7 +660,7 @@ ${JSON.stringify(candidates)}
         });
 
         const text = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-        return JSON.parse(text);
+        return cleanAndParseAIResponse(text);
       } catch (error) {
         lastError = error;
         console.error(`[Gemini API] Vertex AI model ${modelName} gagal:`, error.message || error);
