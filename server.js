@@ -901,6 +901,8 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
     console.error('[AI Draft Generator] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal memproses draf panduan dengan AI: ' + error.message });
   }
+});
+
 // Endpoint untuk mengambil data Prompt Bank
 app.get('/api/prompts', requireAccess, (req, res) => {
   try {
