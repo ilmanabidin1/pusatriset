@@ -515,7 +515,7 @@ function normalizeAiRecommendations(aiItems, candidates) {
     .slice(0, 3);
 }
 
-function cleanAndParseAIResponse(text) {
+function cleanAndParseAIResponse(text, isObject = false) {
   let cleaned = String(text || '').trim();
   
   // 1. Coba hapus blok kode markdown (```json ... ``` atau ``` ... ```)
@@ -524,13 +524,24 @@ function cleanAndParseAIResponse(text) {
   if (match && match[1]) {
     cleaned = match[1].trim();
   }
-  
-  // 2. Jika tidak berawal dengan '[', cari bracket array pertama '[' dan terakhir ']'
-  if (!cleaned.startsWith('[')) {
-    const startIndex = cleaned.indexOf('[');
-    const endIndex = cleaned.lastIndexOf(']');
-    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-      cleaned = cleaned.substring(startIndex, endIndex + 1).trim();
+
+  if (isObject) {
+    // Mode objek: ekstrak {...}
+    if (!cleaned.startsWith('{')) {
+      const startIndex = cleaned.indexOf('{');
+      const endIndex = cleaned.lastIndexOf('}');
+      if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+        cleaned = cleaned.substring(startIndex, endIndex + 1).trim();
+      }
+    }
+  } else {
+    // Mode array: ekstrak [...]
+    if (!cleaned.startsWith('[')) {
+      const startIndex = cleaned.indexOf('[');
+      const endIndex = cleaned.lastIndexOf(']');
+      if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+        cleaned = cleaned.substring(startIndex, endIndex + 1).trim();
+      }
     }
   }
 
@@ -538,7 +549,7 @@ function cleanAndParseAIResponse(text) {
   try {
     return JSON.parse(cleaned);
   } catch (e) {
-    throw new Error(`Gagal memparsing JSON hasil rekomendasi AI. Pastikan AI mengembalikan format JSON valid yang diinstruksikan. Error: ${e.message}`);
+    throw new Error(`Gagal memparsing JSON hasil rekomendasi AI. Error: ${e.message}`);
   }
 }
 
@@ -579,16 +590,16 @@ ${JSON.stringify(candidates)}
         },
         body: JSON.stringify({
           model: claudeModel,
-          max_tokens: 1024,
-          system: process.env.CLAUDE_SYSTEM_PROMPT || "You are a strict JSON-only API for journal recommendation. CRITICAL: You MUST respond with ONLY a raw JSON array. No explanations, no markdown, no code blocks, no headings, no text before or after. Start your response directly with '[' and end with ']'. Format: [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Brief reason in Indonesian\"}]",
+          max_tokens: 1500,
+          system: process.env.CLAUDE_SYSTEM_PROMPT || "You are a journal recommendation API. You MUST respond with ONLY valid JSON (no markdown, no text outside JSON). Return an object with exactly two fields: 'review' (a 2-3 sentence analysis of the article in Indonesian) and 'recommendations' (array of 3 journal matches). Format: {\"review\": \"Analisis singkat artikel...\", \"recommendations\": [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Alasan singkat dalam Bahasa Indonesia\"}]}",
           messages: [
             {
               role: 'user',
-              content: `PENTING: Balas HANYA dengan JSON array murni, tanpa teks lain.\n\nPilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul artikel, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}\n\nFormat balasan WAJIB (JSON array saja, tanpa penjelasan):\n[{"id": <nomor_id>, "matchScore": <angka 70-98>, "reason": "<alasan singkat Bahasa Indonesia>"}]`
+              content: `Analisis artikel ini dan pilih tepat 3 jurnal paling cocok dari daftar kandidat.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}\n\nBalas dengan JSON object persis seperti ini (wajib, tanpa teks lain):\n{"review": "<2-3 kalimat analisis artikel dalam Bahasa Indonesia>", "recommendations": [{"id": <id>, "matchScore": <70-98>, "reason": "<alasan singkat>"}]}`
             },
             {
               role: 'assistant',
-              content: '['
+              content: '{'
             }
           ]
         })
@@ -600,10 +611,10 @@ ${JSON.stringify(candidates)}
       }
 
       const resData = await response.json();
-      // Prefill '[' sudah ditambahkan sebagai assistant prefix, gabungkan kembali
-      const rawText = resData?.content?.[0]?.text || ']';
-      const text = '[' + rawText;
-      return cleanAndParseAIResponse(text);
+      // Prefill '{' sudah ditambahkan, gabungkan kembali
+      const rawText = resData?.content?.[0]?.text || '}';
+      const parsed = cleanAndParseAIResponse('{' + rawText, true);
+      return { review: parsed.review || null, items: parsed.recommendations || parsed };
     } catch (error) {
       lastError = error;
       console.error(`[AI API] Anthropic Claude model ${claudeModel} gagal:`, error.message);
@@ -645,7 +656,7 @@ ${JSON.stringify(candidates)}
 
         const resData = await response.json();
         const text = resData?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-        return cleanAndParseAIResponse(text);
+        return { review: null, items: cleanAndParseAIResponse(text) };
       } catch (error) {
         lastError = error;
         console.error(`[Gemini API] Google AI Studio model ${modelName} gagal:`, error.message);
@@ -666,7 +677,7 @@ ${JSON.stringify(candidates)}
         });
 
         const text = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-        return cleanAndParseAIResponse(text);
+        return { review: null, items: cleanAndParseAIResponse(text) };
       } catch (error) {
         lastError = error;
         console.error(`[Gemini API] Vertex AI model ${modelName} gagal:`, error.message || error);
@@ -716,10 +727,12 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   }
 
   try {
-    const aiItems = await getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates);
+    const aiResult = await getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates);
+    const aiItems = Array.isArray(aiResult) ? aiResult : (aiResult.items || aiResult);
+    const review = aiResult?.review || null;
     const recommendations = normalizeAiRecommendations(aiItems, candidates);
     const sourceName = hasClaudeKey ? 'claude' : 'gemini';
-    res.json({ ok: true, source: sourceName, recommendations });
+    res.json({ ok: true, source: sourceName, review, recommendations });
   } catch (error) {
     console.error(error);
     const activeProvider = hasClaudeKey ? 'Claude' : 'Gemini';

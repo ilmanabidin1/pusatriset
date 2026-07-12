@@ -594,7 +594,11 @@ document.addEventListener('DOMContentLoaded', () => {
     clearMatchBtn.style.display = 'inline-flex';
     runMatchBtn.disabled = true;
     runMatchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menganalisis...';
-    matchSummary.textContent = 'Gemini AI sedang membaca artikel dan mencocokkan jurnal terbaik...';
+    matchSummary.textContent = 'AI sedang membaca artikel dan mencocokkan jurnal terbaik...';
+
+    // Sembunyikan panel review lama jika ada
+    const existingReview = document.getElementById('aiReviewPanel');
+    if (existingReview) existingReview.remove();
 
     try {
       const response = await fetch('/api/match-journals-ai', {
@@ -620,18 +624,53 @@ document.addEventListener('DOMContentLoaded', () => {
       if (recommendations.length === 0) {
         matchSummary.textContent = 'Belum ada jurnal yang cocok. Coba tambahkan keyword atau abstrak yang lebih spesifik.';
       } else {
-        if (data.source === 'gemini') {
+        if (data.source === 'claude') {
+          matchSummary.textContent = 'Berikut 3 rekomendasi terbaik dari Claude AI berdasarkan database JurnalHub.';
+        } else if (data.source === 'gemini') {
           matchSummary.textContent = 'Berikut 3 rekomendasi terbaik dari Gemini AI berdasarkan database JurnalHub.';
         } else {
           matchSummary.textContent = data.warning || 'Berikut 3 rekomendasi terbaik dari sistem lokal JurnalHub.';
         }
       }
 
+      // Tampilkan panel review AI jika tersedia
+      if (data.review && matchResultsContainer) {
+        const providerIcon = data.source === 'claude'
+          ? '<i class="fa-solid fa-wand-magic-sparkles" style="color:#a78bfa;"></i>'
+          : '<i class="fa-solid fa-robot" style="color:#60a5fa;"></i>';
+        const providerLabel = data.source === 'claude' ? 'Analisis Claude AI' : 'Analisis Gemini AI';
+
+        const reviewPanel = document.createElement('div');
+        reviewPanel.id = 'aiReviewPanel';
+        reviewPanel.style.cssText = `
+          background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.08));
+          border: 1px solid rgba(139,92,246,0.25);
+          border-radius: 14px;
+          padding: 1.1rem 1.4rem;
+          margin-bottom: 1.25rem;
+          display: flex;
+          gap: 0.9rem;
+          align-items: flex-start;
+          animation: fadeInUp 0.4s ease;
+        `;
+        reviewPanel.innerHTML = `
+          <div style="flex-shrink:0; width:36px; height:36px; border-radius:50%; background:rgba(139,92,246,0.15); display:flex; align-items:center; justify-content:center; font-size:1rem;">
+            ${providerIcon}
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.35rem;">${providerLabel}</div>
+            <p style="font-size:0.9rem; line-height:1.65; color:var(--text-main); margin:0;">${data.review}</p>
+          </div>
+        `;
+        matchResultsContainer.parentNode.insertBefore(reviewPanel, matchResultsContainer);
+      }
+
       renderMatchCards(recommendations);
-      matchResultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      const scrollTarget = document.getElementById('aiReviewPanel') || matchResultsContainer;
+      scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (error) {
       const fallback = getLocalMatchRecommendations(titleValue, keywordValue, abstractValue);
-      matchSummary.textContent = 'Gemini belum tersedia, jadi hasil ini memakai sistem lokal JurnalHub.';
+      matchSummary.textContent = 'AI belum tersedia, hasil ini memakai sistem lokal JurnalHub.';
       renderMatchCards(fallback);
       matchResultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } finally {
@@ -648,6 +687,8 @@ document.addEventListener('DOMContentLoaded', () => {
     matchResultsContainer.innerHTML = '';
     matchResultsContainer.style.display = 'none';
     matchSummary.textContent = 'Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.';
+    const reviewPanel = document.getElementById('aiReviewPanel');
+    if (reviewPanel) reviewPanel.remove();
   }
   
   function filterJournals() {
