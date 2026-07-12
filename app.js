@@ -1700,6 +1700,279 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // --- LOGIKA PROMPT BANK ---
+    let promptBankData = null;
+    let activePromptTab = 'scopus'; // 'scopus' atau 'tesis_disertasi'
+    let activePromptStage = '';
+
+    window.initPromptBankTab = async function() {
+      if (!promptBankData) {
+        try {
+          const res = await fetch('/api/prompts');
+          if (!res.ok) throw new Error('Gagal memuat database prompt');
+          const data = await res.json();
+          if (data.ok) {
+            promptBankData = {
+              scopus: data.scopus || [],
+              tesis_disertasi: data.tesis_disertasi || []
+            };
+          }
+        } catch (err) {
+          console.error(err);
+          const promptsListContainer = document.getElementById('promptsListContainer');
+          if (promptsListContainer) {
+            promptsListContainer.innerHTML = `<div style="text-align:center; padding: 2rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat database prompt. Silakan coba beberapa saat lagi.</div>`;
+          }
+          return;
+        }
+      }
+
+      renderPromptStages();
+    };
+
+    // Handler Tab Switcher
+    const promptTabScopus = document.getElementById('promptTabScopus');
+    const promptTabTesis = document.getElementById('promptTabTesis');
+    const promptSearchInput = document.getElementById('promptSearchInput');
+
+    if (promptTabScopus && promptTabTesis) {
+      promptTabScopus.addEventListener('click', () => {
+        promptTabScopus.classList.add('active');
+        promptTabTesis.classList.remove('active');
+        activePromptTab = 'scopus';
+        activePromptStage = '';
+        if (promptSearchInput) promptSearchInput.value = '';
+        renderPromptStages();
+      });
+
+      promptTabTesis.addEventListener('click', () => {
+        promptTabTesis.classList.add('active');
+        promptTabScopus.classList.remove('active');
+        activePromptTab = 'tesis_disertasi';
+        activePromptStage = '';
+        if (promptSearchInput) promptSearchInput.value = '';
+        renderPromptStages();
+      });
+    }
+
+    if (promptSearchInput) {
+      promptSearchInput.addEventListener('input', () => {
+        renderPromptsList();
+      });
+    }
+
+    function renderPromptStages() {
+      const promptStagesList = document.getElementById('promptStagesList');
+      if (!promptStagesList || !promptBankData) return;
+
+      promptStagesList.innerHTML = '';
+      const categories = promptBankData[activePromptTab] || [];
+
+      if (categories.length === 0) {
+        promptStagesList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.88rem;">Tidak ada kategori.</p>';
+        return;
+      }
+
+      // Set default active stage if none selected
+      if (!activePromptStage && categories.length > 0) {
+        activePromptStage = categories[0].category;
+      }
+
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.style.cssText = `
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border: 1px solid transparent;
+          border-radius: 8px;
+          background: none;
+          color: var(--text-main);
+          font-family: inherit;
+          font-size: 0.88rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-align: left;
+        `;
+
+        if (cat.category === activePromptStage) {
+          btn.style.background = 'rgba(7, 135, 220, 0.08)';
+          btn.style.color = 'var(--brand-blue)';
+          btn.style.fontWeight = '700';
+          btn.style.borderColor = 'rgba(7, 135, 220, 0.15)';
+        } else {
+          btn.addEventListener('mouseenter', () => {
+            btn.style.background = '#f8fafc';
+          });
+          btn.addEventListener('mouseleave', () => {
+            if (cat.category !== activePromptStage) {
+              btn.style.background = 'none';
+            }
+          });
+        }
+
+        btn.innerHTML = `
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">
+            ${cat.category.replace(/^\d+\s+/, '')}
+          </span>
+          <span style="font-size: 0.75rem; background: ${cat.category === activePromptStage ? 'var(--brand-blue)' : '#f1f5f9'}; color: ${cat.category === activePromptStage ? '#ffffff' : 'var(--text-muted)'}; padding: 0.1rem 0.5rem; border-radius: 10px; font-weight: 700;">
+            ${cat.prompts.length}
+          </span>
+        `;
+
+        btn.addEventListener('click', () => {
+          activePromptStage = cat.category;
+          renderPromptStages();
+        });
+
+        promptStagesList.appendChild(btn);
+      });
+
+      renderPromptsList();
+    }
+
+    function renderPromptsList() {
+      const activeStageTitle = document.getElementById('activeStageTitle');
+      const activePromptCount = document.getElementById('activePromptCount');
+      const promptsListContainer = document.getElementById('promptsListContainer');
+      const searchQuery = promptSearchInput ? promptSearchInput.value.trim().toLowerCase() : '';
+
+      if (!promptsListContainer || !promptBankData) return;
+      promptsListContainer.innerHTML = '';
+
+      const categories = promptBankData[activePromptTab] || [];
+      
+      if (searchQuery) {
+        // Global search across all categories in the active tab
+        activeStageTitle.textContent = `Hasil Pencarian: "${searchQuery}"`;
+        let totalMatches = 0;
+        
+        categories.forEach(cat => {
+          const matched = cat.prompts.filter(p => p.text.toLowerCase().includes(searchQuery));
+          if (matched.length > 0) {
+            totalMatches += matched.length;
+            
+            // Header kategori pencarian
+            const catHeader = document.createElement('div');
+            catHeader.style.cssText = `
+              font-family: var(--font-outfit);
+              font-weight: 800;
+              font-size: 0.9rem;
+              color: var(--brand-blue);
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              margin-top: 1rem;
+              margin-bottom: 0.5rem;
+              background: #f8fafc;
+              padding: 0.4rem 0.75rem;
+              border-radius: 6px;
+              border-left: 3px solid var(--brand-blue);
+            `;
+            catHeader.textContent = cat.category.replace(/^\d+\s+/, '');
+            promptsListContainer.appendChild(catHeader);
+            
+            matched.forEach(p => {
+              promptsListContainer.appendChild(createPromptCard(p, cat.category));
+            });
+          }
+        });
+        
+        activePromptCount.textContent = `${totalMatches} Cocok`;
+        if (totalMatches === 0) {
+          promptsListContainer.innerHTML = `
+            <div style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+              <i class="fa-regular fa-folder-open" style="font-size: 2.5rem; opacity: 0.5; margin-bottom: 1rem; display: block;"></i>
+              <p style="font-weight: 600;">Tidak menemukan prompt yang cocok.</p>
+              <p style="font-size: 0.85rem; margin-top: 0.25rem;">Cobalah kata kunci pencarian yang lebih umum.</p>
+            </div>
+          `;
+        }
+      } else {
+        // Standard view: filter by active stage
+        const currentCat = categories.find(c => c.category === activePromptStage);
+        if (currentCat) {
+          activeStageTitle.textContent = currentCat.category.replace(/^\d+\s+/, '');
+          activePromptCount.textContent = `${currentCat.prompts.length} Prompt`;
+          
+          currentCat.prompts.forEach(p => {
+            promptsListContainer.appendChild(createPromptCard(p, currentCat.category));
+          });
+        } else {
+          activeStageTitle.textContent = 'Pilih Tahapan';
+          activePromptCount.textContent = '0 Prompt';
+          promptsListContainer.innerHTML = '<p style="color: var(--text-muted); font-size: 0.88rem; text-align: center; padding: 2rem;">Silakan pilih kategori tahapan di sebelah kiri.</p>';
+        }
+      }
+    }
+
+    function createPromptCard(prompt, categoryName) {
+      const card = document.createElement('div');
+      card.style.cssText = `
+        background: #ffffff;
+        border: 1px solid rgba(8,34,64,0.06);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.2s ease;
+        text-align: left;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      `;
+
+      // Highlight placeholders like [bidang], [topik], [jenjang], etc.
+      let highlightedText = prompt.text.replace(/\[([^\]]+)\]/g, (match, p1) => {
+        return `<span style="background: rgba(7, 135, 220, 0.08); border: 1px dashed rgba(7, 135, 220, 0.3); color: var(--brand-blue); padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 700; font-size: 0.88rem; font-family: monospace;">[${p1}]</span>`;
+      });
+
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); background: #f8fafc; border: 1px solid rgba(8,34,64,0.04); padding: 0.2rem 0.5rem; border-radius: 6px; flex-shrink: 0;">
+            Prompt #${prompt.id}
+          </span>
+          <button class="copy-prompt-btn" type="button" style="background: none; border: none; color: var(--brand-blue); cursor: pointer; display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 6px; transition: all 0.2s;" data-text="${prompt.text.replace(/"/g, '&quot;')}">
+            <i class="fa-regular fa-copy"></i> Salin Prompt
+          </button>
+        </div>
+        <p style="color: var(--text-main); font-size: 0.92rem; line-height: 1.6; margin: 0; text-align: left;">
+          ${highlightedText}
+        </p>
+      `;
+
+      // Copy to Clipboard logic
+      const copyBtn = card.querySelector('.copy-prompt-btn');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const rawText = copyBtn.getAttribute('data-text');
+          navigator.clipboard.writeText(rawText).then(() => {
+            copyBtn.innerHTML = '<i class="fa-solid fa-check" style="color: #10b981;"></i> Tersalin!';
+            copyBtn.style.color = '#10b981';
+            setTimeout(() => {
+              copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Salin Prompt';
+              copyBtn.style.color = 'var(--brand-blue)';
+            }, 2000);
+          }).catch(err => {
+            console.error('Copy failed:', err);
+          });
+        });
+
+        // Hover styling for copy button
+        copyBtn.addEventListener('mouseenter', () => {
+          copyBtn.style.background = 'rgba(7, 135, 220, 0.05)';
+        });
+        copyBtn.addEventListener('mouseleave', () => {
+          copyBtn.style.background = 'none';
+        });
+      }
+
+      return card;
+    }
+
     activeJournals = JOURNAL_DATABASE;
     filterJournals(); // Apply preferences automatically
     calculateStats();

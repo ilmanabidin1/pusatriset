@@ -901,6 +901,19 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
     console.error('[AI Draft Generator] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal memproses draf panduan dengan AI: ' + error.message });
   }
+// Endpoint untuk mengambil data Prompt Bank
+app.get('/api/prompts', requireAccess, (req, res) => {
+  try {
+    const promptsFilePath = path.join(__dirname, 'data', 'prompt_bank.json');
+    if (!fs.existsSync(promptsFilePath)) {
+      return res.status(404).json({ ok: false, message: 'Data Prompt Bank belum tersedia.' });
+    }
+    const data = JSON.parse(fs.readFileSync(promptsFilePath, 'utf-8'));
+    res.json({ ok: true, ...data });
+  } catch (error) {
+    console.error('[API Prompts] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mengambil data Prompt Bank.' });
+  }
 });
 
 app.use((req, res, next) => {

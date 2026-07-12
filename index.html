@@ -1252,6 +1252,9 @@
         <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
         <span class="pro-badge">PRO</span>
       </a>
+      <a href="#" class="sidebar-link" data-tab="prompt-bank">
+        <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
+      </a>
       <a href="#" class="sidebar-link" data-tab="pengaturan">
         <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
       </a>
@@ -1601,6 +1604,75 @@
           </div>
         </div>
       </div>
+ 
+      <!-- TAB: PROMPT BANK -->
+      <div id="tabContentPromptBank" class="tab-content">
+        <div class="match-score-main-container" style="max-width: 1200px; margin: 0 auto;">
+          <div class="match-box-wrapper" style="padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
+            
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-folder-open"></i> Database Prompt Akademisi</span>
+                <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Prompt Bank JurnalHub</h3>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Koleksi 2100+ prompt super siap pakai untuk mempercepat riset Scopus dan penulisan Tesis/Disertasi Anda.</p>
+              </div>
+            </div>
+ 
+            <!-- Switcher & Search Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+              <!-- Segment Switcher -->
+              <div class="billing-switcher" style="max-width: 420px; margin: 0;">
+                <button class="switcher-btn active" id="promptTabScopus" type="button" style="padding: 0.6rem 1.2rem; font-size: 0.88rem;">
+                  <i class="fa-solid fa-globe"></i> Jurnal Scopus
+                </button>
+                <button class="switcher-btn" id="promptTabTesis" type="button" style="padding: 0.6rem 1.2rem; font-size: 0.88rem;">
+                  <i class="fa-solid fa-graduation-cap"></i> Tesis & Disertasi
+                </button>
+              </div>
+ 
+              <!-- Search Input -->
+              <div style="position: relative; width: 100%; max-width: 360px;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
+                <input type="search" id="promptSearchInput" placeholder="Cari kata di dalam prompt..." style="width: 100%; padding: 0.7rem 1rem 0.7rem 2.5rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.88rem; outline: none; background: #f8fafc;">
+              </div>
+            </div>
+ 
+            <!-- Split Layout Container -->
+            <div style="display: grid; grid-template-columns: 300px 1fr; gap: 2rem;" id="promptSplitLayout">
+              
+              <!-- Left Side: Stages list -->
+              <div style="border-right: 1px solid rgba(8,34,64,0.06); padding-right: 1.5rem;" id="promptStagesContainer">
+                <h5 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; text-transform: uppercase; color: var(--brand-dark); letter-spacing: 0.05em; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fa-solid fa-list" style="color: var(--brand-blue);"></i> Kategori Tahapan
+                </h5>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;" id="promptStagesList">
+                  <!-- Diisi secara dinamis -->
+                </div>
+              </div>
+ 
+              <!-- Right Side: Prompts display -->
+              <div style="min-height: 400px; display: flex; flex-direction: column; gap: 1rem;" id="promptDisplayArea">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; border-bottom: 2px solid rgba(8,34,64,0.04); padding-bottom: 0.5rem;">
+                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; color: var(--text-main); margin: 0; line-height: 1.2; text-align: left;" id="activeStageTitle">Memuat...</h4>
+                  <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); background: #f1f5f9; padding: 0.25rem 0.6rem; border-radius: 20px; flex-shrink: 0;" id="activePromptCount">0 Prompt</span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 1rem; max-height: 600px; overflow-y: auto; padding-right: 0.5rem;" id="promptsListContainer">
+                  <!-- Diisi secara dinamis -->
+                </div>
+              </div>
+ 
+            </div>
+            
+            <!-- Powered by Claude Logo at the bottom -->
+            <div style="margin-top: 2rem; border-top: 1px solid rgba(8,34,64,0.06); padding-top: 1.5rem; display: flex; justify-content: center; align-items: center;">
+              <img src="assets/powered-by-claude-light.png" alt="Powered by Claude" style="height: 38px; width: auto; opacity: 0.85;">
+            </div>
+ 
+          </div>
+        </div>
+      </div>
 
       <!-- TAB 4: SETTINGS (PENGATURAN) -->
       <div id="tabContentPengaturan" class="tab-content">
@@ -1779,6 +1851,11 @@
         // Call renderTemplatesTab if templates tab is selected
         if (tabName === 'templates' && window.renderTemplatesTab) {
           window.renderTemplatesTab();
+        }
+
+        // Call initPromptBankTab if prompt-bank tab is selected
+        if (tabName === 'prompt-bank' && window.initPromptBankTab) {
+          window.initPromptBankTab();
         }
       }
 
