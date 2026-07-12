@@ -134,7 +134,38 @@ document.addEventListener('DOMContentLoaded', () => {
             if (profileType) profileType.textContent = 'Akun Free';
             if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'block';
             if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'flex';
-            if (matchPremiumLock) matchPremiumLock.style.display = 'flex';
+            
+            // Akses tab Match Score dibuka untuk Free User agar bisa mencoba 1x sebulan
+            if (matchPremiumLock) matchPremiumLock.style.display = 'none';
+
+            // Ubah banner upgrade di beranda agar mengarahkan ke tab Match Score jika diklik
+            if (bannerUpgradeBtn) {
+              bannerUpgradeBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Coba AI Match (Gratis 1x/Bulan)';
+              bannerUpgradeBtn.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+              bannerUpgradeBtn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+              bannerUpgradeBtn.className = 'banner-upgrade-btn'; 
+              bannerUpgradeBtn.onclick = (e) => {
+                e.preventDefault();
+                const matchTabLink = document.querySelector('.sidebar-link[data-tab="match-score"]');
+                if (matchTabLink) matchTabLink.click();
+              };
+            }
+
+            // Lock tombol Hitung Match Score jika limit tercapai
+            const runMatchBtn = document.getElementById('runMatch');
+            if (currentUser.user.isLimitReached) {
+              if (runMatchBtn) {
+                runMatchBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan Tercapai (Upgrade)';
+                runMatchBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                runMatchBtn.classList.add('btn-upgrade-trigger');
+              }
+            } else {
+              if (runMatchBtn) {
+                runMatchBtn.innerHTML = '<i class="fa-solid fa-chart-line"></i> Hitung Match Score';
+                runMatchBtn.style.background = 'var(--brand-blue)';
+                runMatchBtn.classList.remove('btn-upgrade-trigger');
+              }
+            }
           }
         }
 
@@ -581,6 +612,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function runJournalMatchWithAi() {
+    // Kunci tombol jika limit bulanan tercapai untuk akun free
+    if (currentUser.user && currentUser.user.type === 'free' && currentUser.user.isLimitReached) {
+      const upgradeModal = document.getElementById('upgradeModal');
+      if (upgradeModal) {
+        upgradeModal.classList.add('active');
+      }
+      return;
+    }
+
     const titleValue = articleTitle.value.trim();
     const keywordValue = articleKeywords.value.trim();
     const abstractValue = articleAbstract.value.trim();
@@ -628,6 +668,16 @@ document.addEventListener('DOMContentLoaded', () => {
           matchSummary.textContent = 'Berikut 3 rekomendasi terbaik dari Claude AI berdasarkan database JurnalHub.';
         } else {
           matchSummary.textContent = data.warning || 'Berikut 3 rekomendasi terbaik dari sistem lokal JurnalHub.';
+        }
+      }
+
+      // Kunci tombol jika akun free setelah sukses pencocokan
+      if (currentUser.user && currentUser.user.type === 'free') {
+        currentUser.user.isLimitReached = true;
+        if (runMatchBtn) {
+          runMatchBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan Tercapai (Upgrade)';
+          runMatchBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+          runMatchBtn.classList.add('btn-upgrade-trigger');
         }
       }
 

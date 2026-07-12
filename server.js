@@ -230,6 +230,13 @@ app.get('/api/me', (req, res) => {
   if (hasAccess(req)) {
     const users = getUsers();
     const user = users.find(u => u.id === req.session.userId);
+    
+    let isLimitReached = false;
+    if (user && (user.type || 'free') === 'free') {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      isLimitReached = (user.lastMatchMonth === currentMonth) && (user.matchCountThisMonth >= 1);
+    }
+
     res.json({
       loggedIn: true,
       user: {
@@ -239,7 +246,8 @@ app.get('/api/me', (req, res) => {
         faculty: user ? (user.faculty || '') : '',
         university: user ? (user.university || '') : '',
         profilePic: user ? (user.profilePic || '') : '',
-        savedJournals: user ? (user.savedJournals || []) : []
+        savedJournals: user ? (user.savedJournals || []) : [],
+        isLimitReached: isLimitReached
       }
     });
   } else {
@@ -698,6 +706,16 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     return;
   }
 
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  if (user && (user.type || 'free') === 'free') {
+    if (user.lastMatchMonth === currentMonth && user.matchCountThisMonth >= 1) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x pencocokan per bulan.' });
+    }
+  }
+
   const candidates = getLocalCandidates(articleTitle, articleKeywords, articleAbstract);
 
   if (candidates.length === 0) {
@@ -732,6 +750,17 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     const review = aiResult?.review || null;
     const recommendations = normalizeAiRecommendations(aiItems, candidates);
     const sourceName = hasClaudeKey ? 'claude' : 'gemini';
+
+    // Increment usage for Free users
+    if (user && (user.type || 'free') === 'free') {
+      if (user.lastMatchMonth !== currentMonth) {
+        user.lastMatchMonth = currentMonth;
+        user.matchCountThisMonth = 0;
+      }
+      user.matchCountThisMonth += 1;
+      saveUsers(users);
+    }
+
     res.json({ ok: true, source: sourceName, review, recommendations });
   } catch (error) {
     console.error(error);
