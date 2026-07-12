@@ -131,7 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
 
-            // Reset drafting companion locks for premium
+            // Reset drafting companion locks & disclaimer for premium
+            const matchQuotaDisclaimer = document.getElementById('matchQuotaDisclaimer');
+            if (matchQuotaDisclaimer) {
+              matchQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
+            }
             const draftPremiumLock = document.getElementById('draftPremiumLock');
             if (draftPremiumLock) draftPremiumLock.style.display = 'none';
             const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
@@ -161,6 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Lock tombol Hitung Match Score jika limit tercapai
             const runMatchBtn = document.getElementById('runMatch');
+            const matchQuotaDisclaimer = document.getElementById('matchQuotaDisclaimer');
+            
+            if (matchQuotaDisclaimer) {
+              matchQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.isLimitReached ? 0 : 1}/1 Bulan Ini</span>`;
+            }
+
             if (currentUser.user.isLimitReached) {
               if (runMatchBtn) {
                 runMatchBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan Tercapai (Upgrade)';
@@ -711,6 +721,10 @@ document.addEventListener('DOMContentLoaded', () => {
           runMatchBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan Tercapai (Upgrade)';
           runMatchBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
           runMatchBtn.classList.add('btn-upgrade-trigger');
+        }
+        const matchQuotaDisclaimer = document.getElementById('matchQuotaDisclaimer');
+        if (matchQuotaDisclaimer) {
+          matchQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 0/1 Bulan Ini</span>';
         }
       }
 

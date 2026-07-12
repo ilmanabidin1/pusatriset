@@ -1452,9 +1452,15 @@
                   <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score</span>
                   <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Temukan rekomendasi jurnal paling cocok</h3>
                 </div>
-                <button id="clearMatch" class="reset-filter-btn" type="button" style="display: none;">
-                  <i class="fa-solid fa-xmark"></i> Bersihkan Match
-                </button>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                  <!-- Quota Disclaimer for Match Score -->
+                  <div id="matchQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 1/1 Bulan Ini</span>
+                  </div>
+                  <button id="clearMatch" class="reset-filter-btn" type="button" style="display: none;">
+                    <i class="fa-solid fa-xmark"></i> Bersihkan Match
+                  </button>
+                </div>
               </div>
               <div class="match-form" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem;">
                 <div class="filter-dropdown-item" style="grid-column: span 1;">
@@ -1576,70 +1582,10 @@
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Unduh Template Jurnal (.docx)</h3>
               <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Gunakan template resmi ini untuk memformat manuskrip Anda sesuai standar penerbit internasional.</p>
             </div>
-
-            <!-- Sub-Tabs Switcher -->
-            <div class="billing-switcher-wrapper" style="margin-bottom: 2rem; justify-content: flex-start;">
-              <div class="billing-switcher" style="max-width: 450px;">
-                <button class="switcher-btn active" id="subTabAllTemplates" type="button">
-                  <i class="fa-solid fa-list-ul"></i> Semua Template
-                </button>
-                <button class="switcher-btn" id="subTabAiAssistant" type="button">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> AI Drafting Companion
-                </button>
-              </div>
-            </div>
             
-            <!-- PANEL 1: SEMUA TEMPLATE -->
-            <div id="subTabContentAllTemplates">
-              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;" id="templatesGridContainer">
-                <!-- Berkas di-render secara dinamis dari API -->
-              </div>
-            </div>
-
-            <!-- PANEL 2: AI DRAFTING COMPANION -->
-            <div id="subTabContentAiAssistant" style="display: none; animation: fadeInOverlay 0.3s ease;">
-              <div class="match-form" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem;">
-                <div class="filter-dropdown-item" style="grid-column: span 1;">
-                  <label for="draftTitle">JUDUL MANUSKRIP</label>
-                  <input type="text" id="draftTitle" placeholder="Masukkan rencana judul manuskrip..." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc;">
-                </div>
-                <div class="filter-dropdown-item" style="grid-column: span 1;">
-                  <label for="draftTemplateSelect">PILIH FORMAT TEMPLATE JURNAL</label>
-                  <select id="draftTemplateSelect" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc; height: 42px;">
-                    <!-- Diisi dinamis dari list template -->
-                  </select>
-                </div>
-                <div class="filter-dropdown-item" style="grid-column: span 2;">
-                  <label for="draftAbstract">ABSTRAK / RENCANA ABSTRAK</label>
-                  <textarea id="draftAbstract" rows="5" placeholder="Tempel abstrak atau poin-poin ide utama penelitian Anda agar AI dapat merinci pembahasan per bab secara presisi." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical; background: #f8fafc;"></textarea>
-                </div>
-              </div>
-
-              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.5rem; margin-bottom: 2rem;">
-                <button id="runDraftGenerator" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: var(--brand-blue); color: #ffffff;" type="button">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI
-                </button>
-                <p id="draftSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
-                  AI akan merumuskan poin-poin penting yang wajib dibahas pada masing-masing segmen jurnal berdasarkan judul & abstrak Anda.
-                </p>
-              </div>
-
-              <!-- AI Output Accordion -->
-              <div id="draftResultsPanel" style="display: none; border-top: 1px solid rgba(8,34,64,0.08); padding-top: 2rem; animation: fadeInUp 0.4s ease;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa-solid fa-clipboard-list" style="color: var(--brand-blue);"></i> Panduan Struktur Pembahasan Manuskrip
-                  </h4>
-                  <button id="downloadDraftGuideBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;">
-                    <i class="fa-solid fa-file-arrow-down"></i> Unduh Panduan (.txt)
-                  </button>
-                </div>
-
-                <!-- Segments Container -->
-                <div id="draftSegmentsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
-                  <!-- Bab-bab akan di-render di sini secara dinamis -->
-                </div>
-              </div>
+            <!-- Template Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;" id="templatesGridContainer">
+              <!-- Berkas di-render secara dinamis dari API -->
             </div>
             
           </div>
