@@ -1241,6 +1241,10 @@
         <i class="fa-solid fa-percent"></i> <span>Match Score AI</span>
         <span class="pro-badge">PRO</span>
       </a>
+      <a href="#" class="sidebar-link" data-tab="drafting-companion">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>AI Drafting Companion</span>
+        <span class="pro-badge">PRO</span>
+      </a>
       <a href="#" class="sidebar-link" data-tab="tersimpan">
         <i class="fa-solid fa-bookmark"></i> <span>Tersimpan</span>
       </a>
@@ -1475,6 +1479,78 @@
                 </p>
               </div>
               <div class="match-results-grid" id="matchResultsContainer" style="display: none; margin-top: 2rem;"></div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: AI DRAFTING COMPANION (DEDICATED VIEW) -->
+      <div id="tabContentDraftingCompanion" class="tab-content">
+        <div class="match-score-main-container">
+          <div class="match-box-wrapper" id="draftBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
+            
+            <!-- Overlay Lock for Free User (Quota-based) -->
+            <div id="draftPremiumLock" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: rgba(11, 26, 48, 0.96); border-radius: var(--card-radius); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; color: #ffffff; backdrop-filter: blur(4px);">
+              <i class="fa-solid fa-lock" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
+              <h3>Limit Bulanan AI Drafting Tercapai</h3>
+              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
+                Kuota gratis bulanan Anda untuk fitur asisten draf penulisan telah habis. Harap tingkatkan ke Premium untuk mendapatkan akses tanpa batas.
+              </p>
+              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fa-solid fa-crown"></i> Upgrade Premium
+              </button>
+            </div>
+
+            <!-- Form Content -->
+            <div class="match-card-content">
+              <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                <div>
+                  <span class="banner-badge" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: #8b5cf6;"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Drafting Companion</span>
+                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Asisten Outline Pembahasan Riset</h3>
+                </div>
+                <!-- Quota Disclaimer -->
+                <div id="draftQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 1/1 Bulan Ini</span>
+                </div>
+              </div>
+
+              <div class="match-form" style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
+                <div class="filter-dropdown-item">
+                  <label for="draftTitle">RENCANA JUDUL MANUSKRIP</label>
+                  <input type="text" id="draftTitle" placeholder="Masukkan rencana judul penelitian Anda..." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc;">
+                </div>
+                <div class="filter-dropdown-item">
+                  <label for="draftAbstract">ABSTRAK / IDE UTAMA PENELITIAN</label>
+                  <textarea id="draftAbstract" rows="6" placeholder="Tempel abstrak atau poin-poin gagasan utama penelitian Anda agar AI dapat merinci panduan penulisan per segmen (Latar Belakang, Metode, Pembahasan, dll) secara terarah." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical; background: #f8fafc;"></textarea>
+                </div>
+              </div>
+
+              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem; margin-bottom: 2rem;">
+                <button id="runDraftGenerator" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: var(--brand-blue); color: #ffffff;" type="button">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI
+                </button>
+                <p id="draftSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
+                  Claude AI akan merumuskan poin-poin pembahasan di setiap bab manuskrip Anda untuk mempercepat proses penulisan draf jurnal.
+                </p>
+              </div>
+
+              <!-- AI Output Accordion -->
+              <div id="draftResultsPanel" style="display: none; border-top: 1px solid rgba(8,34,64,0.08); padding-top: 2rem; animation: fadeInUp 0.4s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-clipboard-list" style="color: var(--brand-blue);"></i> Panduan Struktur Pembahasan Manuskrip
+                  </h4>
+                  <button id="downloadDraftGuideBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;">
+                    <i class="fa-solid fa-file-arrow-down"></i> Unduh Panduan (.txt)
+                  </button>
+                </div>
+
+                <!-- Segments Container -->
+                <div id="draftSegmentsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+                  <!-- Bab-bab akan di-render di sini secara dinamis -->
+                </div>
+              </div>
             </div>
             
           </div>

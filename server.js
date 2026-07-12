@@ -232,9 +232,14 @@ app.get('/api/me', (req, res) => {
     const user = users.find(u => u.id === req.session.userId);
     
     let isLimitReached = false;
+    let isDraftLimitReached = false;
+    let draftsRemaining = 1;
     if (user && (user.type || 'free') === 'free') {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = (user.lastMatchMonth === currentMonth) && (user.matchCountThisMonth >= 1);
+      
+      isDraftLimitReached = (user.lastDraftMonth === currentMonth) && (user.draftCountThisMonth >= 1);
+      draftsRemaining = isDraftLimitReached ? 0 : 1;
     }
 
     res.json({
@@ -247,7 +252,9 @@ app.get('/api/me', (req, res) => {
         university: user ? (user.university || '') : '',
         profilePic: user ? (user.profilePic || '') : '',
         savedJournals: user ? (user.savedJournals || []) : [],
-        isLimitReached: isLimitReached
+        isLimitReached: isLimitReached,
+        isDraftLimitReached: isDraftLimitReached,
+        draftsRemaining: draftsRemaining
       }
     });
   } else {
@@ -782,14 +789,33 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
 });
 
 app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
-  const { title, abstract, filename } = req.body;
+  const { title, abstract } = req.body;
   if (!title || !abstract) {
     return res.status(400).json({ ok: false, message: 'Judul artikel dan abstrak wajib diisi.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  if (user && (user.type || 'free') === 'free') {
+    if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 1) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x drafting per bulan.' });
+    }
   }
 
   const hasClaudeKey = !!process.env.ANTHROPIC_API_KEY;
   if (!hasClaudeKey) {
     // Fallback jika API key Claude tidak tersedia
+    if (user && (user.type || 'free') === 'free') {
+      if (user.lastDraftMonth !== currentMonth) {
+        user.lastDraftMonth = currentMonth;
+        user.draftCountThisMonth = 0;
+      }
+      user.draftCountThisMonth += 1;
+      saveUsers(users);
+    }
+
     return res.json({
       ok: true,
       source: 'local',
@@ -859,6 +885,17 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
     const resData = await response.json();
     const rawText = resData?.content?.[0]?.text || '}';
     const parsed = cleanAndParseAIResponse('{' + rawText, true);
+
+    // Increment usage for Free users
+    if (user && (user.type || 'free') === 'free') {
+      if (user.lastDraftMonth !== currentMonth) {
+        user.lastDraftMonth = currentMonth;
+        user.draftCountThisMonth = 0;
+      }
+      user.draftCountThisMonth += 1;
+      saveUsers(users);
+    }
+
     res.json({ ok: true, source: 'claude', draft: parsed });
   } catch (error) {
     console.error('[AI Draft Generator] Error:', error.message);

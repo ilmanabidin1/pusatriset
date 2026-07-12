@@ -130,6 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
               };
             }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
+
+            // Reset drafting companion locks for premium
+            const draftPremiumLock = document.getElementById('draftPremiumLock');
+            if (draftPremiumLock) draftPremiumLock.style.display = 'none';
+            const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
+            if (draftQuotaDisclaimer) {
+              draftQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
+            }
           } else {
             if (profileType) profileType.textContent = 'Akun Free';
             if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'block';
@@ -164,6 +172,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 runMatchBtn.innerHTML = '<i class="fa-solid fa-chart-line"></i> Hitung Match Score';
                 runMatchBtn.style.background = 'var(--brand-blue)';
                 runMatchBtn.classList.remove('btn-upgrade-trigger');
+              }
+            }
+
+            // Atur status kuota dan lock untuk AI Drafting Companion
+            const draftPremiumLock = document.getElementById('draftPremiumLock');
+            const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
+            const runDraftGenerator = document.getElementById('runDraftGenerator');
+            
+            if (draftQuotaDisclaimer) {
+              draftQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.draftsRemaining !== undefined ? currentUser.user.draftsRemaining : 1}/1 Bulan Ini</span>`;
+            }
+
+            if (currentUser.user.isDraftLimitReached) {
+              if (draftPremiumLock) draftPremiumLock.style.display = 'flex';
+              if (runDraftGenerator) {
+                runDraftGenerator.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Drafting Tercapai';
+                runDraftGenerator.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                runDraftGenerator.classList.add('btn-upgrade-trigger');
+              }
+            } else {
+              if (draftPremiumLock) draftPremiumLock.style.display = 'none';
+              if (runDraftGenerator) {
+                runDraftGenerator.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI';
+                runDraftGenerator.style.background = 'var(--brand-blue)';
+                runDraftGenerator.classList.remove('btn-upgrade-trigger');
               }
             }
           }
@@ -1291,51 +1324,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- LOGIKA AI DRAFTING ASSISTANT ---
-  const subTabAllTemplates = document.getElementById('subTabAllTemplates');
-  const subTabAiAssistant = document.getElementById('subTabAiAssistant');
-  const subTabContentAllTemplates = document.getElementById('subTabContentAllTemplates');
-  const subTabContentAiAssistant = document.getElementById('subTabContentAiAssistant');
-
-  if (subTabAllTemplates && subTabAiAssistant) {
-    subTabAllTemplates.addEventListener('click', () => {
-      subTabAllTemplates.classList.add('active');
-      subTabAiAssistant.classList.remove('active');
-      subTabContentAllTemplates.style.display = 'block';
-      subTabContentAiAssistant.style.display = 'none';
-    });
-
-    subTabAiAssistant.addEventListener('click', () => {
-      subTabAiAssistant.classList.add('active');
-      subTabAllTemplates.classList.remove('active');
-      subTabContentAllTemplates.style.display = 'none';
-      subTabContentAiAssistant.style.display = 'block';
-      
-      // Populate dropdown template
-      populateDraftTemplatesDropdown();
-    });
-  }
-
-  async function populateDraftTemplatesDropdown() {
-    const dropdown = document.getElementById('draftTemplateSelect');
-    if (!dropdown) return;
-    try {
-      const response = await fetch('/api/templates');
-      const resData = await response.json();
-      if (response.ok && resData.templates) {
-        dropdown.innerHTML = resData.templates
-          .map(tpl => `<option value="${tpl.filename}">${tpl.displayName}</option>`)
-          .join('');
-      }
-    } catch (e) {
-      console.error('Failed to populate draft templates dropdown:', e);
-    }
-  }
-
-  // Generate Draft Pembahasan AI
   const runDraftGenerator = document.getElementById('runDraftGenerator');
   const draftTitle = document.getElementById('draftTitle');
   const draftAbstract = document.getElementById('draftAbstract');
-  const draftTemplateSelect = document.getElementById('draftTemplateSelect');
   const draftSummary = document.getElementById('draftSummary');
   const draftResultsPanel = document.getElementById('draftResultsPanel');
   const draftSegmentsContainer = document.getElementById('draftSegmentsContainer');
@@ -1343,9 +1334,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (runDraftGenerator) {
     runDraftGenerator.addEventListener('click', async () => {
+      // Kunci tombol jika limit bulanan tercapai untuk akun free
+      if (currentUser.user && currentUser.user.type === 'free' && currentUser.user.isDraftLimitReached) {
+        const upgradeModal = document.getElementById('upgradeModal');
+        if (upgradeModal) {
+          upgradeModal.classList.add('active');
+        }
+        return;
+      }
+
       const title = draftTitle.value.trim();
       const abstract = draftAbstract.value.trim();
-      const filename = draftTemplateSelect.value;
 
       if (!title || !abstract) {
         draftSummary.textContent = 'Harap isi judul manuskrip dan abstrak terlebih dahulu.';
@@ -1363,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/generate-template-draft', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, abstract, filename })
+          body: JSON.stringify({ title, abstract })
         });
 
         if (!response.ok) throw new Error('Gagal memproses draf panduan.');
@@ -1376,6 +1375,24 @@ document.addEventListener('DOMContentLoaded', () => {
           draftSummary.style.color = '#10b981';
           draftResultsPanel.style.display = 'block';
           draftResultsPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+          // Update kuota sisa di frontend jika akun free
+          if (currentUser.user && currentUser.user.type === 'free') {
+            currentUser.user.isDraftLimitReached = true;
+            currentUser.user.draftsRemaining = 0;
+            
+            const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
+            if (draftQuotaDisclaimer) {
+              draftQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 0/1 Bulan Ini</span>';
+            }
+            
+            const draftPremiumLock = document.getElementById('draftPremiumLock');
+            if (draftPremiumLock) draftPremiumLock.style.display = 'flex';
+            
+            runDraftGenerator.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Drafting Tercapai';
+            runDraftGenerator.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            runDraftGenerator.classList.add('btn-upgrade-trigger');
+          }
         }
       } catch (error) {
         console.error(error);
@@ -1383,7 +1400,9 @@ document.addEventListener('DOMContentLoaded', () => {
         draftSummary.style.color = '#ef4444';
       } finally {
         runDraftGenerator.disabled = false;
-        runDraftGenerator.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI';
+        if (!currentUser.user || currentUser.user.type === 'premium' || !currentUser.user.isDraftLimitReached) {
+          runDraftGenerator.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI';
+        }
       }
     });
   }
@@ -1444,11 +1463,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const title = draftTitle.value.trim();
       const abstract = draftAbstract.value.trim();
-      const templateName = draftTemplateSelect.options[draftTemplateSelect.selectedIndex]?.text || '';
 
       let textContent = `==================================================\nPANDUAN DRAFT PENULISAN MANUSKRIP JURNALHUB AI\n==================================================\n\n`;
-      textContent += `Judul Manuskrip: ${title}\n`;
-      textContent += `Format Jurnal Sasaran: ${templateName}\n\n`;
+      textContent += `Judul Manuskrip: ${title}\n\n`;
       textContent += `Abstrak:\n${abstract}\n\n`;
       textContent += `--------------------------------------------------\nOUTLINE STRUKTUR PEMBAHASAN PER BAB\n--------------------------------------------------\n\n`;
 
