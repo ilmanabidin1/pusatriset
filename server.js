@@ -539,62 +539,42 @@ ${JSON.stringify(candidates)}
   // Coba pakai Anthropic Claude API terlebih dahulu jika ANTHROPIC_API_KEY tersedia
   if (process.env.ANTHROPIC_API_KEY) {
     const fetchFn = globalThis.fetch || require('node-fetch');
+    const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022';
     
-    // Daftar model Claude cadangan untuk dicoba berurutan jika model default/pilihan 404
-    const claudeModels = [];
-    if (process.env.CLAUDE_MODEL) {
-      claudeModels.push(process.env.CLAUDE_MODEL);
-    }
-    claudeModels.push(
-      'claude-3-5-sonnet-20241022',
-      'claude-3-5-haiku-20241022',
-      'claude-3-5-sonnet-latest',
-      'claude-3-5-haiku-latest',
-      'claude-3-haiku-20240307',
-      'claude-3-opus-20240229'
-    );
-    const uniqueClaudeModels = [...new Set(claudeModels)];
-    
-    if (process.env.ANTHROPIC_AGENT_ID) {
-      console.log(`[AI API] ANTHROPIC_AGENT_ID terdeteksi (${process.env.ANTHROPIC_AGENT_ID}). Menggunakan Messages API dengan system prompt kustom.`);
-    }
-    
-    for (const claudeModel of uniqueClaudeModels) {
-      console.log(`[AI API] Mencoba Anthropic Claude API (model: ${claudeModel})...`);
-      try {
-        const response = await fetchFn('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': process.env.ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model: claudeModel,
-            max_tokens: 1024,
-            system: process.env.CLAUDE_SYSTEM_PROMPT || "Anda adalah asisten rekomendasi jurnal ilmiah untuk JurnalHub. Anda wajib membalas HANYA dengan JSON valid dalam format array objek tanpa menyertakan penjelasan teks atau markdown (no ```json). Format JSON: [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Alasan singkat dalam Bahasa Indonesia\"}]",
-            messages: [
-              {
-                role: 'user',
-                content: `Pilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul artikel, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}`
-              }
-            ]
-          })
-        });
+    console.log(`[AI API] Mencoba Anthropic Claude API (model: ${claudeModel})...`);
+    try {
+      const response = await fetchFn('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: claudeModel,
+          max_tokens: 1024,
+          system: process.env.CLAUDE_SYSTEM_PROMPT || "Anda adalah asisten rekomendasi jurnal ilmiah untuk JurnalHub. Anda wajib membalas HANYA dengan JSON valid dalam format array objek tanpa menyertakan penjelasan teks atau markdown (no ```json). Format JSON: [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Alasan singkat dalam Bahasa Indonesia\"}]",
+          messages: [
+            {
+              role: 'user',
+              content: `Pilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul artikel, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}`
+            }
+          ]
+        })
+      });
 
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(`Claude API Error Status: ${response.status} - ${errText}`);
-        }
-
-        const resData = await response.json();
-        const text = resData?.content?.[0]?.text || '[]';
-        const cleanedJsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(cleanedJsonText);
-      } catch (error) {
-        lastError = error;
-        console.error(`[AI API] Anthropic Claude model ${claudeModel} gagal:`, error.message);
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Claude API Error Status: ${response.status} - ${errText}`);
       }
+
+      const resData = await response.json();
+      const text = resData?.content?.[0]?.text || '[]';
+      const cleanedJsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanedJsonText);
+    } catch (error) {
+      lastError = error;
+      console.error(`[AI API] Anthropic Claude model ${claudeModel} gagal:`, error.message);
     }
   }
 
