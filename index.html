@@ -1963,18 +1963,14 @@
       </div>
 
       <div class="modal-body">
-        <!-- Switcher -->
-        <div class="billing-switcher-wrapper">
-          <div class="billing-switcher">
-            <button class="switcher-btn" id="switchMonthly">Bulanan</button>
-            <button class="switcher-btn active" id="switchYearly">Tahunan <span class="save-badge">HEMAT 32%</span></button>
+        <!-- Coming Soon & Info Alert -->
+        <div style="background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; text-align: left;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #d97706; font-weight: 800; font-size: 0.95rem; margin-bottom: 0.35rem; font-family: var(--font-outfit);">
+            <i class="fa-solid fa-clock"></i> Pembayaran Instan Coming Soon
           </div>
-        </div>
-
-        <!-- Pricing Display -->
-        <div class="price-display-box">
-          <h2 class="price-title" id="modalPriceTitle">Rp33rb <span class="price-period">/bulan</span></h2>
-          <p class="price-detail" id="modalPriceDetail"><span style="text-decoration: line-through;">Rp49.000</span> ditagih Rp400.000/tahun</p>
+          <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin: 0;">
+            Sistem pembayaran otomatis e-wallet & virtual account sedang dalam verifikasi merchant DOKU. Untuk sementara, Anda dapat melakukan pembelian kode akses secara manual melalui Lynk.id.
+          </p>
         </div>
 
         <!-- Features Box -->
@@ -2002,10 +1998,10 @@
         </div>
 
         <!-- CTA Button -->
-        <button class="modal-cta-btn" id="modalCtaBtn">
-          <i class="fa-solid fa-lock"></i> Upgrade Sekarang — Rp400.000/tahun
+        <button class="modal-cta-btn" id="modalCtaBtn" style="background: linear-gradient(135deg, var(--primary-color) 0%, #ff8e3c 100%); color: #ffffff; border: none; outline: none; cursor: pointer;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Beli Kode Akses di Lynk.id
         </button>
-        <p class="cta-subtext">Batal kapan saja · Pembayaran aman</p>
+        <p class="cta-subtext" style="display: none;">Batal kapan saja · Pembayaran aman</p>
 
         <!-- Footer link -->
         <p class="modal-footer-text">
