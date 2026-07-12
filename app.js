@@ -1843,8 +1843,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!promptsListContainer || !promptBankData) return;
       promptsListContainer.innerHTML = '';
+      promptsListContainer.style.position = 'relative';
 
       const categories = promptBankData[activePromptTab] || [];
+      const isFreeUser = currentUser.user && currentUser.user.type === 'free';
+      const isFreeStage = activePromptStage.startsWith('01 ');
       
       if (searchQuery) {
         // Global search across all categories in the active tab
@@ -1852,6 +1855,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalMatches = 0;
         
         categories.forEach(cat => {
+          // Bagi Free User, hanya boleh mencari dari kategori 01 (Topik/Judul)
+          if (isFreeUser && !cat.category.startsWith('01 ')) {
+            return;
+          }
+
           const matched = cat.prompts.filter(p => p.text.toLowerCase().includes(searchQuery));
           if (matched.length > 0) {
             totalMatches += matched.length;
@@ -1882,6 +1890,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         activePromptCount.textContent = `${totalMatches} Cocok`;
+
+        // Tampilkan info penafian pencarian terbatas untuk Free User
+        if (isFreeUser) {
+          const searchDisclaimer = document.createElement('div');
+          searchDisclaimer.style.cssText = `
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #d97706;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+          `;
+          searchDisclaimer.innerHTML = `<i class="fa-solid fa-circle-info"></i> Hasil tidak semua ditampilkan, silakan upgrade untuk menampilkan.`;
+          promptsListContainer.appendChild(searchDisclaimer);
+        }
+
         if (totalMatches === 0) {
           promptsListContainer.innerHTML = `
             <div style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
@@ -1898,15 +1929,100 @@ document.addEventListener('DOMContentLoaded', () => {
           activeStageTitle.textContent = currentCat.category.replace(/^\d+\s+/, '');
           activePromptCount.textContent = `${currentCat.prompts.length} Prompt`;
           
-          currentCat.prompts.forEach(p => {
-            promptsListContainer.appendChild(createPromptCard(p, currentCat.category));
-          });
+          if (isFreeUser && !isFreeStage) {
+            // Render 3 dummy blurred prompt cards
+            for (let i = 0; i < 3; i++) {
+              promptsListContainer.appendChild(createBlurredPromptCard(i));
+            }
+            // Tambahkan overlay gembok & CTA upgrade
+            promptsListContainer.appendChild(createLockOverlay());
+          } else {
+            currentCat.prompts.forEach(p => {
+              promptsListContainer.appendChild(createPromptCard(p, currentCat.category));
+            });
+          }
         } else {
           activeStageTitle.textContent = 'Pilih Tahapan';
           activePromptCount.textContent = '0 Prompt';
           promptsListContainer.innerHTML = '<p style="color: var(--text-muted); font-size: 0.88rem; text-align: center; padding: 2rem;">Silakan pilih kategori tahapan di sebelah kiri.</p>';
         }
       }
+    }
+
+    function createBlurredPromptCard(index) {
+      const dummyTexts = [
+        "Bantu saya menganalisis kelemahan metodologi penelitian [nama_metode] dengan menyusun perbandingan yang tajam dari aspek pengumpulan data lapangan.",
+        "Tulis paragraf tinjauan pustaka kritis yang mengaitkan teori [nama_teori] dengan variabel [nama_variabel] dalam penelitian hukum siber.",
+        "Reformulasikan paragraf temuan penelitian ini agar lebih akademis dan logis bagi reviewer jurnal Scopus bereputasi tinggi: [paste_teks]."
+      ];
+      const card = document.createElement('div');
+      card.style.cssText = `
+        background: #ffffff;
+        border: 1px solid rgba(8,34,64,0.06);
+        border-radius: 12px;
+        padding: 1.25rem;
+        filter: blur(4.5px);
+        pointer-events: none;
+        user-select: none;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        opacity: 0.45;
+      `;
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); background: #f8fafc; padding: 0.25rem 0.5rem; border-radius: 6px;">
+            Prompt #???
+          </span>
+        </div>
+        <p style="color: var(--text-main); font-size: 0.92rem; line-height: 1.6; margin: 0;">
+          ${dummyTexts[index % 3]}
+        </p>
+      `;
+      return card;
+    }
+
+    function createLockOverlay() {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(1.5px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        z-index: 5;
+        min-height: 380px;
+      `;
+      overlay.innerHTML = `
+        <div style="background: #ffffff; border: 1px solid rgba(8,34,64,0.08); padding: 2.5rem 2rem; border-radius: 20px; box-shadow: 0 10px 40px rgba(8,34,64,0.12); max-width: 460px; display: flex; flex-direction: column; align-items: center; gap: 1rem; animation: fadeInUp 0.3s ease;">
+          <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #f59e0b; margin-bottom: 0.25rem;">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0;">Fitur Premium: Prompt Bank</h4>
+          <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.5; margin: 0;">
+            Kategori tahapan ini hanya tersedia untuk pengguna Premium. Upgrade akun Anda sekarang untuk membuka akses penuh ke 2.100+ prompt riset siap pakai.
+          </p>
+          <button class="upgrade-btn btn-upgrade-trigger" style="width: 100%; padding: 0.85rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #051329; font-weight: 800; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" type="button">
+            <i class="fa-solid fa-crown"></i> Buka Akses Premium
+          </button>
+        </div>
+      `;
+      
+      overlay.querySelector('.btn-upgrade-trigger').addEventListener('click', () => {
+        const upgradeModal = document.getElementById('upgradeModal');
+        if (upgradeModal) upgradeModal.classList.add('active');
+      });
+      
+      return overlay;
     }
 
     function createPromptCard(prompt, categoryName) {
