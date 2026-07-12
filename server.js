@@ -781,6 +781,91 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   }
 });
 
+app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
+  const { title, abstract, filename } = req.body;
+  if (!title || !abstract) {
+    return res.status(400).json({ ok: false, message: 'Judul artikel dan abstrak wajib diisi.' });
+  }
+
+  const hasClaudeKey = !!process.env.ANTHROPIC_API_KEY;
+  if (!hasClaudeKey) {
+    // Fallback jika API key Claude tidak tersedia
+    return res.json({
+      ok: true,
+      source: 'local',
+      draft: {
+        introduction: [
+          `Bahasan urgensi topik penelitian berdasarkan judul: "${title}"`,
+          "Deskripsi permasalahan utama yang diangkat di lapangan saat ini.",
+          "Tujuan penulisan artikel ilmiah dan kontribusi yang diharapkan."
+        ],
+        literature_review: [
+          "Tinjauan teori-teori dasar yang berkaitan dengan variabel utama.",
+          "Analisis perbandingan penelitian terdahulu yang relevan.",
+          "Gap analysis yang menjustifikasi kebaruan penelitian ini."
+        ],
+        method: [
+          "Penjelasan desain penelitian yang digunakan (kualitatif/kuantitatif).",
+          "Prosedur pengumpulan data, populasi, dan sampel.",
+          "Teknik analisis data yang diterapkan secara bertahap."
+        ],
+        results_discussion: [
+          "Paparan temuan utama dari data lapangan secara berurutan.",
+          "Interpretasi hasil analisis dikaitkan dengan hipotesis/tujuan.",
+          "Diskusi kritis membandingkan temuan dengan teori yang ada."
+        ],
+        conclusion: [
+          "Kesimpulan akhir menjawab rumusan masalah secara ringkas.",
+          "Implikasi teoretis maupun praktis dari hasil penelitian.",
+          "Keterbatasan riset dan saran rekomendasi studi masa depan."
+        ]
+      }
+    });
+  }
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022';
+    
+    const response = await fetchFn('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: claudeModel,
+        max_tokens: 1500,
+        system: "You are an expert scientific writing advisor. Based on the paper title and abstract provided, generate a highly structured outline of what the author must write in each segment of their manuscript. For each segment, provide 3-4 specific, concrete, and highly customized points tailored directly to their research topic (do NOT output generic writing tips). Output ONLY a valid JSON object. Do not wrap in markdown block. JSON format: {\"introduction\": [\"point 1\", \"point 2\"], \"literature_review\": [\"point 1\"], \"method\": [\"point 1\"], \"results_discussion\": [\"point 1\"], \"conclusion\": [\"point 1\"]}",
+        messages: [
+          {
+            role: 'user',
+            content: `Analisis judul dan abstrak berikut, lalu buat panduan outline pembahasan untuk masing-masing segmen jurnal.\n\nJudul: ${title}\nAbstrak: ${abstract}\n\nBalas dengan JSON object persis seperti spesifikasi (tanpa penjelasan teks):`
+          },
+          {
+            role: 'assistant',
+            content: '{'
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Claude API Error Status: ${response.status} - ${errText}`);
+    }
+
+    const resData = await response.json();
+    const rawText = resData?.content?.[0]?.text || '}';
+    const parsed = cleanAndParseAIResponse('{' + rawText, true);
+    res.json({ ok: true, source: 'claude', draft: parsed });
+  } catch (error) {
+    console.error('[AI Draft Generator] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal memproses draf panduan dengan AI: ' + error.message });
+  }
+});
+
 app.use((req, res, next) => {
   // File statis yang diizinkan tanpa login (terutama untuk halaman auth dan informasi)
   const publicFiles = [

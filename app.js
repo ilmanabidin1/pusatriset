@@ -1290,6 +1290,197 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- LOGIKA AI DRAFTING ASSISTANT ---
+  const subTabAllTemplates = document.getElementById('subTabAllTemplates');
+  const subTabAiAssistant = document.getElementById('subTabAiAssistant');
+  const subTabContentAllTemplates = document.getElementById('subTabContentAllTemplates');
+  const subTabContentAiAssistant = document.getElementById('subTabContentAiAssistant');
+
+  if (subTabAllTemplates && subTabAiAssistant) {
+    subTabAllTemplates.addEventListener('click', () => {
+      subTabAllTemplates.classList.add('active');
+      subTabAiAssistant.classList.remove('active');
+      subTabContentAllTemplates.style.display = 'block';
+      subTabContentAiAssistant.style.display = 'none';
+    });
+
+    subTabAiAssistant.addEventListener('click', () => {
+      subTabAiAssistant.classList.add('active');
+      subTabAllTemplates.classList.remove('active');
+      subTabContentAllTemplates.style.display = 'none';
+      subTabContentAiAssistant.style.display = 'block';
+      
+      // Populate dropdown template
+      populateDraftTemplatesDropdown();
+    });
+  }
+
+  async function populateDraftTemplatesDropdown() {
+    const dropdown = document.getElementById('draftTemplateSelect');
+    if (!dropdown) return;
+    try {
+      const response = await fetch('/api/templates');
+      const resData = await response.json();
+      if (response.ok && resData.templates) {
+        dropdown.innerHTML = resData.templates
+          .map(tpl => `<option value="${tpl.filename}">${tpl.displayName}</option>`)
+          .join('');
+      }
+    } catch (e) {
+      console.error('Failed to populate draft templates dropdown:', e);
+    }
+  }
+
+  // Generate Draft Pembahasan AI
+  const runDraftGenerator = document.getElementById('runDraftGenerator');
+  const draftTitle = document.getElementById('draftTitle');
+  const draftAbstract = document.getElementById('draftAbstract');
+  const draftTemplateSelect = document.getElementById('draftTemplateSelect');
+  const draftSummary = document.getElementById('draftSummary');
+  const draftResultsPanel = document.getElementById('draftResultsPanel');
+  const draftSegmentsContainer = document.getElementById('draftSegmentsContainer');
+  let currentGeneratedDraft = null;
+
+  if (runDraftGenerator) {
+    runDraftGenerator.addEventListener('click', async () => {
+      const title = draftTitle.value.trim();
+      const abstract = draftAbstract.value.trim();
+      const filename = draftTemplateSelect.value;
+
+      if (!title || !abstract) {
+        draftSummary.textContent = 'Harap isi judul manuskrip dan abstrak terlebih dahulu.';
+        draftSummary.style.color = '#ef4444';
+        return;
+      }
+
+      runDraftGenerator.disabled = true;
+      runDraftGenerator.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Merumuskan...';
+      draftSummary.textContent = 'Claude AI sedang merinci pembahasan per bab untuk manuskrip Anda...';
+      draftSummary.style.color = 'var(--text-muted)';
+      draftResultsPanel.style.display = 'none';
+
+      try {
+        const response = await fetch('/api/generate-template-draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, abstract, filename })
+        });
+
+        if (!response.ok) throw new Error('Gagal memproses draf panduan.');
+        const resData = await response.json();
+
+        if (resData.ok && resData.draft) {
+          currentGeneratedDraft = resData.draft;
+          renderDraftGuide(resData.draft);
+          draftSummary.textContent = 'Draf outline panduan pembahasan berhasil dibuat!';
+          draftSummary.style.color = '#10b981';
+          draftResultsPanel.style.display = 'block';
+          draftResultsPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      } catch (error) {
+        console.error(error);
+        draftSummary.textContent = 'Terjadi kesalahan saat memproses draf panduan: ' + error.message;
+        draftSummary.style.color = '#ef4444';
+      } finally {
+        runDraftGenerator.disabled = false;
+        runDraftGenerator.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI';
+      }
+    });
+  }
+
+  function renderDraftGuide(draft) {
+    if (!draftSegmentsContainer) return;
+    draftSegmentsContainer.innerHTML = '';
+
+    const segments = [
+      { key: 'introduction', label: '1. Pendahuluan / Latar Belakang (Introduction / Background)', icon: 'fa-book-open', color: '#60a5fa' },
+      { key: 'literature_review', label: '2. Tinjauan Pustaka / Landasan Teori (Literature Review)', icon: 'fa-book', color: '#34d399' },
+      { key: 'method', label: '3. Metode Penelitian (Methodology)', icon: 'fa-flask', color: '#fbbf24' },
+      { key: 'results_discussion', label: '4. Hasil & Pembahasan (Results & Discussion)', icon: 'fa-chart-pie', color: '#a78bfa' },
+      { key: 'conclusion', label: '5. Kesimpulan & Saran (Conclusion & Future Work)', icon: 'fa-circle-check', color: '#f87171' }
+    ];
+
+    segments.forEach(seg => {
+      const points = draft[seg.key] || [];
+      const item = document.createElement('div');
+      item.style.cssText = `
+        background: #f8fafc;
+        border: 1px solid rgba(8,34,64,0.06);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.25s ease;
+        text-align: left;
+        margin-bottom: 1rem;
+      `;
+      
+      const pointsList = points.map(pt => `
+        <li style="margin-bottom: 0.75rem; display: flex; align-items: flex-start; gap: 0.6rem; line-height: 1.5; color: var(--text-main); font-size: 0.9rem; text-align: left;">
+          <i class="fa-solid fa-arrow-right" style="color: ${seg.color}; font-size: 0.8rem; margin-top: 5px; flex-shrink: 0;"></i>
+          <span style="text-align: left;">${pt}</span>
+        </li>
+      `).join('');
+
+      item.innerHTML = `
+        <h5 style="margin: 0 0 1rem 0; font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; display: flex; align-items: center; gap: 0.6rem; color: var(--text-main); text-align: left;">
+          <span style="width: 28px; height: 28px; border-radius: 6px; background: rgba(8,34,64,0.05); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: ${seg.color}; flex-shrink: 0;">
+            <i class="fa-solid ${seg.icon}"></i>
+          </span>
+          ${seg.label}
+        </h5>
+        <ul style="list-style: none; padding: 0; margin: 0; text-align: left;">
+          ${pointsList || '<li>Tidak ada poin untuk segmen ini.</li>'}
+        </ul>
+      `;
+
+      draftSegmentsContainer.appendChild(item);
+    });
+  }
+
+  // Handle Download File Panduan TXT
+  const downloadDraftGuideBtn = document.getElementById('downloadDraftGuideBtn');
+  if (downloadDraftGuideBtn) {
+    downloadDraftGuideBtn.addEventListener('click', () => {
+      if (!currentGeneratedDraft) return;
+      
+      const title = draftTitle.value.trim();
+      const abstract = draftAbstract.value.trim();
+      const templateName = draftTemplateSelect.options[draftTemplateSelect.selectedIndex]?.text || '';
+
+      let textContent = `==================================================\nPANDUAN DRAFT PENULISAN MANUSKRIP JURNALHUB AI\n==================================================\n\n`;
+      textContent += `Judul Manuskrip: ${title}\n`;
+      textContent += `Format Jurnal Sasaran: ${templateName}\n\n`;
+      textContent += `Abstrak:\n${abstract}\n\n`;
+      textContent += `--------------------------------------------------\nOUTLINE STRUKTUR PEMBAHASAN PER BAB\n--------------------------------------------------\n\n`;
+
+      const segments = [
+        { key: 'introduction', label: '1. PENDAHULUAN / LATAR BELAKANG' },
+        { key: 'literature_review', label: '2. TINJAUAN PUSTAKA / LANDASAN TEORI' },
+        { key: 'method', label: '3. METODE PENELITIAN' },
+        { key: 'results_discussion', label: '4. HASIL & PEMBAHASAN' },
+        { key: 'conclusion', label: '5. KESIMPULAN & SARAN' }
+      ];
+
+      segments.forEach(seg => {
+        textContent += `${seg.label}:\n`;
+        const points = currentGeneratedDraft[seg.key] || [];
+        points.forEach((pt, idx) => {
+          textContent += `   [${idx + 1}] ${pt}\n`;
+        });
+        textContent += `\n`;
+      });
+
+      textContent += `==================================================\nGenerated by JurnalHub AI Drafting Assistant\n==================================================`;
+
+      const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Panduan_Draft_${title.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+
   // Expose function to window
   window.renderBookmarksTab = renderBookmarksTab;
   window.renderTemplatesTab = renderTemplatesTab;
