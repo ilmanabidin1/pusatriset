@@ -626,8 +626,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         if (data.source === 'claude') {
           matchSummary.textContent = 'Berikut 3 rekomendasi terbaik dari Claude AI berdasarkan database JurnalHub.';
-        } else if (data.source === 'gemini') {
-          matchSummary.textContent = 'Berikut 3 rekomendasi terbaik dari Gemini AI berdasarkan database JurnalHub.';
         } else {
           matchSummary.textContent = data.warning || 'Berikut 3 rekomendasi terbaik dari sistem lokal JurnalHub.';
         }
@@ -635,10 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Tampilkan panel review AI jika tersedia
       if (data.review && matchResultsContainer) {
-        const providerIcon = data.source === 'claude'
-          ? '<i class="fa-solid fa-wand-magic-sparkles" style="color:#a78bfa;"></i>'
-          : '<i class="fa-solid fa-robot" style="color:#60a5fa;"></i>';
-        const providerLabel = data.source === 'claude' ? 'Analisis Claude AI' : 'Analisis Gemini AI';
+        const providerIcon = '<i class="fa-solid fa-wand-magic-sparkles" style="color:#a78bfa;"></i>';
+        const providerLabel = 'Analisis Claude AI';
 
         const reviewPanel = document.createElement('div');
         reviewPanel.id = 'aiReviewPanel';
