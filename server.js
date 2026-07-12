@@ -580,11 +580,15 @@ ${JSON.stringify(candidates)}
         body: JSON.stringify({
           model: claudeModel,
           max_tokens: 1024,
-          system: process.env.CLAUDE_SYSTEM_PROMPT || "Anda adalah asisten rekomendasi jurnal ilmiah untuk JurnalHub. Anda wajib membalas HANYA dengan JSON valid dalam format array objek tanpa menyertakan penjelasan teks atau markdown (no ```json). Format JSON: [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Alasan singkat dalam Bahasa Indonesia\"}]",
+          system: process.env.CLAUDE_SYSTEM_PROMPT || "You are a strict JSON-only API for journal recommendation. CRITICAL: You MUST respond with ONLY a raw JSON array. No explanations, no markdown, no code blocks, no headings, no text before or after. Start your response directly with '[' and end with ']'. Format: [{\"id\": 123, \"matchScore\": 92, \"reason\": \"Brief reason in Indonesian\"}]",
           messages: [
             {
               role: 'user',
-              content: `Pilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul artikel, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}`
+              content: `PENTING: Balas HANYA dengan JSON array murni, tanpa teks lain.\n\nPilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul artikel, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}\n\nFormat balasan WAJIB (JSON array saja, tanpa penjelasan):\n[{"id": <nomor_id>, "matchScore": <angka 70-98>, "reason": "<alasan singkat Bahasa Indonesia>"}]`
+            },
+            {
+              role: 'assistant',
+              content: '['
             }
           ]
         })
@@ -596,7 +600,9 @@ ${JSON.stringify(candidates)}
       }
 
       const resData = await response.json();
-      const text = resData?.content?.[0]?.text || '[]';
+      // Prefill '[' sudah ditambahkan sebagai assistant prefix, gabungkan kembali
+      const rawText = resData?.content?.[0]?.text || ']';
+      const text = '[' + rawText;
       return cleanAndParseAIResponse(text);
     } catch (error) {
       lastError = error;
