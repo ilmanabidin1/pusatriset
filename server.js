@@ -906,7 +906,7 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
 // Endpoint untuk mengambil data Prompt Bank
 app.get('/api/prompts', requireAccess, (req, res) => {
   try {
-    const promptsFilePath = path.join(__dirname, 'data', 'prompt_bank.json');
+    const promptsFilePath = path.join(__dirname, 'data-static', 'prompt_bank.json');
     if (!fs.existsSync(promptsFilePath)) {
       return res.status(404).json({ ok: false, message: 'Data Prompt Bank belum tersedia.' });
     }
