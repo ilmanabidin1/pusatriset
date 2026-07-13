@@ -2050,7 +2050,12 @@
       sidebarLinks.forEach(link => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          switchTab(link.getAttribute('data-tab'));
+          const tabName = link.getAttribute('data-tab');
+          if (tabName === 'lit-review') {
+            alert("Fitur AI Literature Review & Citation Finder segera hadir (Coming Soon)!");
+            return;
+          }
+          switchTab(tabName);
         });
       });
 
