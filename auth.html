@@ -13,6 +13,9 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- Google Sign-In SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <style>
     :root {
       --primary-color: #ff7417;
@@ -478,6 +481,12 @@
     <!-- Right Column: Glassmorphism Card (matches 1b layout) -->
     <div class="auth-card-wrapper">
       <div class="auth-container">
+        <!-- Google Sign-In Config -->
+        <div id="g_id_onload"
+             data-client_id="571306850750-ckq38nmai4felal861uu0hgj1b13bihf.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
         
         <div class="auth-tabs-wrapper">
           <button class="auth-tab active" data-target="loginForm">Masuk</button>
@@ -507,6 +516,27 @@
           <button type="submit" class="auth-btn btn-main">
             <i class="fa-solid fa-right-to-bracket"></i> Masuk Sekarang
           </button>
+
+          <!-- Divider "atau" -->
+          <div class="auth-divider" style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.25rem 0; color: rgba(255,255,255,0.4); font-size: 0.85rem;">
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            <span>atau</span>
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+          </div>
+          
+          <!-- Google Sign-In Button -->
+          <div style="display: flex; justify-content: center; width: 100%; margin-bottom: 0.5rem;">
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left"
+                 data-width="320">
+            </div>
+          </div>
+
           <div class="register-switch-info">
             Belum punya akun? <a href="#" id="toRegisterLink">Daftar gratis</a>
           </div>
@@ -541,6 +571,27 @@
           <button type="submit" class="auth-btn btn-main">
             <i class="fa-solid fa-user-plus"></i> Buat Akun Baru
           </button>
+
+          <!-- Divider "atau" -->
+          <div class="auth-divider" style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.25rem 0; color: rgba(255,255,255,0.4); font-size: 0.85rem;">
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            <span>atau</span>
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+          </div>
+          
+          <!-- Google Sign-In Button -->
+          <div style="display: flex; justify-content: center; width: 100%; margin-bottom: 0.5rem;">
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="signup_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left"
+                 data-width="320">
+            </div>
+          </div>
+
           <div class="register-switch-info">
             Sudah punya akun? <a href="#" id="toLoginLink">Masuk di sini</a>
           </div>
@@ -601,6 +652,34 @@
   </div>
 
   <script>
+    // Google Sign-In Callback Handler
+    window.handleCredentialResponse = async (response) => {
+      const errorElement = document.getElementById('loginError') || document.getElementById('registerError');
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: response.credential })
+        });
+        
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          window.location.href = '/';
+        } else {
+          if (errorElement) {
+            errorElement.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${data.message || 'Login Google gagal.'}`;
+          } else {
+            alert('Login Google gagal: ' + (data.message || 'Terjadi kesalahan'));
+          }
+        }
+      } catch (err) {
+        console.error('Google sign in error:', err);
+        if (errorElement) {
+          errorElement.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Gagal terhubung ke server untuk autentikasi Google.`;
+        }
+      }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
       // Periksa apakah pengguna sudah login, jika ya, lempar ke beranda
       fetch('/api/me')

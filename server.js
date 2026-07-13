@@ -6,8 +6,12 @@ const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const { v4: uuidv4 } = require('uuid');
 const { VertexAI } = require('@google-cloud/vertexai');
+const { OAuth2Client } = require('google-auth-library');
 const JOURNAL_DATABASE = require('./database');
 const app = express();
+
+const GOOGLE_CLIENT_ID = '571306850750-ckq38nmai4felal861uu0hgj1b13bihf.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Tentukan port dari environment variable (Railway menyediakannya lewat PORT) atau port 3000 secara lokal
 const PORT = process.env.PORT || 3000;
@@ -213,6 +217,66 @@ app.post('/api/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ ok: false, message: 'Terjadi kesalahan pada server.' });
+  }
+});
+
+app.post('/api/auth/google', async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ ok: false, message: 'Token wajib disertakan.' });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const googleId = payload.sub;
+
+    if (!email) {
+      return res.status(400).json({ ok: false, message: 'Email tidak ditemukan dari akun Google.' });
+    }
+
+    const users = getUsers();
+    let user = users.find(u => u.email === email);
+
+    if (!user) {
+      // Jika user belum ada, buat akun free baru secara otomatis
+      user = {
+        id: uuidv4(),
+        email: email,
+        password: '', // Login via Google, tidak ada password lokal
+        type: 'free',
+        name: payload.name || '',
+        faculty: '',
+        university: '',
+        profilePic: payload.picture || '',
+        savedJournals: [],
+        createdAt: new Date().toISOString()
+      };
+      users.push(user);
+    } else {
+      // Update Google ID & Profile Pic jika belum diset
+      if (!user.googleId) user.googleId = googleId;
+      if (!user.name && payload.name) user.name = payload.name;
+      if (!user.profilePic && payload.picture) user.profilePic = payload.picture;
+    }
+
+    saveUsers(users);
+
+    // Set Session
+    req.session.userId = user.id;
+    req.session.userType = user.type || 'free';
+    req.session.email = user.email;
+
+    res.json({ ok: true, user: { email: user.email, type: user.type } });
+  } catch (error) {
+    console.error('Google Auth error:', error);
+    res.status(401).json({ ok: false, message: 'Autentikasi Google gagal.' });
   }
 });
 

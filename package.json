@@ -12,6 +12,7 @@
     "bcryptjs": "^3.0.3",
     "express": "^4.19.2",
     "express-session": "^1.19.0",
+    "google-auth-library": "^10.9.0",
     "node-fetch": "^2.7.0",
     "pdf-parse": "^2.4.5",
     "uuid": "^14.0.1"
