@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let visibleCount = 30;     // Jumlah kartu awal yang dirender (lazy-loading)
   let activeJournals = [];   // Menyimpan hasil filter saat ini
   let currentUser = { loggedIn: false, type: 'free' };
+  let currentCitations = [];
 
   // --- 0. AUTHENTICATION & USER STATE ---
   async function checkAuthState() {
@@ -2171,6 +2172,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           // Update UI
+          currentCitations = data.citations || [];
           if (textContainer) {
             textContainer.innerHTML = data.review || '<p>Tidak ada draf yang dihasilkan.</p>';
           }
@@ -2213,6 +2215,139 @@ document.addEventListener('DOMContentLoaded', () => {
           runLitReviewBtn.disabled = false;
           runLitReviewBtn.innerHTML = originalBtnHtml;
         }
+      });
+    }
+
+    // PDF Export
+    const downloadLitPdfBtn = document.getElementById('downloadLitPdfBtn');
+    if (downloadLitPdfBtn) {
+      downloadLitPdfBtn.addEventListener('click', () => {
+        const element = document.getElementById('litReviewTextContainer');
+        if (!element || !element.innerText.trim()) {
+          alert('Belum ada data tinjauan pustaka untuk diunduh.');
+          return;
+        }
+
+        const titleInput = document.getElementById('litReviewTitle');
+        const titleText = titleInput ? titleInput.value.trim() : 'Tinjauan_Pustaka';
+        const cleanTitle = titleText.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_');
+
+        const opt = {
+          margin:       1,
+          filename:     `Tinjauan_Pustaka_${cleanTitle}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2 },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save();
+      });
+    }
+
+    // Word (.docx) Export
+    const downloadLitDocxBtn = document.getElementById('downloadLitDocxBtn');
+    if (downloadLitDocxBtn) {
+      downloadLitDocxBtn.addEventListener('click', () => {
+        const textContainer = document.getElementById('litReviewTextContainer');
+        if (!textContainer || !textContainer.innerText.trim()) {
+          alert('Belum ada data tinjauan pustaka untuk diunduh.');
+          return;
+        }
+
+        const titleInput = document.getElementById('litReviewTitle');
+        const titleText = titleInput ? titleInput.value.trim() : 'Tinjauan Pustaka';
+        const cleanTitleFile = titleText.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_');
+
+        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                       "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                       "xmlns='http://www.w3.org/TR/REC-html40'>" +
+                       "<head><title>Tinjauan Pustaka</title><style>body { font-family: Arial, sans-serif; line-height: 1.6; } h1, h2, h3 { color: #0b1a30; }</style></head><body>" +
+                       "<h2>Tinjauan Pustaka: " + titleText + "</h2>";
+        const footer = "</body></html>";
+        const htmlContent = header + textContainer.innerHTML + footer;
+
+        const blob = new Blob(['\ufeff' + htmlContent], {
+          type: 'application/msword;charset=utf-8'
+        });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Tinjauan_Pustaka_${cleanTitleFile}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+
+    // RIS Export
+    const exportCitationsRisBtn = document.getElementById('exportCitationsRisBtn');
+    if (exportCitationsRisBtn) {
+      exportCitationsRisBtn.addEventListener('click', () => {
+        if (!currentCitations || currentCitations.length === 0) {
+          alert('Belum ada referensi ilmiah untuk diekspor.');
+          return;
+        }
+
+        let risContent = '';
+        currentCitations.forEach(cit => {
+          risContent += 'TY  - JOUR\r\n';
+          risContent += `TI  - ${cit.title || 'Untitled'}\r\n`;
+          if (cit.authors) {
+            const authorsList = cit.authors.split(/,|&|dan/i);
+            authorsList.forEach(auth => {
+              risContent += `AU  - ${auth.trim()}\r\n`;
+            });
+          }
+          if (cit.journal) risContent += `JO  - ${cit.journal}\r\n`;
+          if (cit.year) risContent += `PY  - ${cit.year}\r\n`;
+          if (cit.url) risContent += `UR  - ${cit.url}\r\n`;
+          if (cit.reason) risContent += `N1  - Relevansi: ${cit.reason}\r\n`;
+          risContent += 'ER  - \r\n\r\n';
+        });
+
+        const blob = new Blob([risContent], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Referensi_Kutipan.ris';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+
+    // BibTeX Export
+    const exportCitationsBibBtn = document.getElementById('exportCitationsBibBtn');
+    if (exportCitationsBibBtn) {
+      exportCitationsBibBtn.addEventListener('click', () => {
+        if (!currentCitations || currentCitations.length === 0) {
+          alert('Belum ada referensi ilmiah untuk diekspor.');
+          return;
+        }
+
+        let bibContent = '';
+        currentCitations.forEach((cit, idx) => {
+          const firstAuthor = cit.authors ? cit.authors.split(/,| /)[0].toLowerCase().replace(/[^a-z]/g, '') : 'author';
+          const year = cit.year || '2026';
+          const titleWord = cit.title ? cit.title.split(' ')[0].toLowerCase().replace(/[^a-z]/g, '') : 'article';
+          const citeKey = `${firstAuthor}${year}${titleWord}${idx+1}`;
+
+          bibContent += `@article{${citeKey},\r\n`;
+          bibContent += `  title = {${cit.title || 'Untitled'}},\r\n`;
+          if (cit.authors) bibContent += `  author = {${cit.authors}},\r\n`;
+          if (cit.journal) bibContent += `  journal = {${cit.journal}},\r\n`;
+          if (cit.year) bibContent += `  year = {${cit.year}},\r\n`;
+          if (cit.url) bibContent += `  url = {${cit.url}},\r\n`;
+          if (cit.reason) bibContent += `  note = {Relevansi: ${cit.reason}},\r\n`;
+          bibContent += '}\r\n\r\n';
+        });
+
+        const blob = new Blob([bibContent], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Referensi_Kutipan.bib';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       });
     }
 
