@@ -1059,8 +1059,7 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
             role: 'user',
             content: prompt
           }
-        ],
-        response_format: { type: 'json_object' }
+        ]
       })
     });
 
@@ -1071,7 +1070,7 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
 
     const resData = await response.json();
     const content = resData?.choices?.[0]?.message?.content;
-    const parsed = JSON.parse(content);
+    const parsed = cleanAndParseAIResponse(content, true);
 
     // Update usage for Free user
     if (user && (user.type || 'free') === 'free') {
