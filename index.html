@@ -72,6 +72,12 @@
       z-index: 100;
       box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
       transition: all 0.3s ease;
+      overflow-y: auto;
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .sidebar::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
     }
 
     .sidebar-logo {
@@ -251,6 +257,34 @@
     .logout-icon-btn:hover {
       color: #ef4444;
       background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Media query for small laptop screen heights */
+    @media (max-height: 800px) {
+      .sidebar {
+        padding: 1rem 0.75rem;
+      }
+      .sidebar-logo {
+        margin-bottom: 1.25rem;
+      }
+      .sidebar-link {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.9rem;
+      }
+      .sidebar-upgrade-card {
+        padding: 0.75rem 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+      .sidebar-upgrade-card p {
+        display: none; /* Hide description to save vertical space */
+      }
+      .sidebar-upgrade-card h4 {
+        margin-bottom: 0.5rem;
+      }
+      .user-profile-section {
+        padding-top: 0.75rem;
+        margin-top: 0.25rem;
+      }
     }
 
     /* Main Content Wrapper */
