@@ -298,12 +298,17 @@ app.get('/api/me', (req, res) => {
     let isLimitReached = false;
     let isDraftLimitReached = false;
     let draftsRemaining = 1;
+    let isLitReviewLimitReached = false;
+    let litReviewsRemaining = 1;
     if (user && (user.type || 'free') === 'free') {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = (user.lastMatchMonth === currentMonth) && (user.matchCountThisMonth >= 1);
       
       isDraftLimitReached = (user.lastDraftMonth === currentMonth) && (user.draftCountThisMonth >= 1);
       draftsRemaining = isDraftLimitReached ? 0 : 1;
+
+      isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 1);
+      litReviewsRemaining = isLitReviewLimitReached ? 0 : 1;
     }
 
     res.json({
@@ -318,7 +323,9 @@ app.get('/api/me', (req, res) => {
         savedJournals: user ? (user.savedJournals || []) : [],
         isLimitReached: isLimitReached,
         isDraftLimitReached: isDraftLimitReached,
-        draftsRemaining: draftsRemaining
+        draftsRemaining: draftsRemaining,
+        isLitReviewLimitReached: isLitReviewLimitReached,
+        litReviewsRemaining: litReviewsRemaining
       }
     });
   } else {
@@ -964,6 +971,122 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
   } catch (error) {
     console.error('[AI Draft Generator] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal memproses draf panduan dengan AI: ' + error.message });
+  }
+});
+
+app.post('/api/lit-review', requireAccess, async (req, res) => {
+  const { title, keywords, abstract } = req.body;
+  if (!title) {
+    return res.status(400).json({ ok: false, message: 'Judul atau topik penelitian wajib diisi.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  // Check quota for Free users
+  if (user && (user.type || 'free') === 'free') {
+    if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 1) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x Literature Review per bulan.' });
+    }
+  }
+
+  const perplexityKey = process.env.PERPLEXITY_API_KEY;
+  
+  if (!perplexityKey) {
+    // Fallback lokal jika Perplexity API Key belum dikonfigurasi
+    if (user && (user.type || 'free') === 'free') {
+      if (user.lastLitReviewMonth !== currentMonth) {
+        user.lastLitReviewMonth = currentMonth;
+        user.litReviewCountThisMonth = 0;
+      }
+      user.litReviewCountThisMonth += 1;
+      saveUsers(users);
+    }
+
+    return res.json({
+      ok: true,
+      source: 'local',
+      review: `<h3>Tinjauan Pustaka: ${title}</h3><p>Fitur AI Literature Review berjalan di server namun <code>PERPLEXITY_API_KEY</code> belum terpasang di Railway.</p><p>Berikut adalah simulasi draf Tinjauan Pustaka untuk topik Anda:</p><ul><li><strong>Kajian Teori:</strong> Menganalisis landasan teoritis utama yang mendasari permasalahan penelitian Anda.</li><li><strong>Studi Terdahulu:</strong> Meneliti bagaimana para peneliti lain telah mendekati masalah serupa dan hasil penelitian mereka.</li><li><strong>Celah Penelitian (Research Gap):</strong> Mengidentifikasi apa yang belum diteliti dan bagaimana penelitian Anda akan mengisi celah tersebut.</li></ul>`,
+      citations: [
+        { title: "Panduan Penulisan Jurnal Ilmiah Scopus & Sinta", authors: "Abidin, M. I.", journal: "Pusat Riset Indonesia", year: "2026", url: "https://github.com/ilmanabidin1/pusatriset", reason: "Referensi dasar yang membahas tentang penyusunan draf tinjauan pustaka dan kesesuaian jurnal ilmiah." }
+      ]
+    });
+  }
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const prompt = `
+Anda adalah pakar penulisan jurnal ilmiah internasional.
+Lakukan pencarian web untuk mencari paper ilmiah/jurnal terbaru yang relevan dengan topik/judul berikut:
+Judul: ${title}
+Keyword/Bidang: ${keywords || '-'}
+Abstrak: ${abstract || '-'}
+
+Buatlah Tinjauan Pustaka (Literature Review) yang komprehensif dalam Bahasa Indonesia (berisi ringkasan teori, perbandingan studi terdahulu, dan gap analysis penelitian ini).
+Harap sertakan daftar kutipan/referensi ilmiah asli dari web dengan URL aktif ke paper tersebut.
+
+Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown seperti \`\`\`json):
+{
+  "review": "Isi teks Tinjauan Pustaka Anda dalam format HTML/Markdown (gunakan tag paragraph p, list li, strong, dll) yang rapi dan profesional",
+  "citations": [
+    {
+      "title": "Judul Paper Ilmiah yang ditemukan",
+      "authors": "Nama Penulis (contoh: Doe et al.)",
+      "journal": "Nama Jurnal/Penerbit",
+      "year": "Tahun Terbit",
+      "url": "URL aktif ke paper/jurnal ilmiah asli",
+      "reason": "Alasan mengapa paper ini sangat relevan dengan topik pengguna"
+    }
+  ]
+}
+`;
+
+    const response = await fetchFn('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${perplexityKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'sonar',
+        messages: [
+          {
+            role: 'system',
+            content: 'Anda adalah AI akademis yang mengembalikan respon dalam format JSON sesuai instruksi.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        response_format: { type: 'json_object' }
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Perplexity API Error: ${response.status} - ${errText}`);
+    }
+
+    const resData = await response.json();
+    const content = resData?.choices?.[0]?.message?.content;
+    const parsed = JSON.parse(content);
+
+    // Update usage for Free user
+    if (user && (user.type || 'free') === 'free') {
+      if (user.lastLitReviewMonth !== currentMonth) {
+        user.lastLitReviewMonth = currentMonth;
+        user.litReviewCountThisMonth = 0;
+      }
+      user.litReviewCountThisMonth += 1;
+      saveUsers(users);
+    }
+
+    res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [] });
+  } catch (error) {
+    console.error('[Perplexity Lit Review] Error:', error);
+    res.status(500).json({ ok: false, message: 'Gagal mencari referensi & membuat literature review: ' + error.message });
   }
 });
 

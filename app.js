@@ -136,12 +136,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (matchQuotaDisclaimer) {
               matchQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
             }
-            const draftPremiumLock = document.getElementById('draftPremiumLock');
-            if (draftPremiumLock) draftPremiumLock.style.display = 'none';
-            const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
-            if (draftQuotaDisclaimer) {
-              draftQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
-            }
+             const draftPremiumLock = document.getElementById('draftPremiumLock');
+             if (draftPremiumLock) draftPremiumLock.style.display = 'none';
+             const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
+             if (draftQuotaDisclaimer) {
+               draftQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
+             }
+             const litReviewPremiumLock = document.getElementById('litReviewPremiumLock');
+             if (litReviewPremiumLock) litReviewPremiumLock.style.display = 'none';
+             const litReviewQuotaDisclaimer = document.getElementById('litReviewQuotaDisclaimer');
+             if (litReviewQuotaDisclaimer) {
+               litReviewQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
+             }
           } else {
             if (profileType) profileType.textContent = 'Akun Free';
             if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'block';
@@ -207,6 +213,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 runDraftGenerator.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI';
                 runDraftGenerator.style.background = 'var(--brand-blue)';
                 runDraftGenerator.classList.remove('btn-upgrade-trigger');
+              }
+            }
+
+            // Atur status kuota dan lock untuk AI Lit Review
+            const litReviewPremiumLock = document.getElementById('litReviewPremiumLock');
+            const litReviewQuotaDisclaimer = document.getElementById('litReviewQuotaDisclaimer');
+            const runLitReviewBtn = document.getElementById('runLitReviewBtn');
+            
+            if (litReviewQuotaDisclaimer) {
+              litReviewQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.litReviewsRemaining !== undefined ? currentUser.user.litReviewsRemaining : 1}/1 Bulan Ini</span>`;
+            }
+
+            if (currentUser.user.isLitReviewLimitReached) {
+              if (litReviewPremiumLock) litReviewPremiumLock.style.display = 'flex';
+              if (runLitReviewBtn) {
+                runLitReviewBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Lit Review Tercapai';
+                runLitReviewBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                runLitReviewBtn.classList.add('btn-upgrade-trigger');
+              }
+            } else {
+              if (litReviewPremiumLock) litReviewPremiumLock.style.display = 'none';
+              if (runLitReviewBtn) {
+                runLitReviewBtn.innerHTML = '<i class="fa-solid fa-search"></i> Cari Referensi & Susun Kajian';
+                runLitReviewBtn.style.background = 'var(--brand-blue)';
+                runLitReviewBtn.classList.remove('btn-upgrade-trigger');
               }
             }
           }
@@ -2087,6 +2118,102 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       return card;
+    }
+
+    // --- LOGIKA AI LITERATURE REVIEW & CITATION FINDER ---
+    const runLitReviewBtn = document.getElementById('runLitReviewBtn');
+    if (runLitReviewBtn) {
+      runLitReviewBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // Jika user dibatasi kuota bulanan, panggil modal upgrade saat di-klik
+        if (runLitReviewBtn.classList.contains('btn-upgrade-trigger')) {
+          const upgradeModal = document.getElementById('upgradeModal');
+          if (upgradeModal) upgradeModal.classList.add('active');
+          return;
+        }
+
+        const titleInput = document.getElementById('litReviewTitle');
+        const keywordsInput = document.getElementById('litReviewKeywords');
+        const abstractInput = document.getElementById('litReviewAbstract');
+
+        const title = titleInput ? titleInput.value.trim() : '';
+        const keywords = keywordsInput ? keywordsInput.value.trim() : '';
+        const abstract = abstractInput ? abstractInput.value.trim() : '';
+
+        if (!title) {
+          alert('Mohon masukkan judul atau topik penelitian terlebih dahulu.');
+          return;
+        }
+
+        const originalBtnHtml = runLitReviewBtn.innerHTML;
+        runLitReviewBtn.disabled = true;
+        runLitReviewBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses Kajian AI...';
+
+        const resultsPanel = document.getElementById('litReviewResultsPanel');
+        const textContainer = document.getElementById('litReviewTextContainer');
+        const citationsContainer = document.getElementById('litReviewCitationsContainer');
+
+        if (resultsPanel) resultsPanel.style.display = 'none';
+
+        try {
+          const response = await fetch('/api/lit-review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, keywords, abstract })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            alert(data.message || 'Terjadi kesalahan saat memproses data.');
+            return;
+          }
+
+          // Update UI
+          if (textContainer) {
+            textContainer.innerHTML = data.review || '<p>Tidak ada draf yang dihasilkan.</p>';
+          }
+
+          if (citationsContainer) {
+            citationsContainer.innerHTML = '';
+            if (data.citations && data.citations.length > 0) {
+              data.citations.forEach(cit => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid rgba(8,34,64,0.04)';
+                tr.innerHTML = `
+                  <td style="padding: 1rem; vertical-align: top; max-width: 280px; font-weight: 600; color: var(--text-main);">${cit.title}<br><span style="font-size: 0.78rem; font-weight: 500; color: var(--text-muted);">Penulis: ${cit.authors || '-'}</span></td>
+                  <td style="padding: 1rem; vertical-align: top; color: var(--text-muted); font-size: 0.82rem;">${cit.journal || '-'}<br><span style="font-size: 0.78rem; background: #e2e8f0; color: #475569; padding: 0.1rem 0.4rem; border-radius: 4px;">${cit.year || '-'}</span></td>
+                  <td style="padding: 1rem; vertical-align: top; color: var(--text-muted); font-size: 0.82rem; line-height: 1.4;">${cit.reason || '-'}</td>
+                  <td style="padding: 1rem; vertical-align: top; text-align: center;">
+                    <a href="${cit.url}" target="_blank" class="reset-filter-btn" style="display: inline-flex; text-decoration: none; padding: 0.4rem 0.8rem; background: var(--brand-blue); color: white; border: none; font-size: 0.78rem;">
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Link
+                    </a>
+                  </td>
+                `;
+                citationsContainer.appendChild(tr);
+              });
+            } else {
+              citationsContainer.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tidak ada referensi online eksternal yang terindeks langsung.</td></tr>`;
+            }
+          }
+
+          if (resultsPanel) {
+            resultsPanel.style.display = 'block';
+            resultsPanel.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          // Sinkronisasi status limit terbaru
+          await checkAuthState();
+
+        } catch (error) {
+          console.error('[Lit Review UI] Error:', error);
+          alert('Gagal menghubungi server untuk memproses literature review.');
+        } finally {
+          runLitReviewBtn.disabled = false;
+          runLitReviewBtn.innerHTML = originalBtnHtml;
+        }
+      });
     }
 
     activeJournals = JOURNAL_DATABASE;
