@@ -432,9 +432,9 @@ document.addEventListener('DOMContentLoaded', () => {
        promoCard.innerHTML = `
          <i class="fa-solid fa-lock" style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 1rem;"></i>
          <h3 style="margin-bottom: 0.5rem;">${activeJournals.length - 1} Jurnal Lainnya Disembunyikan</h3>
-         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Akun Free hanya dapat melihat 1 rekomendasi teratas. Tingkatkan ke Premium untuk melihat semua hasil.</p>
+         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Akun Free hanya dapat melihat 1 rekomendasi teratas. Tingkatkan ke PRO untuk melihat semua hasil.</p>
          <button class="btn btn-primary btn-upgrade-trigger" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
-           Upgrade Premium
+           Upgrade PRO
          </button>
        `;
        resultsContainer.appendChild(promoCard);
@@ -1237,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${dummyLinesHtml}
                 <div style="position: absolute; inset: 0; background: rgba(255,255,255,0.75); backdrop-filter: blur(1.5px); display: flex; flex-direction: column; align-items: center; justify-content: center;">
                   <i class="fa-solid fa-lock" style="font-size: 1.5rem; color: #d97706; margin-bottom: 0.5rem;"></i>
-                  <span style="font-size: 0.65rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-crown" style="font-size: 0.65rem;"></i> PREMIUM</span>
+                  <span style="font-size: 0.65rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-crown" style="font-size: 0.65rem;"></i> PRO</span>
                 </div>
               </div>
             `;
@@ -1277,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                    <i class="fa-regular fa-eye"></i> Lihat & Unduh
                  </button>` :
                 `<button class="btn btn-upgrade-trigger" style="width: 100%; text-align: center; justify-content: center; font-size: 0.85rem; padding: 0.6rem; display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white; border-radius: 8px;">
-                   <i class="fa-solid fa-crown"></i> Buka Premium
+                   <i class="fa-solid fa-crown"></i> Buka PRO
                  </button>`
               }
             </div>
@@ -2039,12 +2039,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #f59e0b; margin-bottom: 0.25rem;">
             <i class="fa-solid fa-lock"></i>
           </div>
-          <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0;">Fitur Premium: Prompt Bank</h4>
+          <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0;">Fitur PRO: Prompt Bank</h4>
           <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.5; margin: 0;">
-            Kategori tahapan ini hanya tersedia untuk pengguna Premium. Upgrade akun Anda sekarang untuk membuka akses penuh ke 2.100+ prompt riset siap pakai.
+            Kategori tahapan ini hanya tersedia untuk pengguna PRO. Upgrade akun Anda sekarang untuk membuka akses penuh ke 2.100+ prompt riset siap pakai.
           </p>
           <button class="upgrade-btn btn-upgrade-trigger" style="width: 100%; padding: 0.85rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #051329; font-weight: 800; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" type="button">
-            <i class="fa-solid fa-crown"></i> Buka Akses Premium
+            <i class="fa-solid fa-crown"></i> Buka Akses PRO
           </button>
         </div>
       `;
