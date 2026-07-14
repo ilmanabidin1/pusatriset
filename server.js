@@ -449,6 +449,16 @@ app.get('/api/debug-delete-user', (req, res) => {
   res.json({ ok: true, message: `User with email ${email} has been deleted successfully.` });
 });
 
+app.get('/api/debug-env', (req, res) => {
+  res.json({
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_USER,
+    hasPass: !!SMTP_PASS,
+    SMTP_FROM
+  });
+});
+
 app.post('/api/auth/google', async (req, res) => {
   const { token } = req.body;
 
