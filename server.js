@@ -300,11 +300,12 @@ app.get('/api/me', (req, res) => {
     let draftsRemaining = 1;
     let isLitReviewLimitReached = false;
     let litReviewsRemaining = 1;
-    const isFree = !user || (user.type || 'free') === 'free';
-    const isPremium = user && user.type === 'premium';
-    const isUltimate = user && user.type === 'ultimate';
+    const userType = req.session.userType || 'free';
+    const isFree = userType === 'free';
+    const isPremium = userType === 'premium';
+    const isUltimate = userType === 'ultimate';
 
-    if (isFree) {
+    if (isFree && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = (user.lastMatchMonth === currentMonth) && (user.matchCountThisMonth >= 1);
       
@@ -313,7 +314,7 @@ app.get('/api/me', (req, res) => {
 
       isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 1);
       litReviewsRemaining = isLitReviewLimitReached ? 0 : 1;
-    } else if (isPremium) {
+    } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
       
@@ -322,7 +323,7 @@ app.get('/api/me', (req, res) => {
 
       isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 15);
       litReviewsRemaining = Math.max(0, 15 - (user.lastLitReviewMonth === currentMonth ? user.litReviewCountThisMonth : 0));
-    } else if (isUltimate) {
+    } else {
       isLimitReached = false;
       isDraftLimitReached = false;
       draftsRemaining = 999;
