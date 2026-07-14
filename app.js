@@ -120,8 +120,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const isUltimate = currentUser.user.type === 'ultimate';
             if (profileType) profileType.textContent = isUltimate ? 'Akun Ultimate' : 'Akun Premium';
             if (profileType) profileType.style.color = '#fbbf24';
-            if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'none';
-            if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'none';
+            
+            if (isUltimate) {
+              if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'none';
+              if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'none';
+            } else {
+              if (sidebarUpgradeCard) {
+                sidebarUpgradeCard.style.display = 'block';
+                sidebarUpgradeCard.innerHTML = `
+                  <i class="fa-solid fa-crown upgrade-crown-icon" style="color: #fbbf24;"></i>
+                  <h4>Upgrade ke Ultimate</h4>
+                  <p>Buka AI Drafting & Lit Review tanpa batas</p>
+                  <button class="upgrade-btn btn-upgrade-trigger">Upgrade Sekarang</button>
+                `;
+              }
+              if (headerUpgradeBtn) {
+                headerUpgradeBtn.style.display = 'flex';
+                headerUpgradeBtn.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Upgrade Ultimate';
+              }
+            }
             if (bannerUpgradeBtn) {
               bannerUpgradeBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Mulai AI Match';
               bannerUpgradeBtn.style.background = 'var(--brand-blue)';
