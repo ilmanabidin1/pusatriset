@@ -1421,7 +1421,7 @@ app.post('/api/payment/create', requireAccess, async (req, res) => {
   // Base URL according to sandbox environment
   const ipaymuUrl = isSandbox 
     ? 'https://sandbox.ipaymu.com/api/v2/payment' 
-    : 'https://payment.ipaymu.com/api/v2/payment';
+    : 'https://my.ipaymu.com/api/v2/payment';
 
   // Return and notification URLs
   const hostHeader = req.headers.host || 'localhost:3000';
