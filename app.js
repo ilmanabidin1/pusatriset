@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok) {
         const data = await response.json();
         currentUser = data;
+        window.currentUser = currentUser;
 
         if (!currentUser.loggedIn) {
           window.location.href = '/auth.html';
@@ -85,7 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
             let typeLabel = 'Akun Free';
             if (currentUser.user.type === 'ultimate') typeLabel = 'Akun Ultimate';
             else if (currentUser.user.type === 'premium') typeLabel = 'Akun Premium';
-            settingsAccountType.textContent = typeLabel;
+            
+            let expiryText = '';
+            if (currentUser.user.paymentExpiredAt) {
+              const diffTime = new Date(currentUser.user.paymentExpiredAt) - new Date();
+              const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              expiryText = ` (Aktif ${daysLeft > 0 ? daysLeft : 0} Hari Lagi)`;
+            }
+            settingsAccountType.textContent = typeLabel + expiryText;
             settingsAccountType.style.color = (currentUser.user.type === 'premium' || currentUser.user.type === 'ultimate') ? '#fbbf24' : 'var(--text-main)';
           }
 
@@ -118,8 +126,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (currentUser.user.type === 'premium' || currentUser.user.type === 'ultimate') {
             const isUltimate = currentUser.user.type === 'ultimate';
-            if (profileType) profileType.textContent = isUltimate ? 'Akun Ultimate' : 'Akun Premium';
-            if (profileType) profileType.style.color = '#fbbf24';
+            
+            let daysLeftHtml = '';
+            if (currentUser.user.paymentExpiredAt) {
+              const diffTime = new Date(currentUser.user.paymentExpiredAt) - new Date();
+              const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              daysLeftHtml = `<br><span style="font-size: 0.7rem; color: #a3e635; font-weight: 600;">Sisa Aktif: ${daysLeft > 0 ? daysLeft : 0} Hari</span>`;
+            }
+            
+            if (profileType) {
+              profileType.innerHTML = (isUltimate ? 'Akun Ultimate' : 'Akun Premium') + daysLeftHtml;
+              profileType.style.color = '#fbbf24';
+            }
             
             if (isUltimate) {
               if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'none';
@@ -285,6 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
               const upgradeModal = document.getElementById('upgradeModal');
               if (upgradeModal) {
                 upgradeModal.classList.add('active');
+                if (window.updateModalButtonStates) {
+                  window.updateModalButtonStates();
+                }
               }
             }
           });

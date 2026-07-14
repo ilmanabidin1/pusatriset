@@ -496,7 +496,18 @@ app.get('/api/me', (req, res) => {
   if (hasAccess(req)) {
     const users = getUsers();
     const user = users.find(u => u.id === req.session.userId);
-    
+
+    // Check if subscription has expired and automatically demote user
+    if (user && user.type !== 'free' && user.paymentExpiredAt) {
+      if (new Date(user.paymentExpiredAt) < new Date()) {
+        user.type = 'free';
+        user.planId = null;
+        user.paymentExpiredAt = null;
+        saveUsers(users);
+        req.session.userType = 'free';
+      }
+    }
+
     // Sync session userType with database in case it was upgraded via webhook in background
     if (user && user.type && req.session.userType !== user.type) {
       req.session.userType = user.type;
@@ -552,7 +563,9 @@ app.get('/api/me', (req, res) => {
         isDraftLimitReached: isDraftLimitReached,
         draftsRemaining: draftsRemaining,
         isLitReviewLimitReached: isLitReviewLimitReached,
-        litReviewsRemaining: litReviewsRemaining
+        litReviewsRemaining: litReviewsRemaining,
+        planId: user ? (user.planId || null) : null,
+        paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null
       }
     });
   } else {
@@ -1521,9 +1534,15 @@ app.post('/api/payment/callback', async (req, res) => {
         const users = getUsers();
         const userIndex = users.findIndex(u => u.id === userId);
         if (userIndex !== -1) {
+          const isYearly = planId.endsWith('yearly');
+          const durationDays = isYearly ? 365 : 30;
+          const expiredAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+
           users[userIndex].type = targetType;
+          users[userIndex].planId = planId;
+          users[userIndex].paymentExpiredAt = expiredAt;
           saveUsers(users);
-          console.log(`[iPaymu Webhook] User ${userId} upgraded successfully.`);
+          console.log(`[iPaymu Webhook] User ${userId} upgraded successfully to ${targetType} (${planId}), expires at ${expiredAt}`);
         } else {
           console.warn(`[iPaymu Webhook] User ${userId} not found in database.`);
         }

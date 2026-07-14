@@ -2275,6 +2275,8 @@
           
           if (ultimatePriceText) ultimatePriceText.innerHTML = 'Rp149rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
           if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Ditagih bulanan';
+
+          if (window.updateModalButtonStates) window.updateModalButtonStates();
         });
       }
 
@@ -2294,8 +2296,62 @@
           
           if (ultimatePriceText) ultimatePriceText.innerHTML = 'Rp1.5jt<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span>';
           if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Setara Rp125rb/bulan';
+
+          if (window.updateModalButtonStates) window.updateModalButtonStates();
         });
       }
+
+      // Helper to dynamically update buy buttons based on active subscription plan
+      window.updateModalButtonStates = function() {
+        const u = window.currentUser;
+        if (!u || !u.loggedIn || !u.user) return;
+
+        const switchYearly = document.getElementById('switchYearly');
+        const isYearly = switchYearly && switchYearly.classList.contains('active');
+        const currentPremiumPlan = `premium_${isYearly ? 'yearly' : 'monthly'}`;
+        const currentUltimatePlan = `ultimate_${isYearly ? 'yearly' : 'monthly'}`;
+
+        const activePlanId = u.user.planId || null;
+
+        const premiumBtn = document.querySelector('.upgrade-btn-select[data-plan="premium"]');
+        const ultimateBtn = document.querySelector('.upgrade-btn-select[data-plan="ultimate"]');
+
+        if (premiumBtn) {
+          if (activePlanId === currentPremiumPlan) {
+            premiumBtn.disabled = true;
+            premiumBtn.textContent = 'Paket Aktif Anda';
+            premiumBtn.style.background = '#e2e8f0';
+            premiumBtn.style.color = '#94a3b8';
+            premiumBtn.style.border = '1px solid #cbd5e1';
+            premiumBtn.style.cursor = 'default';
+          } else {
+            premiumBtn.disabled = false;
+            premiumBtn.textContent = 'Pilih Premium';
+            premiumBtn.style.background = 'rgba(7, 135, 220, 0.08)';
+            premiumBtn.style.color = 'var(--brand-blue)';
+            premiumBtn.style.border = '1px solid rgba(7, 135, 220, 0.15)';
+            premiumBtn.style.cursor = 'pointer';
+          }
+        }
+
+        if (ultimateBtn) {
+          if (activePlanId === currentUltimatePlan) {
+            ultimateBtn.disabled = true;
+            ultimateBtn.textContent = 'Paket Aktif Anda';
+            ultimateBtn.style.background = '#e2e8f0';
+            ultimateBtn.style.color = '#94a3b8';
+            ultimateBtn.style.border = 'none';
+            ultimateBtn.style.cursor = 'default';
+          } else {
+            ultimateBtn.disabled = false;
+            ultimateBtn.textContent = 'Pilih Ultimate';
+            ultimateBtn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+            ultimateBtn.style.color = '#051329';
+            ultimateBtn.style.border = 'none';
+            ultimateBtn.style.cursor = 'pointer';
+          }
+        }
+      };
 
       // Handle plan button selections (redirect to iPaymu)
       document.addEventListener('click', async (e) => {
