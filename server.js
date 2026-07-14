@@ -1550,8 +1550,35 @@ app.get('*', requireAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server JurnalHub berjalan di port ${PORT}`);
+
+  // Seed demo user if it doesn't exist (for iPaymu team review)
+  try {
+    const users = getUsers();
+    const demoUser = users.find(u => u.email === 'demo');
+    if (!demoUser) {
+      const hashedDemoPassword = await bcrypt.hash('demo', 10);
+      users.push({
+        id: uuidv4(),
+        email: 'demo',
+        password: hashedDemoPassword,
+        type: 'free',
+        isVerified: true,
+        verificationToken: null,
+        name: 'iPaymu Demo Team',
+        faculty: 'Demo',
+        university: 'iPaymu',
+        profilePic: '',
+        savedJournals: [],
+        createdAt: new Date().toISOString()
+      });
+      saveUsers(users);
+      console.log('[Database Seed] Akun demo (demo/demo) berhasil dibuat.');
+    }
+  } catch (err) {
+    console.error('[Database Seed] Gagal membuat akun demo:', err.message);
+  }
 
   // Deteksi IP Outbound Publik dari server (untuk registrasi iPaymu)
   const https = require('https');
