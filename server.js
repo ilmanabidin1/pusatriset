@@ -497,6 +497,11 @@ app.get('/api/me', (req, res) => {
     const users = getUsers();
     const user = users.find(u => u.id === req.session.userId);
     
+    // Sync session userType with database in case it was upgraded via webhook in background
+    if (user && user.type && req.session.userType !== user.type) {
+      req.session.userType = user.type;
+    }
+    
     let isLimitReached = false;
     let isDraftLimitReached = false;
     let draftsRemaining = 1;
