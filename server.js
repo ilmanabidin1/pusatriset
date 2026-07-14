@@ -380,6 +380,56 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
+app.get('/api/debug-smtp', async (req, res) => {
+  if (!SMTP_USER || !SMTP_PASS) {
+    return res.json({ 
+      ok: false, 
+      message: 'SMTP credentials not configured in environment variables.',
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      hasUser: !!SMTP_USER,
+      hasPass: !!SMTP_PASS
+    });
+  }
+
+  try {
+    const verifyResult = await new Promise((resolve, reject) => {
+      if (!transporter) {
+        return reject(new Error('Transporter is null'));
+      }
+      transporter.verify((error, success) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(success);
+        }
+      });
+    });
+
+    res.json({
+      ok: true,
+      message: 'SMTP connection verified successfully!',
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      user: SMTP_USER,
+      from: SMTP_FROM
+    });
+  } catch (error) {
+    console.error('[SMTP Debug] Verification failed:', error);
+    res.status(500).json({
+      ok: false,
+      message: 'SMTP connection verification failed.',
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      user: SMTP_USER
+    });
+  }
+});
+
 app.post('/api/auth/google', async (req, res) => {
   const { token } = req.body;
 
