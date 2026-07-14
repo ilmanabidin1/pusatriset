@@ -1454,11 +1454,15 @@ app.post('/api/payment/create', requireAccess, async (req, res) => {
     });
 
     const resData = await response.json();
-    if (resData && resData.status === 200 && resData.data && resData.data.Url) {
-      res.json({ ok: true, redirectUrl: resData.data.Url });
+    const resStatus = resData.status !== undefined ? resData.status : resData.Status;
+    const resDataObj = resData.data !== undefined ? resData.data : resData.Data;
+    const redirectUrl = resDataObj ? (resDataObj.Url || resDataObj.url) : null;
+
+    if (resData && (resStatus === 200 || resStatus == '200') && redirectUrl) {
+      res.json({ ok: true, redirectUrl: redirectUrl });
     } else {
       console.error('[iPaymu Payment Create] Error Response:', resData);
-      res.status(500).json({ ok: false, message: resData.message || 'Gagal membuat sesi pembayaran dengan iPaymu.' });
+      res.status(500).json({ ok: false, message: (resData.message || resData.Message) || 'Gagal membuat sesi pembayaran dengan iPaymu.' });
     }
   } catch (error) {
     console.error('[iPaymu Payment Create] Exception:', error);
@@ -1490,12 +1494,15 @@ app.post('/api/payment/callback', async (req, res) => {
 
   // 2. Parse callback parameters
   const data = req.body;
-  const { referenceId, status, status_code } = data;
+  const referenceId = data.referenceId || data.reference_id || data.ReferenceId || data.reference;
+  const rawStatus = data.status || data.Status || '';
+  const status = String(rawStatus).toLowerCase();
+  const statusCode = String(data.status_code !== undefined ? data.status_code : (data.StatusCode !== undefined ? data.StatusCode : '')).trim();
 
   console.log('[iPaymu Webhook] Received callback data:', data);
 
   // 3. Process payment status
-  if (status_code === '1' || status === 'berhasil') {
+  if (statusCode === '1' || status === 'berhasil' || status === 'success') {
     if (referenceId) {
       const parts = referenceId.split('_');
       if (parts.length >= 2) {
