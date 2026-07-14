@@ -430,6 +430,25 @@ app.get('/api/debug-smtp', async (req, res) => {
   }
 });
 
+app.get('/api/debug-delete-user', (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ ok: false, message: 'Email query parameter is required.' });
+  }
+
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.email === email);
+
+  if (userIndex === -1) {
+    return res.status(404).json({ ok: false, message: 'User not found in database.' });
+  }
+
+  users.splice(userIndex, 1);
+  saveUsers(users);
+
+  res.json({ ok: true, message: `User with email ${email} has been deleted successfully.` });
+});
+
 app.post('/api/auth/google', async (req, res) => {
   const { token } = req.body;
 
