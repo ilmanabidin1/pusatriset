@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const profileAvatar = document.getElementById('profileAvatar');
         const sidebarUpgradeCard = document.getElementById('sidebarUpgradeCard');
         const headerUpgradeBtn = document.getElementById('headerUpgradeBtn');
-        const bannerUpgradeBtn = document.getElementById('bannerUpgradeBtn');
+        const bannerUpgradeBtn = document.getElementById('bannerUpgradeBtn') || document.querySelector('.banner-slide[data-slide-index="0"] .banner-action-btn');
         const matchPremiumLock = document.getElementById('matchPremiumLock');
 
         if (currentUser.user) {

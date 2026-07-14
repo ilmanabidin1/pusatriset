@@ -434,11 +434,7 @@
     .match-banner-card {
       background: linear-gradient(105deg, #0787dc 0%, #00539c 60%, #082240 100%);
       border-radius: var(--card-radius);
-      padding: 2.25rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 2rem;
+      padding: 2.25rem 2rem 2.75rem 2rem;
       color: #ffffff;
       box-shadow: 0 10px 30px rgba(7, 135, 220, 0.15);
       margin-bottom: 2rem;
@@ -455,6 +451,29 @@
       height: 100%;
       background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
       pointer-events: none;
+    }
+
+    .banner-slides-wrapper {
+      width: 100%;
+      position: relative;
+    }
+
+    .banner-slide {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      width: 100%;
+    }
+
+    .banner-slide.active {
+      display: flex;
+      animation: fadeEffect 0.5s ease-in-out;
+    }
+
+    @keyframes fadeEffect {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .banner-text {
@@ -492,7 +511,7 @@
       line-height: 1.5;
     }
 
-    .banner-upgrade-btn {
+    .banner-action-btn {
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -508,15 +527,71 @@
       box-shadow: 0 4px 15px rgba(255, 116, 23, 0.3);
       font-family: inherit;
       transition: all 0.25s ease;
+      z-index: 5;
     }
 
-    .banner-upgrade-btn:hover {
+    .banner-action-btn:hover {
       background: #e85f00;
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(255, 116, 23, 0.45);
     }
 
-    /* Stats Grid Row */
+    /* Controls */
+    .banner-controls {
+      position: absolute;
+      right: 1.5rem;
+      top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 10;
+    }
+
+    .banner-ctrl-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .banner-ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    /* Dots */
+    .banner-dots {
+      position: absolute;
+      bottom: 0.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.4rem;
+      z-index: 10;
+    }
+
+    .banner-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .banner-dot.active {
+      width: 18px;
+      border-radius: 3px;
+      background: #ffffff;
+    }    /* Stats Grid Row */
     .stats-row-container {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1401,14 +1476,71 @@
         
         <!-- Banner Card matching mock style -->
         <div class="match-banner-card" id="matchBannerCard">
-          <div class="banner-text">
-            <span class="banner-badge"><i class="fa-solid fa-percent"></i> AI Match Score</span>
-            <h3>Temukan jurnal paling cocok untuk artikel Anda</h3>
-            <p>Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.</p>
+          <div class="banner-slides-wrapper" id="bannerSlidesWrapper">
+            
+            <!-- Slide 1: AI Match Score -->
+            <div class="banner-slide active" data-slide-index="0">
+              <div class="banner-text">
+                <span class="banner-badge"><i class="fa-solid fa-percent"></i> AI Match Score</span>
+                <h3>Temukan jurnal paling cocok untuk artikel Anda</h3>
+                <p>Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.</p>
+              </div>
+              <button class="banner-action-btn" onclick="document.querySelector('.sidebar-link[data-tab=\'match-score\']')?.click()">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Mulai AI Match
+              </button>
+            </div>
+
+            <!-- Slide 2: AI Lit Review -->
+            <div class="banner-slide" data-slide-index="1">
+              <div class="banner-text">
+                <span class="banner-badge"><i class="fa-solid fa-book-open"></i> AI Lit Review</span>
+                <h3>Buat tinjauan pustaka ilmiah dalam hitungan detik</h3>
+                <p>Masukkan topik riset Anda, dapatkan analisis komprehensif, sitasi, dan ekspor draft instan.</p>
+              </div>
+              <button class="banner-action-btn" onclick="document.querySelector('.sidebar-link[data-tab=\'lit-review\']')?.click()">
+                <i class="fa-solid fa-magnifying-glass"></i> Coba Lit Review
+              </button>
+            </div>
+
+            <!-- Slide 3: AI Drafting Companion -->
+            <div class="banner-slide" data-slide-index="2">
+              <div class="banner-text">
+                <span class="banner-badge"><i class="fa-solid fa-feather-pointed"></i> AI Drafting Companion</span>
+                <h3>Tulis draf manuskrip Anda bersama asisten AI</h3>
+                <p>Kembangkan argumen penelitian, perbaiki tata bahasa akademis, dan optimalkan struktur manuskrip.</p>
+              </div>
+              <button class="banner-action-btn" onclick="document.querySelector('.sidebar-link[data-tab=\'drafting-companion\']')?.click()">
+                <i class="fa-solid fa-pen-nib"></i> Mulai Menulis
+              </button>
+            </div>
+
+            <!-- Slide 4: Prompt Bank -->
+            <div class="banner-slide" data-slide-index="3">
+              <div class="banner-text">
+                <span class="banner-badge"><i class="fa-solid fa-lightbulb"></i> Prompt Bank</span>
+                <h3>Koleksi prompt pintar untuk publikasi ilmiah</h3>
+                <p>Gunakan ribuan formula instruksi siap pakai untuk paraphrase akademis dan respon reviewer.</p>
+              </div>
+              <button class="banner-action-btn" onclick="document.querySelector('.sidebar-link[data-tab=\'prompt-bank\']')?.click()">
+                <i class="fa-solid fa-layer-group"></i> Buka Prompt Bank
+              </button>
+            </div>
+
           </div>
-          <button class="banner-upgrade-btn btn-upgrade-trigger" id="bannerUpgradeBtn">
-            <i class="fa-solid fa-lock"></i> Upgrade Sekarang
-          </button>
+
+          <!-- Controls -->
+          <div class="banner-controls">
+            <button class="banner-ctrl-btn" id="bannerPrevBtn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="banner-ctrl-btn" id="bannerNextBtn"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+
+          <!-- Indicators -->
+          <div class="banner-dots">
+            <span class="banner-dot active" data-dot-index="0"></span>
+            <span class="banner-dot" data-dot-index="1"></span>
+            <span class="banner-dot" data-dot-index="2"></span>
+            <span class="banner-dot" data-dot-index="3"></span>
+          </div>
         </div>
 
         <!-- Statistics Row Container (Dynamic from database.js) -->
@@ -2184,10 +2316,77 @@
           });
         });
       }
+
+      // Banner Slideshow Logic
+      const bannerSlides = document.querySelectorAll('.banner-slide');
+      const bannerDots = document.querySelectorAll('.banner-dot');
+      const bannerPrevBtn = document.getElementById('bannerPrevBtn');
+      const bannerNextBtn = document.getElementById('bannerNextBtn');
+      let currentBannerSlide = 0;
+      let bannerSlideInterval;
+
+      function showBannerSlide(index) {
+        if (bannerSlides.length === 0) return;
+        if (index >= bannerSlides.length) currentBannerSlide = 0;
+        else if (index < 0) currentBannerSlide = bannerSlides.length - 1;
+        else currentBannerSlide = index;
+
+        bannerSlides.forEach((slide, i) => {
+          if (i === currentBannerSlide) {
+            slide.classList.add('active');
+          } else {
+            slide.classList.remove('active');
+          }
+        });
+
+        bannerDots.forEach((dot, i) => {
+          if (i === currentBannerSlide) {
+            dot.classList.add('active');
+          } else {
+            dot.classList.remove('active');
+          }
+        });
+      }
+
+      function nextBannerSlide() {
+        showBannerSlide(currentBannerSlide + 1);
+      }
+
+      function startBannerTimer() {
+        stopBannerTimer();
+        bannerSlideInterval = setInterval(nextBannerSlide, 5000);
+      }
+
+      function stopBannerTimer() {
+        if (bannerSlideInterval) clearInterval(bannerSlideInterval);
+      }
+
+      if (bannerPrevBtn && bannerNextBtn) {
+        bannerPrevBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showBannerSlide(currentBannerSlide - 1);
+          startBannerTimer();
+        });
+        bannerNextBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showBannerSlide(currentBannerSlide + 1);
+          startBannerTimer();
+        });
+      }
+
+      bannerDots.forEach(dot => {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(dot.getAttribute('data-dot-index'));
+          showBannerSlide(idx);
+          startBannerTimer();
+        });
+      });
+
+      // Mulai timer slideshow
+      startBannerTimer();
     });
   </script>
-
-  <!-- Premium Upgrade Modal HTML -->
   <div class="modal-overlay" id="upgradeModal">
     <div class="modal-card">
       <button class="modal-close-btn" id="closeModalBtn">&times;</button>
