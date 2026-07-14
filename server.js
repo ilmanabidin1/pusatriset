@@ -1425,7 +1425,7 @@ app.post('/api/payment/create', requireAccess, async (req, res) => {
 
   const va = process.env.IPAYMU_VA;
   const apiKey = process.env.IPAYMU_API_KEY;
-  const isSandbox = process.env.IPAYMU_SANDBOX === 'true';
+  const isSandbox = String(process.env.IPAYMU_SANDBOX).trim().toLowerCase() === 'true';
 
   if (!va || !apiKey) {
     return res.status(500).json({ ok: false, message: 'iPaymu credentials belum dikonfigurasi di server.' });
