@@ -504,7 +504,10 @@
             </div>
           </div>
           <div class="form-group">
-            <label for="loginPassword">Password</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <label for="loginPassword" style="margin-bottom: 0;">Password</label>
+              <a href="#" id="forgotPasswordLink" style="font-size: 0.82rem; color: #3b82f6; text-decoration: none; font-weight: 500;">Lupa Password?</a>
+            </div>
             <div class="input-wrapper">
               <i class="fa-solid fa-lock input-icon"></i>
               <input type="password" id="loginPassword" placeholder="••••••••" required>
@@ -632,6 +635,33 @@
           <p class="auth-error" id="accessError"></p>
         </form>
 
+        <!-- Form Lupa Password -->
+        <form id="forgotForm" class="auth-form">
+          <div style="margin-bottom: 1.5rem; text-align: center;">
+            <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: #ffffff; margin-bottom: 0.5rem;">Lupa Kata Sandi?</h3>
+            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.6); line-height: 1.4;">Masukkan alamat email terdaftar Anda, kami akan mengirimkan instruksi untuk mengatur ulang kata sandi.</p>
+          </div>
+
+          <div id="forgotError" class="auth-error" style="color: #ef4444; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600; text-align: center;"></div>
+          <div id="forgotSuccess" class="auth-success" style="color: #10b981; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600; text-align: center;"></div>
+
+          <div class="form-group">
+            <label for="forgotEmail">Email</label>
+            <div class="input-wrapper">
+              <i class="fa-regular fa-envelope input-icon"></i>
+              <input type="email" id="forgotEmail" placeholder="nama@email.com" required>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn btn-main">
+            <i class="fa-solid fa-paper-plane"></i> Kirim Tautan Pemulihan
+          </button>
+
+          <p class="auth-helper-text" style="margin-top: 1.25rem; text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+            Ingat kata sandi Anda? <a href="#" id="backToLoginLink" style="color: #3b82f6; text-decoration: none; font-weight: 600;">Masuk di sini</a>
+          </p>
+        </form>
+
       </div>
       
       <!-- Footer Links for Gateway Compliance -->
@@ -737,6 +767,22 @@
         switchTab('accessForm');
       });
 
+      const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+      if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          switchTab('forgotForm');
+        });
+      }
+
+      const backToLoginLink = document.getElementById('backToLoginLink');
+      if (backToLoginLink) {
+        backToLoginLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          switchTab('loginForm');
+        });
+      }
+
       // Show/Hide Password Toggle
       const toggles = document.querySelectorAll('.password-toggle');
       toggles.forEach(toggle => {
@@ -755,9 +801,20 @@
         });
       });
 
+      // Check query parameter verified & set alert
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('verified') === 'true') {
+        const loginError = document.getElementById('loginError');
+        if (loginError) {
+          loginError.style.color = '#10b981';
+          loginError.innerHTML = `<i class="fa-solid fa-circle-check"></i> Akun Anda berhasil diverifikasi! Silakan masuk menggunakan email dan password Anda.`;
+        }
+      }
+
       // Helper function for API calls
       async function handleAuth(url, bodyData, errorElement, btnElement, btnIcon, btnText) {
         errorElement.innerHTML = '';
+        errorElement.style.color = '#ef4444';
         btnElement.disabled = true;
         btnElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses...`;
 
@@ -772,14 +829,21 @@
 
           if (!response.ok) {
             errorElement.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${data.message || 'Terjadi kesalahan. Silakan coba lagi.'}`;
+          } else if (data.requiresVerification) {
+            errorElement.style.color = '#10b981';
+            errorElement.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${data.message}`;
+            const form = btnElement.closest('form');
+            if (form) form.reset();
           } else {
-            // Berhasil login/register/access, redirect ke index
             window.location.href = '/';
           }
         } catch (err) {
           errorElement.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Gagal menghubungi server. Periksa koneksi Anda.`;
         } finally {
-          if (errorElement.innerHTML !== '') {
+          if (errorElement.innerHTML !== '' && !errorElement.innerHTML.includes('berhasil')) {
+            btnElement.disabled = false;
+            btnElement.innerHTML = `<i class="${btnIcon}"></i> ${btnText}`;
+          } else if (errorElement.innerHTML.includes('berhasil') || errorElement.innerHTML.includes('pemulihan')) {
             btnElement.disabled = false;
             btnElement.innerHTML = `<i class="${btnIcon}"></i> ${btnText}`;
           }
@@ -813,6 +877,41 @@
         const code = document.getElementById('accessCode').value;
         const btn = accessForm.querySelector('button[type="submit"]');
         handleAuth('/api/access', { code }, document.getElementById('accessError'), btn, 'fa-solid fa-unlock-keyhole', 'Aktifkan Premium');
+      });
+
+      // Handle Forgot Password Form
+      const forgotForm = document.getElementById('forgotForm');
+      forgotForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('forgotEmail').value;
+        const btn = forgotForm.querySelector('button[type="submit"]');
+        const errorEl = document.getElementById('forgotError');
+        const successEl = document.getElementById('forgotSuccess');
+        
+        errorEl.innerHTML = '';
+        successEl.innerHTML = '';
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...`;
+
+        try {
+          const response = await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const data = await response.json();
+          if (response.ok) {
+            successEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${data.message}`;
+            forgotForm.reset();
+          } else {
+            errorEl.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${data.message}`;
+          }
+        } catch (err) {
+          errorEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Gagal menghubungi server.`;
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Kirim Tautan Pemulihan`;
+        }
       });
     });
   </script>

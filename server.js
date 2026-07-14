@@ -9,6 +9,54 @@ const { VertexAI } = require('@google-cloud/vertexai');
 const { OAuth2Client } = require('google-auth-library');
 const JOURNAL_DATABASE = require('./database');
 const app = express();
+const nodemailer = require('nodemailer');
+
+// SMTP Configuration for Hostinger
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.hostinger.com';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465');
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_FROM = process.env.SMTP_FROM || `"JurnalHub" <${SMTP_USER || 'no-reply@jurnalhub.id'}>`;
+
+// Transporter setup
+const transporter = SMTP_USER && SMTP_PASS ? nodemailer.createTransport({
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465,
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS
+  }
+}) : null;
+
+if (transporter) {
+  console.log('[SMTP] Transporter configured for:', SMTP_USER);
+} else {
+  console.log('[SMTP] Warning: SMTP credentials not set. Emails will be logged to console instead.');
+}
+
+// Helper to send emails
+async function sendMailHelper(to, subject, html) {
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: SMTP_FROM,
+        to,
+        subject,
+        html
+      });
+      console.log(`[SMTP] Email sent successfully to ${to}`);
+    } catch (err) {
+      console.error(`[SMTP] Error sending email to ${to}:`, err);
+    }
+  } else {
+    console.log('==================================================');
+    console.log(`[SMTP MOCK] To: ${to}`);
+    console.log(`[SMTP MOCK] Subject: ${subject}`);
+    console.log(`[SMTP MOCK] HTML:\n${html}`);
+    console.log('==================================================');
+  }
+}
 
 const GOOGLE_CLIENT_ID = '571306850750-ckq38nmai4felal861uu0hgj1b13bihf.apps.googleusercontent.com';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -145,6 +193,7 @@ function requireAccess(req, res, next) {
 }
 
 // User Authentication API Endpoints
+// User Authentication API Endpoints
 app.post('/api/register', async (req, res) => {
   const { email, password } = req.body;
 
@@ -161,11 +210,14 @@ app.post('/api/register', async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    const token = uuidv4();
     const newUser = {
       id: uuidv4(),
       email,
       password: hashedPassword,
       type: 'free', // Default account type is free
+      isVerified: false,
+      verificationToken: token,
       name: '',
       faculty: '',
       university: '',
@@ -177,12 +229,24 @@ app.post('/api/register', async (req, res) => {
     users.push(newUser);
     saveUsers(users);
 
-    // Auto login after register
-    req.session.userId = newUser.id;
-    req.session.userType = newUser.type;
-    req.session.email = newUser.email;
+    const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email?token=${token}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <h2 style="color: #0b1a30; text-align: center;">Selamat Datang di JurnalHub!</h2>
+        <p>Terima kasih telah mendaftar. Silakan klik tombol di bawah ini untuk memverifikasi alamat email Anda dan mengaktifkan akun Anda:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationUrl}" style="background-color: #0787dc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Verifikasi Email Saya</a>
+        </div>
+        <p style="color: #64748b; font-size: 0.85em;">Jika tombol di atas tidak berfungsi, Anda juga dapat menyalin dan menempelkan tautan berikut ke browser Anda:</p>
+        <p style="word-break: break-all; color: #0787dc;"><a href="${verificationUrl}">${verificationUrl}</a></p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+        <p style="color: #64748b; font-size: 0.8em; text-align: center;">Ini adalah email otomatis, mohon tidak membalas email ini.</p>
+      </div>
+    `;
 
-    res.json({ ok: true, user: { email: newUser.email, type: newUser.type } });
+    await sendMailHelper(newUser.email, 'Verifikasi Akun JurnalHub Anda', html);
+
+    res.json({ ok: true, requiresVerification: true, message: 'Registrasi berhasil. Silakan periksa kotak masuk email Anda untuk memverifikasi akun Anda sebelum melakukan login.' });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ ok: false, message: 'Terjadi kesalahan pada server.' });
@@ -203,6 +267,11 @@ app.post('/api/login', async (req, res) => {
     return res.status(401).json({ ok: false, message: 'Email atau password salah.' });
   }
 
+  // Jika akun diatur belum terverifikasi secara eksplisit
+  if (user.isVerified === false) {
+    return res.status(403).json({ ok: false, isNotVerified: true, message: 'Akun Anda belum terverifikasi. Silakan periksa email Anda untuk tautan verifikasi.' });
+  }
+
   try {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -217,6 +286,94 @@ app.post('/api/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ ok: false, message: 'Terjadi kesalahan pada server.' });
+  }
+});
+
+// GET verify email
+app.get('/api/auth/verify-email', (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.status(400).send('<h2>Token verifikasi tidak ditemukan.</h2>');
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.verificationToken === token);
+
+  if (!user) {
+    return res.status(400).send('<h2>Tautan verifikasi tidak valid atau telah kedaluwarsa.</h2>');
+  }
+
+  user.isVerified = true;
+  delete user.verificationToken;
+  saveUsers(users);
+
+  res.redirect('/auth.html?verified=true');
+});
+
+// POST forgot password
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ ok: false, message: 'Email wajib diisi.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.email === email);
+
+  if (!user) {
+    // Demi alasan keamanan, tetap tampilkan respons sukses agar pelaku tidak mengetahui email mana saja yang terdaftar
+    return res.json({ ok: true, message: 'Instruksi pemulihan telah dikirim jika email tersebut terdaftar.' });
+  }
+
+  const token = uuidv4();
+  user.resetPasswordToken = token;
+  user.resetPasswordExpires = Date.now() + 3600000; // 1 jam masa berlaku
+  saveUsers(users);
+
+  const resetUrl = `${req.protocol}://${req.get('host')}/reset-password.html?token=${token}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <h2 style="color: #0b1a30; text-align: center;">Atur Ulang Kata Sandi JurnalHub</h2>
+      <p>Kami menerima permintaan untuk mengatur ulang kata sandi akun JurnalHub Anda. Silakan klik tombol di bawah ini untuk melakukannya (Tautan ini berlaku selama 1 jam):</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${resetUrl}" style="background-color: #0787dc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Atur Ulang Kata Sandi</a>
+      </div>
+      <p style="color: #64748b; font-size: 0.85em;">Jika Anda tidak meminta pengaturan ulang kata sandi, abaikan email ini.</p>
+      <p style="color: #64748b; font-size: 0.85em;">Atau salin tautan berikut ke browser Anda:</p>
+      <p style="word-break: break-all; color: #0787dc;"><a href="${resetUrl}">${resetUrl}</a></p>
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+      <p style="color: #64748b; font-size: 0.8em; text-align: center;">Ini adalah email otomatis, mohon tidak membalas email ini.</p>
+    </div>
+  `;
+
+  await sendMailHelper(user.email, 'Atur Ulang Kata Sandi JurnalHub', html);
+  res.json({ ok: true, message: 'Instruksi pemulihan kata sandi telah dikirim ke email Anda.' });
+});
+
+// POST reset password
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ ok: false, message: 'Token dan kata sandi baru wajib disertakan.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.resetPasswordToken === token && u.resetPasswordExpires > Date.now());
+
+  if (!user) {
+    return res.status(400).json({ ok: false, message: 'Tautan reset kata sandi tidak valid atau telah kedaluwarsa.' });
+  }
+
+  try {
+    user.password = await bcrypt.hash(password, 10);
+    delete user.resetPasswordToken;
+    delete user.resetPasswordExpires;
+    saveUsers(users);
+
+    res.json({ ok: true, message: 'Kata sandi berhasil diubah. Silakan masuk kembali.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ ok: false, message: 'Gagal mengatur ulang kata sandi.' });
   }
 });
 
@@ -1136,7 +1293,8 @@ app.use((req, res, next) => {
   // File statis yang diizinkan tanpa login (terutama untuk halaman auth dan informasi)
   const publicFiles = [
     '/auth.html', '/styles.css', '/app.js', '/database.js',
-    '/terms.html', '/refund.html', '/faq.html', '/contact.html'
+    '/terms.html', '/refund.html', '/faq.html', '/contact.html',
+    '/reset-password.html'
   ];
 
   if (publicFiles.includes(req.path) || req.path.startsWith('/assets/')) {
