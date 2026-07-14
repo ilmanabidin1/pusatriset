@@ -2297,11 +2297,43 @@
         });
       }
 
-      // Handle plan button selections (redirect to Lynk.id)
-      document.addEventListener('click', (e) => {
+      // Handle plan button selections (redirect to iPaymu)
+      document.addEventListener('click', async (e) => {
         if (e.target && e.target.classList.contains('upgrade-btn-select')) {
           e.preventDefault();
-          window.open('https://drilman.my.id/drilmanabidin/nvj3wrm97zdw', '_blank');
+          const btn = e.target;
+          const planBase = btn.getAttribute('data-plan'); // 'premium' or 'ultimate'
+          const switchYearly = document.getElementById('switchYearly');
+          const isYearly = switchYearly && switchYearly.classList.contains('active');
+          const planId = `${planBase}_${isYearly ? 'yearly' : 'monthly'}`;
+
+          const originalText = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+
+          try {
+            const response = await fetch('/api/payment/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ planId })
+            });
+
+            const resData = await response.json();
+            if (response.ok && resData.ok && resData.redirectUrl) {
+              window.location.href = resData.redirectUrl;
+            } else {
+              alert(resData.message || 'Gagal memulai proses pembayaran. Silakan coba lagi.');
+              btn.disabled = false;
+              btn.innerHTML = originalText;
+            }
+          } catch (error) {
+            console.error('Payment initialization failed:', error);
+            alert('Terjadi kesalahan koneksi saat memulai pembayaran: ' + error.message);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
         }
       });
 
@@ -2479,7 +2511,7 @@
         </div>
 
         <p style="font-size: 0.78rem; color: var(--text-muted); text-align: center; margin-bottom: 1.25rem;">
-          <i class="fa-solid fa-info-circle" style="color: var(--brand-blue);"></i> Pembayaran manual via Lynk.id. Dapatkan kode akses instan setelah transfer.
+          <i class="fa-solid fa-info-circle" style="color: var(--brand-blue);"></i> Alternatif: Pembayaran manual via <a href="https://drilman.my.id/drilmanabidin/nvj3wrm97zdw" target="_blank" style="color: var(--brand-blue); font-weight: 700; text-decoration: underline;">Lynk.id</a> untuk mendapatkan kode akses instan.
         </p>
 
         <!-- Footer link -->

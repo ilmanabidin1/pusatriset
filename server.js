@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -147,8 +148,17 @@ function getVertexModel(modelName = GEMINI_MODEL) {
   return model;
 }
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
+app.use(express.urlencoded({
+  extended: false,
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 
 // Trust proxy untuk Railway (supaya cookie secure bisa diset kalau dibelakang load balancer HTTPS)
 app.set('trust proxy', 1);
@@ -1361,6 +1371,165 @@ app.use('/templates', requireAccess, (req, res, next) => {
   }
   next();
 }, express.static(path.join(__dirname, 'templates')));
+
+// --- IPAYMU INTEGRATION ---
+const crypto = require('crypto');
+
+// Helper to generate iPaymu API signature
+function generateIpaymuSignature(body, method = 'POST') {
+  const va = process.env.IPAYMU_VA || '1179000000000000';
+  const apiKey = process.env.IPAYMU_API_KEY || 'sandbox-api-key-placeholder';
+  const bodyString = JSON.stringify(body);
+  const bodyHash = crypto.createHash('sha256').update(bodyString).digest('hex').toLowerCase();
+  const stringToSign = `${method}:${va}:${bodyHash}:${apiKey}`;
+  return crypto.createHmac('sha256', apiKey).update(stringToSign).digest('hex');
+}
+
+// Endpoint to create a payment transaction
+app.post('/api/payment/create', requireAccess, async (req, res) => {
+  const { planId } = req.body;
+  if (!planId) {
+    return res.status(400).json({ ok: false, message: 'Plan ID wajib dipilih.' });
+  }
+
+  // Price mapping for JurnalHub plans
+  const planPrices = {
+    premium_monthly: { price: 79000, name: 'Premium (Bulanan)', desc: 'Langganan JurnalHub Premium - Bulanan' },
+    premium_yearly: { price: 800000, name: 'Premium (Tahunan)', desc: 'Langganan JurnalHub Premium - Tahunan' },
+    ultimate_monthly: { price: 149000, name: 'Ultimate (Bulanan)', desc: 'Langganan JurnalHub Ultimate - Bulanan' },
+    ultimate_yearly: { price: 1500000, name: 'Ultimate (Tahunan)', desc: 'Langganan JurnalHub Ultimate - Tahunan' }
+  };
+
+  const selectedPlan = planPrices[planId];
+  if (!selectedPlan) {
+    return res.status(400).json({ ok: false, message: 'Plan ID tidak valid.' });
+  }
+
+  const va = process.env.IPAYMU_VA;
+  const apiKey = process.env.IPAYMU_API_KEY;
+  const isSandbox = process.env.IPAYMU_SANDBOX === 'true';
+
+  if (!va || !apiKey) {
+    return res.status(500).json({ ok: false, message: 'iPaymu credentials belum dikonfigurasi di server.' });
+  }
+
+  // Base URL according to sandbox environment
+  const ipaymuUrl = isSandbox 
+    ? 'https://sandbox.ipaymu.com/api/v2/payment' 
+    : 'https://payment.ipaymu.com/api/v2/payment';
+
+  // Return and notification URLs
+  const hostHeader = req.headers.host || 'localhost:3000';
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const baseUrl = `${protocol}://${hostHeader}`;
+
+  // Unique transaction reference containing: userId + "_" + planId + "_" + timestamp
+  const refId = `${req.session.userId}_${planId}_${Date.now()}`;
+
+  const payload = {
+    product: [selectedPlan.name],
+    qty: [1],
+    price: [selectedPlan.price],
+    description: [selectedPlan.desc],
+    returnUrl: `${baseUrl}/payment-success`,
+    cancelUrl: `${baseUrl}/payment-cancel`,
+    notifyUrl: `${baseUrl}/api/payment/callback`,
+    referenceId: refId
+  };
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14); // YYYYMMDDhhmmss
+    const signature = generateIpaymuSignature(payload, 'POST');
+
+    const response = await fetchFn(ipaymuUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'va': va,
+        'signature': signature,
+        'timestamp': timestamp
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const resData = await response.json();
+    if (resData && resData.status === 200 && resData.data && resData.data.Url) {
+      res.json({ ok: true, redirectUrl: resData.data.Url });
+    } else {
+      console.error('[iPaymu Payment Create] Error Response:', resData);
+      res.status(500).json({ ok: false, message: resData.message || 'Gagal membuat sesi pembayaran dengan iPaymu.' });
+    }
+  } catch (error) {
+    console.error('[iPaymu Payment Create] Exception:', error);
+    res.status(500).json({ ok: false, message: 'Terjadi kesalahan pada server saat menghubungkan ke iPaymu: ' + error.message });
+  }
+});
+
+// Endpoint for Webhook Callback (IPN)
+app.post('/api/payment/callback', async (req, res) => {
+  const signatureFromHeader = req.headers['signature'];
+  const apiKey = process.env.IPAYMU_API_KEY;
+
+  if (!apiKey) {
+    console.error('[iPaymu Webhook] Error: API key not set in environment.');
+    return res.status(500).send('API key not set');
+  }
+
+  // 1. Verify iPaymu signature
+  const rawBodyString = req.rawBody ? req.rawBody.toString('utf8') : '';
+  const calculatedSignature = crypto
+    .createHmac('sha256', apiKey)
+    .update(rawBodyString)
+    .digest('hex');
+
+  if (signatureFromHeader && calculatedSignature !== signatureFromHeader) {
+    console.error('[iPaymu Webhook] Unauthorized Signature. Header:', signatureFromHeader, 'Calculated:', calculatedSignature);
+    return res.status(401).send('Unauthorized signature');
+  }
+
+  // 2. Parse callback parameters
+  const data = req.body;
+  const { referenceId, status, status_code } = data;
+
+  console.log('[iPaymu Webhook] Received callback data:', data);
+
+  // 3. Process payment status
+  if (status_code === '1' || status === 'berhasil') {
+    if (referenceId) {
+      const parts = referenceId.split('_');
+      if (parts.length >= 2) {
+        const userId = parts[0];
+        const planId = parts[1]; // premium_monthly, premium_yearly, ultimate_monthly, ultimate_yearly
+        const targetType = planId.startsWith('ultimate') ? 'ultimate' : 'premium';
+
+        console.log(`[iPaymu Webhook] Payment Successful! Upgrading user ${userId} to type ${targetType}`);
+
+        // Update user type in database
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.id === userId);
+        if (userIndex !== -1) {
+          users[userIndex].type = targetType;
+          saveUsers(users);
+          console.log(`[iPaymu Webhook] User ${userId} upgraded successfully.`);
+        } else {
+          console.warn(`[iPaymu Webhook] User ${userId} not found in database.`);
+        }
+      }
+    }
+  }
+
+  // Always respond HTTP 200 OK to acknowledge callback
+  res.status(200).send('OK');
+});
+
+app.get('/payment-success', (req, res) => {
+  res.sendFile(path.join(__dirname, 'payment-success.html'));
+});
+
+app.get('/payment-cancel', (req, res) => {
+  res.sendFile(path.join(__dirname, 'payment-cancel.html'));
+});
 
 app.use(express.static(path.join(__dirname, '.')));
 
