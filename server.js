@@ -38,9 +38,39 @@ if (transporter) {
   console.log('[SMTP] Warning: SMTP credentials not set. Emails will be logged to console instead.');
 }
 
-// Helper to send emails
+// Helper to send emails (Supports Resend API and SMTP fallback)
 async function sendMailHelper(to, subject, html) {
-  if (transporter) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+
+  if (resendApiKey) {
+    // Gunakan Resend API (HTTPS - anti-blokir Railway)
+    try {
+      const fetchFn = globalThis.fetch || require('node-fetch');
+      const response = await fetchFn('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: SMTP_FROM || 'JurnalHub <onboarding@resend.dev>',
+          to: [to],
+          subject: subject,
+          html: html
+        })
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        console.error('[Resend API] Error sending email:', resData);
+      } else {
+        console.log(`[Resend API] Email sent successfully to ${to}, ID: ${resData.id}`);
+      }
+    } catch (err) {
+      console.error('[Resend API] Request error:', err);
+    }
+  } else if (transporter) {
+    // Fallback ke SMTP
     try {
       await transporter.sendMail({
         from: SMTP_FROM,
@@ -53,6 +83,7 @@ async function sendMailHelper(to, subject, html) {
       console.error(`[SMTP] Error sending email to ${to}:`, err);
     }
   } else {
+    // Mocking lokal
     console.log('==================================================');
     console.log(`[SMTP MOCK] To: ${to}`);
     console.log(`[SMTP MOCK] Subject: ${subject}`);
@@ -381,10 +412,20 @@ app.post('/api/auth/reset-password', async (req, res) => {
 });
 
 app.get('/api/debug-smtp', async (req, res) => {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    return res.json({
+      ok: true,
+      message: 'Resend API Key is configured! Email sending will use Resend API instead of SMTP.',
+      hasResendKey: true,
+      from: SMTP_FROM || 'JurnalHub <onboarding@resend.dev>'
+    });
+  }
+
   if (!SMTP_USER || !SMTP_PASS) {
     return res.json({ 
       ok: false, 
-      message: 'SMTP credentials not configured in environment variables.',
+      message: 'Resend API Key is not set, and SMTP credentials are not fully configured in environment variables.',
       host: SMTP_HOST,
       port: SMTP_PORT,
       hasUser: !!SMTP_USER,
