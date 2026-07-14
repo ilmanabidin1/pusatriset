@@ -1286,6 +1286,15 @@
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
       backdrop-filter: blur(4px);
     }
+    @media (max-width: 768px) {
+      .modal-card {
+        max-width: 95% !important;
+        margin: 1rem;
+      }
+      #pricingCardsContainer {
+        grid-template-columns: 1fr !important;
+      }
+    }
   </style>
 
   <!-- CDNs for client-side docx rendering & PDF export -->
@@ -2123,9 +2132,17 @@
         switchMonthly.addEventListener('click', () => {
           switchMonthly.classList.add('active');
           if (switchYearly) switchYearly.classList.remove('active');
-          if (modalPriceTitle) modalPriceTitle.innerHTML = 'Rp49rb <span class="price-period">/bulan</span>';
-          if (modalPriceDetail) modalPriceDetail.textContent = 'Ditagih bulanan, batalkan kapan saja';
-          if (modalCtaBtn) modalCtaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Upgrade Sekarang — Rp49.000/bulan';
+          
+          const premiumPriceText = document.getElementById('premiumPriceText');
+          const premiumPriceDetail = document.getElementById('premiumPriceDetail');
+          const ultimatePriceText = document.getElementById('ultimatePriceText');
+          const ultimatePriceDetail = document.getElementById('ultimatePriceDetail');
+
+          if (premiumPriceText) premiumPriceText.innerHTML = 'Rp79rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
+          if (premiumPriceDetail) premiumPriceDetail.textContent = 'Ditagih bulanan';
+          
+          if (ultimatePriceText) ultimatePriceText.innerHTML = 'Rp149rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
+          if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Ditagih bulanan';
         });
       }
 
@@ -2134,19 +2151,27 @@
         switchYearly.addEventListener('click', () => {
           switchYearly.classList.add('active');
           if (switchMonthly) switchMonthly.classList.remove('active');
-          if (modalPriceTitle) modalPriceTitle.innerHTML = 'Rp33rb <span class="price-period">/bulan</span>';
-          if (modalPriceDetail) modalPriceDetail.innerHTML = '<span style="text-decoration: line-through;">Rp49.000</span> ditagih Rp400.000/tahun';
-          if (modalCtaBtn) modalCtaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Upgrade Sekarang — Rp400.000/tahun';
+          
+          const premiumPriceText = document.getElementById('premiumPriceText');
+          const premiumPriceDetail = document.getElementById('premiumPriceDetail');
+          const ultimatePriceText = document.getElementById('ultimatePriceText');
+          const ultimatePriceDetail = document.getElementById('ultimatePriceDetail');
+
+          if (premiumPriceText) premiumPriceText.innerHTML = 'Rp800rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span>';
+          if (premiumPriceDetail) premiumPriceDetail.textContent = 'Setara Rp66rb/bulan';
+          
+          if (ultimatePriceText) ultimatePriceText.innerHTML = 'Rp1.5jt<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span>';
+          if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Setara Rp125rb/bulan';
         });
       }
 
-      // CTA Button Click (open WhatsApp/purchase instructions)
-      if (modalCtaBtn) {
-        modalCtaBtn.addEventListener('click', (e) => {
+      // Handle plan button selections (redirect to Lynk.id)
+      document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('upgrade-btn-select')) {
           e.preventDefault();
           window.open('https://drilman.my.id/drilmanabidin/nvj3wrm97zdw', '_blank');
-        });
-      }
+        }
+      });
 
       // Activate Code Footer Link (directs to auth access tab)
       if (modalActivateLink) {
@@ -2172,52 +2197,94 @@
           <i class="fa-solid fa-crown"></i>
         </div>
         <h3>Upgrade ke JurnalHub Premium</h3>
-        <p>Buka AI Match Score tanpa batas & filter penuh</p>
+        <p>Pilih paket berlangganan untuk membuka fitur AI tanpa batas</p>
       </div>
 
       <div class="modal-body">
-        <!-- Coming Soon & Info Alert -->
-        <div style="background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; text-align: left;">
-          <div style="display: flex; align-items: center; gap: 0.5rem; color: #d97706; font-weight: 800; font-size: 0.95rem; margin-bottom: 0.35rem; font-family: var(--font-outfit);">
-            <i class="fa-solid fa-clock"></i> Pembayaran Instan Coming Soon
-          </div>
-          <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin: 0;">
-            Sistem pembayaran otomatis e-wallet & virtual account sedang dalam verifikasi merchant DOKU. Untuk sementara, Anda dapat melakukan pembelian kode akses secara manual melalui Lynk.id.
-          </p>
-        </div>
-
-        <!-- Features Box -->
-        <div class="modal-features-box">
-          <div class="feature-item">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>AI Journal Matcher & Analisis Review tanpa batas</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>AI Drafting Companion (Outline Pembahasan Per Bab)</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>Unduh Template Jurnal Internasional Resmi (.docx)</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>Akses Penuh 2.100+ Prompt Riset & Sidang (Prompt Bank)</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>Pencarian, filter, & simpan jurnal favorit tanpa batas</span>
+        <!-- Billing Switcher -->
+        <div class="billing-switcher-wrapper" style="margin-bottom: 1.5rem;">
+          <div class="billing-switcher" style="max-width: 320px; margin: 0 auto;">
+            <button class="switcher-btn" id="switchMonthly">Bulanan</button>
+            <button class="switcher-btn active" id="switchYearly">Tahunan <span class="save-badge">Hemat s.d 16%</span></button>
           </div>
         </div>
 
-        <!-- CTA Button -->
-        <button class="modal-cta-btn" id="modalCtaBtn" style="background: linear-gradient(135deg, var(--primary-color) 0%, #ff8e3c 100%); color: #ffffff; border: none; outline: none; cursor: pointer;">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> Beli Kode Akses di Lynk.id
-        </button>
-        <p class="cta-subtext" style="display: none;">Batal kapan saja · Pembayaran aman</p>
+        <!-- Pricing Cards Container -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;" id="pricingCardsContainer">
+          
+          <!-- Plan 1: Premium -->
+          <div style="border: 1px solid rgba(8,34,64,0.08); border-radius: 16px; padding: 1.25rem; background: #ffffff; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+            <div>
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.1rem; color: var(--text-main); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.4rem;">
+                <i class="fa-solid fa-star" style="color: var(--brand-blue);"></i> Premium
+              </h4>
+              <div style="margin: 0.75rem 0;">
+                <h2 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.65rem; color: var(--text-main); margin: 0;" id="premiumPriceText">Rp800rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span></h2>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;" id="premiumPriceDetail">Setara Rp66rb/bulan</p>
+              </div>
+              <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); text-align: left;">
+                <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
+                  <span>Jatah <strong>15x/bulan</strong> AI Drafting</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
+                  <span>Jatah <strong>15x/bulan</strong> AI Literature Review</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
+                  <span>AI Journal Matcher tanpa batas</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
+                  <span>Template Jurnal & Prompt Bank</span>
+                </li>
+              </ul>
+            </div>
+            <button class="upgrade-btn-select" data-plan="premium" style="width: 100%; margin-top: 1.25rem; padding: 0.6rem; background: rgba(7, 135, 220, 0.08); border: 1px solid rgba(7, 135, 220, 0.15); color: var(--brand-blue); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 0.82rem;">Pilih Premium</button>
+          </div>
+
+          <!-- Plan 2: Ultimate -->
+          <div style="border: 2px solid #fbbf24; border-radius: 16px; padding: 1.25rem; background: #fffdf6; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+            <span style="position: absolute; top: -10px; right: 1rem; background: #fbbf24; color: #051329; font-size: 0.62rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 20px; text-transform: uppercase; font-family: var(--font-outfit);">Paling Populer</span>
+            <div>
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.1rem; color: var(--text-main); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.4rem;">
+                <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Ultimate
+              </h4>
+              <div style="margin: 0.75rem 0;">
+                <h2 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.65rem; color: var(--text-main); margin: 0;" id="ultimatePriceText">Rp1.5jt<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span></h2>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;" id="ultimatePriceDetail">Setara Rp125rb/bulan</p>
+              </div>
+              <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); text-align: left;">
+                <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
+                  <span style="color: var(--text-main); font-weight: 700;">Unlimited All Access</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
+                  <span>AI Drafting tanpa batas</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
+                  <span>AI Literature Review tanpa batas</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
+                  <span>Prioritas server & dukungan langsung</span>
+                </li>
+              </ul>
+            </div>
+            <button class="upgrade-btn-select" data-plan="ultimate" style="width: 100%; margin-top: 1.25rem; padding: 0.6rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #051329; border-radius: 8px; font-weight: 800; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 0.82rem;">Pilih Ultimate</button>
+          </div>
+          
+        </div>
+
+        <p style="font-size: 0.78rem; color: var(--text-muted); text-align: center; margin-bottom: 1.25rem;">
+          <i class="fa-solid fa-info-circle" style="color: var(--brand-blue);"></i> Pembayaran manual via Lynk.id. Dapatkan kode akses instan setelah transfer.
+        </p>
 
         <!-- Footer link -->
-        <p class="modal-footer-text">
+        <p class="modal-footer-text" style="margin-top: 1rem; padding-top: 1rem;">
           Sudah punya kode akses? <a href="#" id="modalActivateLink">Aktifkan di sini</a>
         </p>
       </div>
