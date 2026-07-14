@@ -26,6 +26,9 @@ const transporter = SMTP_USER && SMTP_PASS ? nodemailer.createTransport({
   auth: {
     user: SMTP_USER,
     pass: SMTP_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 }) : null;
 
@@ -244,7 +247,7 @@ app.post('/api/register', async (req, res) => {
       </div>
     `;
 
-    await sendMailHelper(newUser.email, 'Verifikasi Akun JurnalHub Anda', html);
+    sendMailHelper(newUser.email, 'Verifikasi Akun JurnalHub Anda', html);
 
     res.json({ ok: true, requiresVerification: true, message: 'Registrasi berhasil. Silakan periksa kotak masuk email Anda untuk memverifikasi akun Anda sebelum melakukan login.' });
   } catch (error) {
@@ -346,7 +349,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     </div>
   `;
 
-  await sendMailHelper(user.email, 'Atur Ulang Kata Sandi JurnalHub', html);
+  sendMailHelper(user.email, 'Atur Ulang Kata Sandi JurnalHub', html);
   res.json({ ok: true, message: 'Instruksi pemulihan kata sandi telah dikirim ke email Anda.' });
 });
 
