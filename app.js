@@ -82,8 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const settingsAccountType = document.getElementById('settingsAccountType');
           if (settingsEmail) settingsEmail.textContent = currentUser.user.email;
           if (settingsAccountType) {
-            settingsAccountType.textContent = currentUser.user.type === 'premium' ? 'Akun Premium' : 'Akun Free';
-            settingsAccountType.style.color = currentUser.user.type === 'premium' ? '#fbbf24' : 'var(--text-main)';
+            let typeLabel = 'Akun Free';
+            if (currentUser.user.type === 'ultimate') typeLabel = 'Akun Ultimate';
+            else if (currentUser.user.type === 'premium') typeLabel = 'Akun Premium';
+            settingsAccountType.textContent = typeLabel;
+            settingsAccountType.style.color = (currentUser.user.type === 'premium' || currentUser.user.type === 'ultimate') ? '#fbbf24' : 'var(--text-main)';
           }
 
           // Set settings avatar fields
@@ -113,8 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (profileFacultyInput) profileFacultyInput.value = currentUser.user.faculty || '';
           if (profileUniversityInput) profileUniversityInput.value = currentUser.user.university || '';
 
-          if (currentUser.user.type === 'premium') {
-            if (profileType) profileType.textContent = 'Akun Premium';
+          if (currentUser.user.type === 'premium' || currentUser.user.type === 'ultimate') {
+            const isUltimate = currentUser.user.type === 'ultimate';
+            if (profileType) profileType.textContent = isUltimate ? 'Akun Ultimate' : 'Akun Premium';
             if (profileType) profileType.style.color = '#fbbf24';
             if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'none';
             if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'none';
@@ -132,22 +136,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
 
-            // Reset drafting companion locks & disclaimer for premium
+            // Reset drafting companion locks & disclaimer for premium/ultimate
             const matchQuotaDisclaimer = document.getElementById('matchQuotaDisclaimer');
             if (matchQuotaDisclaimer) {
-              matchQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
+              matchQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate' : 'Premium'} (Akses Unlimited)`;
             }
              const draftPremiumLock = document.getElementById('draftPremiumLock');
              if (draftPremiumLock) draftPremiumLock.style.display = 'none';
              const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
              if (draftQuotaDisclaimer) {
-               draftQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
+               draftQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
              }
              const litReviewPremiumLock = document.getElementById('litReviewPremiumLock');
              if (litReviewPremiumLock) litReviewPremiumLock.style.display = 'none';
              const litReviewQuotaDisclaimer = document.getElementById('litReviewQuotaDisclaimer');
              if (litReviewQuotaDisclaimer) {
-               litReviewQuotaDisclaimer.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Premium (Akses Unlimited)';
+               litReviewQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
              }
           } else {
             if (profileType) profileType.textContent = 'Akun Free';
@@ -1208,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
 
           const sizeKb = Math.round(tpl.size / 1024);
-          const isPremiumUser = currentUser.user && currentUser.user.type === 'premium';
+          const isPremiumUser = currentUser.user && (currentUser.user.type === 'premium' || currentUser.user.type === 'ultimate');
           const canDownload = tpl.isFree || isPremiumUser;
           
           const dummyLinesHtml = `
@@ -1446,7 +1450,7 @@ document.addEventListener('DOMContentLoaded', () => {
         draftSummary.style.color = '#ef4444';
       } finally {
         runDraftGenerator.disabled = false;
-        if (!currentUser.user || currentUser.user.type === 'premium' || !currentUser.user.isDraftLimitReached) {
+        if (!currentUser.user || currentUser.user.type === 'premium' || currentUser.user.type === 'ultimate' || !currentUser.user.isDraftLimitReached) {
           runDraftGenerator.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI';
         }
       }

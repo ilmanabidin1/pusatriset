@@ -300,7 +300,11 @@ app.get('/api/me', (req, res) => {
     let draftsRemaining = 1;
     let isLitReviewLimitReached = false;
     let litReviewsRemaining = 1;
-    if (user && (user.type || 'free') === 'free') {
+    const isFree = !user || (user.type || 'free') === 'free';
+    const isPremium = user && user.type === 'premium';
+    const isUltimate = user && user.type === 'ultimate';
+
+    if (isFree) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = (user.lastMatchMonth === currentMonth) && (user.matchCountThisMonth >= 1);
       
@@ -309,6 +313,21 @@ app.get('/api/me', (req, res) => {
 
       isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 1);
       litReviewsRemaining = isLitReviewLimitReached ? 0 : 1;
+    } else if (isPremium) {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      isLimitReached = false;
+      
+      isDraftLimitReached = (user.lastDraftMonth === currentMonth) && (user.draftCountThisMonth >= 15);
+      draftsRemaining = Math.max(0, 15 - (user.lastDraftMonth === currentMonth ? user.draftCountThisMonth : 0));
+
+      isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 15);
+      litReviewsRemaining = Math.max(0, 15 - (user.lastLitReviewMonth === currentMonth ? user.litReviewCountThisMonth : 0));
+    } else if (isUltimate) {
+      isLimitReached = false;
+      isDraftLimitReached = false;
+      draftsRemaining = 999;
+      isLitReviewLimitReached = false;
+      litReviewsRemaining = 999;
     }
 
     res.json({
@@ -494,10 +513,10 @@ app.post('/api/access', (req, res) => {
     return;
   }
 
-  // Jika kode akses benar, beri sesi premium
+  // Jika kode akses benar, beri sesi ultimate
   req.session.userId = 'access_code_user';
-  req.session.userType = 'premium';
-  req.session.email = 'Premium User';
+  req.session.userType = 'ultimate';
+  req.session.email = 'Ultimate User';
 
   res.json({ ok: true });
 });
@@ -873,12 +892,16 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
     if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 1) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x drafting per bulan.' });
     }
+  } else if (user && user.type === 'premium') {
+    if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 15) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x drafting per bulan.' });
+    }
   }
 
   const hasClaudeKey = !!process.env.ANTHROPIC_API_KEY;
   if (!hasClaudeKey) {
     // Fallback jika API key Claude tidak tersedia
-    if (user && (user.type || 'free') === 'free') {
+    if (user && (user.type === 'free' || user.type === 'premium')) {
       if (user.lastDraftMonth !== currentMonth) {
         user.lastDraftMonth = currentMonth;
         user.draftCountThisMonth = 0;
@@ -957,8 +980,8 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
     const rawText = resData?.content?.[0]?.text || '}';
     const parsed = cleanAndParseAIResponse('{' + rawText, true);
 
-    // Increment usage for Free users
-    if (user && (user.type || 'free') === 'free') {
+    // Increment usage for Free & Premium users
+    if (user && (user.type === 'free' || user.type === 'premium')) {
       if (user.lastDraftMonth !== currentMonth) {
         user.lastDraftMonth = currentMonth;
         user.draftCountThisMonth = 0;
@@ -984,10 +1007,14 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  // Check quota for Free users
+  // Check quota for Free and Premium users
   if (user && (user.type || 'free') === 'free') {
     if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 1) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x Literature Review per bulan.' });
+    }
+  } else if (user && user.type === 'premium') {
+    if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 15) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x Literature Review per bulan.' });
     }
   }
 
@@ -995,7 +1022,7 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   
   if (!perplexityKey) {
     // Fallback lokal jika Perplexity API Key belum dikonfigurasi
-    if (user && (user.type || 'free') === 'free') {
+    if (user && (user.type === 'free' || user.type === 'premium')) {
       if (user.lastLitReviewMonth !== currentMonth) {
         user.lastLitReviewMonth = currentMonth;
         user.litReviewCountThisMonth = 0;
@@ -1072,8 +1099,8 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
     const content = resData?.choices?.[0]?.message?.content;
     const parsed = cleanAndParseAIResponse(content, true);
 
-    // Update usage for Free user
-    if (user && (user.type || 'free') === 'free') {
+    // Update usage for Free & Premium users
+    if (user && (user.type === 'free' || user.type === 'premium')) {
       if (user.lastLitReviewMonth !== currentMonth) {
         user.lastLitReviewMonth = currentMonth;
         user.litReviewCountThisMonth = 0;
@@ -1132,11 +1159,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Route statis aman untuk file template jurnal (hanya premium, kecuali Wiley)
+// Route statis aman untuk file template jurnal (hanya premium/ultimate, kecuali Wiley)
 app.use('/templates', requireAccess, (req, res, next) => {
   const isWiley = req.path.toLowerCase().includes('wiley');
-  if (!isWiley && req.session.userType !== 'premium') {
-    return res.status(403).send('Akses ditolak. Fitur ini khusus pengguna Premium.');
+  if (!isWiley && req.session.userType !== 'premium' && req.session.userType !== 'ultimate') {
+    return res.status(403).send('Akses ditolak. Fitur ini khusus pengguna PRO (Premium & Ultimate).');
   }
   next();
 }, express.static(path.join(__dirname, 'templates')));
