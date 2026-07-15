@@ -43,10 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCitations = [];
   let justGeneratedDraft = false;
   let justGeneratedLitReview = false;
+  let justGeneratedHumanizer = false;
 
   window.resetJustGeneratedFlags = () => {
     justGeneratedDraft = false;
     justGeneratedLitReview = false;
+    justGeneratedHumanizer = false;
     checkAuthState();
   };
 
@@ -183,18 +185,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (matchQuotaDisclaimer) {
               matchQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate' : 'Premium'} (Akses Unlimited)`;
             }
-             const draftPremiumLock = document.getElementById('draftPremiumLock');
-             if (draftPremiumLock) draftPremiumLock.style.display = 'none';
-             const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
-             if (draftQuotaDisclaimer) {
-               draftQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
-             }
-             const litReviewPremiumLock = document.getElementById('litReviewPremiumLock');
-             if (litReviewPremiumLock) litReviewPremiumLock.style.display = 'none';
-             const litReviewQuotaDisclaimer = document.getElementById('litReviewQuotaDisclaimer');
-             if (litReviewQuotaDisclaimer) {
-               litReviewQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
-             }
+            const draftPremiumLock = document.getElementById('draftPremiumLock');
+            if (draftPremiumLock) draftPremiumLock.style.display = 'none';
+            const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
+            if (draftQuotaDisclaimer) {
+              draftQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
+            }
+            const litReviewPremiumLock = document.getElementById('litReviewPremiumLock');
+            if (litReviewPremiumLock) litReviewPremiumLock.style.display = 'none';
+            const litReviewQuotaDisclaimer = document.getElementById('litReviewQuotaDisclaimer');
+            if (litReviewQuotaDisclaimer) {
+              litReviewQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
+            }
+
+            // Reset humanizer locks & disclaimer for premium/ultimate
+            const humanizerPremiumLock = document.getElementById('humanizerPremiumLock');
+            if (humanizerPremiumLock) humanizerPremiumLock.style.display = 'none';
+            const humanizerWordsRemainingLabel = document.getElementById('humanizerWordsRemainingLabel');
+            if (humanizerWordsRemainingLabel && currentUser.user) {
+              const remaining = currentUser.user.humanizerWordsRemaining ?? 0;
+              const limit = currentUser.user.humanizerWordsLimit ?? 0;
+              humanizerWordsRemainingLabel.textContent = `${remaining.toLocaleString('id-ID')} / ${limit.toLocaleString('id-ID')} Kata`;
+            }
           } else {
             if (profileType) profileType.textContent = 'Akun Free';
             if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'block';
@@ -288,6 +300,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 runLitReviewBtn.innerHTML = '<i class="fa-solid fa-search"></i> Cari Referensi & Susun Kajian';
                 runLitReviewBtn.style.background = 'var(--brand-blue)';
                 runLitReviewBtn.classList.remove('btn-upgrade-trigger');
+              }
+            }
+
+            // Atur status kuota dan lock untuk Humanizer
+            const humanizerPremiumLock = document.getElementById('humanizerPremiumLock');
+            const runHumanizerBtn = document.getElementById('runHumanizerBtn');
+            const humanizerWordsRemainingLabel = document.getElementById('humanizerWordsRemainingLabel');
+
+            if (humanizerWordsRemainingLabel) {
+              humanizerWordsRemainingLabel.textContent = `0 / 0 Kata`;
+            }
+
+            if (currentUser.user.isHumanizerLimitReached) {
+              if (humanizerPremiumLock) {
+                humanizerPremiumLock.style.display = justGeneratedHumanizer ? 'none' : 'flex';
+              }
+              if (runHumanizerBtn) {
+                runHumanizerBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Fitur Eksklusif PRO';
+                runHumanizerBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                runHumanizerBtn.classList.add('btn-upgrade-trigger');
+              }
+            } else {
+              if (humanizerPremiumLock) humanizerPremiumLock.style.display = 'none';
+              if (runHumanizerBtn) {
+                runHumanizerBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Mulai Humanisasi Teks';
+                runHumanizerBtn.style.background = '#f59e0b';
+                runHumanizerBtn.classList.remove('btn-upgrade-trigger');
               }
             }
           }
@@ -2402,6 +2441,150 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      });
+    }
+
+    // --- JURNALHUB HUMANIZER ENGINE ---
+    const humanizerInputText = document.getElementById('humanizerInputText');
+    const humanizerWordCounter = document.getElementById('humanizerWordCounter');
+    const runHumanizerBtn = document.getElementById('runHumanizerBtn');
+    const humanizerResultsPanel = document.getElementById('humanizerResultsPanel');
+    const humanizerOutputText = document.getElementById('humanizerOutputText');
+    const humanizerScoreLabel = document.getElementById('humanizerScoreLabel');
+    const humanizerScoreBar = document.getElementById('humanizerScoreBar');
+    const copyHumanizerOutputBtn = document.getElementById('copyHumanizerOutputBtn');
+    const resetHumanizerBtn = document.getElementById('resetHumanizerBtn');
+
+    // Dynamic word counter listener
+    if (humanizerInputText && humanizerWordCounter) {
+      const updateWordCount = () => {
+        const text = humanizerInputText.value.trim();
+        const wordCount = text === '' ? 0 : text.split(/\s+/).filter(w => w.length > 0).length;
+        humanizerWordCounter.textContent = `${wordCount.toLocaleString('id-ID')} / 2.000 Kata`;
+        
+        if (wordCount > 2000) {
+          humanizerWordCounter.style.color = '#ef4444';
+        } else {
+          humanizerWordCounter.style.color = 'var(--text-muted)';
+        }
+      };
+      humanizerInputText.addEventListener('input', updateWordCount);
+      humanizerInputText.addEventListener('keyup', updateWordCount);
+      humanizerInputText.addEventListener('paste', () => setTimeout(updateWordCount, 50));
+    }
+
+    if (runHumanizerBtn) {
+      runHumanizerBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // Check if upgrade is needed
+        if (runHumanizerBtn.classList.contains('btn-upgrade-trigger')) {
+          const upgradeTrigger = document.querySelector('.btn-upgrade-trigger');
+          if (upgradeTrigger) {
+            const overlay = document.getElementById('upgradeOverlay');
+            if (overlay) overlay.style.display = 'flex';
+          }
+          return;
+        }
+
+        const text = humanizerInputText.value.trim();
+        if (!text) {
+          alert('Silakan masukkan teks AI yang ingin di-humanize.');
+          return;
+        }
+
+        const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+        if (wordCount > 2000) {
+          alert('Teks melebihi batas maksimal 2.000 kata per panggilan.');
+          return;
+        }
+
+        const modeSelector = document.querySelector('input[name="humanizerMode"]:checked');
+        const mode = modeSelector ? modeSelector.value : 'standard';
+
+        const originalBtnHtml = runHumanizerBtn.innerHTML;
+        runHumanizerBtn.disabled = true;
+        runHumanizerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghilangkan Gaya AI...';
+
+        try {
+          const response = await fetch('/api/humanize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, mode })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            alert(data.message || 'Gagal memproses humanisasi teks.');
+            return;
+          }
+
+          if (humanizerOutputText) {
+            humanizerOutputText.value = data.humanizedText;
+          }
+
+          if (humanizerScoreLabel) {
+            humanizerScoreLabel.textContent = `${data.originalityScore}%`;
+          }
+
+          if (humanizerScoreBar) {
+            humanizerScoreBar.style.width = `${data.originalityScore}%`;
+          }
+
+          if (humanizerResultsPanel) {
+            humanizerResultsPanel.style.display = 'block';
+            humanizerResultsPanel.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          // Sinkronisasi status limit terbaru
+          justGeneratedHumanizer = true;
+          await checkAuthState();
+
+        } catch (error) {
+          console.error('[Humanizer UI] Error:', error);
+          alert('Gagal menghubungi server untuk memproses humanisasi.');
+        } finally {
+          runHumanizerBtn.disabled = false;
+          runHumanizerBtn.innerHTML = originalBtnHtml;
+        }
+      });
+    }
+
+    if (copyHumanizerOutputBtn && humanizerOutputText) {
+      copyHumanizerOutputBtn.addEventListener('click', () => {
+        const text = humanizerOutputText.value;
+        if (!text) {
+          alert('Tidak ada teks untuk disalin.');
+          return;
+        }
+
+        navigator.clipboard.writeText(text).then(() => {
+          const originalText = copyHumanizerOutputBtn.innerHTML;
+          copyHumanizerOutputBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+          setTimeout(() => {
+            copyHumanizerOutputBtn.innerHTML = originalText;
+          }, 2000);
+        }).catch(err => {
+          console.error('Copy failed:', err);
+          alert('Gagal menyalin teks secara otomatis.');
+        });
+      });
+    }
+
+    if (resetHumanizerBtn) {
+      resetHumanizerBtn.addEventListener('click', () => {
+        if (humanizerInputText) {
+          humanizerInputText.value = '';
+          const wordCounter = document.getElementById('humanizerWordCounter');
+          if (wordCounter) wordCounter.textContent = '0 / 2.000 Kata';
+        }
+        if (humanizerOutputText) {
+          humanizerOutputText.value = '';
+        }
+        if (humanizerResultsPanel) {
+          humanizerResultsPanel.style.display = 'none';
+        }
       });
     }
 

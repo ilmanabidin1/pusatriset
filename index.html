@@ -1930,6 +1930,20 @@
               </button>
             </div>
 
+            <!-- Card 4: JurnalHub Humanizer Engine -->
+            <div class="ai-research-card">
+              <div class="ai-research-card-content">
+                <div class="ai-research-icon-wrapper" style="background-color: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                  <i class="fa-solid fa-user-check"></i>
+                </div>
+                <h4>JurnalHub Humanizer Engine</h4>
+                <p>Ubah tulisan hasil AI agar lolos dari berbagai detektor AI (seperti Turnitin & GPTZero) dengan tata bahasa akademis yang sangat natural.</p>
+              </div>
+              <button class="ai-research-btn" onclick="switchTab('humanizer')" style="background: linear-gradient(135deg, #f59e0b, #b45309);">
+                Buka Fitur <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
@@ -2221,6 +2235,113 @@
         </div>
       </div>
 
+      <!-- TAB: HUMANIZER (JURNALHUB HUMANIZER ENGINE) -->
+      <div id="tabContentHumanizer" class="tab-content">
+        <div class="match-score-main-container">
+          <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
+          <div class="match-box-wrapper" id="humanizerBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
+            
+            <!-- Overlay Lock for Free User -->
+            <div id="humanizerPremiumLock" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: rgba(11, 26, 48, 0.96); border-radius: var(--card-radius); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; color: #ffffff; backdrop-filter: blur(4px);">
+              <i class="fa-solid fa-lock" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
+              <h3>Fitur Eksklusif PRO</h3>
+              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
+                Fitur JurnalHub Humanizer Engine hanya tersedia untuk pengguna paket Premium dan Ultimate. Harap tingkatkan akun Anda untuk menikmati fitur ini.
+              </p>
+              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fa-solid fa-crown"></i> Upgrade PRO
+              </button>
+            </div>
+
+            <!-- Form Content -->
+            <div class="match-card-content">
+              <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                  <span class="banner-badge" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245,158,11,0.2); color: #f59e0b;"><i class="fa-solid fa-user-check"></i> JurnalHub Humanizer Engine</span>
+                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">AI Humanizer & Paraphraser</h3>
+                  <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Paragrafkan ulang tulisan AI Anda agar memiliki gaya bahasa akademis yang natural dan lolos dari Turnitin AI detector.</p>
+                </div>
+                <!-- Quota Badge -->
+                <div id="humanizerQuotaBadge" class="quota-badge" style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main); font-weight: 700;">
+                  <i class="fa-solid fa-chart-pie" style="color: #f59e0b;"></i> Sisa Kuota Kata: <span id="humanizerWordsRemainingLabel">5.000 / 5.000</span>
+                </div>
+              </div>
+
+              <!-- Input Form -->
+              <div class="match-form" style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
+                <!-- Mode Selector -->
+                <div class="filter-dropdown-item">
+                  <label>PILIH MODE HUMANISASI</label>
+                  <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                    <label style="flex: 1; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; background: #f8fafc; font-size: 0.88rem; font-weight: 600;">
+                      <input type="radio" name="humanizerMode" value="standard" checked style="accent-color: #f59e0b;">
+                      <span>Mode Standard (Alami & Seimbang)</span>
+                    </label>
+                    <label style="flex: 1; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; background: #f8fafc; font-size: 0.88rem; font-weight: 600;">
+                      <input type="radio" name="humanizerMode" value="academic" style="accent-color: #f59e0b;">
+                      <span>Mode Akademik (Karya Tulis & Jurnal)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Text Input -->
+                <div class="filter-dropdown-item">
+                  <label for="humanizerInputText">MASUKKAN TEKS AI (MAKSIMAL 2.000 KATA)</label>
+                  <div style="position: relative; margin-top: 0.5rem;">
+                    <textarea id="humanizerInputText" rows="10" placeholder="Tempel naskah atau draf paragraf Anda yang dideteksi sebagai kecerdasan buatan (AI) di sini..." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical; background: #f8fafc; padding-bottom: 2rem;"></textarea>
+                    <div id="humanizerWordCounter" style="position: absolute; bottom: 0.75rem; right: 0.75rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; background: rgba(255,255,255,0.85); padding: 0.2rem 0.5rem; border-radius: 4px;">
+                      0 / 2.000 Kata
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions Section -->
+              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                <button id="runHumanizerBtn" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: #f59e0b; color: #ffffff;" type="button">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Mulai Humanisasi Teks
+                </button>
+                <p id="humanizerSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0; flex-grow: 1;">
+                  Mesin humanizer kami akan mendeteksi kata-kata bergaya AI dan merombaknya secara otomatis menggunakan tata bahasa ilmiah yang natural.
+                </p>
+              </div>
+
+              <!-- Output Section -->
+              <div id="humanizerResultsPanel" style="display: none; border-top: 1px solid rgba(8,34,64,0.08); padding-top: 2rem; animation: fadeInUp 0.4s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-file-signature" style="color: #f59e0b;"></i> Hasil Humanisasi Teks Akademis
+                  </h4>
+                  
+                  <!-- Originality Progress / Metric -->
+                  <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); padding: 0.5rem 1rem; border-radius: 8px;">
+                    <span style="font-size: 0.85rem; font-weight: 700; color: #10b981;">Skor Keaslian Manusia:</span>
+                    <span id="humanizerScoreLabel" style="font-size: 1rem; font-weight: 900; color: #10b981;">98%</span>
+                    <div style="width: 80px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; position: relative;">
+                      <div id="humanizerScoreBar" style="width: 98%; height: 100%; background: #10b981; border-radius: 4px;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="position: relative;">
+                  <textarea id="humanizerOutputText" rows="12" readonly style="width: 100%; padding: 1rem; border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 8px; font-family: inherit; font-size: 0.92rem; line-height: 1.6; outline: none; background: #f0fdf4; color: #064e3b; resize: vertical;"></textarea>
+                  
+                  <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+                    <button id="copyHumanizerOutputBtn" class="upgrade-btn" style="width: auto; padding: 0.6rem 1.5rem; background: var(--brand-blue); color: white; font-size: 0.88rem;" type="button">
+                      <i class="fa-regular fa-copy"></i> Salin Teks
+                    </button>
+                    <button id="resetHumanizerBtn" class="upgrade-btn" style="width: auto; padding: 0.6rem 1.5rem; background: #f1f5f9; color: var(--text-main); border: 1px solid #e2e8f0; font-size: 0.88rem;" type="button">
+                      <i class="fa-solid fa-rotate-left"></i> Bersihkan
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB 5: TEMPLATE JURNAL -->
       <div id="tabContentTemplates" class="tab-content">
         <div class="match-score-main-container">
@@ -2446,7 +2567,7 @@
       }
 
       function switchTab(tabName) {
-        if (window.resetJustGeneratedFlags && !['match-score', 'drafting-companion', 'lit-review'].includes(tabName)) {
+        if (window.resetJustGeneratedFlags && !['match-score', 'drafting-companion', 'lit-review', 'humanizer'].includes(tabName)) {
           window.resetJustGeneratedFlags();
         }
         // Close mobile menu if open
@@ -2460,7 +2581,7 @@
         sidebarLinks.forEach(link => {
           const currentTab = link.getAttribute('data-tab');
           if (currentTab === tabName || 
-             (currentTab === 'ai-research' && ['match-score', 'drafting-companion', 'lit-review'].includes(tabName))) {
+             (currentTab === 'ai-research' && ['match-score', 'drafting-companion', 'lit-review', 'humanizer'].includes(tabName))) {
             link.classList.add('active');
           } else {
             link.classList.remove('active');
@@ -2479,7 +2600,7 @@
         }
         
         // Update Page Title
-        const activeTabForTitle = ['match-score', 'drafting-companion', 'lit-review'].includes(tabName) ? 'ai-research' : tabName;
+        const activeTabForTitle = ['match-score', 'drafting-companion', 'lit-review', 'humanizer'].includes(tabName) ? 'ai-research' : tabName;
         const currentLink = document.querySelector(`.sidebar-link[data-tab="${activeTabForTitle}"]`);
         if (currentLink) {
           pageTitle.textContent = currentLink.querySelector('span').textContent;

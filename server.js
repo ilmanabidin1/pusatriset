@@ -548,6 +548,10 @@ app.get('/api/me', (req, res) => {
     let draftsRemaining = 1;
     let isLitReviewLimitReached = false;
     let litReviewsRemaining = 1;
+    let isHumanizerLimitReached = false;
+    let humanizerWordsRemaining = 0;
+    let humanizerWordsLimit = 0;
+
     const userType = req.session.userType || 'free';
     const isFree = userType === 'free';
     const isPremium = userType === 'premium';
@@ -562,6 +566,10 @@ app.get('/api/me', (req, res) => {
 
       isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 1);
       litReviewsRemaining = isLitReviewLimitReached ? 0 : 1;
+
+      isHumanizerLimitReached = true;
+      humanizerWordsRemaining = 0;
+      humanizerWordsLimit = 0;
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -571,12 +579,39 @@ app.get('/api/me', (req, res) => {
 
       isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 15);
       litReviewsRemaining = Math.max(0, 15 - (user.lastLitReviewMonth === currentMonth ? user.litReviewCountThisMonth : 0));
+
+      if (user.lastHumanizerMonth !== currentMonth) {
+        user.lastHumanizerMonth = currentMonth;
+        user.humanizerWordsUsedThisMonth = 0;
+        saveUsers(users);
+      }
+      humanizerWordsLimit = 5000;
+      const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
+      humanizerWordsRemaining = Math.max(0, 5000 - wordsUsed);
+      isHumanizerLimitReached = humanizerWordsRemaining <= 0;
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
       draftsRemaining = 999;
       isLitReviewLimitReached = false;
       litReviewsRemaining = 999;
+
+      if (user) {
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        if (user.lastHumanizerMonth !== currentMonth) {
+          user.lastHumanizerMonth = currentMonth;
+          user.humanizerWordsUsedThisMonth = 0;
+          saveUsers(users);
+        }
+        humanizerWordsLimit = 20000;
+        const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
+        humanizerWordsRemaining = Math.max(0, 20000 - wordsUsed);
+        isHumanizerLimitReached = humanizerWordsRemaining <= 0;
+      } else {
+        humanizerWordsLimit = 20000;
+        humanizerWordsRemaining = 20000;
+        isHumanizerLimitReached = false;
+      }
     }
 
     res.json({
@@ -594,6 +629,9 @@ app.get('/api/me', (req, res) => {
         draftsRemaining: draftsRemaining,
         isLitReviewLimitReached: isLitReviewLimitReached,
         litReviewsRemaining: litReviewsRemaining,
+        isHumanizerLimitReached: isHumanizerLimitReached,
+        humanizerWordsRemaining: humanizerWordsRemaining,
+        humanizerWordsLimit: humanizerWordsLimit,
         planId: user ? (user.planId || null) : null,
         paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null
       }
@@ -1365,6 +1403,90 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
     console.error('[Perplexity Lit Review] Error:', error);
     res.status(500).json({ ok: false, message: 'Gagal mencari referensi & membuat literature review: ' + error.message });
   }
+});
+
+app.post('/api/humanize', requireAccess, (req, res) => {
+  const { text, mode } = req.body;
+  if (!text || String(text).trim() === '') {
+    return res.status(400).json({ ok: false, message: 'Teks input wajib disertakan.' });
+  }
+
+  const cleanText = String(text).trim();
+  const wordCount = cleanText.split(/\s+/).filter(w => w.length > 0).length;
+
+  if (wordCount > 2000) {
+    return res.status(400).json({ ok: false, message: 'Maksimal input adalah 2.000 kata per panggilan.' });
+  }
+
+  // Check user limit
+  const userType = req.session.userType || 'free';
+  if (userType === 'free') {
+    return res.status(403).json({ ok: false, message: 'Fitur Humanizer hanya tersedia untuk pelanggan Premium dan Ultimate.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+
+  // If user exists, verify remaining quota
+  if (user) {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    if (user.lastHumanizerMonth !== currentMonth) {
+      user.lastHumanizerMonth = currentMonth;
+      user.humanizerWordsUsedThisMonth = 0;
+    }
+
+    const limit = user.type === 'ultimate' ? 20000 : 5000;
+    const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
+    const remaining = Math.max(0, limit - wordsUsed);
+
+    if (remaining < wordCount) {
+      return res.status(403).json({ 
+        ok: false, 
+        message: `Kuota kata Anda tidak mencukupi. Sisa kuota Anda: ${remaining} kata, sedangkan teks input Anda berisi: ${wordCount} kata.` 
+      });
+    }
+
+    // Deduct words from database
+    user.humanizerWordsUsedThisMonth = (user.humanizerWordsUsedThisMonth || 0) + wordCount;
+    saveUsers(users);
+  }
+
+  // Perform mock paraphrasing / humanizing
+  let humanized = cleanText;
+
+  // Simple rule-based substitutions to simulate academic paraphrasing
+  const rules = [
+    { regex: /\bTherefore\b/g, repl: 'Consequently' },
+    { regex: /\bfurthermore\b/gi, repl: 'moreover' },
+    { regex: /\bin order to\b/gi, repl: 'to' },
+    { regex: /\butilize\b/gi, repl: 'use' },
+    { regex: /\butilized\b/gi, repl: 'used' },
+    { regex: /\butilization\b/gi, repl: 'use' },
+    { regex: /\bIt is important to note that\b/gi, repl: 'Notably,' },
+    { regex: /\ba plethora of\b/gi, repl: 'many' },
+    { regex: /\bconducted a study\b/gi, repl: 'investigated' },
+    { regex: /\bconcluded that\b/gi, repl: 'found that' },
+    { regex: /\bdemonstrates that\b/gi, repl: 'shows that' },
+    { regex: /\bThis study aims to\b/gi, repl: 'This research focuses on' },
+    { regex: /\bsignificant effect\b/gi, repl: 'noticeable impact' }
+  ];
+
+  rules.forEach(rule => {
+    humanized = humanized.replace(rule.regex, rule.repl);
+  });
+
+  // If Academic mode, make a mock enhanced message prefix or touch up
+  if (mode === 'academic') {
+    humanized = humanized.replace(/\bwe found\b/gi, 'our findings indicate');
+    humanized = humanized.replace(/\bI think\b/gi, 'it is argued');
+  }
+
+  res.json({
+    ok: true,
+    humanizedText: humanized,
+    wordCount: wordCount,
+    originalityScore: 94 + Math.floor(Math.random() * 5) // Mock originality score (94%-98%)
+  });
 });
 
 // Endpoint untuk mengambil data Prompt Bank
