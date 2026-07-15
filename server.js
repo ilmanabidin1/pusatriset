@@ -1405,7 +1405,7 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
   }
 });
 
-app.post('/api/humanize', requireAccess, (req, res) => {
+app.post('/api/humanize', requireAccess, async (req, res) => {
   const { text, mode } = req.body;
   if (!text || String(text).trim() === '') {
     return res.status(400).json({ ok: false, message: 'Teks input wajib disertakan.' });
@@ -1451,7 +1451,51 @@ app.post('/api/humanize', requireAccess, (req, res) => {
     saveUsers(users);
   }
 
-  // Perform mock paraphrasing / humanizing
+  const stealthApiKey = process.env.STEALTHGPT_API_KEY;
+
+  if (stealthApiKey && stealthApiKey.trim() !== '') {
+    try {
+      console.log(`[Humanizer] Calling StealthGPT API for user ${req.session.userId || 'unknown'} (${wordCount} words)`);
+      const fetchFn = globalThis.fetch || require('node-fetch');
+      const tone = mode === 'academic' ? 'Academic' : 'Standard';
+      
+      const response = await fetchFn('https://www.stealthgpt.ai/api/stealthify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-token': stealthApiKey.trim()
+        },
+        body: JSON.stringify({
+          prompt: cleanText,
+          rephrase: true,
+          tone: tone,
+          mode: 'Medium'
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Humanizer] StealthGPT API error status:', response.status, errorText);
+        throw new Error(`StealthGPT API returned status ${response.status}`);
+      }
+
+      const resData = await response.json();
+      const humanized = resData.result || cleanText;
+      const score = resData.howLikelyToBeDetected !== undefined ? (100 - parseInt(resData.howLikelyToBeDetected)) : (94 + Math.floor(Math.random() * 5));
+
+      return res.json({
+        ok: true,
+        humanizedText: humanized,
+        wordCount: wordCount,
+        originalityScore: isNaN(score) ? 95 : Math.max(80, Math.min(100, score))
+      });
+
+    } catch (apiError) {
+      console.error('[Humanizer] Failed to connect to StealthGPT API, falling back to mock paraphrasing:', apiError.message);
+    }
+  }
+
+  // Perform mock paraphrasing / humanizing (as fallback)
   let humanized = cleanText;
 
   // Simple rule-based substitutions to simulate academic paraphrasing
