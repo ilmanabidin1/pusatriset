@@ -421,27 +421,6 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
-app.get('/api/debug-reset-demo', async (req, res) => {
-  const users = getUsers();
-  const userIndex = users.findIndex(u => u.email === 'demo');
-  if (userIndex !== -1) {
-    users.splice(userIndex, 1);
-  }
-  const hashedDemoPassword = await bcrypt.hash('demo', 10);
-  users.push({
-    id: 'demo-user-id',
-    email: 'demo',
-    password: hashedDemoPassword,
-    type: 'free',
-    name: 'iPaymu Demo Team',
-    faculty: 'Demo',
-    university: 'Demo University',
-    savedJournals: [],
-    createdAt: new Date().toISOString()
-  });
-  saveUsers(users);
-  res.json({ ok: true, message: 'Demo user limits and data have been fully reset!' });
-});
 
 
 app.post('/api/auth/google', async (req, res) => {
