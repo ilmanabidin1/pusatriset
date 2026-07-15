@@ -440,260 +440,911 @@
     footer a:hover {
       color: #ffffff !important;
     }
+
+    /* --- NEW FULLSCREEN LANDING PAGE STYLING --- */
+    body {
+      background: #fafafa !important;
+      color: var(--brand-navy) !important;
+      display: block !important;
+      padding: 0 !important;
+      overflow-y: auto !important;
+    }
+    
+    body::before, body::after {
+      display: none !important;
+    }
+
+    /* Fixed Header/Navbar */
+    .landing-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(8, 34, 64, 0.06);
+      z-index: 999;
+    }
+    .landing-header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+    }
+    .landing-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+    .landing-logo img {
+      max-height: 40px;
+      width: auto;
+    }
+    .landing-nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    .landing-nav .nav-link {
+      font-weight: 600;
+      color: #475569;
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: var(--transition-smooth);
+    }
+    .landing-nav .nav-link:hover {
+      color: var(--brand-blue);
+    }
+    .landing-auth-buttons {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .header-btn-login {
+      background: transparent;
+      border: none;
+      font-weight: 700;
+      color: var(--brand-navy);
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      transition: var(--transition-smooth);
+      font-family: inherit;
+    }
+    .header-btn-login:hover {
+      color: var(--brand-blue);
+    }
+    .header-btn-register {
+      background: #ff7417;
+      color: white;
+      border: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0.65rem 1.25rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(255, 116, 23, 0.25);
+      transition: var(--transition-smooth);
+      font-family: inherit;
+    }
+    .header-btn-register:hover {
+      background: #e85f00;
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .landing-hero {
+      position: relative;
+      padding: 140px 0 80px 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      background-color: #fafafa;
+      background-image: linear-gradient(rgba(8, 34, 64, 0.012) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(8, 34, 64, 0.012) 1px, transparent 1px);
+      background-size: 30px 30px;
+      overflow: hidden;
+    }
+    .hero-bg-glow-1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(7, 135, 220, 0.05) 0%, transparent 70%);
+      top: -100px;
+      right: -100px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .hero-bg-glow-2 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 116, 23, 0.03) 0%, transparent 70%);
+      bottom: -50px;
+      left: -100px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .landing-hero-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 4rem;
+      align-items: center;
+      padding: 0 1.5rem;
+      width: 100%;
+      position: relative;
+      z-index: 10;
+    }
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+    .hero-title {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 3.5rem;
+      line-height: 1.12;
+      color: var(--brand-navy);
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.03em;
+    }
+    .hero-description {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #475569;
+      margin-bottom: 2.5rem;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .hero-btn-primary {
+      background: #ff7417;
+      color: white;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.9rem 1.75rem;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(255, 116, 23, 0.3);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      font-family: inherit;
+    }
+    .hero-btn-primary:hover {
+      background: #e85f00;
+      transform: translateY(-1px);
+    }
+    .hero-btn-secondary {
+      background: white;
+      border: 1px solid rgba(8,34,64,0.15);
+      color: var(--brand-navy);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.9rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      font-family: inherit;
+    }
+    .hero-btn-secondary:hover {
+      background: #f8fafc;
+      border-color: rgba(8,34,64,0.25);
+    }
+
+    /* Hero Preview Widget */
+    .hero-preview {
+      display: flex;
+      justify-content: center;
+      position: relative;
+    }
+    .preview-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2.25rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 25px 60px -15px rgba(8, 34, 64, 0.1);
+      border: 1px solid rgba(8, 34, 64, 0.04);
+      text-align: left;
+      position: relative;
+    }
+    .preview-tag {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #ff7417;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+    .preview-title {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: var(--brand-navy);
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
+    }
+    .preview-desc {
+      font-size: 0.88rem;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .preview-item {
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-item.draft {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+    }
+    .preview-item.export {
+      background: #f0f9ff;
+      border: 1px solid #e0f2fe;
+    }
+    .preview-item .item-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 0.25rem;
+    }
+    .preview-item .item-value {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.15rem;
+    }
+    .preview-item.draft .item-value {
+      color: #d97706;
+    }
+    .preview-item.export .item-value {
+      color: #0284c7;
+    }
+    .preview-info-box {
+      background: #fcfdfe;
+      border: 1px solid rgba(8, 34, 64, 0.04);
+      border-radius: 12px;
+      padding: 1rem;
+      border-left: 4px solid #ff7417;
+    }
+    .preview-info-box .info-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--brand-navy);
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .preview-info-box .info-text {
+      font-size: 0.82rem;
+      color: #64748b;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* Features Section */
+    .landing-features {
+      padding: 100px 0;
+      background: white;
+      border-top: 1px solid rgba(8, 34, 64, 0.04);
+    }
+    .landing-features-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      text-align: left;
+    }
+    .features-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #ff7417;
+      letter-spacing: 0.1em;
+      display: inline-block;
+      margin-bottom: 0.75rem;
+    }
+    .features-title {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 2.3rem;
+      color: var(--brand-navy);
+      margin-bottom: 3.5rem;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      max-width: 600px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2rem;
+    }
+    .feature-card {
+      background: white;
+      border: 1px solid rgba(8, 34, 64, 0.06);
+      border-radius: 20px;
+      padding: 2.25rem 2rem;
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px -10px rgba(8, 34, 64, 0.06);
+      border-color: rgba(8, 34, 64, 0.12);
+    }
+    .feature-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: #ff7417;
+      background: #fff7ed;
+      margin-bottom: 1.5rem;
+    }
+    .feature-card h3 {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--brand-navy);
+      margin-bottom: 0.75rem;
+    }
+    .feature-card p {
+      font-size: 0.9rem;
+      color: #64748b;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Footer Section */
+    .landing-footer {
+      background: #fafafa;
+      border-top: 1px solid rgba(8, 34, 64, 0.06);
+      padding: 5rem 0 0 0;
+    }
+    .landing-footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 4rem;
+      padding: 0 1.5rem 4rem 1.5rem;
+    }
+    .footer-branding {
+      display: flex;
+      flex-direction: column;
+      max-width: 400px;
+      text-align: left;
+    }
+    .footer-logo img {
+      max-height: 40px;
+      width: auto;
+      margin-bottom: 1.5rem;
+    }
+    .footer-desc {
+      font-size: 0.88rem;
+      color: #64748b;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .footer-links-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      text-align: left;
+    }
+    .footer-column {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .footer-column h4 {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--brand-navy);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.75rem;
+    }
+    .footer-column a {
+      color: #64748b;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: var(--transition-smooth);
+    }
+    .footer-column a:hover {
+      color: var(--brand-blue);
+    }
+    .footer-bottom {
+      border-top: 1px solid rgba(8, 34, 64, 0.06);
+      padding: 2rem 0;
+    }
+    .footer-bottom-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-bottom-container .copyright {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin: 0;
+    }
+    .footer-bottom-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    .footer-bottom-links a, .footer-bottom-links button {
+      color: #64748b;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      font-family: inherit;
+    }
+    .footer-bottom-links a:hover, .footer-bottom-links button:hover {
+      color: var(--brand-blue);
+    }
+
+    /* Modal Overlay for Auth Forms */
+    .auth-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(8, 34, 64, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    .auth-modal-overlay.active {
+      display: flex;
+    }
+    .auth-modal-content {
+      background: radial-gradient(circle at 80% 20%, #0e2b5c 0%, #051329 100%);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 460px;
+      position: relative;
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      animation: zoomIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes zoomIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .auth-modal-close {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #94a3b8;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      z-index: 1010;
+    }
+    .auth-modal-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    /* Responsive styling for landing page */
+    @media (max-width: 992px) {
+      .landing-nav {
+        display: none;
+      }
+      .landing-hero-container {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        text-align: center;
+      }
+      .hero-content {
+        align-items: center;
+        text-align: center;
+      }
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      .hero-buttons {
+        justify-content: center;
+      }
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      .landing-footer-container {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <div class="auth-page-container">
-    
-    <!-- Left Column: Branding (matches 1b layout) -->
-    <div class="auth-branding">
-      <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 3.5rem; flex-wrap: wrap;">
-        <img src="assets/jurnalhub-logo.png" alt="JurnalHub" style="max-height: 64px; width: auto; filter: brightness(0) invert(1);">
-        <div style="width: 1px; height: 42px; background: rgba(255, 255, 255, 0.25);"></div>
-        <img src="assets/powered-by-claude-dark.png" alt="Powered by Claude" style="max-height: 56px; width: auto;">
+  <!-- Fixed Header/Navbar -->
+  <header class="landing-header">
+    <div class="landing-header-container">
+      <a href="#home" class="landing-logo">
+        <img src="assets/jurnalhub-logo.png" alt="JurnalHub">
+      </a>
+      <nav class="landing-nav">
+        <a href="#fitur" class="nav-link">Fitur</a>
+        <a href="#home" class="nav-link">Cara Kerja</a>
+        <a href="#footer" class="nav-link">About</a>
+        <a href="/contact.html" class="nav-link">Hubungi Kami</a>
+      </nav>
+      <div class="landing-auth-buttons">
+        <button class="header-btn-login btn-login-trigger">Masuk</button>
+        <button class="header-btn-register btn-register-trigger">Daftar Gratis</button>
       </div>
-      
-      <div class="branding-badge">
-        <i class="fa-solid fa-graduation-cap"></i> Portal Riset Terpadu
-      </div>
-      
-      <h1 class="branding-title">
-        Satu portal untuk semua kebutuhan <span>publikasi jurnal</span> Anda
-      </h1>
-      
-      <p class="branding-description" style="margin-bottom: 2rem;">
-        Cari, bandingkan, susun draf, dan loloskan draf Anda dari Turnitin menggunakan asisten pintar AI Journal Matcher, AI Drafting Companion, & JurnalHub Humanizer Engine.
-      </p>
+    </div>
+  </header>
 
-      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 3rem; font-size: 0.95rem; color: rgba(255,255,255,0.85);">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <i class="fa-solid fa-circle-check" style="color: #fbbf24; font-size: 1.1rem;"></i>
-          <span><strong>AI Journal Match Score</strong> - Rekomendasi jurnal Scopus & Sinta terakurat.</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <i class="fa-solid fa-circle-check" style="color: #fbbf24; font-size: 1.1rem;"></i>
-          <span><strong>AI Drafting Companion & Lit Review</strong> - Susun struktur dan kajian pustaka instan.</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <i class="fa-solid fa-circle-check" style="color: #f59e0b; font-size: 1.1rem;"></i>
-          <span><strong>JurnalHub Humanizer Engine</strong> - Loloskan tulisan AI dari Turnitin & GPTZero secara natural.</span>
+  <!-- Hero Section -->
+  <section class="landing-hero" id="home">
+    <div class="hero-bg-glow-1"></div>
+    <div class="hero-bg-glow-2"></div>
+    <div class="landing-hero-container">
+      <div class="hero-content">
+        <h1 class="hero-title">Percepat pencarian referensi ilmiah Anda.</h1>
+        <p class="hero-description">
+          JurnalHub membantu menemukan rekomendasi referensi dari topik penelitian, mengakses jurnal SINTA dan internasional, menyimpan draf daftar pustaka, serta menyiapkan sitasi akademik secara lebih rapi.
+        </p>
+        <div class="hero-buttons">
+          <button class="hero-btn-primary btn-register-trigger">Mulai Sekarang</button>
+          <button class="hero-btn-secondary btn-login-trigger">Lihat Cara Kerja</button>
         </div>
       </div>
-
-      <div class="branding-stats">
-        <div class="stat-item">
-          <span class="stat-value">750+</span>
-          <span class="stat-label">Jurnal terverifikasi</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">100%</span>
-          <span class="stat-label">Gratis untuk mulai</span>
+      <div class="hero-preview">
+        <div class="preview-card">
+          <span class="preview-tag">PREVIEW JURNALHUB</span>
+          <h3 class="preview-title">Cari, simpan, dan export referensi.</h3>
+          <p class="preview-desc">Cocok untuk mahasiswa, dosen, peneliti, dan penulis artikel ilmiah.</p>
+          
+          <div class="preview-grid">
+            <div class="preview-item draft">
+              <span class="item-label">Draft</span>
+              <span class="item-value">Save</span>
+            </div>
+            <div class="preview-item export">
+              <span class="item-label">Export</span>
+              <span class="item-value">PDF</span>
+            </div>
+          </div>
+          
+          <div class="preview-info-box">
+            <span class="info-title">Rekomendasi berbasis topik</span>
+            <p class="info-text">Hasil dapat disimpan sebagai daftar pustaka dan digunakan kembali.</p>
+          </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- Right Column: Glassmorphism Card (matches 1b layout) -->
-    <div class="auth-card-wrapper">
-      <div class="auth-container">
-        <!-- Google Sign-In Config -->
-        <div id="g_id_onload"
-             data-client_id="571306850750-ckq38nmai4felal861uu0hgj1b13bihf.apps.googleusercontent.com"
-             data-callback="handleCredentialResponse"
-             data-auto_prompt="false">
+  <!-- Features Section -->
+  <section class="landing-features" id="fitur">
+    <div class="landing-features-container">
+      <span class="features-badge">FITUR UTAMA</span>
+      <h2 class="features-title">Dibuat untuk menyusun referensi dengan lebih efisien.</h2>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <h3>AI Reference Search</h3>
+          <p>Cari rekomendasi referensi ilmiah berdasarkan topik penelitian secara cepat, rapi, dan terarah.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <i class="fa-solid fa-globe"></i>
+          </div>
+          <h3>Jurnal SINTA & Internasional</h3>
+          <p>Akses referensi jurnal nasional terindeks SINTA dan jurnal internasional sesuai kebutuhan riset.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <i class="fa-solid fa-bookmark"></i>
+          </div>
+          <h3>Bibliography Builder</h3>
+          <p>Simpan referensi pilihan dan susun daftar pustaka dengan format akademik yang lebih siap pakai.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="landing-footer" id="footer">
+    <div class="landing-footer-container">
+      <div class="footer-branding">
+        <div class="footer-logo">
+          <img src="assets/jurnalhub-logo.png" alt="JurnalHub">
+        </div>
+        <p class="footer-desc">
+          Platform asisten referensi akademik untuk membantu pencarian jurnal, penyimpanan draft pustaka, pemetaan riset, dan export sitasi secara lebih rapi.
+        </p>
+      </div>
+      <div class="footer-links-grid">
+        <div class="footer-column">
+          <h4>MENU</h4>
+          <a href="#home">Home</a>
+          <a href="#fitur">Fitur</a>
+          <a href="/contact.html">Hubungi Kami</a>
+        </div>
+        <div class="footer-column">
+          <h4>HALAMAN</h4>
+          <a href="/terms.html" target="_blank">Syarat & Ketentuan</a>
+          <a href="/refund.html" target="_blank">Refund Policy</a>
+          <a href="/faq.html" target="_blank">FAQ</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-container">
+        <p class="copyright">© 2026 JurnalHub. All rights reserved.</p>
+        <div class="footer-bottom-links">
+          <a href="#home">Beranda</a>
+          <a href="/contact.html">Kontak</a>
+          <button class="btn-login-trigger">Masuk</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Overlay wrapping Auth Cards -->
+  <div class="auth-modal-overlay" id="authModal">
+    <div class="auth-modal-content">
+      <button class="auth-modal-close" id="closeAuthModal">&times;</button>
+      
+      <!-- Right Column: Glassmorphism Card (matches 1b layout) -->
+      <div class="auth-card-wrapper">
+        <div class="auth-container">
+          <!-- Google Sign-In Config -->
+          <div id="g_id_onload"
+               data-client_id="571306850750-ckq38nmai4felal861uu0hgj1b13bihf.apps.googleusercontent.com"
+               data-callback="handleCredentialResponse"
+               data-auto_prompt="false">
+          </div>
+          
+          <div class="auth-tabs-wrapper">
+            <button class="auth-tab active" data-target="loginForm">Masuk</button>
+            <button class="auth-tab" data-target="registerForm">Daftar</button>
+            <button class="auth-tab" data-target="accessForm">Akses</button>
+          </div>
+
+          <!-- Form Login -->
+          <form id="loginForm" class="auth-form active">
+            <div class="form-group">
+              <label for="loginEmail">Email</label>
+              <div class="input-wrapper">
+                <i class="fa-regular fa-envelope input-icon"></i>
+                <input type="text" id="loginEmail" placeholder="nama@email.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label for="loginPassword" style="margin-bottom: 0;">Password</label>
+                <a href="#" id="forgotPasswordLink" style="font-size: 0.82rem; color: #3b82f6; text-decoration: none; font-weight: 500;">Lupa Password?</a>
+              </div>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="loginPassword" placeholder="••••••••" required>
+                <button type="button" class="password-toggle" data-input="loginPassword">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="auth-btn btn-main">
+              <i class="fa-solid fa-right-to-bracket"></i> Masuk Sekarang
+            </button>
+
+            <!-- Divider "atau" -->
+            <div class="auth-divider" style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.25rem 0; color: rgba(255,255,255,0.4); font-size: 0.85rem;">
+              <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+              <span>atau</span>
+              <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            </div>
+            
+            <!-- Google Sign-In Button -->
+            <div style="display: flex; justify-content: center; width: 100%; margin-bottom: 0.5rem;">
+              <div class="g_id_signin"
+                   data-type="standard"
+                   data-size="large"
+                   data-theme="outline"
+                   data-text="signin_with"
+                   data-shape="rectangular"
+                   data-logo_alignment="left"
+                   data-width="320">
+              </div>
+            </div>
+
+            <div class="register-switch-info">
+              Belum punya akun? <a href="#" id="toRegisterLink">Daftar gratis</a>
+            </div>
+            <div class="card-footer-access">
+              <span style="color: rgba(255,255,255,0.5);">Punya kode akses?</span>
+              <a href="#" class="access-link" id="toAccessLink">
+                <i class="fa-solid fa-crown" style="font-size: 0.8rem;"></i> Aktifkan &rarr;
+              </a>
+            </div>
+            <p class="auth-error" id="loginError"></p>
+          </form>
+
+          <!-- Form Register -->
+          <form id="registerForm" class="auth-form">
+            <div class="form-group">
+              <label for="registerEmail">Email</label>
+              <div class="input-wrapper">
+                <i class="fa-regular fa-envelope input-icon"></i>
+                <input type="email" id="registerEmail" placeholder="nama@email.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="registerPassword">Password</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="registerPassword" placeholder="Minimal 6 karakter" required minlength="6">
+                <button type="button" class="password-toggle" data-input="registerPassword">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="auth-btn btn-main">
+              <i class="fa-solid fa-user-plus"></i> Buat Akun Baru
+            </button>
+
+            <!-- Divider "atau" -->
+            <div class="auth-divider" style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.25rem 0; color: rgba(255,255,255,0.4); font-size: 0.85rem;">
+              <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+              <span>atau</span>
+              <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            </div>
+            
+            <!-- Google Sign-In Button -->
+            <div style="display: flex; justify-content: center; width: 100%; margin-bottom: 0.5rem;">
+              <div class="g_id_signin"
+                   data-type="standard"
+                   data-size="large"
+                   data-theme="outline"
+                   data-text="signup_with"
+                   data-shape="rectangular"
+                   data-logo_alignment="left"
+                   data-width="320">
+              </div>
+            </div>
+
+            <div class="register-switch-info">
+              Sudah punya akun? <a href="#" id="toLoginLink">Masuk di sini</a>
+            </div>
+            <p class="auth-error" id="registerError"></p>
+          </form>
+
+          <!-- Form Kode Akses -->
+          <form id="accessForm" class="auth-form">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+              <div class="premium-icon-box">
+                <i class="fa-solid fa-crown"></i>
+              </div>
+              <h3 style="margin: 0; font-size: 1.1rem; font-family: var(--font-outfit); font-weight: 700; color: #ffffff;">Akses Premium</h3>
+              <p style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 0.5rem; line-height: 1.4;">
+                Masukkan kode akses khusus untuk langsung menggunakan fitur premium tanpa perlu mendaftar.
+              </p>
+            </div>
+            <div class="form-group">
+              <label for="accessCode">Kode Rahasia <span class="premium-badge" style="background: #fbbf24; color: #051329;">PREMIUM</span></label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-key input-icon"></i>
+                <input type="password" id="accessCode" autocomplete="off" placeholder="Masukkan kode akses premium" required>
+                <button type="button" class="password-toggle" data-input="accessCode">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="auth-btn btn-premium">
+              <i class="fa-solid fa-unlock-keyhole"></i> Aktifkan Premium
+            </button>
+            
+            <p class="register-switch-info" style="margin-top: 1.25rem;">
+              Belum memiliki kode akses? <br>
+              <a href="https://drilman.my.id/drilmanabidin/nvj3wrm97zdw" target="_blank" rel="noopener">
+                Dapatkan Kode Akses di Sini <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; margin-left: 2px;"></i>
+              </a>
+            </p>
+            <p class="auth-error" id="accessError"></p>
+          </form>
+
+          <!-- Form Lupa Password -->
+          <form id="forgotForm" class="auth-form">
+            <div style="margin-bottom: 1.5rem; text-align: center;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: #ffffff; margin-bottom: 0.5rem;">Lupa Kata Sandi?</h3>
+              <p style="font-size: 0.85rem; color: rgba(255,255,255,0.6); line-height: 1.4;">Masukkan alamat email terdaftar Anda, kami akan mengirimkan instruksi untuk mengatur ulang kata sandi.</p>
+            </div>
+
+            <div id="forgotError" class="auth-error" style="color: #ef4444; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600; text-align: center;"></div>
+            <div id="forgotSuccess" class="auth-success" style="color: #10b981; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600; text-align: center;"></div>
+
+            <div class="form-group">
+              <label for="forgotEmail">Email</label>
+              <div class="input-wrapper">
+                <i class="fa-regular fa-envelope input-icon"></i>
+                <input type="email" id="forgotEmail" placeholder="nama@email.com" required>
+              </div>
+            </div>
+
+            <button type="submit" class="auth-btn btn-main">
+              <i class="fa-solid fa-paper-plane"></i> Kirim Tautan Pemulihan
+            </button>
+
+            <p class="auth-helper-text" style="margin-top: 1.25rem; text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+              Ingat kata sandi Anda? <a href="#" id="backToLoginLink" style="color: #3b82f6; text-decoration: none; font-weight: 600;">Masuk di sini</a>
+            </p>
+          </form>
+
         </div>
         
-        <div class="auth-tabs-wrapper">
-          <button class="auth-tab active" data-target="loginForm">Masuk</button>
-          <button class="auth-tab" data-target="registerForm">Daftar</button>
-          <button class="auth-tab" data-target="accessForm">Akses</button>
-        </div>
-
-        <!-- Form Login -->
-        <form id="loginForm" class="auth-form active">
-          <div class="form-group">
-            <label for="loginEmail">Email</label>
-            <div class="input-wrapper">
-              <i class="fa-regular fa-envelope input-icon"></i>
-              <input type="text" id="loginEmail" placeholder="nama@email.com" required>
-            </div>
+        <!-- Footer Links for Gateway Compliance -->
+        <footer style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; width: 100%;">
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+            <a href="/terms.html" style="color: rgba(255, 255, 255, 0.45); text-decoration: none; transition: color 0.2s; font-weight: 500;">Syarat & Ketentuan</a>
+            <span style="color: rgba(255, 255, 255, 0.15);">|</span>
+            <a href="/refund.html" style="color: rgba(255, 255, 255, 0.45); text-decoration: none; transition: color 0.2s; font-weight: 500;">Refund Policy</a>
+            <span style="color: rgba(255, 255, 255, 0.15);">|</span>
+            <a href="/faq.html" style="color: rgba(255, 255, 255, 0.45); text-decoration: none; transition: color 0.2s; font-weight: 500;">FAQ</a>
+            <span style="color: rgba(255, 255, 255, 0.15);">|</span>
+            <a href="/contact.html" style="color: rgba(255, 255, 255, 0.45); text-decoration: none; transition: color 0.2s; font-weight: 500;">Kontak</a>
           </div>
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <label for="loginPassword" style="margin-bottom: 0;">Password</label>
-              <a href="#" id="forgotPasswordLink" style="font-size: 0.82rem; color: #3b82f6; text-decoration: none; font-weight: 500;">Lupa Password?</a>
-            </div>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="loginPassword" placeholder="••••••••" required>
-              <button type="button" class="password-toggle" data-input="loginPassword">
-                <i class="fa-regular fa-eye"></i>
-              </button>
-            </div>
-          </div>
-          <button type="submit" class="auth-btn btn-main">
-            <i class="fa-solid fa-right-to-bracket"></i> Masuk Sekarang
-          </button>
-
-          <!-- Divider "atau" -->
-          <div class="auth-divider" style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.25rem 0; color: rgba(255,255,255,0.4); font-size: 0.85rem;">
-            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
-            <span>atau</span>
-            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
-          </div>
-          
-          <!-- Google Sign-In Button -->
-          <div style="display: flex; justify-content: center; width: 100%; margin-bottom: 0.5rem;">
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-size="large"
-                 data-theme="outline"
-                 data-text="signin_with"
-                 data-shape="rectangular"
-                 data-logo_alignment="left"
-                 data-width="320">
-            </div>
-          </div>
-
-          <div class="register-switch-info">
-            Belum punya akun? <a href="#" id="toRegisterLink">Daftar gratis</a>
-          </div>
-          <div class="card-footer-access">
-            <span style="color: rgba(255,255,255,0.5);">Punya kode akses?</span>
-            <a href="#" class="access-link" id="toAccessLink">
-              <i class="fa-solid fa-crown" style="font-size: 0.8rem;"></i> Aktifkan &rarr;
-            </a>
-          </div>
-          <p class="auth-error" id="loginError"></p>
-        </form>
-
-        <!-- Form Register -->
-        <form id="registerForm" class="auth-form">
-          <div class="form-group">
-            <label for="registerEmail">Email</label>
-            <div class="input-wrapper">
-              <i class="fa-regular fa-envelope input-icon"></i>
-              <input type="email" id="registerEmail" placeholder="nama@email.com" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="registerPassword">Password</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="registerPassword" placeholder="Minimal 6 karakter" required minlength="6">
-              <button type="button" class="password-toggle" data-input="registerPassword">
-                <i class="fa-regular fa-eye"></i>
-              </button>
-            </div>
-          </div>
-          <button type="submit" class="auth-btn btn-main">
-            <i class="fa-solid fa-user-plus"></i> Buat Akun Baru
-          </button>
-
-          <!-- Divider "atau" -->
-          <div class="auth-divider" style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.25rem 0; color: rgba(255,255,255,0.4); font-size: 0.85rem;">
-            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
-            <span>atau</span>
-            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
-          </div>
-          
-          <!-- Google Sign-In Button -->
-          <div style="display: flex; justify-content: center; width: 100%; margin-bottom: 0.5rem;">
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-size="large"
-                 data-theme="outline"
-                 data-text="signup_with"
-                 data-shape="rectangular"
-                 data-logo_alignment="left"
-                 data-width="320">
-            </div>
-          </div>
-
-          <div class="register-switch-info">
-            Sudah punya akun? <a href="#" id="toLoginLink">Masuk di sini</a>
-          </div>
-          <p class="auth-error" id="registerError"></p>
-        </form>
-
-        <!-- Form Kode Akses -->
-        <form id="accessForm" class="auth-form">
-          <div style="text-align: center; margin-bottom: 1.5rem;">
-            <div class="premium-icon-box">
-              <i class="fa-solid fa-crown"></i>
-            </div>
-            <h3 style="margin: 0; font-size: 1.1rem; font-family: var(--font-outfit); font-weight: 700; color: #ffffff;">Akses Premium</h3>
-            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 0.5rem; line-height: 1.4;">
-              Masukkan kode akses khusus untuk langsung menggunakan fitur premium tanpa perlu mendaftar.
-            </p>
-          </div>
-          <div class="form-group">
-            <label for="accessCode">Kode Rahasia <span class="premium-badge" style="background: #fbbf24; color: #051329;">PREMIUM</span></label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-key input-icon"></i>
-              <input type="password" id="accessCode" autocomplete="off" placeholder="Masukkan kode akses premium" required>
-              <button type="button" class="password-toggle" data-input="accessCode">
-                <i class="fa-regular fa-eye"></i>
-              </button>
-            </div>
-          </div>
-          <button type="submit" class="auth-btn btn-premium">
-            <i class="fa-solid fa-unlock-keyhole"></i> Aktifkan Premium
-          </button>
-          
-          <p class="register-switch-info" style="margin-top: 1.25rem;">
-            Belum memiliki kode akses? <br>
-            <a href="https://drilman.my.id/drilmanabidin/nvj3wrm97zdw" target="_blank" rel="noopener">
-              Dapatkan Kode Akses di Sini <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; margin-left: 2px;"></i>
-            </a>
-          </p>
-          <p class="auth-error" id="accessError"></p>
-        </form>
-
-        <!-- Form Lupa Password -->
-        <form id="forgotForm" class="auth-form">
-          <div style="margin-bottom: 1.5rem; text-align: center;">
-            <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: #ffffff; margin-bottom: 0.5rem;">Lupa Kata Sandi?</h3>
-            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.6); line-height: 1.4;">Masukkan alamat email terdaftar Anda, kami akan mengirimkan instruksi untuk mengatur ulang kata sandi.</p>
-          </div>
-
-          <div id="forgotError" class="auth-error" style="color: #ef4444; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600; text-align: center;"></div>
-          <div id="forgotSuccess" class="auth-success" style="color: #10b981; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600; text-align: center;"></div>
-
-          <div class="form-group">
-            <label for="forgotEmail">Email</label>
-            <div class="input-wrapper">
-              <i class="fa-regular fa-envelope input-icon"></i>
-              <input type="email" id="forgotEmail" placeholder="nama@email.com" required>
-            </div>
-          </div>
-
-          <button type="submit" class="auth-btn btn-main">
-            <i class="fa-solid fa-paper-plane"></i> Kirim Tautan Pemulihan
-          </button>
-
-          <p class="auth-helper-text" style="margin-top: 1.25rem; text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
-            Ingat kata sandi Anda? <a href="#" id="backToLoginLink" style="color: #3b82f6; text-decoration: none; font-weight: 600;">Masuk di sini</a>
-          </p>
-        </form>
-
+          <p style="color: rgba(255,255,255,0.25); font-size: 0.75rem;">&copy; 2026 JurnalHub. All rights reserved.</p>
+        </footer>
       </div>
-      
-      <!-- Footer Links for Gateway Compliance -->
-      <footer style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; width: 100%;">
-        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-          <a href="/terms.html" style="color: rgba(255, 255, 255, 0.45); text-decoration: none; transition: color 0.2s; font-weight: 500;">Syarat & Ketentuan</a>
-          <span style="color: rgba(255, 255, 255, 0.15);">|</span>
-          <a href="/refund.html" style="color: rgba(255, 255, 255, 0.45); text-decoration: none; transition: color 0.2s; font-weight: 500;">Refund Policy</a>
-          <span style="color: rgba(255, 255, 255, 0.15);">|</span>
-          <a href="/faq.html" style="color: rgba(255, 255, 255, 0.45); text-decoration: none; transition: color 0.2s; font-weight: 500;">FAQ</a>
-          <span style="color: rgba(255, 255, 255, 0.15);">|</span>
-          <a href="/contact.html" style="color: rgba(255, 255, 255, 0.45); text-decoration: none; transition: color 0.2s; font-weight: 500;">Kontak</a>
-        </div>
-        <p style="color: rgba(255,255,255,0.25); font-size: 0.75rem;">&copy; 2026 JurnalHub. All rights reserved.</p>
-      </footer>
-    </div>
 
+    </div>
   </div>
 
   <script>
@@ -928,6 +1579,69 @@
           btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Kirim Tautan Pemulihan`;
         }
       });
+      
+      // Auth Modal handling
+      const authModal = document.getElementById('authModal');
+      const closeAuthModal = document.getElementById('closeAuthModal');
+      
+      function openModal(tabName) {
+        if (authModal) {
+          authModal.classList.add('active');
+          // Switch to the correct tab in the modal card
+          const tabs = document.querySelectorAll('.auth-tab');
+          const forms = document.querySelectorAll('.auth-form');
+          
+          tabs.forEach(tab => {
+            if (tab.getAttribute('data-target') === tabName) {
+              tab.classList.add('active');
+            } else {
+              tab.classList.remove('active');
+            }
+          });
+          
+          forms.forEach(form => {
+            if (form.id === tabName) {
+              form.classList.add('active');
+            } else {
+              form.classList.remove('active');
+            }
+          });
+        }
+      }
+      
+      function closeModal() {
+        if (authModal) {
+          authModal.classList.remove('active');
+        }
+      }
+      
+      // Bind all login triggers
+      document.querySelectorAll('.btn-login-trigger').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openModal('loginForm');
+        });
+      });
+      
+      // Bind all register triggers
+      document.querySelectorAll('.btn-register-trigger').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openModal('registerForm');
+        });
+      });
+      
+      if (closeAuthModal) {
+        closeAuthModal.addEventListener('click', closeModal);
+      }
+      
+      if (authModal) {
+        authModal.addEventListener('click', (e) => {
+          if (e.target === authModal) {
+            closeModal();
+          }
+        });
+      }
     });
   </script>
 </body>
