@@ -741,6 +741,82 @@
     
     .back-to-research-btn:hover {
       transform: translateX(-4px);
+    }
+
+    /* Video Demo Modal styling */
+    .video-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(11, 26, 48, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .video-modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+    .video-modal-card {
+      background: #0b1a30;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 800px;
+      padding: 1.5rem;
+      position: relative;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+    .video-modal-overlay.active .video-modal-card {
+      transform: translateY(0);
+    }
+    .video-modal-close {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      background: #ef4444;
+      border: none;
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+      transition: all 0.2s;
+      z-index: 99999;
+    }
+    .video-modal-close:hover {
+      background: #dc2626;
+      transform: scale(1.1);
+    }
+    .video-aspect-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+      height: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+    }
+    .video-aspect-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
     }    /* Stats Grid Row */
     .stats-row-container {
       display: grid;
@@ -1881,7 +1957,12 @@
               <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
                 <div>
                   <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score</span>
-                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Temukan rekomendasi jurnal paling cocok</h3>
+                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span>Temukan rekomendasi jurnal paling cocok</span>
+                    <a href="#" id="howItWorksBtn" style="font-size: 0.78rem; color: var(--brand-blue); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(7, 135, 220, 0.08); padding: 0.25rem 0.6rem; border-radius: 20px; transition: all 0.2s;">
+                      <i class="fa-regular fa-circle-play"></i> Cara Kerja?
+                    </a>
+                  </h3>
                 </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                   <!-- Quota Disclaimer for Match Score -->
@@ -2464,6 +2545,48 @@
         });
       }
 
+      // Video Demo Modal Logic
+      const videoDemoModal = document.getElementById('videoDemoModal');
+      const howItWorksBtn = document.getElementById('howItWorksBtn');
+      const closeVideoModalBtn = document.getElementById('closeVideoModalBtn');
+      const demoVideoPlayer = document.getElementById('demoVideoPlayer');
+
+      function openVideoModal(e) {
+        if (e) e.preventDefault();
+        if (videoDemoModal) {
+          videoDemoModal.classList.add('active');
+          if (demoVideoPlayer) {
+            demoVideoPlayer.currentTime = 0;
+            demoVideoPlayer.play().catch(err => console.log('Autoplay blocked:', err));
+          }
+        }
+      }
+
+      function closeVideoModal() {
+        if (videoDemoModal) {
+          videoDemoModal.classList.remove('active');
+          if (demoVideoPlayer) {
+            demoVideoPlayer.pause();
+          }
+        }
+      }
+
+      if (howItWorksBtn) {
+        howItWorksBtn.addEventListener('click', openVideoModal);
+      }
+
+      if (closeVideoModalBtn) {
+        closeVideoModalBtn.addEventListener('click', closeVideoModal);
+      }
+
+      if (videoDemoModal) {
+        videoDemoModal.addEventListener('click', (e) => {
+          if (e.target === videoDemoModal) {
+            closeVideoModal();
+          }
+        });
+      }
+
       // Switch to Monthly Plan
       if (switchMonthly) {
         switchMonthly.addEventListener('click', () => {
@@ -2813,6 +2936,16 @@
             <p>Menyiapkan pratinjau dokumen...</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Demo Modal HTML -->
+  <div class="video-modal-overlay" id="videoDemoModal">
+    <div class="video-modal-card">
+      <button class="video-modal-close" id="closeVideoModalBtn">&times;</button>
+      <div class="video-aspect-container">
+        <video id="demoVideoPlayer" src="https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-his-computer-34304-large.mp4" controls></video>
       </div>
     </div>
   </div>
