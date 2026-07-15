@@ -2048,11 +2048,14 @@
                 </div>
               </div>
 
-              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem; margin-bottom: 2rem;">
+              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem; margin-bottom: 2rem; flex-wrap: wrap;">
                 <button id="runDraftGenerator" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: var(--brand-blue); color: #ffffff;" type="button">
                   <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Outline Pembahasan AI
                 </button>
-                <p id="draftSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
+                <a href="#" id="howItWorksDraftBtn" style="font-size: 0.88rem; color: var(--brand-blue); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(7, 135, 220, 0.08); padding: 0.8rem 1.2rem; border-radius: 8px; transition: all 0.2s; border: 1px solid rgba(7,135,220,0.12);">
+                  <i class="fa-regular fa-circle-play"></i> Cara Kerja?
+                </a>
+                <p id="draftSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0; flex-grow: 1;">
                   Claude AI akan merumuskan poin-poin pembahasan di setiap bab manuskrip Anda untuk mempercepat proses penulisan draf jurnal.
                 </p>
               </div>
@@ -2549,14 +2552,16 @@
       // Video Demo Modal Logic
       const videoDemoModal = document.getElementById('videoDemoModal');
       const howItWorksBtn = document.getElementById('howItWorksBtn');
+      const howItWorksDraftBtn = document.getElementById('howItWorksDraftBtn');
       const closeVideoModalBtn = document.getElementById('closeVideoModalBtn');
       const demoVideoPlayer = document.getElementById('demoVideoPlayer');
 
-      function openVideoModal(e) {
+      function openVideoModal(src, e) {
         if (e) e.preventDefault();
         if (videoDemoModal) {
           videoDemoModal.classList.add('active');
           if (demoVideoPlayer) {
+            demoVideoPlayer.src = src;
             demoVideoPlayer.currentTime = 0;
             demoVideoPlayer.play().catch(err => console.log('Autoplay blocked:', err));
           }
@@ -2573,7 +2578,11 @@
       }
 
       if (howItWorksBtn) {
-        howItWorksBtn.addEventListener('click', openVideoModal);
+        howItWorksBtn.addEventListener('click', (e) => openVideoModal('assets/demo-ai-match-score.mp4', e));
+      }
+
+      if (howItWorksDraftBtn) {
+        howItWorksDraftBtn.addEventListener('click', (e) => openVideoModal('assets/demo2.mp4', e));
       }
 
       if (closeVideoModalBtn) {
