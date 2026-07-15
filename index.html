@@ -2300,6 +2300,9 @@
                 <button id="runHumanizerBtn" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: #f59e0b; color: #ffffff;" type="button">
                   <i class="fa-solid fa-wand-magic-sparkles"></i> Mulai Humanisasi Teks
                 </button>
+                <a href="#" id="howItWorksHumanizerBtn" style="font-size: 0.88rem; color: #f59e0b; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(245, 158, 11, 0.08); padding: 0.8rem 1.2rem; border-radius: 8px; transition: all 0.2s; border: 1px solid rgba(245, 158, 11, 0.12);">
+                  <i class="fa-regular fa-circle-play"></i> Cara Kerja?
+                </a>
                 <p id="humanizerSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0; flex-grow: 1;">
                   Mesin humanizer kami akan mendeteksi kata-kata bergaya AI dan merombaknya secara otomatis menggunakan tata bahasa ilmiah yang natural.
                 </p>
@@ -2711,6 +2714,11 @@
 
       if (howItWorksLitBtn) {
         howItWorksLitBtn.addEventListener('click', (e) => openVideoModal('assets/demo3.mp4', e));
+      }
+
+      const howItWorksHumanizerBtn = document.getElementById('howItWorksHumanizerBtn');
+      if (howItWorksHumanizerBtn) {
+        howItWorksHumanizerBtn.addEventListener('click', (e) => openVideoModal('assets/demo4.mp4', e));
       }
 
       if (closeVideoModalBtn) {
