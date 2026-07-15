@@ -1711,8 +1711,8 @@ app.post('/api/payment/topup/create', requireAccess, async (req, res) => {
 
   const packages = {
     starter: { price: 39000, name: 'Humanizer Starter Pack', desc: 'Top-up Kuota Kata Humanizer 5.000 Kata' },
-    scholar: { price: 89000, name: 'Humanizer Scholar Pack', desc: 'Top-up Kuota Kata Humanizer 15.000 Kata' },
-    thesis: { price: 199000, name: 'Humanizer Thesis Pack', desc: 'Top-up Kuota Kata Humanizer 40.000 Kata' }
+    scholar: { price: 119000, name: 'Humanizer Scholar Pack', desc: 'Top-up Kuota Kata Humanizer 15.000 Kata' },
+    thesis: { price: 299000, name: 'Humanizer Thesis Pack', desc: 'Top-up Kuota Kata Humanizer 40.000 Kata' }
   };
 
   const selectedPackage = packages[packageId];
