@@ -603,13 +603,13 @@ app.get('/api/me', (req, res) => {
           user.humanizerWordsUsedThisMonth = 0;
           saveUsers(users);
         }
-        humanizerWordsLimit = 20000;
+        humanizerWordsLimit = 15000;
         const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
-        humanizerWordsRemaining = Math.max(0, 20000 - wordsUsed);
+        humanizerWordsRemaining = Math.max(0, 15000 - wordsUsed);
         isHumanizerLimitReached = humanizerWordsRemaining <= 0;
       } else {
-        humanizerWordsLimit = 20000;
-        humanizerWordsRemaining = 20000;
+        humanizerWordsLimit = 15000;
+        humanizerWordsRemaining = 15000;
         isHumanizerLimitReached = false;
       }
     }
@@ -1435,7 +1435,7 @@ app.post('/api/humanize', requireAccess, (req, res) => {
       user.humanizerWordsUsedThisMonth = 0;
     }
 
-    const limit = user.type === 'ultimate' ? 20000 : 5000;
+    const limit = user.type === 'ultimate' ? 15000 : 5000;
     const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
     const remaining = Math.max(0, limit - wordsUsed);
 
