@@ -1451,7 +1451,7 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
     saveUsers(users);
   }
 
-  const stealthApiKey = process.env.STEALTHGPT_API_KEY;
+  const stealthApiKey = process.env.STEALTH_API_KEY || process.env.STEALTHGPT_API_KEY;
 
   if (stealthApiKey && stealthApiKey.trim() !== '') {
     try {
