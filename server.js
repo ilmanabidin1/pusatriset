@@ -1433,6 +1433,7 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
     if (user.lastHumanizerMonth !== currentMonth) {
       user.lastHumanizerMonth = currentMonth;
       user.humanizerWordsUsedThisMonth = 0;
+      saveUsers(users);
     }
 
     const limit = user.type === 'ultimate' ? 15000 : 5000;
@@ -1445,10 +1446,6 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
         message: `Kuota kata Anda tidak mencukupi. Sisa kuota Anda: ${remaining} kata, sedangkan teks input Anda berisi: ${wordCount} kata.` 
       });
     }
-
-    // Deduct words from database
-    user.humanizerWordsUsedThisMonth = (user.humanizerWordsUsedThisMonth || 0) + wordCount;
-    saveUsers(users);
   }
 
   const stealthApiKey = process.env.STEALTH_API_KEY || process.env.STEALTHGPT_API_KEY;
@@ -1481,12 +1478,22 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
 
       const resData = await response.json();
       const humanized = resData.result || cleanText;
+      const outputWordCount = humanized.split(/\s+/).filter(w => w.length > 0).length;
+      const actualCost = wordCount + outputWordCount;
+
+      // Update database usage with (input + output)
+      if (user) {
+        user.humanizerWordsUsedThisMonth = (user.humanizerWordsUsedThisMonth || 0) + actualCost;
+        saveUsers(users);
+      }
+
       const score = resData.howLikelyToBeDetected !== undefined ? (100 - parseInt(resData.howLikelyToBeDetected)) : (94 + Math.floor(Math.random() * 5));
 
       return res.json({
         ok: true,
         humanizedText: humanized,
         wordCount: wordCount,
+        actualCost: actualCost,
         originalityScore: isNaN(score) ? 95 : Math.max(80, Math.min(100, score))
       });
 
@@ -1525,10 +1532,20 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
     humanized = humanized.replace(/\bI think\b/gi, 'it is argued');
   }
 
+  const outputWordCount = humanized.split(/\s+/).filter(w => w.length > 0).length;
+  const actualCost = wordCount + outputWordCount;
+
+  // Update database usage with (input + output)
+  if (user) {
+    user.humanizerWordsUsedThisMonth = (user.humanizerWordsUsedThisMonth || 0) + actualCost;
+    saveUsers(users);
+  }
+
   res.json({
     ok: true,
     humanizedText: humanized,
     wordCount: wordCount,
+    actualCost: actualCost,
     originalityScore: 94 + Math.floor(Math.random() * 5) // Mock originality score (94%-98%)
   });
 });
