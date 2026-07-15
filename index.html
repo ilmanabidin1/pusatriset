@@ -591,6 +591,156 @@
       width: 18px;
       border-radius: 3px;
       background: #ffffff;
+    }
+
+    /* AI Research Cards Grid */
+    .ai-research-container {
+      padding: 0.5rem 0;
+    }
+    
+    .ai-research-header {
+      margin-bottom: 2rem;
+    }
+    
+    .ai-research-header h3 {
+      font-family: var(--font-outfit);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+    
+    .ai-research-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    
+    .ai-research-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .ai-research-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--card-radius);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(8, 34, 64, 0.02);
+    }
+    
+    .ai-research-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(7, 135, 220, 0.3);
+      box-shadow: 0 10px 30px rgba(7, 135, 220, 0.08);
+    }
+    
+    .ai-research-card-content {
+      margin-bottom: 1.5rem;
+    }
+    
+    .ai-research-icon-wrapper {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .ai-research-card:nth-child(1) .ai-research-icon-wrapper {
+      background-color: rgba(7, 135, 220, 0.1);
+      color: #0787dc;
+    }
+    
+    .ai-research-card:nth-child(2) .ai-research-icon-wrapper {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+    
+    .ai-research-card:nth-child(3) .ai-research-icon-wrapper {
+      background-color: rgba(139, 92, 246, 0.1);
+      color: #8b5cf6;
+    }
+    
+    .ai-research-card h4 {
+      font-family: var(--font-outfit);
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+    }
+    
+    .ai-research-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    
+    .ai-research-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #0787dc, #0c203a);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    
+    .ai-research-btn:hover {
+      background: linear-gradient(135deg, #0893f0, #0c203a);
+      box-shadow: 0 4px 12px rgba(7, 135, 220, 0.2);
+    }
+    
+    .ai-research-card:nth-child(2) .ai-research-btn {
+      background: linear-gradient(135deg, #10b981, #064e3b);
+    }
+    .ai-research-card:nth-child(2) .ai-research-btn:hover {
+      background: linear-gradient(135deg, #059669, #064e3b);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+    
+    .ai-research-card:nth-child(3) .ai-research-btn {
+      background: linear-gradient(135deg, #8b5cf6, #4c1d95);
+    }
+    .ai-research-card:nth-child(3) .ai-research-btn:hover {
+      background: linear-gradient(135deg, #7c3aed, #4c1d95);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    }
+    
+    /* Back Navigation Button */
+    .back-to-research-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--brand-blue);
+      background: transparent;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s;
+    }
+    
+    .back-to-research-btn:hover {
+      transform: translateX(-4px);
     }    /* Stats Grid Row */
     .stats-row-container {
       display: grid;
@@ -1404,16 +1554,8 @@
       <a href="#" class="sidebar-link active" data-tab="beranda">
         <i class="fa-solid fa-house"></i> <span>Beranda</span>
       </a>
-      <a href="#" class="sidebar-link" data-tab="match-score">
-        <i class="fa-solid fa-percent"></i> <span>Match Score AI</span>
-        <span class="pro-badge">PRO</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="drafting-companion">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>AI Drafting Companion</span>
-        <span class="pro-badge">PRO</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="lit-review">
-        <i class="fa-solid fa-book-open"></i> <span>AI Lit Review</span>
+      <a href="#" class="sidebar-link" data-tab="ai-research">
+        <i class="fa-solid fa-flask"></i> <span>AI For Research</span>
         <span class="pro-badge">PRO</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="templates">
@@ -1485,7 +1627,7 @@
                 <h3>Temukan jurnal paling cocok untuk artikel Anda</h3>
                 <p>Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.</p>
               </div>
-              <button class="banner-action-btn" onclick="document.querySelector('.sidebar-link[data-tab=\'match-score\']')?.click()">
+              <button class="banner-action-btn" onclick="switchTab('match-score')">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Mulai AI Match
               </button>
             </div>
@@ -1497,7 +1639,7 @@
                 <h3>Buat tinjauan pustaka ilmiah dalam hitungan detik</h3>
                 <p>Masukkan topik riset Anda, dapatkan analisis komprehensif, sitasi, dan ekspor draft instan.</p>
               </div>
-              <button class="banner-action-btn" onclick="document.querySelector('.sidebar-link[data-tab=\'lit-review\']')?.click()">
+              <button class="banner-action-btn" onclick="switchTab('lit-review')">
                 <i class="fa-solid fa-magnifying-glass"></i> Coba Lit Review
               </button>
             </div>
@@ -1509,7 +1651,7 @@
                 <h3>Tulis draf manuskrip Anda bersama asisten AI</h3>
                 <p>Kembangkan argumen penelitian, perbaiki tata bahasa akademis, dan optimalkan struktur manuskrip.</p>
               </div>
-              <button class="banner-action-btn" onclick="document.querySelector('.sidebar-link[data-tab=\'drafting-companion\']')?.click()">
+              <button class="banner-action-btn" onclick="switchTab('drafting-companion')">
                 <i class="fa-solid fa-pen-nib"></i> Mulai Menulis
               </button>
             </div>
@@ -1521,7 +1663,7 @@
                 <h3>Koleksi prompt pintar untuk publikasi ilmiah</h3>
                 <p>Gunakan ribuan formula instruksi siap pakai untuk paraphrase akademis dan respon reviewer.</p>
               </div>
-              <button class="banner-action-btn" onclick="document.querySelector('.sidebar-link[data-tab=\'prompt-bank\']')?.click()">
+              <button class="banner-action-btn" onclick="switchTab('prompt-bank')">
                 <i class="fa-solid fa-layer-group"></i> Buka Prompt Bank
               </button>
             </div>
@@ -1660,9 +1802,66 @@
 
       </div>
 
+      <!-- TAB: AI FOR RESEARCH (GRID MAIN VIEW) -->
+      <div id="tabContentAiResearch" class="tab-content">
+        <div class="ai-research-container">
+          <div class="ai-research-header">
+            <h3>AI For Research</h3>
+            <p>Pilih salah satu asisten kecerdasan buatan (AI) di bawah ini untuk mempercepat riset dan penulisan ilmiah Anda.</p>
+          </div>
+          
+          <div class="ai-research-grid">
+            
+            <!-- Card 1: AI Match Score -->
+            <div class="ai-research-card">
+              <div class="ai-research-card-content">
+                <div class="ai-research-icon-wrapper">
+                  <i class="fa-solid fa-percent"></i>
+                </div>
+                <h4>AI Match Score</h4>
+                <p>Temukan rekomendasi jurnal Scopus & Sinta terakreditasi berdasarkan kesesuaian judul dan abstrak manuskrip riset Anda secara instan.</p>
+              </div>
+              <button class="ai-research-btn" onclick="switchTab('match-score')">
+                Buka Fitur <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- Card 2: AI Drafting Companion -->
+            <div class="ai-research-card">
+              <div class="ai-research-card-content">
+                <div class="ai-research-icon-wrapper">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <h4>AI Drafting Companion</h4>
+                <p>Tulis draf manuskrip Anda bersama asisten AI. Kembangkan argumentasi ilmiah, perbaiki tata bahasa, dan optimalkan struktur manuskrip.</p>
+              </div>
+              <button class="ai-research-btn" onclick="switchTab('drafting-companion')">
+                Buka Fitur <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- Card 3: AI Literature Review -->
+            <div class="ai-research-card">
+              <div class="ai-research-card-content">
+                <div class="ai-research-icon-wrapper">
+                  <i class="fa-solid fa-book-open"></i>
+                </div>
+                <h4>AI Literature Review</h4>
+                <p>Buat tinjauan pustaka (literature review) ilmiah komprehensif lengkap dengan sitasi dalam hitungan detik untuk topik pilihan Anda.</p>
+              </div>
+              <button class="ai-research-btn" onclick="switchTab('lit-review')">
+                Buka Fitur <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
       <!-- TAB 2: MATCH SCORE (DEDICATED VIEW) -->
       <div id="tabContentMatchScore" class="tab-content">
         <div class="match-score-main-container">
+          <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
           <div class="match-box-wrapper" id="matchBoxWrapper" style="position: relative;">
             
             <!-- Overlay Lock for Free User -->
@@ -1731,6 +1930,7 @@
       <!-- TAB: AI DRAFTING COMPANION (DEDICATED VIEW) -->
       <div id="tabContentDraftingCompanion" class="tab-content">
         <div class="match-score-main-container">
+          <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
           <div class="match-box-wrapper" id="draftBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
             <!-- Overlay Lock for Free User (Quota-based) -->
@@ -1808,6 +2008,7 @@
       <!-- TAB: AI LITERATURE REVIEW & CITATION FINDER (DEDICATED VIEW) -->
       <div id="tabContentLitReview" class="tab-content">
         <div class="match-score-main-container">
+          <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
           <div class="match-box-wrapper" id="litReviewBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
             <!-- Overlay Lock for Free User (Quota-based) -->
@@ -2169,7 +2370,9 @@
 
         // Clean link state and activate target
         sidebarLinks.forEach(link => {
-          if (link.getAttribute('data-tab') === tabName) {
+          const currentTab = link.getAttribute('data-tab');
+          if (currentTab === tabName || 
+             (currentTab === 'ai-research' && ['match-score', 'drafting-companion', 'lit-review'].includes(tabName))) {
             link.classList.add('active');
           } else {
             link.classList.remove('active');
@@ -2188,7 +2391,8 @@
         }
         
         // Update Page Title
-        const currentLink = document.querySelector(`.sidebar-link[data-tab="${tabName}"]`);
+        const activeTabForTitle = ['match-score', 'drafting-companion', 'lit-review'].includes(tabName) ? 'ai-research' : tabName;
+        const currentLink = document.querySelector(`.sidebar-link[data-tab="${activeTabForTitle}"]`);
         if (currentLink) {
           pageTitle.textContent = currentLink.querySelector('span').textContent;
         }
@@ -2208,6 +2412,7 @@
           window.initPromptBankTab();
         }
       }
+      window.switchTab = switchTab;
 
       sidebarLinks.forEach(link => {
         link.addEventListener('click', (e) => {

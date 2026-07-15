@@ -165,8 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
               bannerUpgradeBtn.className = 'banner-upgrade-btn'; 
               bannerUpgradeBtn.onclick = (e) => {
                 e.preventDefault();
-                const matchTabLink = document.querySelector('.sidebar-link[data-tab="match-score"]');
-                if (matchTabLink) matchTabLink.click();
+                if (window.switchTab) window.switchTab('match-score');
               };
             }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
@@ -204,8 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
               bannerUpgradeBtn.className = 'banner-upgrade-btn'; 
               bannerUpgradeBtn.onclick = (e) => {
                 e.preventDefault();
-                const matchTabLink = document.querySelector('.sidebar-link[data-tab="match-score"]');
-                if (matchTabLink) matchTabLink.click();
+                if (window.switchTab) window.switchTab('match-score');
               };
             }
 
