@@ -216,9 +216,18 @@ function parseCookies(cookieHeader = '') {
 function hasAccess(req) {
   // Check if session exists and user is authenticated
   if (req.session && req.session.userId) {
-    return true;
+    if (req.session.userId === 'access_code_user') {
+      return true;
+    }
+    const users = getUsers();
+    const user = users.find(u => u.id === req.session.userId);
+    if (user && user.currentSessionToken === req.session.sessionToken) {
+      return true;
+    }
+    // Clear session to force logout if token does not match
+    delete req.session.userId;
+    delete req.session.sessionToken;
   }
-  // Check old cookie for backward compatibility temporarily if needed, though session is preferred now.
   return false;
 }
 
@@ -322,9 +331,15 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ ok: false, message: 'Email atau password salah.' });
     }
 
+    const crypto = require('crypto');
+    const sessionToken = crypto.randomUUID();
+    user.currentSessionToken = sessionToken;
+    saveUsers(users);
+
     req.session.userId = user.id;
     req.session.userType = user.type || 'free';
     req.session.email = user.email;
+    req.session.sessionToken = sessionToken;
 
     res.json({ ok: true, user: { email: user.email, type: user.type } });
   } catch (error) {
@@ -472,9 +487,15 @@ app.post('/api/auth/google', async (req, res) => {
     saveUsers(users);
 
     // Set Session
+    const crypto = require('crypto');
+    const sessionToken = crypto.randomUUID();
+    user.currentSessionToken = sessionToken;
+    saveUsers(users);
+
     req.session.userId = user.id;
     req.session.userType = user.type || 'free';
     req.session.email = user.email;
+    req.session.sessionToken = sessionToken;
 
     res.json({ ok: true, user: { email: user.email, type: user.type } });
   } catch (error) {
@@ -484,6 +505,14 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
+  if (req.session && req.session.userId) {
+    const users = getUsers();
+    const user = users.find(u => u.id === req.session.userId);
+    if (user) {
+      delete user.currentSessionToken;
+      saveUsers(users);
+    }
+  }
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ ok: false, message: 'Gagal logout.' });
