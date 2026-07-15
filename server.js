@@ -585,9 +585,10 @@ app.get('/api/me', (req, res) => {
         user.humanizerWordsUsedThisMonth = 0;
         saveUsers(users);
       }
-      humanizerWordsLimit = 5000;
+      const topup = user.humanizerTopupCredits || 0;
+      humanizerWordsLimit = 5000 + topup;
       const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
-      humanizerWordsRemaining = Math.max(0, 5000 - wordsUsed);
+      humanizerWordsRemaining = Math.max(0, humanizerWordsLimit - wordsUsed);
       isHumanizerLimitReached = humanizerWordsRemaining <= 0;
     } else {
       isLimitReached = false;
@@ -603,9 +604,10 @@ app.get('/api/me', (req, res) => {
           user.humanizerWordsUsedThisMonth = 0;
           saveUsers(users);
         }
-        humanizerWordsLimit = 15000;
+        const topup = user.humanizerTopupCredits || 0;
+        humanizerWordsLimit = 15000 + topup;
         const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
-        humanizerWordsRemaining = Math.max(0, 15000 - wordsUsed);
+        humanizerWordsRemaining = Math.max(0, humanizerWordsLimit - wordsUsed);
         isHumanizerLimitReached = humanizerWordsRemaining <= 0;
       } else {
         humanizerWordsLimit = 15000;
@@ -1436,7 +1438,7 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
-    const limit = user.type === 'ultimate' ? 15000 : 5000;
+    const limit = (user.type === 'ultimate' ? 15000 : 5000) + (user.humanizerTopupCredits || 0);
     const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
     const remaining = Math.max(0, limit - wordsUsed);
 
@@ -1701,6 +1703,86 @@ app.post('/api/payment/create', requireAccess, async (req, res) => {
   }
 });
 
+app.post('/api/payment/topup/create', requireAccess, async (req, res) => {
+  const { packageId } = req.body;
+  if (!packageId) {
+    return res.status(400).json({ ok: false, message: 'Package ID wajib disertakan.' });
+  }
+
+  const packages = {
+    starter: { price: 39000, name: 'Humanizer Starter Pack', desc: 'Top-up Kuota Kata Humanizer 5.000 Kata' },
+    scholar: { price: 89000, name: 'Humanizer Scholar Pack', desc: 'Top-up Kuota Kata Humanizer 15.000 Kata' },
+    thesis: { price: 199000, name: 'Humanizer Thesis Pack', desc: 'Top-up Kuota Kata Humanizer 40.000 Kata' }
+  };
+
+  const selectedPackage = packages[packageId];
+  if (!selectedPackage) {
+    return res.status(400).json({ ok: false, message: 'Package ID tidak valid.' });
+  }
+
+  const va = process.env.IPAYMU_VA;
+  const apiKey = process.env.IPAYMU_API_KEY;
+  const isSandbox = String(process.env.IPAYMU_SANDBOX).trim().toLowerCase() === 'true';
+
+  if (!va || !apiKey) {
+    return res.status(500).json({ ok: false, message: 'iPaymu credentials belum dikonfigurasi di server.' });
+  }
+
+  const ipaymuUrl = isSandbox 
+    ? 'https://sandbox.ipaymu.com/api/v2/payment' 
+    : 'https://my.ipaymu.com/api/v2/payment';
+
+  const hostHeader = req.headers.host || 'localhost:3000';
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const baseUrl = `${protocol}://${hostHeader}`;
+
+  // Unique reference structure containing: userId + "_topup_" + packageId + "_" + timestamp
+  const refId = `${req.session.userId}_topup_${packageId}_${Date.now()}`;
+
+  const payload = {
+    product: [selectedPackage.name],
+    qty: [1],
+    price: [selectedPackage.price],
+    description: [selectedPackage.desc],
+    returnUrl: `${baseUrl}/payment-success`,
+    cancelUrl: `${baseUrl}/payment-cancel`,
+    notifyUrl: `${baseUrl}/api/payment/callback`,
+    referenceId: refId
+  };
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14); // YYYYMMDDhhmmss
+    const signature = generateIpaymuSignature(payload, 'POST');
+
+    const response = await fetchFn(ipaymuUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'va': va,
+        'signature': signature,
+        'timestamp': timestamp
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const resData = await response.json();
+    const resStatus = resData.status !== undefined ? resData.status : resData.Status;
+    const resDataObj = resData.data !== undefined ? resData.data : resData.Data;
+    const redirectUrl = resDataObj ? (resDataObj.Url || resDataObj.url) : null;
+
+    if (resData && (resStatus === 200 || resStatus == '200') && redirectUrl) {
+      res.json({ ok: true, redirectUrl: redirectUrl });
+    } else {
+      console.error('[iPaymu Top-up Create] Error Response:', resData);
+      res.status(500).json({ ok: false, message: (resData.message || resData.Message) || 'Gagal membuat sesi pembayaran top-up dengan iPaymu.' });
+    }
+  } catch (error) {
+    console.error('[iPaymu Top-up Create] Exception:', error);
+    res.status(500).json({ ok: false, message: 'Terjadi kesalahan pada server saat menghubungkan ke iPaymu: ' + error.message });
+  }
+});
+
 // Endpoint for Webhook Callback (IPN)
 app.post('/api/payment/callback', async (req, res) => {
   const signatureFromHeader = req.headers['signature'];
@@ -1738,26 +1820,49 @@ app.post('/api/payment/callback', async (req, res) => {
       const parts = referenceId.split('_');
       if (parts.length >= 2) {
         const userId = parts[0];
-        const planId = parts[1]; // premium_monthly, premium_yearly, ultimate_monthly, ultimate_yearly
-        const targetType = planId.startsWith('ultimate') ? 'ultimate' : 'premium';
+        
+        // Handle Top-up Payments
+        if (parts[1] === 'topup') {
+          const packageId = parts[2];
+          let wordsToAdd = 0;
+          if (packageId === 'starter') wordsToAdd = 5000;
+          else if (packageId === 'scholar') wordsToAdd = 15000;
+          else if (packageId === 'thesis') wordsToAdd = 40000;
 
-        console.log(`[iPaymu Webhook] Payment Successful! Upgrading user ${userId} to type ${targetType}`);
+          console.log(`[iPaymu Webhook] Top-up Payment Successful! Adding ${wordsToAdd} words to user ${userId}`);
 
-        // Update user type in database
-        const users = getUsers();
-        const userIndex = users.findIndex(u => u.id === userId);
-        if (userIndex !== -1) {
-          const isYearly = planId.endsWith('yearly');
-          const durationDays = isYearly ? 365 : 30;
-          const expiredAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
-
-          users[userIndex].type = targetType;
-          users[userIndex].planId = planId;
-          users[userIndex].paymentExpiredAt = expiredAt;
-          saveUsers(users);
-          console.log(`[iPaymu Webhook] User ${userId} upgraded successfully to ${targetType} (${planId}), expires at ${expiredAt}`);
+          const users = getUsers();
+          const userIndex = users.findIndex(u => u.id === userId);
+          if (userIndex !== -1) {
+            users[userIndex].humanizerTopupCredits = (users[userIndex].humanizerTopupCredits || 0) + wordsToAdd;
+            saveUsers(users);
+            console.log(`[iPaymu Webhook] User ${userId} top-up completed. New top-up credits: ${users[userIndex].humanizerTopupCredits}`);
+          } else {
+            console.warn(`[iPaymu Webhook] Top-up User ${userId} not found.`);
+          }
         } else {
-          console.warn(`[iPaymu Webhook] User ${userId} not found in database.`);
+          // Handle Regular Subscription Upgrades
+          const planId = parts[1]; // premium_monthly, premium_yearly, ultimate_monthly, ultimate_yearly
+          const targetType = planId.startsWith('ultimate') ? 'ultimate' : 'premium';
+
+          console.log(`[iPaymu Webhook] Payment Successful! Upgrading user ${userId} to type ${targetType}`);
+
+          // Update user type in database
+          const users = getUsers();
+          const userIndex = users.findIndex(u => u.id === userId);
+          if (userIndex !== -1) {
+            const isYearly = planId.endsWith('yearly');
+            const durationDays = isYearly ? 365 : 30;
+            const expiredAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+
+            users[userIndex].type = targetType;
+            users[userIndex].planId = planId;
+            users[userIndex].paymentExpiredAt = expiredAt;
+            saveUsers(users);
+            console.log(`[iPaymu Webhook] User ${userId} upgraded successfully to ${targetType} (${planId}), expires at ${expiredAt}`);
+          } else {
+            console.warn(`[iPaymu Webhook] User ${userId} not found in database.`);
+          }
         }
       }
     }

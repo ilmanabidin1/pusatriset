@@ -2588,6 +2588,74 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Top-up Modal Event Handlers
+    const openTopupModalBtn = document.getElementById('openTopupModalBtn');
+    const closeTopupModalBtn = document.getElementById('closeTopupModalBtn');
+    const topupModal = document.getElementById('topupModal');
+
+    if (openTopupModalBtn && topupModal) {
+      openTopupModalBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        topupModal.classList.add('active');
+      });
+    }
+
+    if (closeTopupModalBtn && topupModal) {
+      closeTopupModalBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        topupModal.classList.remove('active');
+      });
+    }
+
+    if (topupModal) {
+      topupModal.addEventListener('click', (e) => {
+        if (e.target === topupModal) {
+          topupModal.classList.remove('active');
+        }
+      });
+    }
+
+    // Top-up Purchase Action Trigger
+    document.addEventListener('click', async (e) => {
+      const selectBtn = e.target.closest('.topup-btn-select');
+      if (selectBtn) {
+        e.preventDefault();
+        const packageId = selectBtn.getAttribute('data-package');
+        if (!packageId) return;
+
+        const originalBtnHtml = selectBtn.innerHTML;
+        selectBtn.disabled = true;
+        selectBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+
+        try {
+          const response = await fetch('/api/payment/topup/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ packageId })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            alert(data.message || 'Gagal membuat transaksi top-up.');
+            return;
+          }
+
+          if (data.redirectUrl) {
+            window.location.href = data.redirectUrl;
+          } else {
+            alert('Gagal mendapatkan tautan pembayaran.');
+          }
+        } catch (error) {
+          console.error('[Top-up Purchase] Error:', error);
+          alert('Terjadi kesalahan koneksi saat memproses pembelian.');
+        } finally {
+          selectBtn.disabled = false;
+          selectBtn.innerHTML = originalBtnHtml;
+        }
+      }
+    });
+
     activeJournals = JOURNAL_DATABASE;
     filterJournals(); // Apply preferences automatically
     calculateStats();
