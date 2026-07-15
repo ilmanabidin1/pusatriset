@@ -1957,12 +1957,7 @@
               <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
                 <div>
                   <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score</span>
-                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
-                    <span>Temukan rekomendasi jurnal paling cocok</span>
-                    <a href="#" id="howItWorksBtn" style="font-size: 0.78rem; color: var(--brand-blue); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(7, 135, 220, 0.08); padding: 0.25rem 0.6rem; border-radius: 20px; transition: all 0.2s;">
-                      <i class="fa-regular fa-circle-play"></i> Cara Kerja?
-                    </a>
-                  </h3>
+                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Temukan rekomendasi jurnal paling cocok</h3>
                 </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                   <!-- Quota Disclaimer for Match Score -->
@@ -1988,11 +1983,14 @@
                   <textarea id="articleAbstract" rows="6" placeholder="Tempel abstrak atau ringkasan artikel agar rekomendasi jurnal lebih akurat." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
                 </div>
               </div>
-              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem;">
+              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem; flex-wrap: wrap;">
                 <button id="runMatch" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: var(--brand-blue); color: #ffffff;">
                   <i class="fa-solid fa-chart-line"></i> Hitung Match Score
                 </button>
-                <p id="matchSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+                <a href="#" id="howItWorksBtn" style="font-size: 0.88rem; color: var(--brand-blue); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(7, 135, 220, 0.08); padding: 0.8rem 1.2rem; border-radius: 8px; transition: all 0.2s; border: 1px solid rgba(7,135,220,0.12);">
+                  <i class="fa-regular fa-circle-play"></i> Cara Kerja?
+                </a>
+                <p id="matchSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; flex-grow: 1;">
                   Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.
                 </p>
               </div>
