@@ -41,6 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeJournals = [];   // Menyimpan hasil filter saat ini
   let currentUser = { loggedIn: false, type: 'free' };
   let currentCitations = [];
+  let justGeneratedDraft = false;
+  let justGeneratedLitReview = false;
+
+  window.resetJustGeneratedFlags = () => {
+    justGeneratedDraft = false;
+    justGeneratedLitReview = false;
+    checkAuthState();
+  };
 
   // --- 0. AUTHENTICATION & USER STATE ---
   async function checkAuthState() {
@@ -239,7 +247,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (currentUser.user.isDraftLimitReached) {
-              if (draftPremiumLock) draftPremiumLock.style.display = 'flex';
+              if (draftPremiumLock) {
+                draftPremiumLock.style.display = justGeneratedDraft ? 'none' : 'flex';
+              }
               if (runDraftGenerator) {
                 runDraftGenerator.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Drafting Tercapai';
                 runDraftGenerator.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
@@ -264,7 +274,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (currentUser.user.isLitReviewLimitReached) {
-              if (litReviewPremiumLock) litReviewPremiumLock.style.display = 'flex';
+              if (litReviewPremiumLock) {
+                litReviewPremiumLock.style.display = justGeneratedLitReview ? 'none' : 'flex';
+              }
               if (runLitReviewBtn) {
                 runLitReviewBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Lit Review Tercapai';
                 runLitReviewBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
@@ -1466,6 +1478,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (currentUser.user && currentUser.user.type === 'free') {
             currentUser.user.isDraftLimitReached = true;
             currentUser.user.draftsRemaining = 0;
+            justGeneratedDraft = true; // Set flag
             
             const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
             if (draftQuotaDisclaimer) {
@@ -1473,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const draftPremiumLock = document.getElementById('draftPremiumLock');
-            if (draftPremiumLock) draftPremiumLock.style.display = 'flex';
+            if (draftPremiumLock) draftPremiumLock.style.display = 'none';
             
             runDraftGenerator.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Drafting Tercapai';
             runDraftGenerator.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
@@ -2246,6 +2259,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           // Sinkronisasi status limit terbaru
+          justGeneratedLitReview = true;
           await checkAuthState();
 
         } catch (error) {

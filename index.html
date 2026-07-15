@@ -2440,6 +2440,9 @@
       }
 
       function switchTab(tabName) {
+        if (window.resetJustGeneratedFlags && !['match-score', 'drafting-companion', 'lit-review'].includes(tabName)) {
+          window.resetJustGeneratedFlags();
+        }
         // Close mobile menu if open
         sidebar.classList.remove('show');
         const mobileMenuIcon = mobileMenuBtn.querySelector('i');
