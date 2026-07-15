@@ -440,35 +440,57 @@
     footer a:hover {
       color: #ffffff !important;
     }
-    .auth-branding-banner {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.5rem;
-      transition: transform 0.3s ease;
-    }
-    .auth-branding-banner img {
-      width: 100%;
-      height: auto;
-      max-width: 100%;
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: transform 0.3s ease;
-    }
-    .auth-branding-banner:hover {
-      transform: scale(1.02);
-    }
   </style>
 </head>
 <body>
 
   <div class="auth-page-container">
     
-    <!-- Left Column: Hero Banner Image -->
-    <div class="auth-branding-banner">
-      <img src="assets/hero-banner.png" alt="JurnalHub - Cukup Satu">
+    <!-- Left Column: Branding (matches 1b layout) -->
+    <div class="auth-branding">
+      <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 3.5rem; flex-wrap: wrap;">
+        <img src="assets/jurnalhub-logo.png" alt="JurnalHub" style="max-height: 64px; width: auto; filter: brightness(0) invert(1);">
+        <div style="width: 1px; height: 42px; background: rgba(255, 255, 255, 0.25);"></div>
+        <img src="assets/powered-by-claude-dark.png" alt="Powered by Claude" style="max-height: 56px; width: auto;">
+      </div>
+      
+      <div class="branding-badge">
+        <i class="fa-solid fa-graduation-cap"></i> Portal Riset Terpadu
+      </div>
+      
+      <h1 class="branding-title">
+        Satu portal untuk semua kebutuhan <span>publikasi jurnal</span> Anda
+      </h1>
+      
+      <p class="branding-description" style="margin-bottom: 2rem;">
+        Cari, bandingkan, susun draf, dan loloskan draf Anda dari Turnitin menggunakan asisten pintar AI Journal Matcher, AI Drafting Companion, & JurnalHub Humanizer Engine.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 3rem; font-size: 0.95rem; color: rgba(255,255,255,0.85);">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-circle-check" style="color: #fbbf24; font-size: 1.1rem;"></i>
+          <span><strong>AI Journal Match Score</strong> - Rekomendasi jurnal Scopus & Sinta terakurat.</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-circle-check" style="color: #fbbf24; font-size: 1.1rem;"></i>
+          <span><strong>AI Drafting Companion & Lit Review</strong> - Susun struktur dan kajian pustaka instan.</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-circle-check" style="color: #f59e0b; font-size: 1.1rem;"></i>
+          <span><strong>JurnalHub Humanizer Engine</strong> - Loloskan tulisan AI dari Turnitin & GPTZero secara natural.</span>
+        </div>
+      </div>
+
+      <div class="branding-stats">
+        <div class="stat-item">
+          <span class="stat-value">750+</span>
+          <span class="stat-label">Jurnal terverifikasi</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">100%</span>
+          <span class="stat-label">Gratis untuk mulai</span>
+        </div>
+      </div>
     </div>
 
     <!-- Right Column: Glassmorphism Card (matches 1b layout) -->
@@ -712,16 +734,6 @@
             window.location.href = '/';
           }
         });
-      
-      // Click branding banner to switch to register tab
-      const brandingBanner = document.querySelector('.auth-branding-banner');
-      if (brandingBanner) {
-        brandingBanner.style.cursor = 'pointer';
-        brandingBanner.addEventListener('click', () => {
-          const toRegisterLink = document.getElementById('toRegisterLink');
-          if (toRegisterLink) toRegisterLink.click();
-        });
-      }
 
       // Tab Switching Logic
       const tabs = document.querySelectorAll('.auth-tab');
