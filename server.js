@@ -5,6 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const { v4: uuidv4 } = require('uuid');
 const { VertexAI } = require('@google-cloud/vertexai');
 const { OAuth2Client } = require('google-auth-library');
@@ -164,6 +165,12 @@ app.use(express.urlencoded({
 app.set('trust proxy', 1);
 
 app.use(session({
+  store: new FileStore({
+    path: path.join(__dirname, 'data', 'sessions'),
+    ttl: 2592000, // 30 hari (detik)
+    retries: 1,
+    logFn: () => {} // matikan log verbose bawaan
+  }),
   secret: process.env.SESSION_SECRET || 'jurnalhub_super_secret_key',
   resave: false,
   saveUninitialized: false,
