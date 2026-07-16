@@ -1681,7 +1681,12 @@
       </div>
       <div class="header-center">
       </div>
-      <div class="header-right">
+      <div class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+        <!-- Language Switcher -->
+        <div class="lang-switcher" style="display: flex; background: rgba(8,34,64,0.04); border: 1px solid rgba(8,34,64,0.06); border-radius: 8px; padding: 2px; align-items: center; gap: 2px;">
+          <button id="langBtnId" class="lang-btn active" style="border: none; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; background: var(--brand-navy); color: #ffffff; transition: all 0.2s;" type="button">ID</button>
+          <button id="langBtnEn" class="lang-btn" style="border: none; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-muted); transition: all 0.2s;" type="button">EN</button>
+        </div>
         <button class="bell-icon-btn" title="Notifikasi"><i class="fa-regular fa-bell"></i></button>
         <button class="upgrade-header-btn btn-upgrade-trigger" id="headerUpgradeBtn">
           <i class="fa-solid fa-crown"></i> Upgrade

@@ -3094,6 +3094,271 @@ document.addEventListener('DOMContentLoaded', () => {
       historyDetailModal.classList.add('active');
     }
 
+    // --- BILINGUAL (LOCALIZATION) SYSTEM ---
+    const TRANSLATIONS = {
+      id: {
+        beranda: "Beranda",
+        "ai-research": "Asisten AI",
+        templates: "Template Jurnal",
+        "prompt-bank": "Prompt Bank",
+        tersimpan: "Tersimpan",
+        riwayat: "Riwayat AI",
+        pengaturan: "Pengaturan",
+        upgrade_pro: "Upgrade ke PRO",
+        upgrade_desc: "Buka AI Match Score & filter tanpa batas",
+        upgrade_btn: "Upgrade Sekarang",
+        hello: "Halo, ",
+        logout: "Keluar",
+        // Matcher
+        matcher_title: "AI Journal Match Score",
+        matcher_desc: "Masukkan metadata artikel Anda untuk menemukan kecocokan jurnal Scopus & Sinta terbaik.",
+        matcher_input_title: "JUDUL ARTIKEL",
+        matcher_input_keywords: "KATA KUNCI (SEPARASI DENGAN KOMA)",
+        matcher_input_abstract: "ABSTRAK ARTIKEL",
+        matcher_btn_run: "Mulai Analisis Jurnal",
+        matcher_btn_running: "Menganalisis Jurnal...",
+        // Drafting
+        drafting_title: "AI Drafting Companion",
+        drafting_desc: "Buat kerangka naskah jurnal ilmiah terstruktur secara otomatis berdasarkan judul dan abstrak riset Anda.",
+        drafting_btn_run: "Susun Outline Draf",
+        drafting_btn_running: "Menyusun Outline Draf...",
+        // Lit Review
+        lit_title: "AI Literature Review & Citation Finder",
+        lit_desc: "Temukan publikasi Scopus & Sinta yang relevan, cari referensi terpercaya, dan buat naskah tinjauan pustaka.",
+        lit_input_title: "TOPIK / JUDUL PENELITIAN",
+        lit_btn_run: "Cari Referensi & Review",
+        lit_btn_running: "Mencari & Meninjau Pustaka...",
+        // Humanizer
+        humanizer_title: "AI Humanizer & Paraphraser",
+        humanizer_desc: "Paragrafkan ulang tulisan AI Anda agar memiliki gaya bahasa akademis yang natural dan lolos dari Turnitin AI detector.",
+        humanizer_btn_run: "Mulai Humanisasi Teks",
+        humanizer_btn_running: "Memproses Humanisasi...",
+        humanizer_lbl_quota: "Sisa Kuota Kata",
+        humanizer_lbl_quota_desc: "Kuota dihitung dari total kata: Input + Output",
+        humanizer_input_lbl: "TEKS MASUKAN (AI)",
+        humanizer_output_lbl: "HASIL HUMANISASI",
+        // History
+        history_title: "Riwayat Penggunaan AI",
+        history_clear_btn: "Bersihkan Semua Riwayat",
+        history_empty: "Tidak Ada Riwayat",
+        history_empty_desc: "Anda belum pernah menggunakan alat AI dengan kategori ini."
+      },
+      en: {
+        beranda: "Home",
+        "ai-research": "AI Assistant",
+        templates: "Journal Templates",
+        "prompt-bank": "Prompt Bank",
+        tersimpan: "Bookmarks",
+        riwayat: "AI History",
+        pengaturan: "Settings",
+        upgrade_pro: "Upgrade to PRO",
+        upgrade_desc: "Unlock Match Score & unlimited filters",
+        upgrade_btn: "Upgrade Now",
+        hello: "Hello, ",
+        logout: "Log Out",
+        // Matcher
+        matcher_title: "AI Journal Match Score",
+        matcher_desc: "Enter your article metadata to find the best matching Scopus & Sinta journals.",
+        matcher_input_title: "ARTICLE TITLE",
+        matcher_input_keywords: "KEYWORDS (SEPARATED BY COMMA)",
+        matcher_input_abstract: "ARTICLE ABSTRACT",
+        matcher_btn_run: "Start Journal Matching",
+        matcher_btn_running: "Matching Journals...",
+        // Drafting
+        drafting_title: "AI Drafting Companion",
+        drafting_desc: "Create a structured scientific journal outline automatically based on your research title and abstract.",
+        drafting_btn_run: "Generate Draft Outline",
+        drafting_btn_running: "Generating Draft Outline...",
+        // Lit Review
+        lit_title: "AI Literature Review & Citation Finder",
+        lit_desc: "Find relevant Scopus & Sinta publications, search trusted references, and generate literature review texts.",
+        lit_input_title: "RESEARCH TOPIC / TITLE",
+        lit_btn_run: "Search References & Review",
+        lit_btn_running: "Searching & Generating Review...",
+        // Humanizer
+        humanizer_title: "AI Humanizer & Paraphraser",
+        humanizer_desc: "Paraphrase your AI text to have a natural academic writing style that passes Turnitin AI detectors.",
+        humanizer_btn_run: "Start Paraphrasing Text",
+        humanizer_btn_running: "Paraphrasing Text...",
+        humanizer_lbl_quota: "Remaining Words Quota",
+        humanizer_lbl_quota_desc: "Quota calculated from total words: Input + Output",
+        humanizer_input_lbl: "INPUT TEXT (AI)",
+        humanizer_output_lbl: "HUMANIZED RESULT",
+        // History
+        history_title: "AI Usage History",
+        history_clear_btn: "Clear All History",
+        history_empty: "No History Found",
+        history_empty_desc: "You haven't used any AI tools in this category. Start an analysis or paraphrasing to create history."
+      }
+    };
+
+    let currentLanguage = localStorage.getItem('jurnalhub_lang') || 'id';
+
+    function applyLanguage(lang) {
+      currentLanguage = lang;
+      localStorage.setItem('jurnalhub_lang', lang);
+
+      // 1. Language switcher buttons styling
+      const btnId = document.getElementById('langBtnId');
+      const btnEn = document.getElementById('langBtnEn');
+      if (btnId && btnEn) {
+        if (lang === 'id') {
+          btnId.style.background = 'var(--brand-navy)';
+          btnId.style.color = '#ffffff';
+          btnId.classList.add('active');
+          btnEn.style.background = 'transparent';
+          btnEn.style.color = 'var(--text-muted)';
+          btnEn.classList.remove('active');
+        } else {
+          btnEn.style.background = 'var(--brand-navy)';
+          btnEn.style.color = '#ffffff';
+          btnEn.classList.add('active');
+          btnId.style.background = 'transparent';
+          btnId.style.color = 'var(--text-muted)';
+          btnId.classList.remove('active');
+        }
+      }
+
+      // 2. Translate Sidebar Links
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+      sidebarLinks.forEach(link => {
+        const tab = link.getAttribute('data-tab');
+        const span = link.querySelector('span');
+        if (span && TRANSLATIONS[lang][tab]) {
+          span.textContent = TRANSLATIONS[lang][tab];
+        }
+      });
+
+      // 3. Translate Sidebar Upgrade Card
+      const upgradeCardTitle = document.querySelector('#sidebarUpgradeCard h4');
+      const upgradeCardDesc = document.querySelector('#sidebarUpgradeCard p');
+      const upgradeCardBtn = document.querySelector('#sidebarUpgradeCard button');
+      if (upgradeCardTitle) upgradeCardTitle.textContent = TRANSLATIONS[lang].upgrade_pro;
+      if (upgradeCardDesc) upgradeCardDesc.textContent = TRANSLATIONS[lang].upgrade_desc;
+      if (upgradeCardBtn) upgradeCardBtn.textContent = TRANSLATIONS[lang].upgrade_btn;
+
+      // 4. Translate greeting
+      const welcomeSpan = document.getElementById('welcomeText');
+      if (welcomeSpan) {
+        const email = currentUser?.email || 'user';
+        welcomeSpan.textContent = TRANSLATIONS[lang].hello + email;
+      }
+
+      // 5. Translate Matcher Tab
+      const matcherHeader = document.querySelector('#tabContentMatchScore h3');
+      const matcherDesc = document.querySelector('#tabContentMatchScore p');
+      const runMatchBtn = document.getElementById('runMatchBtn');
+      if (matcherHeader) matcherHeader.textContent = TRANSLATIONS[lang].matcher_title;
+      if (matcherDesc) matcherDesc.textContent = TRANSLATIONS[lang].matcher_desc;
+      if (runMatchBtn) {
+        runMatchBtn.innerHTML = runMatchBtn.classList.contains('loading')
+          ? `<i class="fa-solid fa-spinner fa-spin"></i> ${TRANSLATIONS[lang].matcher_btn_running}`
+          : `<i class="fa-solid fa-wand-magic-sparkles"></i> ${TRANSLATIONS[lang].matcher_btn_run}`;
+      }
+
+      // 6. Translate Drafting Tab
+      const draftingHeader = document.querySelector('#tabContentDraftingCompanion h3');
+      const draftingDesc = document.querySelector('#tabContentDraftingCompanion p');
+      const runDraftGenerator = document.getElementById('runDraftGenerator');
+      if (draftingHeader) draftingHeader.textContent = TRANSLATIONS[lang].drafting_title;
+      if (draftingDesc) draftingDesc.textContent = TRANSLATIONS[lang].drafting_desc;
+      if (runDraftGenerator) {
+        runDraftGenerator.innerHTML = runDraftGenerator.classList.contains('loading')
+          ? `<i class="fa-solid fa-spinner fa-spin"></i> ${TRANSLATIONS[lang].drafting_btn_running}`
+          : `<i class="fa-solid fa-wand-magic-sparkles"></i> ${TRANSLATIONS[lang].drafting_btn_run}`;
+      }
+
+      // 7. Translate Lit Review Tab
+      const litHeader = document.querySelector('#tabContentLitReview h3');
+      const litDesc = document.querySelector('#tabContentLitReview p');
+      const runLitReviewBtn = document.getElementById('runLitReviewBtn');
+      if (litHeader) litHeader.textContent = TRANSLATIONS[lang].lit_title;
+      if (litDesc) litDesc.textContent = TRANSLATIONS[lang].lit_desc;
+      if (runLitReviewBtn) {
+        runLitReviewBtn.innerHTML = runLitReviewBtn.classList.contains('loading')
+          ? `<i class="fa-solid fa-spinner fa-spin"></i> ${TRANSLATIONS[lang].lit_btn_running}`
+          : `<i class="fa-solid fa-wand-magic-sparkles"></i> ${TRANSLATIONS[lang].lit_btn_run}`;
+      }
+
+      // 8. Translate Humanizer Tab
+      const humanizerHeader = document.querySelector('#tabContentHumanizer h3');
+      const humanizerDesc = document.querySelector('#tabContentHumanizer p');
+      const runHumanizerBtn = document.getElementById('runHumanizerBtn');
+      const humanizerQuotaBadge = document.getElementById('humanizerQuotaBadge');
+      if (humanizerHeader) humanizerHeader.textContent = TRANSLATIONS[lang].humanizer_title;
+      if (humanizerDesc) humanizerDesc.textContent = TRANSLATIONS[lang].humanizer_desc;
+      if (runHumanizerBtn) {
+        runHumanizerBtn.innerHTML = runHumanizerBtn.classList.contains('loading')
+          ? `<i class="fa-solid fa-spinner fa-spin"></i> ${TRANSLATIONS[lang].humanizer_btn_running}`
+          : `<i class="fa-solid fa-wand-magic-sparkles"></i> ${TRANSLATIONS[lang].humanizer_btn_run}`;
+      }
+      if (humanizerQuotaBadge && humanizerQuotaBadge.nextElementSibling) {
+        humanizerQuotaBadge.nextElementSibling.innerHTML = `<i class="fa-solid fa-info-circle"></i> ${TRANSLATIONS[lang].humanizer_lbl_quota_desc}`;
+      }
+
+      // 9. Translate Input Labels (Title / Keywords / Abstracts)
+      const labels = document.querySelectorAll('label');
+      labels.forEach(lbl => {
+        const text = lbl.textContent.toUpperCase();
+        if (text.includes('JUDUL ARTIKEL') || text.includes('ARTICLE TITLE')) {
+          lbl.textContent = TRANSLATIONS[lang].matcher_input_title;
+        } else if (text.includes('KATA KUNCI') || text.includes('KEYWORDS')) {
+          lbl.textContent = TRANSLATIONS[lang].matcher_input_keywords;
+        } else if (text.includes('ABSTRAK ARTIKEL') || text.includes('ARTICLE ABSTRACT')) {
+          lbl.textContent = TRANSLATIONS[lang].matcher_input_abstract;
+        } else if (text.includes('TOPIK / JUDUL PENELITIAN') || text.includes('RESEARCH TOPIC')) {
+          lbl.textContent = TRANSLATIONS[lang].lit_input_title;
+        } else if (text.includes('TEKS MASUKAN') || text.includes('INPUT TEXT')) {
+          lbl.textContent = TRANSLATIONS[lang].humanizer_input_lbl;
+        } else if (text.includes('HASIL HUMANISASI') || text.includes('HUMANIZED RESULT')) {
+          lbl.textContent = TRANSLATIONS[lang].humanizer_output_lbl;
+        }
+      });
+
+      // 10. Translate History Tab static elements
+      const historyTitleEl = document.querySelector('#tabContentRiwayat h3');
+      const clearHistoryBtnEl = document.getElementById('clearHistoryBtn');
+      if (historyTitleEl) historyTitleEl.textContent = TRANSLATIONS[lang].history_title;
+      if (clearHistoryBtnEl) {
+        clearHistoryBtnEl.innerHTML = `<i class="fa-regular fa-trash-can"></i> ${TRANSLATIONS[lang].history_clear_btn}`;
+      }
+
+      // Translate history filter badges
+      const histBadges = document.querySelectorAll('#historyFilterButtons .filter-badge');
+      histBadges.forEach(badge => {
+        const type = badge.getAttribute('data-type');
+        if (type === 'all') badge.textContent = lang === 'id' ? 'Semua' : 'All';
+        else if (type === 'match') badge.textContent = lang === 'id' ? 'Journal Matcher' : 'Journal Matcher';
+        else if (type === 'draft') badge.textContent = lang === 'id' ? 'Drafting Companion' : 'Drafting Companion';
+        else if (type === 'lit-review') badge.textContent = lang === 'id' ? 'Literature Review' : 'Literature Review';
+        else if (type === 'humanizer') badge.textContent = lang === 'id' ? 'Humanizer Engine' : 'Humanizer Engine';
+      });
+
+      // Re-trigger history list rendering if currently on history tab to update cards
+      const activeTabLink = document.querySelector('.sidebar-link.active');
+      if (activeTabLink && activeTabLink.getAttribute('data-tab') === 'riwayat') {
+        displayHistoryList();
+      }
+
+      // Update current title element text
+      const activeTab = document.querySelector('.sidebar-link.active')?.getAttribute('data-tab') || 'beranda';
+      const pageTitleEl = document.getElementById('pageTitle');
+      if (pageTitleEl && TRANSLATIONS[lang][activeTab]) {
+        pageTitleEl.textContent = TRANSLATIONS[lang][activeTab];
+      }
+    }
+
+    // Bind lang buttons click
+    const btnId = document.getElementById('langBtnId');
+    const btnEn = document.getElementById('langBtnEn');
+    if (btnId) btnId.addEventListener('click', () => applyLanguage('id'));
+    if (btnEn) btnEn.addEventListener('click', () => applyLanguage('en'));
+
+    // Apply language on load
+    setTimeout(() => {
+      applyLanguage(currentLanguage);
+    }, 200);
+
     activeJournals = JOURNAL_DATABASE;
     filterJournals(); // Apply preferences automatically
     calculateStats();
