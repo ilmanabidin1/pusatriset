@@ -3,9 +3,12 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const { v4: uuidv4 } = require('uuid');
 const { VertexAI } = require('@google-cloud/vertexai');
 const { OAuth2Client } = require('google-auth-library');
@@ -149,6 +152,16 @@ function getVertexModel(modelName = GEMINI_MODEL) {
   return model;
 }
 
+// Header keamanan dasar (X-Frame-Options, X-Content-Type-Options, HSTS, dll).
+// CSP & Cross-Origin-Embedder-Policy dimatikan dulu karena halaman ini memuat
+// banyak script/CSS dari CDN eksternal (Font Awesome, Google Sign-In, jsdelivr,
+// dst) dan script inline - mengaktifkannya tanpa allowlist yang diuji akan
+// mematahkan halaman. Perlu di-audit & diaktifkan bertahap terpisah.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+
 app.use(express.json({
   verify: (req, res, buf) => {
     req.rawBody = buf;
@@ -164,6 +177,24 @@ app.use(express.urlencoded({
 // Trust proxy untuk Railway (supaya cookie secure bisa diset kalau dibelakang load balancer HTTPS)
 app.set('trust proxy', 1);
 
+// Rate limiter untuk endpoint auth - mencegah brute-force login & spam registrasi
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: 'Terlalu banyak percobaan. Silakan coba lagi dalam beberapa menit.' }
+});
+
+if (!process.env.SESSION_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: SESSION_SECRET belum diset. Set env var SESSION_SECRET di Railway sebelum menjalankan di production.');
+    process.exit(1);
+  }
+  console.warn('[WARNING] SESSION_SECRET belum diset, memakai secret acak sementara untuk development (sesi akan invalid tiap restart).');
+}
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(48).toString('hex');
+
 app.use(session({
   store: new FileStore({
     path: path.join(__dirname, 'data', 'sessions'),
@@ -171,7 +202,7 @@ app.use(session({
     retries: 1,
     logFn: () => {} // matikan log verbose bawaan
   }),
-  secret: process.env.SESSION_SECRET || 'jurnalhub_super_secret_key',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   name: ACCESS_COOKIE,
@@ -187,6 +218,17 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
+
+// Lock sederhana per-resource supaya operasi read-modify-write (baca file JSON,
+// ubah di memory, tulis balik) tidak saling tabrakan antar request bersamaan
+// dan menyebabkan salah satu perubahan (mis. upgrade paket via webhook) hilang.
+const resourceLocks = {};
+function withLock(key, fn) {
+  const previous = resourceLocks[key] || Promise.resolve();
+  const run = previous.catch(() => {}).then(fn);
+  resourceLocks[key] = run.catch(() => {});
+  return run;
+}
 
 // Fungsi helper untuk user database
 function getUsers() {
@@ -211,8 +253,10 @@ function saveUsers(users) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    return true;
   } catch (error) {
     console.error('Gagal menyimpan users.json:', error);
+    return false;
   }
 }
 
@@ -358,41 +402,47 @@ function requireAccess(req, res, next) {
 
 // User Authentication API Endpoints
 // User Authentication API Endpoints
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', authLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ ok: false, message: 'Email dan password wajib diisi.' });
   }
 
-  const users = getUsers();
-  const existingUser = users.find(u => u.email === email);
-
-  if (existingUser) {
-    return res.status(409).json({ ok: false, message: 'Email sudah terdaftar.' });
-  }
-
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const token = uuidv4();
-    const newUser = {
-      id: uuidv4(),
-      email,
-      password: hashedPassword,
-      type: 'free', // Default account type is free
-      isVerified: false,
-      verificationToken: token,
-      name: '',
-      faculty: '',
-      university: '',
-      profilePic: '',
-      savedJournals: [],
-      createdAt: new Date().toISOString()
-    };
+    const lockResult = await withLock('users', async () => {
+      const users = getUsers();
+      if (users.find(u => u.email === email)) {
+        return { conflict: true };
+      }
 
-    users.push(newUser);
-    saveUsers(users);
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const token = uuidv4();
+      const newUser = {
+        id: uuidv4(),
+        email,
+        password: hashedPassword,
+        type: 'free', // Default account type is free
+        isVerified: false,
+        verificationToken: token,
+        name: '',
+        faculty: '',
+        university: '',
+        profilePic: '',
+        savedJournals: [],
+        createdAt: new Date().toISOString()
+      };
 
+      users.push(newUser);
+      saveUsers(users);
+      return { conflict: false, newUser, token };
+    });
+
+    if (lockResult.conflict) {
+      return res.status(409).json({ ok: false, message: 'Email sudah terdaftar.' });
+    }
+
+    const { newUser, token } = lockResult;
     const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email?token=${token}`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -417,7 +467,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -442,10 +492,18 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ ok: false, message: 'Email atau password salah.' });
     }
 
-    const crypto = require('crypto');
     const sessionToken = crypto.randomUUID();
-    user.currentSessionToken = sessionToken;
-    saveUsers(users);
+    // Re-baca & simpan di dalam lock supaya tidak menimpa perubahan lain
+    // (mis. upgrade paket dari webhook pembayaran) yang terjadi selagi
+    // bcrypt.compare di atas berjalan (async).
+    await withLock('users', async () => {
+      const freshUsers = getUsers();
+      const freshUser = freshUsers.find(u => u.id === user.id);
+      if (freshUser) {
+        freshUser.currentSessionToken = sessionToken;
+        saveUsers(freshUsers);
+      }
+    });
 
     req.session.userId = user.id;
     req.session.userType = user.type || 'free';
@@ -481,7 +539,7 @@ app.get('/api/auth/verify-email', (req, res) => {
 });
 
 // POST forgot password
-app.post('/api/auth/forgot-password', async (req, res) => {
+app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ ok: false, message: 'Email wajib diisi.' });
@@ -521,7 +579,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 });
 
 // POST reset password
-app.post('/api/auth/reset-password', async (req, res) => {
+app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) {
     return res.status(400).json({ ok: false, message: 'Token dan kata sandi baru wajib disertakan.' });
@@ -549,7 +607,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
 
 
-app.post('/api/auth/google', async (req, res) => {
+app.post('/api/auth/google', authLimiter, async (req, res) => {
   const { token } = req.body;
 
   if (!token) {
@@ -598,7 +656,6 @@ app.post('/api/auth/google', async (req, res) => {
     saveUsers(users);
 
     // Set Session
-    const crypto = require('crypto');
     const sessionToken = crypto.randomUUID();
     user.currentSessionToken = sessionToken;
     saveUsers(users);
@@ -2047,7 +2104,6 @@ app.use('/templates', requireAccess, (req, res, next) => {
 }, express.static(path.join(__dirname, 'templates')));
 
 // --- IPAYMU INTEGRATION ---
-const crypto = require('crypto');
 
 // Helper to generate iPaymu API signature
 function generateIpaymuSignature(body, method = 'POST') {
@@ -2278,8 +2334,12 @@ app.post('/api/payment/callback', async (req, res) => {
           const userIndex = users.findIndex(u => u.id === userId);
           if (userIndex !== -1) {
             users[userIndex].humanizerTopupCredits = (users[userIndex].humanizerTopupCredits || 0) + wordsToAdd;
-            saveUsers(users);
+            const saved = saveUsers(users);
             addTransaction(userId, referenceId, name, amount, 'success');
+            if (!saved) {
+              console.error(`[iPaymu Webhook] GAGAL menyimpan top-up untuk user ${userId} - membalas non-200 supaya iPaymu retry.`);
+              return res.status(500).send('Failed to persist top-up');
+            }
             console.log(`[iPaymu Webhook] User ${userId} top-up completed. New top-up credits: ${users[userIndex].humanizerTopupCredits}`);
           } else {
             console.warn(`[iPaymu Webhook] Top-up User ${userId} not found.`);
@@ -2308,8 +2368,12 @@ app.post('/api/payment/callback', async (req, res) => {
             users[userIndex].type = targetType;
             users[userIndex].planId = planId;
             users[userIndex].paymentExpiredAt = expiredAt;
-            saveUsers(users);
+            const saved = saveUsers(users);
             addTransaction(userId, referenceId, name, amount, 'success');
+            if (!saved) {
+              console.error(`[iPaymu Webhook] GAGAL menyimpan upgrade untuk user ${userId} - membalas non-200 supaya iPaymu retry.`);
+              return res.status(500).send('Failed to persist upgrade');
+            }
             console.log(`[iPaymu Webhook] User ${userId} upgraded successfully to ${targetType} (${planId}), expires at ${expiredAt}`);
           } else {
             console.warn(`[iPaymu Webhook] User ${userId} not found in database.`);
@@ -2336,6 +2400,27 @@ app.use(express.static(path.join(__dirname, '.')));
 // Arahkan semua request lainnya ke index.html (tapi sudah dilindungi oleh middleware di atas)
 app.get('*', requireAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Global error handler - menangkap error yang tidak tertangani di route handler
+// (mis. throw sinkron atau next(err)) supaya proses tidak crash dan client tetap
+// dapat response yang jelas, bukan koneksi yang menggantung/putus.
+app.use((err, req, res, next) => {
+  console.error('[Unhandled Route Error]', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({ ok: false, message: 'Terjadi kesalahan tak terduga pada server.' });
+});
+
+// Jaring pengaman terakhir - mencegah proses Node mati total karena error async
+// yang tidak tertangkap di mana pun (promise rejection tanpa .catch, dsb).
+// Ini bukan pengganti penanganan error yang benar, hanya mencegah downtime total.
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled Rejection:', reason);
 });
 
 app.listen(PORT, async () => {
