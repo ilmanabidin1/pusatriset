@@ -375,14 +375,22 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContainer.innerHTML = '';
     
     // Update label jumlah hasil pencarian keseluruhan
-    resultsCount.textContent = `Menampilkan ${activeJournals.length} jurnal`;
+    const isEn = (window.currentLanguage === 'en');
+    resultsCount.textContent = isEn 
+      ? `Showing ${activeJournals.length} journals` 
+      : `Menampilkan ${activeJournals.length} jurnal`;
 
     if (activeJournals.length === 0) {
+      const emptyTitle = isEn ? 'No Journals Found' : 'Jurnal Tidak Ditemukan';
+      const emptyDesc = isEn 
+        ? 'Try using other keywords, clearing filters, or checking your spelling.' 
+        : 'Coba gunakan kata kunci lain, bersihkan filter, atau periksa ejaan Anda.';
+
       resultsContainer.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
-          <h3>Jurnal Tidak Ditemukan</h3>
-          <p>Coba gunakan kata kunci lain, bersihkan filter, atau periksa ejaan Anda.</p>
+          <h3>${emptyTitle}</h3>
+          <p>${emptyDesc}</p>
         </div>
       `;
       loadMoreContainer.style.display = 'none';
@@ -441,28 +449,28 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="card-footer-wrapper">
           <div class="card-meta-details">
             <div class="meta-detail-row">
-              <span class="meta-label">Keilmuan:</span>
+              <span class="meta-label">${isEn ? 'Field:' : 'Keilmuan:'}</span>
               <span class="meta-value">${journal.keilmuan}</span>
             </div>
             <div class="meta-detail-row">
-              <span class="meta-label">Rumpun:</span>
+              <span class="meta-label">${isEn ? 'Subject:' : 'Rumpun:'}</span>
               <span class="meta-value">${journal.subject}</span>
             </div>
             <div class="meta-detail-row">
-              <span class="meta-label">Biaya APC:</span>
-              <span class="meta-value meta-apc ${apcClass}">${journal.apc}</span>
+              <span class="meta-label">${isEn ? 'APC Fee:' : 'Biaya APC:'}</span>
+              <span class="meta-value meta-apc ${apcClass}">${isEn && journal.apc.toLowerCase().includes('gratis') ? 'Free (No APC)' : journal.apc}</span>
             </div>
             ${journal.isFastTrack ? `
             <div class="meta-detail-row" style="color: #fbbf24; font-weight: 600;">
               <span class="meta-label">Fast Track:</span>
-              <span class="meta-value"><i class="fa-solid fa-bolt"></i> ${journal.responseTime || 'Ya'}</span>
+              <span class="meta-value"><i class="fa-solid fa-bolt"></i> ${isEn && (journal.responseTime || 'Ya') === 'Ya' ? 'Yes' : (journal.responseTime || 'Ya')}</span>
             </div>
             ` : ''}
           </div>
           
           <div class="card-footer" style="margin-top: 1.25rem;">
             <a href="${journal.url}" target="_blank" class="journal-link">
-              Kunjungi Jurnal <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              ${isEn ? 'Visit Journal' : 'Kunjungi Jurnal'} <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </a>
           </div>
         </div>
@@ -522,10 +530,10 @@ document.addEventListener('DOMContentLoaded', () => {
        `;
        promoCard.innerHTML = `
          <i class="fa-solid fa-lock" style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 1rem;"></i>
-         <h3 style="margin-bottom: 0.5rem;">${activeJournals.length - 1} Jurnal Lainnya Disembunyikan</h3>
-         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Akun Free hanya dapat melihat 1 rekomendasi teratas. Tingkatkan ke PRO untuk melihat semua hasil.</p>
+         <h3 style="margin-bottom: 0.5rem;">${isEn ? `${activeJournals.length - 1} More Journals Hidden` : `${activeJournals.length - 1} Jurnal Lainnya Disembunyikan`}</h3>
+         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">${isEn ? 'Free account can only view the top 1 recommendation. Upgrade to PRO to view all results.' : 'Akun Free hanya dapat melihat 1 rekomendasi teratas. Tingkatkan ke PRO untuk melihat semua hasil.'}</p>
          <button class="btn btn-primary btn-upgrade-trigger" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
-           Upgrade PRO
+           ${isEn ? 'Upgrade to PRO' : 'Upgrade PRO'}
          </button>
        `;
        resultsContainer.appendChild(promoCard);
@@ -3196,6 +3204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyLanguage(lang) {
       currentLanguage = lang;
+      window.currentLanguage = lang;
       localStorage.setItem('jurnalhub_lang', lang);
 
       // 1. Language switcher buttons styling
@@ -3217,6 +3226,68 @@ document.addEventListener('DOMContentLoaded', () => {
           btnId.style.color = 'var(--text-muted)';
           btnId.classList.remove('active');
         }
+      }
+
+      // Translate Home Banner Statistics Row Card labels
+      const statLabels = document.querySelectorAll('.stat-card .stat-label');
+      if (statLabels.length >= 3) {
+        statLabels[0].textContent = lang === 'id' ? 'Jurnal Scopus' : 'Scopus Journals';
+        statLabels[1].textContent = lang === 'id' ? 'Jurnal Sinta' : 'Sinta Journals';
+        statLabels[2].textContent = lang === 'id' ? 'Tanpa Biaya (No APC)' : 'Free of Charge (No APC)';
+      }
+
+      // Translate Search Bar Placeholder
+      const searchInputEl = document.getElementById('searchInput');
+      if (searchInputEl) {
+        searchInputEl.placeholder = lang === 'id' ? 'Cari jurnal, penerbit, keyword...' : 'Search journal, publisher, keyword...';
+      }
+
+      // Translate Dropdown Filter Headers
+      const filterLabelItems = document.querySelectorAll('.filter-dropdown-item label');
+      if (filterLabelItems.length >= 3) {
+        filterLabelItems[0].textContent = lang === 'id' ? 'KATEGORI' : 'CATEGORY';
+        filterLabelItems[1].textContent = lang === 'id' ? 'RUMPUN KEILMUAN' : 'SUBJECT AREA';
+        filterLabelItems[2].textContent = lang === 'id' ? 'TINGKATAN / RANK' : 'RANKING';
+      }
+
+      // Translate Category Selector Dropdown Options
+      const typeOptions = document.querySelectorAll('#filterType option');
+      if (typeOptions.length >= 3) {
+        typeOptions[0].textContent = lang === 'id' ? 'Semua Jurnal' : 'All Journals';
+        typeOptions[1].textContent = lang === 'id' ? 'Scopus Only' : 'Scopus Only';
+        typeOptions[2].textContent = lang === 'id' ? 'Sinta Only' : 'Sinta Only';
+      }
+
+      // Translate Subject Dropdown Options
+      const subjectOptions = document.querySelectorAll('#filterSubject option');
+      if (subjectOptions.length >= 5) {
+        subjectOptions[0].textContent = lang === 'id' ? 'Semua Rumpun' : 'All Subjects';
+        subjectOptions[1].textContent = lang === 'id' ? 'Sains & Teknologi' : 'Science & Technology';
+        subjectOptions[2].textContent = lang === 'id' ? 'Sosial & Humaniora' : 'Social Sciences & Humanities';
+        subjectOptions[3].textContent = lang === 'id' ? 'Kesehatan' : 'Health & Medical';
+        subjectOptions[4].textContent = lang === 'id' ? 'Ekonomi & Bisnis' : 'Economics & Business';
+      }
+
+      // Translate Rank Dropdown Option (first only)
+      const rankOptions = document.querySelectorAll('#filterRank option');
+      if (rankOptions.length > 0) {
+        rankOptions[0].textContent = lang === 'id' ? 'Semua Tingkat' : 'All Ranks';
+      }
+
+      // Translate Filter Checkbox spans
+      const checkFreeOnlySpan = document.querySelector('#checkFreeOnly')?.nextElementSibling?.nextElementSibling;
+      const checkFastTrackSpan = document.querySelector('#checkFastTrackOnly')?.nextElementSibling?.nextElementSibling;
+      if (checkFreeOnlySpan) {
+        checkFreeOnlySpan.textContent = lang === 'id' ? 'Hanya Gratis (No APC)' : 'Free Only (No APC)';
+      }
+      if (checkFastTrackSpan) {
+        checkFastTrackSpan.textContent = lang === 'id' ? 'Fast Track (Berbayar)' : 'Fast Track (Paid)';
+      }
+
+      // Translate Reset Filter button
+      const resetFiltersEl = document.getElementById('resetFilters');
+      if (resetFiltersEl) {
+        resetFiltersEl.innerHTML = lang === 'id' ? '<i class="fa-solid fa-rotate-left"></i> Reset Filter' : '<i class="fa-solid fa-rotate-left"></i> Reset Filters';
       }
 
       // 2. Translate Sidebar Links
@@ -3345,6 +3416,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const pageTitleEl = document.getElementById('pageTitle');
       if (pageTitleEl && TRANSLATIONS[lang][activeTab]) {
         pageTitleEl.textContent = TRANSLATIONS[lang][activeTab];
+      }
+
+      // Re-trigger cards rendering to update labels (Field, Subject, APC, Visit, Hidden Jurnals)
+      if (typeof renderCards === 'function') {
+        renderCards();
       }
     }
 
