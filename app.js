@@ -406,8 +406,159 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // --- VISUAL QUOTA TRACKER ---
+  function updateVisualQuotaTracker(user) {
+    const homeQuotaTrackerCard = document.getElementById('homeQuotaTrackerCard');
+    if (!homeQuotaTrackerCard) return;
+
+    homeQuotaTrackerCard.style.display = 'block';
+
+    const isEn = (window.currentLanguage === 'en');
+
+    // Account Type label
+    const typeLabel = user.type === 'ultimate' ? (isEn ? 'Ultimate Account' : 'Akun Ultimate') : (user.type === 'premium' ? (isEn ? 'Premium Account' : 'Akun Premium') : (isEn ? 'Free Account' : 'Akun Free'));
+    document.getElementById('lblQuotaAccountType').textContent = (isEn ? 'Account Type: ' : 'Tipe Akun: ') + typeLabel;
+
+    // 1. Match & Draft (Claude limits) - Match dan Draft punya kuota terpisah,
+    // bukan kuota gabungan, jadi jangan dijumlahkan jadi satu angka.
+    const txtQuotaMatchDraft = document.getElementById('txtQuotaMatchDraft');
+    const barQuotaMatchDraft = document.getElementById('barQuotaMatchDraft');
+    const lblMatchDraftLimitNote = document.getElementById('lblMatchDraftLimitNote');
+
+    const matchUsed = user.matchCountThisMonth || 0;
+    const draftUsed = user.draftCountThisMonth || 0;
+
+    if (user.type === 'ultimate') {
+      txtQuotaMatchDraft.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
+      barQuotaMatchDraft.style.width = '100%';
+      barQuotaMatchDraft.style.background = '#10b981'; // Green for unlimited/success
+      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match & Draft unlimited' : 'Match & Draft tanpa batas';
+    } else if (user.type === 'premium') {
+      // Match tanpa batas untuk Premium, hanya Draft yang dijatah 15x/bulan
+      const draftLimit = 15;
+      txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
+      const pct = Math.min(100, (draftUsed / draftLimit) * 100);
+      barQuotaMatchDraft.style.width = `${pct}%`;
+      barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
+      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match unlimited · Draft 15x/month' : 'Match tanpa batas · Draft 15x/bulan';
+    } else {
+      const draftLimit = 1;
+      txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
+      const pct = Math.min(100, (draftUsed / draftLimit) * 100);
+      barQuotaMatchDraft.style.width = `${pct}%`;
+      barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
+      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match 1x/month · Draft 1x/month' : 'Match 1x/bulan · Draft 1x/bulan';
+    }
+
+    // 2. Lit Review (Perplexity limits)
+    const txtQuotaLitReview = document.getElementById('txtQuotaLitReview');
+    const barQuotaLitReview = document.getElementById('barQuotaLitReview');
+    const litUsed = user.litReviewCountThisMonth || 0;
+
+    if (user.type === 'ultimate') {
+      txtQuotaLitReview.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
+      barQuotaLitReview.style.width = '100%';
+      barQuotaLitReview.style.background = '#10b981';
+    } else {
+      const limit = user.type === 'premium' ? 15 : 1;
+      txtQuotaLitReview.textContent = `${litUsed} / ${limit}`;
+      const pct = Math.min(100, (litUsed / limit) * 100);
+      barQuotaLitReview.style.width = `${pct}%`;
+      barQuotaLitReview.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : '#8b5cf6');
+    }
+
+    // 3. Humanizer Words
+    const txtQuotaHumanizer = document.getElementById('txtQuotaHumanizer');
+    const barQuotaHumanizer = document.getElementById('barQuotaHumanizer');
+    const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
+
+    let wordsLimit = 0;
+    const topup = user.humanizerTopupCredits || 0;
+    if (user.type === 'free') wordsLimit = topup;
+    else if (user.type === 'premium') wordsLimit = 5000 + topup;
+    else if (user.type === 'ultimate') wordsLimit = 15000 + topup;
+
+    txtQuotaHumanizer.textContent = `${wordsUsed.toLocaleString('id-ID')} / ${wordsLimit.toLocaleString('id-ID')}`;
+
+    if (wordsLimit === 0) {
+      barQuotaHumanizer.style.width = '0%';
+      barQuotaHumanizer.style.background = '#e2e8f0';
+    } else {
+      const pct = Math.min(100, (wordsUsed / wordsLimit) * 100);
+      barQuotaHumanizer.style.width = `${pct}%`;
+      barQuotaHumanizer.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : '#f59e0b');
+    }
+  }
+
+  // --- BILLING HISTORY TABLE ---
+  async function renderBillingHistory() {
+    const tableBody = document.getElementById('billingHistoryTableBody');
+    if (!tableBody) return;
+
+    const isEn = (window.currentLanguage === 'en');
+
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem; color: var(--brand-blue);"></i> ${isEn ? 'Loading transactions...' : 'Memuat data transaksi...'}
+        </td>
+      </tr>
+    `;
+
+    try {
+      const response = await fetch('/api/transactions');
+      const data = await response.json();
+
+      if (data.ok && data.transactions && data.transactions.length > 0) {
+        tableBody.innerHTML = '';
+        data.transactions.forEach(tx => {
+          const dateStr = new Date(tx.timestamp).toLocaleDateString(isEn ? 'en-US' : 'id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          });
+          const amountStr = 'Rp ' + tx.amount.toLocaleString('id-ID');
+          const statusBadge = `<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 700; font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block;"><i class="fa-solid fa-circle-check"></i> ${isEn ? 'Paid' : 'Lunas'}</span>`;
+
+          const row = document.createElement('tr');
+          row.style.borderBottom = '1px solid var(--border-light-hover)';
+          row.innerHTML = `
+            <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 500;">${dateStr}</td>
+            <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 700;">${tx.description}</td>
+            <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 700;">${amountStr}</td>
+            <td style="padding: 1rem 0.5rem;">${statusBadge}</td>
+            <td style="padding: 1rem 0.5rem; text-align: right;">
+              <a href="/api/transactions/${tx.id}/invoice" target="_blank" class="upgrade-btn" style="width: auto; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; font-size: 0.78rem; background: var(--brand-blue); color: white; text-decoration: none; border-radius: 6px;">
+                <i class="fa-solid fa-receipt"></i> ${isEn ? 'Receipt' : 'Kuitansi'}
+              </a>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      } else {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;"><i class="fa-regular fa-folder-open"></i></div>
+              <div>${isEn ? 'No payment transactions recorded.' : 'Belum ada transaksi pembayaran tercatat.'}</div>
+            </td>
+          </tr>
+        `;
+      }
+    } catch (err) {
+      console.error('Fetch billing history error:', err);
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 2rem; color: #ef4444; font-weight: 600;">
+            <i class="fa-solid fa-triangle-exclamation"></i> ${isEn ? 'Failed to load transaction data.' : 'Gagal memuat data transaksi.'}
+          </td>
+        </tr>
+      `;
+    }
+  }
+
   // --- 1. TAMPILAN MENYELURUH (RENDERING) ---
-  
+
   // Fungsi merender kartu ke HTML (dilengkapi lazy-loading)
   function renderCards() {
     resultsContainer.innerHTML = '';
@@ -3537,157 +3688,6 @@ document.addEventListener('DOMContentLoaded', () => {
       applyLanguage(currentLanguage);
     }, 200);
 
-    // --- VISUAL QUOTA TRACKER ---
-    function updateVisualQuotaTracker(user) {
-      const homeQuotaTrackerCard = document.getElementById('homeQuotaTrackerCard');
-      if (!homeQuotaTrackerCard) return;
-
-      homeQuotaTrackerCard.style.display = 'block';
-
-      const isEn = (window.currentLanguage === 'en');
-      
-      // Account Type label
-      const typeLabel = user.type === 'ultimate' ? (isEn ? 'Ultimate Account' : 'Akun Ultimate') : (user.type === 'premium' ? (isEn ? 'Premium Account' : 'Akun Premium') : (isEn ? 'Free Account' : 'Akun Free'));
-      document.getElementById('lblQuotaAccountType').textContent = (isEn ? 'Account Type: ' : 'Tipe Akun: ') + typeLabel;
-
-      // 1. Match & Draft (Claude limits) - Match dan Draft punya kuota terpisah,
-      // bukan kuota gabungan, jadi jangan dijumlahkan jadi satu angka.
-      const txtQuotaMatchDraft = document.getElementById('txtQuotaMatchDraft');
-      const barQuotaMatchDraft = document.getElementById('barQuotaMatchDraft');
-      const lblMatchDraftLimitNote = document.getElementById('lblMatchDraftLimitNote');
-
-      const matchUsed = user.matchCountThisMonth || 0;
-      const draftUsed = user.draftCountThisMonth || 0;
-
-      if (user.type === 'ultimate') {
-        txtQuotaMatchDraft.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
-        barQuotaMatchDraft.style.width = '100%';
-        barQuotaMatchDraft.style.background = '#10b981'; // Green for unlimited/success
-        if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match & Draft unlimited' : 'Match & Draft tanpa batas';
-      } else if (user.type === 'premium') {
-        // Match tanpa batas untuk Premium, hanya Draft yang dijatah 15x/bulan
-        const draftLimit = 15;
-        txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
-        const pct = Math.min(100, (draftUsed / draftLimit) * 100);
-        barQuotaMatchDraft.style.width = `${pct}%`;
-        barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
-        if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match unlimited · Draft 15x/month' : 'Match tanpa batas · Draft 15x/bulan';
-      } else {
-        const draftLimit = 1;
-        txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
-        const pct = Math.min(100, (draftUsed / draftLimit) * 100);
-        barQuotaMatchDraft.style.width = `${pct}%`;
-        barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
-        if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match 1x/month · Draft 1x/month' : 'Match 1x/bulan · Draft 1x/bulan';
-      }
-
-      // 2. Lit Review (Perplexity limits)
-      const txtQuotaLitReview = document.getElementById('txtQuotaLitReview');
-      const barQuotaLitReview = document.getElementById('barQuotaLitReview');
-      const litUsed = user.litReviewCountThisMonth || 0;
-
-      if (user.type === 'ultimate') {
-        txtQuotaLitReview.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
-        barQuotaLitReview.style.width = '100%';
-        barQuotaLitReview.style.background = '#10b981';
-      } else {
-        const limit = user.type === 'premium' ? 15 : 1;
-        txtQuotaLitReview.textContent = `${litUsed} / ${limit}`;
-        const pct = Math.min(100, (litUsed / limit) * 100);
-        barQuotaLitReview.style.width = `${pct}%`;
-        barQuotaLitReview.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : '#8b5cf6');
-      }
-
-      // 3. Humanizer Words
-      const txtQuotaHumanizer = document.getElementById('txtQuotaHumanizer');
-      const barQuotaHumanizer = document.getElementById('barQuotaHumanizer');
-      const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
-      
-      let wordsLimit = 0;
-      const topup = user.humanizerTopupCredits || 0;
-      if (user.type === 'free') wordsLimit = topup;
-      else if (user.type === 'premium') wordsLimit = 5000 + topup;
-      else if (user.type === 'ultimate') wordsLimit = 15000 + topup;
-
-      txtQuotaHumanizer.textContent = `${wordsUsed.toLocaleString('id-ID')} / ${wordsLimit.toLocaleString('id-ID')}`;
-      
-      if (wordsLimit === 0) {
-        barQuotaHumanizer.style.width = '0%';
-        barQuotaHumanizer.style.background = '#e2e8f0';
-      } else {
-        const pct = Math.min(100, (wordsUsed / wordsLimit) * 100);
-        barQuotaHumanizer.style.width = `${pct}%`;
-        barQuotaHumanizer.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : '#f59e0b');
-      }
-    }
-
-    // --- BILLING HISTORY TABLE ---
-    async function renderBillingHistory() {
-      const tableBody = document.getElementById('billingHistoryTableBody');
-      if (!tableBody) return;
-
-      const isEn = (window.currentLanguage === 'en');
-
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-            <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem; color: var(--brand-blue);"></i> ${isEn ? 'Loading transactions...' : 'Memuat data transaksi...'}
-          </td>
-        </tr>
-      `;
-
-      try {
-        const response = await fetch('/api/transactions');
-        const data = await response.json();
-
-        if (data.ok && data.transactions && data.transactions.length > 0) {
-          tableBody.innerHTML = '';
-          data.transactions.forEach(tx => {
-            const dateStr = new Date(tx.timestamp).toLocaleDateString(isEn ? 'en-US' : 'id-ID', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric'
-            });
-            const amountStr = 'Rp ' + tx.amount.toLocaleString('id-ID');
-            const statusBadge = `<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 700; font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block;"><i class="fa-solid fa-circle-check"></i> ${isEn ? 'Paid' : 'Lunas'}</span>`;
-
-            const row = document.createElement('tr');
-            row.style.borderBottom = '1px solid var(--border-light-hover)';
-            row.innerHTML = `
-              <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 500;">${dateStr}</td>
-              <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 700;">${tx.description}</td>
-              <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 700;">${amountStr}</td>
-              <td style="padding: 1rem 0.5rem;">${statusBadge}</td>
-              <td style="padding: 1rem 0.5rem; text-align: right;">
-                <a href="/api/transactions/${tx.id}/invoice" target="_blank" class="upgrade-btn" style="width: auto; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; font-size: 0.78rem; background: var(--brand-blue); color: white; text-decoration: none; border-radius: 6px;">
-                  <i class="fa-solid fa-receipt"></i> ${isEn ? 'Receipt' : 'Kuitansi'}
-                </a>
-              </td>
-            `;
-            tableBody.appendChild(row);
-          });
-        } else {
-          tableBody.innerHTML = `
-            <tr>
-              <td colspan="5" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;"><i class="fa-regular fa-folder-open"></i></div>
-                <div>${isEn ? 'No payment transactions recorded.' : 'Belum ada transaksi pembayaran tercatat.'}</div>
-              </td>
-            </tr>
-          `;
-        }
-      } catch (err) {
-        console.error('Fetch billing history error:', err);
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="5" style="text-align: center; padding: 2rem; color: #ef4444; font-weight: 600;">
-              <i class="fa-solid fa-triangle-exclamation"></i> ${isEn ? 'Failed to load transaction data.' : 'Gagal memuat data transaksi.'}
-            </td>
-          </tr>
-        `;
-      }
-    }
-
     activeJournals = JOURNAL_DATABASE;
     filterJournals(); // Apply preferences automatically
     calculateStats();
@@ -3695,3 +3695,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   init();
 });
+
