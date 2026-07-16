@@ -1644,6 +1644,9 @@
       <a href="#" class="sidebar-link" data-tab="tersimpan">
         <i class="fa-solid fa-bookmark"></i> <span>Tersimpan</span>
       </a>
+      <a href="#" class="sidebar-link" data-tab="riwayat">
+        <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat AI</span>
+      </a>
       <a href="#" class="sidebar-link" data-tab="pengaturan">
         <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
       </a>
@@ -2439,6 +2442,36 @@
         </div>
       </div>
 
+      <!-- TAB: RIWAYAT (HISTORY) -->
+      <div id="tabContentRiwayat" class="tab-content">
+        <div class="settings-container" style="max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+          
+          <!-- Filter and Control Bar -->
+          <div class="filter-box-card" style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;" id="historyFilterButtons">
+              <button class="filter-badge active" data-type="all" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Semua</button>
+              <button class="filter-badge" data-type="match" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Journal Matcher</button>
+              <button class="filter-badge" data-type="draft" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Drafting Companion</button>
+              <button class="filter-badge" data-type="lit-review" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Literature Review</button>
+              <button class="filter-badge" data-type="humanizer" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Humanizer Engine</button>
+            </div>
+            
+            <button id="clearHistoryBtn" style="border: 1px solid #ef4444; color: #ef4444; background: transparent; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">
+              <i class="fa-regular fa-trash-can"></i> Bersihkan Semua Riwayat
+            </button>
+          </div>
+
+          <!-- History List Container -->
+          <div id="historyListContainer" style="display: flex; flex-direction: column; gap: 1rem; min-height: 250px;">
+            <div style="text-align: center; padding: 4rem 2rem; background: rgba(255,255,255,0.6); border: 1px dashed var(--border-light-hover); border-radius: 16px;">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--brand-blue); margin-bottom: 1rem;"></i>
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Memuat riwayat penggunaan...</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       <!-- TAB 4: SETTINGS (PENGATURAN) -->
       <div id="tabContentPengaturan" class="tab-content">
         <div class="settings-container" style="max-width: 800px; margin: 0 auto;">
@@ -2627,6 +2660,11 @@
         // Call initPromptBankTab if prompt-bank tab is selected
         if (tabName === 'prompt-bank' && window.initPromptBankTab) {
           window.initPromptBankTab();
+        }
+
+        // Call renderHistoryTab if riwayat tab is selected
+        if (tabName === 'riwayat' && window.renderHistoryTab) {
+          window.renderHistoryTab();
         }
       }
       window.switchTab = switchTab;
@@ -3157,6 +3195,29 @@
           </div>
 
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Detail Riwayat Penggunaan -->
+  <div class="modal-overlay" id="historyDetailModal">
+    <div class="modal-card" style="max-width: 800px; width: 95%;">
+      <button class="modal-close-btn" id="closeHistoryDetailModalBtn">&times;</button>
+      
+      <div class="modal-header" style="border-bottom: 1px solid rgba(8,34,64,0.06); padding-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div id="historyDetailIconWrapper" style="width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(7, 135, 220, 0.1); color: var(--brand-blue); font-size: 1.1rem; flex-shrink: 0;">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div style="text-align: left;">
+            <h3 id="historyDetailTitle" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0;">Detail Riwayat Penggunaan</h3>
+            <p id="historyDetailMeta" style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">Memuat tanggal & jenis...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding-top: 1.5rem; max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; text-align: left;" id="historyDetailBody">
+        <!-- Diisi dinamis -->
       </div>
     </div>
   </div>

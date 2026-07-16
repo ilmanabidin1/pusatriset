@@ -2656,6 +2656,444 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // --- RIWAYAT AI (HISTORY) TAB ---
+    let allHistory = [];
+    let activeHistoryFilter = 'all';
+
+    const historyListContainer = document.getElementById('historyListContainer');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const historyFilterButtons = document.querySelectorAll('#historyFilterButtons .filter-badge');
+
+    const historyDetailModal = document.getElementById('historyDetailModal');
+    const closeHistoryDetailModalBtn = document.getElementById('closeHistoryDetailModalBtn');
+    const historyDetailTitle = document.getElementById('historyDetailTitle');
+    const historyDetailMeta = document.getElementById('historyDetailMeta');
+    const historyDetailBody = document.getElementById('historyDetailBody');
+    const historyDetailIconWrapper = document.getElementById('historyDetailIconWrapper');
+
+    // Handle closing detail modal
+    if (closeHistoryDetailModalBtn && historyDetailModal) {
+      closeHistoryDetailModalBtn.addEventListener('click', () => {
+        historyDetailModal.classList.remove('active');
+      });
+    }
+
+    if (historyDetailModal) {
+      historyDetailModal.addEventListener('click', (e) => {
+        if (e.target === historyDetailModal) {
+          historyDetailModal.classList.remove('active');
+        }
+      });
+    }
+
+    // Function to render the history tab
+    async function renderHistoryTab() {
+      if (!historyListContainer) return;
+
+      historyListContainer.innerHTML = `
+        <div style="text-align: center; padding: 4rem 2rem; background: rgba(255,255,255,0.6); border: 1px dashed var(--border-light-hover); border-radius: 16px;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--brand-blue); margin-bottom: 1rem;"></i>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Memuat riwayat penggunaan...</p>
+        </div>
+      `;
+
+      try {
+        const response = await fetch('/api/history');
+        const data = await response.json();
+        
+        if (data.ok) {
+          allHistory = data.history || [];
+          displayHistoryList();
+        } else {
+          historyListContainer.innerHTML = `
+            <div style="text-align: center; padding: 4rem 2rem; background: #fff; border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 16px;">
+              <i class="fa-solid fa-circle-xmark" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 1rem;"></i>
+              <p style="color: #ef4444; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">Gagal Memuat Riwayat</p>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">${data.message || 'Terjadi kesalahan pada server.'}</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.error('Fetch history error:', err);
+        historyListContainer.innerHTML = `
+          <div style="text-align: center; padding: 4rem 2rem; background: #fff; border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 16px;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 1rem;"></i>
+            <p style="color: #ef4444; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">Kesalahan Koneksi</p>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Gagal menghubungkan ke server JurnalHub.</p>
+          </div>
+        `;
+      }
+    }
+    window.renderHistoryTab = renderHistoryTab;
+
+    // Display history items
+    function displayHistoryList() {
+      if (!historyListContainer) return;
+
+      const filtered = activeHistoryFilter === 'all' 
+        ? allHistory 
+        : allHistory.filter(item => item.type === activeHistoryFilter);
+
+      if (filtered.length === 0) {
+        historyListContainer.innerHTML = `
+          <div style="text-align: center; padding: 5rem 2rem; background: #ffffff; border: 1px solid var(--border-light-hover); border-radius: 16px; box-shadow: 0 4px 20px rgba(8,34,64,0.02);">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: #f8fafc; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--text-muted); font-size: 1.75rem;">
+              <i class="fa-regular fa-clock"></i>
+            </div>
+            <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.5rem;">Tidak Ada Riwayat</h4>
+            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 400px; margin: 0 auto;">Anda belum pernah menggunakan alat AI dengan kategori ini. Mulai analisis atau humanisasi teks untuk membuat riwayat.</p>
+          </div>
+        `;
+        return;
+      }
+
+      historyListContainer.innerHTML = '';
+      filtered.forEach(item => {
+        const dateStr = new Date(item.timestamp).toLocaleString('id-ID', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        let typeLabel = 'AI Tool';
+        let typeIcon = 'fa-solid fa-robot';
+        let iconBg = 'rgba(7, 135, 220, 0.08)';
+        let iconColor = 'var(--brand-blue)';
+        let titleText = 'Penggunaan Alat AI';
+        let descText = '';
+
+        if (item.type === 'match') {
+          typeLabel = 'Journal Matcher';
+          typeIcon = 'fa-solid fa-magnifying-glass-chart';
+          iconBg = 'rgba(7, 135, 220, 0.08)';
+          iconColor = 'var(--brand-blue)';
+          titleText = item.input.title || 'Pencarian Kesesuaian Jurnal';
+          descText = `Keywords: ${item.input.keywords || '-'} | Rekomendasi: ${item.output.recommendations ? item.output.recommendations.length : 0} jurnal`;
+        } else if (item.type === 'draft') {
+          typeLabel = 'Drafting Companion';
+          typeIcon = 'fa-regular fa-file-lines';
+          iconBg = 'rgba(16, 185, 129, 0.08)';
+          iconColor = '#10b981';
+          titleText = item.input.title || 'Pembuatan Draf Jurnal';
+          descText = `Abstrak: ${item.input.abstract ? item.input.abstract.slice(0, 100) + '...' : '-'}`;
+        } else if (item.type === 'lit-review') {
+          typeLabel = 'Literature Review';
+          typeIcon = 'fa-solid fa-book-open-reader';
+          iconBg = 'rgba(139, 92, 246, 0.08)';
+          iconColor = '#8b5cf6';
+          titleText = item.input.title || 'AI Literature Review';
+          descText = `Referensi: ${item.output.citations ? item.output.citations.length : 0} paper ilmiah`;
+        } else if (item.type === 'humanizer') {
+          typeLabel = 'Humanizer Engine';
+          typeIcon = 'fa-solid fa-wand-magic-sparkles';
+          iconBg = 'rgba(245, 158, 11, 0.08)';
+          iconColor = '#f59e0b';
+          titleText = item.input.text ? item.input.text.slice(0, 80) + '...' : 'Teks Terhumanisasi';
+          descText = `Mode: ${item.input.mode === 'academic' ? 'Akademik' : 'Standar'} | Nilai Keaslian: ${item.output.originalityScore}% | Biaya: ${item.output.actualCost} kata`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'filter-box-card';
+        card.style.padding = '1.25rem 1.5rem';
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        card.style.justifyContent = 'space-between';
+        card.style.gap = '1.5rem';
+        card.style.flexWrap = 'wrap';
+
+        card.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 1.25rem; flex: 1; min-width: 280px; text-align: left;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: ${iconBg}; color: ${iconColor}; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+              <i class="${typeIcon}"></i>
+            </div>
+            <div style="overflow: hidden; flex: 1;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: ${iconColor}; text-transform: uppercase; background: ${iconBg}; padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block;">${typeLabel}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;"><i class="fa-regular fa-clock" style="margin-right: 0.15rem;"></i> ${dateStr}</span>
+              </div>
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-main); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${titleText}">${titleText}</h4>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${descText}</p>
+            </div>
+          </div>
+          
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+            <button class="upgrade-btn show-history-detail-btn" data-id="${item.id}" style="width: auto; padding: 0.5rem 1.25rem; font-size: 0.8rem; background: var(--brand-blue); color: #ffffff;" type="button">
+              <i class="fa-regular fa-eye"></i> Lihat Detail
+            </button>
+            <button class="upgrade-btn delete-history-item-btn" data-id="${item.id}" style="width: auto; padding: 0.5rem; font-size: 0.8rem; background: transparent; border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;" type="button" title="Hapus riwayat ini">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+
+        historyListContainer.appendChild(card);
+      });
+
+      // Bind button events dynamically
+      const detailBtns = historyListContainer.querySelectorAll('.show-history-detail-btn');
+      detailBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const histId = btn.getAttribute('data-id');
+          showHistoryDetails(histId);
+        });
+      });
+
+      const deleteBtns = historyListContainer.querySelectorAll('.delete-history-item-btn');
+      deleteBtns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const histId = btn.getAttribute('data-id');
+          if (confirm('Apakah Anda yakin ingin menghapus item riwayat ini?')) {
+            try {
+              const res = await fetch(`/api/history/${histId}`, { method: 'DELETE' });
+              const result = await res.json();
+              if (result.ok) {
+                renderHistoryTab();
+              } else {
+                alert(result.message);
+              }
+            } catch (err) {
+              alert('Gagal menghapus item riwayat.');
+            }
+          }
+        });
+      });
+    }
+
+    // Filter Buttons click handler
+    historyFilterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        historyFilterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeHistoryFilter = btn.getAttribute('data-type');
+        displayHistoryList();
+      });
+    });
+
+    // Clear All History click handler
+    if (clearHistoryBtn) {
+      clearHistoryBtn.addEventListener('click', async () => {
+        if (confirm('Apakah Anda yakin ingin menghapus SELURUH riwayat penggunaan AI Anda? Tindakan ini tidak dapat dibatalkan.')) {
+          try {
+            const res = await fetch('/api/history', { method: 'DELETE' });
+            const result = await res.json();
+            if (result.ok) {
+              renderHistoryTab();
+            } else {
+              alert(result.message);
+            }
+          } catch (err) {
+            alert('Gagal membersihkan seluruh riwayat.');
+          }
+        }
+      });
+    }
+
+    // Detail Populator
+    function showHistoryDetails(id) {
+      const item = allHistory.find(h => h.id === id);
+      if (!item || !historyDetailModal) return;
+
+      let typeIcon = 'fa-solid fa-robot';
+      let iconColor = 'var(--brand-blue)';
+      let typeLabel = 'AI Tool';
+      let iconBg = 'rgba(7, 135, 220, 0.1)';
+
+      if (item.type === 'match') {
+        typeIcon = 'fa-solid fa-magnifying-glass-chart';
+        iconColor = 'var(--brand-blue)';
+        iconBg = 'rgba(7, 135, 220, 0.1)';
+        typeLabel = 'AI Journal Matcher';
+      } else if (item.type === 'draft') {
+        typeIcon = 'fa-regular fa-file-lines';
+        iconColor = '#10b981';
+        iconBg = 'rgba(16, 185, 129, 0.1)';
+        typeLabel = 'AI Drafting Companion';
+      } else if (item.type === 'lit-review') {
+        typeIcon = 'fa-solid fa-book-open-reader';
+        iconColor = '#8b5cf6';
+        iconBg = 'rgba(139, 92, 246, 0.1)';
+        typeLabel = 'AI Literature Review';
+      } else if (item.type === 'humanizer') {
+        typeIcon = 'fa-solid fa-wand-magic-sparkles';
+        iconColor = '#f59e0b';
+        iconBg = 'rgba(245, 158, 11, 0.1)';
+        typeLabel = 'JurnalHub Humanizer Engine';
+      }
+
+      historyDetailIconWrapper.className = '';
+      historyDetailIconWrapper.innerHTML = `<i class="${typeIcon}"></i>`;
+      historyDetailIconWrapper.style.background = iconBg;
+      historyDetailIconWrapper.style.color = iconColor;
+
+      historyDetailTitle.textContent = typeLabel;
+      historyDetailMeta.innerHTML = `<i class="fa-regular fa-clock"></i> ${new Date(item.timestamp).toLocaleString('id-ID')}`;
+
+      // Populate body based on type
+      historyDetailBody.innerHTML = '';
+
+      if (item.type === 'match') {
+        historyDetailBody.innerHTML = `
+          <div>
+            <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">INPUT METADATA</h5>
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <div><strong>Judul:</strong> ${item.input.title || '-'}</div>
+              <div><strong>Kata Kunci:</strong> ${item.input.keywords || '-'}</div>
+              <div><strong>Abstrak:</strong> ${item.input.abstract || '-'}</div>
+            </div>
+          </div>
+          <div>
+            <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.75rem;">REKOMENDASI SCOPUS / SINTA</h5>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              ${item.output.recommendations.map(rec => {
+                const matched = JOURNAL_DATABASE.find(j => j.id === rec.id) || { title: `Jurnal ID: ${rec.id}`, sinta: '', scopus: '' };
+                const dbBadge = matched.scopus ? `<span class="journal-tag sinta-tag scopus-tag">Scopus ${matched.scopus}</span>` : `<span class="journal-tag sinta-tag">Sinta ${matched.sinta}</span>`;
+                return `
+                  <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: #ffffff;">
+                    <div style="text-align: left;">
+                      <h6 style="font-weight: 700; font-size: 0.88rem; color: var(--text-main); margin: 0 0 0.25rem 0;">${matched.title}</h6>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        ${dbBadge}
+                        <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Match Score: <strong style="color: var(--brand-blue);">${rec.matchScore}%</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      } else if (item.type === 'draft') {
+        const sections = item.output.draft || {};
+        historyDetailBody.innerHTML = `
+          <div>
+            <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">INPUT METADATA</h5>
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <div><strong>Judul:</strong> ${item.input.title || '-'}</div>
+              <div><strong>Abstrak:</strong> ${item.input.abstract || '-'}</div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">PANDUAN OUTLINE DRAFT</h5>
+              <button id="copyHistoryDraftBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: #10b981; color: white;" type="button">
+                <i class="fa-regular fa-copy"></i> Salin Semua Draf
+              </button>
+            </div>
+            <div id="historyDraftTextWrapper" style="display: flex; flex-direction: column; gap: 1rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+              ${Object.keys(sections).map(key => {
+                const label = key.replace('_', ' ').toUpperCase();
+                const points = sections[key] || [];
+                return `
+                  <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.85rem 1rem; background: #ffffff;">
+                    <strong style="color: #10b981; font-size: 0.78rem; font-weight: 800; display: block; margin-bottom: 0.5rem;">${label}</strong>
+                    <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.82rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.35rem; text-align: left;">
+                      ${points.map(pt => `<li>${pt}</li>`).join('')}
+                    </ul>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        setTimeout(() => {
+          const copyBtn = document.getElementById('copyHistoryDraftBtn');
+          if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+              let copyText = `OUTLINE DRAF PANDUAN PENULISAN\n\n`;
+              Object.keys(sections).forEach(key => {
+                copyText += `${key.toUpperCase().replace('_', ' ')}:\n`;
+                (sections[key] || []).forEach((pt, i) => {
+                  copyText += `${i + 1}. ${pt}\n`;
+                });
+                copyText += `\n`;
+              });
+              navigator.clipboard.writeText(copyText).then(() => {
+                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+                setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Salin Semua Draf', 2000);
+              });
+            });
+          }
+        }, 100);
+
+      } else if (item.type === 'lit-review') {
+        historyDetailBody.innerHTML = `
+          <div>
+            <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">INPUT METADATA</h5>
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <div><strong>Topik/Judul Penelitian:</strong> ${item.input.title || '-'}</div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">HASIL LITERATURE REVIEW</h5>
+              <button id="copyHistoryLitReviewBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: #8b5cf6; color: white;" type="button">
+                <i class="fa-regular fa-copy"></i> Salin Review
+              </button>
+            </div>
+            <div id="historyLitReviewTextWrapper" style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1.25rem; font-size: 0.85rem; background: #ffffff; line-height: 1.6; max-height: 300px; overflow-y: auto; color: var(--text-main);">
+              ${item.output.review}
+            </div>
+          </div>
+        `;
+
+        setTimeout(() => {
+          const copyBtn = document.getElementById('copyHistoryLitReviewBtn');
+          if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+              const reviewText = document.getElementById('historyLitReviewTextWrapper').innerText;
+              navigator.clipboard.writeText(reviewText).then(() => {
+                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+                setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Salin Review', 2000);
+              });
+            });
+          }
+        }, 100);
+
+      } else if (item.type === 'humanizer') {
+        historyDetailBody.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.82rem; margin-bottom: 0.5rem;">
+            <div style="background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.15); border-radius: 8px; padding: 0.75rem 1rem;">
+              <strong>Mode Humanisasi:</strong> ${item.input.mode === 'academic' ? 'Akademik' : 'Standar'}
+            </div>
+            <div style="background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 8px; padding: 0.75rem 1rem;">
+              <strong>Nilai Keaslian:</strong> <strong style="color: #10b981; font-size: 0.95rem;">${item.output.originalityScore}% Original</strong>
+            </div>
+          </div>
+          <div>
+            <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">TEKS ASLI (INPUT)</h5>
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; max-height: 150px; overflow-y: auto; color: var(--text-muted); line-height: 1.5; white-space: pre-wrap;">${item.input.text}</div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">TEKS HUMANISASI (OUTPUT)</h5>
+              <button id="copyHistoryHumanizerBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: #f59e0b; color: white;" type="button">
+                <i class="fa-regular fa-copy"></i> Salin Hasil
+              </button>
+            </div>
+            <div id="historyHumanizerTextWrapper" style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1.25rem; font-size: 0.85rem; background: #ffffff; line-height: 1.6; max-height: 250px; overflow-y: auto; color: var(--text-main); white-space: pre-wrap;">${item.output.humanizedText}</div>
+          </div>
+        `;
+
+        setTimeout(() => {
+          const copyBtn = document.getElementById('copyHistoryHumanizerBtn');
+          if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+              const outputText = document.getElementById('historyHumanizerTextWrapper').innerText;
+              navigator.clipboard.writeText(outputText).then(() => {
+                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+                setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Salin Hasil', 2000);
+              });
+            });
+          }
+        }, 100);
+      }
+
+      historyDetailModal.classList.add('active');
+    }
+
     activeJournals = JOURNAL_DATABASE;
     filterJournals(); // Apply preferences automatically
     calculateStats();

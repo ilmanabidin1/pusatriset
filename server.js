@@ -204,6 +204,60 @@ function saveUsers(users) {
   }
 }
 
+const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
+
+function getHistory() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(HISTORY_FILE)) {
+      fs.writeFileSync(HISTORY_FILE, '[]');
+    }
+    const data = fs.readFileSync(HISTORY_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Gagal membaca history.json:', error);
+    return [];
+  }
+}
+
+function saveHistory(history) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
+  } catch (error) {
+    console.error('Gagal menyimpan history.json:', error);
+  }
+}
+
+function addHistoryItem(userId, type, input, output) {
+  const history = getHistory();
+  const newItem = {
+    id: 'hist_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
+    userId,
+    timestamp: new Date().toISOString(),
+    type,
+    input,
+    output
+  };
+  history.unshift(newItem);
+  
+  // Cap at 50 entries per user to save disk space
+  const userHistory = history.filter(item => item.userId === userId);
+  if (userHistory.length > 50) {
+    const itemsToRemove = userHistory.slice(50);
+    const removeIds = new Set(itemsToRemove.map(item => item.id));
+    const filteredHistory = history.filter(item => !removeIds.has(item.id));
+    saveHistory(filteredHistory);
+  } else {
+    saveHistory(history);
+  }
+  return newItem;
+}
+
 function parseCookies(cookieHeader = '') {
   return cookieHeader.split(';').reduce((cookies, item) => {
     const [key, ...valueParts] = item.trim().split('=');
@@ -1116,18 +1170,22 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   const hasVertex = !!(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 
   if (!hasClaudeKey && !hasApiKey && !hasVertex) {
+    const recommendations = normalizeAiRecommendations(
+      candidates.slice(0, 3).map((candidate, index) => ({
+        id: candidate.id,
+        matchScore: Math.min(96, Math.max(72, candidate.localScore + 28 - (index * 4))),
+        reason: 'Rekomendasi dihitung dari kecocokan keyword, bidang keilmuan, dan deskripsi jurnal.'
+      })),
+      candidates
+    );
+
+    addHistoryItem(req.session.userId, 'match', { title: articleTitle, keywords: articleKeywords, abstract: articleAbstract }, { recommendations, review: null });
+
     res.json({
       ok: true,
       source: 'local',
       warning: 'Kredensial Claude (ANTHROPIC_API_KEY), Gemini (GEMINI_API_KEY), atau Vertex AI belum dikonfigurasi. Menggunakan kalkulasi kecocokan lokal.',
-      recommendations: normalizeAiRecommendations(
-        candidates.slice(0, 3).map((candidate, index) => ({
-          id: candidate.id,
-          matchScore: Math.min(96, Math.max(72, candidate.localScore + 28 - (index * 4))),
-          reason: 'Rekomendasi dihitung dari kecocokan keyword, bidang keilmuan, dan deskripsi jurnal.'
-        })),
-        candidates
-      )
+      recommendations: recommendations
     });
     return;
   }
@@ -1149,22 +1207,28 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
+    addHistoryItem(req.session.userId, 'match', { title: articleTitle, keywords: articleKeywords, abstract: articleAbstract }, { recommendations, review });
+
     res.json({ ok: true, source: sourceName, review, recommendations });
   } catch (error) {
     console.error(error);
     const activeProvider = hasClaudeKey ? 'Claude' : 'Gemini';
+    const recommendations = normalizeAiRecommendations(
+      candidates.slice(0, 3).map((candidate, index) => ({
+        id: candidate.id,
+        matchScore: Math.min(96, Math.max(72, candidate.localScore + 28 - (index * 4))),
+        reason: 'Rekomendasi fallback dihitung dari kecocokan keyword, bidang keilmuan, dan deskripsi jurnal.'
+      })),
+      candidates
+    );
+
+    addHistoryItem(req.session.userId, 'match', { title: articleTitle, keywords: articleKeywords, abstract: articleAbstract }, { recommendations, review: null });
+
     res.json({
       ok: true,
       source: 'local',
       warning: `Layanan ${activeProvider} tidak tersedia, memakai fallback lokal. ${error.message.slice(0, 180)}`,
-      recommendations: normalizeAiRecommendations(
-        candidates.slice(0, 3).map((candidate, index) => ({
-          id: candidate.id,
-          matchScore: Math.min(96, Math.max(72, candidate.localScore + 28 - (index * 4))),
-          reason: 'Rekomendasi fallback dihitung dari kecocokan keyword, bidang keilmuan, dan deskripsi jurnal.'
-        })),
-        candidates
-      )
+      recommendations: recommendations
     });
   }
 });
@@ -1201,36 +1265,40 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
+    const localDraft = {
+      introduction: [
+        `Bahasan urgensi topik penelitian berdasarkan judul: "${title}"`,
+        "Deskripsi permasalahan utama yang diangkat di lapangan saat ini.",
+        "Tujuan penulisan artikel ilmiah dan kontribusi yang diharapkan."
+      ],
+      literature_review: [
+        "Tinjauan teori-teori dasar yang berkaitan dengan variabel utama.",
+        "Analisis perbandingan penelitian terdahulu yang relevan.",
+        "Gap analysis yang menjustifikasi kebaruan penelitian ini."
+      ],
+      method: [
+        "Penjelasan desain penelitian yang digunakan (kualitatif/kuantitatif).",
+        "Prosedur pengumpulan data, populasi, dan sampel.",
+        "Teknik analisis data yang diterapkan secara bertahap."
+      ],
+      results_discussion: [
+        "Paparan temuan utama dari data lapangan secara berurutan.",
+        "Interpretasi hasil analisis dikaitkan dengan hipotesis/tujuan.",
+        "Diskusi kritis membandingkan temuan dengan teori yang ada."
+      ],
+      conclusion: [
+        "Kesimpulan akhir menjawab rumusan masalah secara ringkas.",
+        "Implikasi teoretis maupun praktis dari hasil penelitian.",
+        "Keterbatasan riset dan saran rekomendasi studi masa depan."
+      ]
+    };
+
+    addHistoryItem(req.session.userId, 'draft', { title, abstract }, { draft: localDraft });
+
     return res.json({
       ok: true,
       source: 'local',
-      draft: {
-        introduction: [
-          `Bahasan urgensi topik penelitian berdasarkan judul: "${title}"`,
-          "Deskripsi permasalahan utama yang diangkat di lapangan saat ini.",
-          "Tujuan penulisan artikel ilmiah dan kontribusi yang diharapkan."
-        ],
-        literature_review: [
-          "Tinjauan teori-teori dasar yang berkaitan dengan variabel utama.",
-          "Analisis perbandingan penelitian terdahulu yang relevan.",
-          "Gap analysis yang menjustifikasi kebaruan penelitian ini."
-        ],
-        method: [
-          "Penjelasan desain penelitian yang digunakan (kualitatif/kuantitatif).",
-          "Prosedur pengumpulan data, populasi, dan sampel.",
-          "Teknik analisis data yang diterapkan secara bertahap."
-        ],
-        results_discussion: [
-          "Paparan temuan utama dari data lapangan secara berurutan.",
-          "Interpretasi hasil analisis dikaitkan dengan hipotesis/tujuan.",
-          "Diskusi kritis membandingkan temuan dengan teori yang ada."
-        ],
-        conclusion: [
-          "Kesimpulan akhir menjawab rumusan masalah secara ringkas.",
-          "Implikasi teoretis maupun praktis dari hasil penelitian.",
-          "Keterbatasan riset dan saran rekomendasi studi masa depan."
-        ]
-      }
+      draft: localDraft
     });
   }
 
@@ -1281,6 +1349,8 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
+    addHistoryItem(req.session.userId, 'draft', { title, abstract }, { draft: parsed });
+
     res.json({ ok: true, source: 'claude', draft: parsed });
   } catch (error) {
     console.error('[AI Draft Generator] Error:', error.message);
@@ -1322,13 +1392,18 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
+    const localReview = `<h3>Tinjauan Pustaka: ${title}</h3><p>Fitur AI Literature Review berjalan di server namun <code>PERPLEXITY_API_KEY</code> belum terpasang di Railway.</p><p>Berikut adalah simulasi draf Tinjauan Pustaka untuk topik Anda:</p><ul><li><strong>Kajian Teori:</strong> Menganalisis landasan teoritis utama yang mendasari permasalahan penelitian Anda.</li><li><strong>Studi Terdahulu:</strong> Meneliti bagaimana para peneliti lain telah mendekati masalah serupa dan hasil penelitian mereka.</li><li><strong>Celah Penelitian (Research Gap):</strong> Mengidentifikasi apa yang belum diteliti dan bagaimana penelitian Anda akan mengisi celah tersebut.</li></ul>`;
+    const localCitations = [
+      { title: "Panduan Penulisan Jurnal Ilmiah Scopus & Sinta", authors: "Abidin, M. I.", journal: "Pusat Riset Indonesia", year: "2026", url: "https://github.com/ilmanabidin1/pusatriset", reason: "Referensi dasar yang membahas tentang penyusunan draf tinjauan pustaka dan kesesuaian jurnal ilmiah." }
+    ];
+
+    addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review: localReview, citations: localCitations });
+
     return res.json({
       ok: true,
       source: 'local',
-      review: `<h3>Tinjauan Pustaka: ${title}</h3><p>Fitur AI Literature Review berjalan di server namun <code>PERPLEXITY_API_KEY</code> belum terpasang di Railway.</p><p>Berikut adalah simulasi draf Tinjauan Pustaka untuk topik Anda:</p><ul><li><strong>Kajian Teori:</strong> Menganalisis landasan teoritis utama yang mendasari permasalahan penelitian Anda.</li><li><strong>Studi Terdahulu:</strong> Meneliti bagaimana para peneliti lain telah mendekati masalah serupa dan hasil penelitian mereka.</li><li><strong>Celah Penelitian (Research Gap):</strong> Mengidentifikasi apa yang belum diteliti dan bagaimana penelitian Anda akan mengisi celah tersebut.</li></ul>`,
-      citations: [
-        { title: "Panduan Penulisan Jurnal Ilmiah Scopus & Sinta", authors: "Abidin, M. I.", journal: "Pusat Riset Indonesia", year: "2026", url: "https://github.com/ilmanabidin1/pusatriset", reason: "Referensi dasar yang membahas tentang penyusunan draf tinjauan pustaka dan kesesuaian jurnal ilmiah." }
-      ]
+      review: localReview,
+      citations: localCitations
     });
   }
 
@@ -1399,6 +1474,8 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
       user.litReviewCountThisMonth += 1;
       saveUsers(users);
     }
+
+    addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review: parsed.review, citations: parsed.citations || [] });
 
     res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [] });
   } catch (error) {
@@ -1490,13 +1567,16 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
       }
 
       const score = resData.howLikelyToBeDetected !== undefined ? (100 - parseInt(resData.howLikelyToBeDetected)) : (94 + Math.floor(Math.random() * 5));
+      const originalityScore = isNaN(score) ? 95 : Math.max(80, Math.min(100, score));
+
+      addHistoryItem(req.session.userId, 'humanizer', { text: cleanText, mode }, { humanizedText: humanized, originalityScore, wordCount, actualCost });
 
       return res.json({
         ok: true,
         humanizedText: humanized,
         wordCount: wordCount,
         actualCost: actualCost,
-        originalityScore: isNaN(score) ? 95 : Math.max(80, Math.min(100, score))
+        originalityScore: originalityScore
       });
 
     } catch (apiError) {
@@ -1543,12 +1623,15 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
     saveUsers(users);
   }
 
+  const originalityScore = 94 + Math.floor(Math.random() * 5);
+  addHistoryItem(req.session.userId, 'humanizer', { text: cleanText, mode }, { humanizedText: humanized, originalityScore, wordCount, actualCost });
+
   res.json({
     ok: true,
     humanizedText: humanized,
     wordCount: wordCount,
     actualCost: actualCost,
-    originalityScore: 94 + Math.floor(Math.random() * 5) // Mock originality score (94%-98%)
+    originalityScore: originalityScore
   });
 });
 
@@ -1564,6 +1647,49 @@ app.get('/api/prompts', requireAccess, (req, res) => {
   } catch (error) {
     console.error('[API Prompts] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal mengambil data Prompt Bank.' });
+  }
+});
+
+// Endpoint untuk mengambil riwayat penggunaan AI
+app.get('/api/history', requireAccess, (req, res) => {
+  try {
+    const history = getHistory();
+    const userHistory = history.filter(item => item.userId === req.session.userId);
+    res.json({ ok: true, history: userHistory });
+  } catch (error) {
+    console.error('[API History Get] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mengambil data riwayat.' });
+  }
+});
+
+// Endpoint untuk menghapus item riwayat tertentu
+app.delete('/api/history/:id', requireAccess, (req, res) => {
+  const { id } = req.params;
+  try {
+    const history = getHistory();
+    const index = history.findIndex(item => item.id === id && item.userId === req.session.userId);
+    if (index === -1) {
+      return res.status(404).json({ ok: false, message: 'Riwayat tidak ditemukan.' });
+    }
+    history.splice(index, 1);
+    saveHistory(history);
+    res.json({ ok: true, message: 'Riwayat berhasil dihapus.' });
+  } catch (error) {
+    console.error('[API History Delete One] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal menghapus riwayat.' });
+  }
+});
+
+// Endpoint untuk membersihkan semua riwayat user
+app.delete('/api/history', requireAccess, (req, res) => {
+  try {
+    const history = getHistory();
+    const remainingHistory = history.filter(item => item.userId !== req.session.userId);
+    saveHistory(remainingHistory);
+    res.json({ ok: true, message: 'Semua riwayat berhasil dibersihkan.' });
+  } catch (error) {
+    console.error('[API History Clear All] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal membersihkan riwayat.' });
   }
 });
 
