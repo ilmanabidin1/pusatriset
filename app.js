@@ -900,12 +900,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return sourceWords.filter(word => normalizedTarget.includes(word)).length;
   }
 
-  function calculateJournalMatchScore(journal, articleText, keywordText) {
-    const articleWords = getWords(articleText);
-    const keywordWords = getWords(keywordText);
-    const allWords = [...new Set([...articleWords, ...keywordWords])];
-    const normalizedArticleText = normalizeText(articleText);
-
+  function calculateJournalMatchScore(journal, allWords, keywordWords, normalizedArticleText) {
     if (allWords.length === 0) return 0;
 
     const journalTitle = normalizeText(journal.title);
@@ -932,7 +927,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const titleValue = articleTitle.value.trim();
     const keywordValue = articleKeywords.value.trim();
     const abstractValue = articleAbstract.value.trim();
-    const articleText = `${titleValue} ${abstractValue}`;
 
     if (!titleValue && !keywordValue && !abstractValue) {
       matchSummary.textContent = 'Isi minimal judul artikel atau keyword untuk menghitung rekomendasi jurnal.';
@@ -952,10 +946,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getLocalMatchRecommendations(titleValue, keywordValue, abstractValue) {
     const articleText = `${titleValue} ${abstractValue}`;
+    const articleWords = getWords(articleText);
+    const keywordWords = getWords(keywordValue);
+    const allWords = [...new Set([...articleWords, ...keywordWords])];
+    const normalizedArticleText = normalizeText(articleText);
+
     const ranked = JOURNAL_DATABASE
       .map((journal, index) => ({
         ...journal,
-        matchScore: calculateJournalMatchScore(journal, articleText, keywordValue),
+        matchScore: calculateJournalMatchScore(journal, allWords, keywordWords, normalizedArticleText),
         originalIndex: index
       }))
       .filter(journal => journal.matchScore > 0)
@@ -1108,6 +1107,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   function filterJournals() {
     const query = normalizeText(searchInput.value);
+    const queryWords = query ? query.split(/\s+/).filter(Boolean) : [];
     const typeValue = filterType.value;
     const subjectValue = filterSubject.value;
     const rankValue = filterRank.value;
@@ -1116,7 +1116,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lakukan penyaringan pada JOURNAL_DATABASE (dari database.js)
     const filtered = JOURNAL_DATABASE
       .map((journal, index) => {
-        const titleScore = getTitleMatchScore(journal.title, query);
+        // inline logic of getTitleMatchScore to avoid repeating the query parameter overhead
+        const normalizedTitle = normalizeText(journal.title);
+        let titleScore = 0;
+        if (query) {
+          if (normalizedTitle === query) titleScore = 100;
+          else if (normalizedTitle.startsWith(query)) titleScore = 80;
+          else if (normalizedTitle.includes(query)) titleScore = 60;
+          else {
+            const matchedWords = queryWords.filter(word => normalizedTitle.includes(word)).length;
+            titleScore = matchedWords > 0 ? Math.round((matchedWords / queryWords.length) * 40) : 0;
+          }
+        }
+
         const matchesKeyword =
           query === '' ||
           titleScore > 0 ||
