@@ -3550,24 +3550,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const typeLabel = user.type === 'ultimate' ? (isEn ? 'Ultimate Account' : 'Akun Ultimate') : (user.type === 'premium' ? (isEn ? 'Premium Account' : 'Akun Premium') : (isEn ? 'Free Account' : 'Akun Free'));
       document.getElementById('lblQuotaAccountType').textContent = (isEn ? 'Account Type: ' : 'Tipe Akun: ') + typeLabel;
 
-      // 1. Match & Draft (Claude limits)
+      // 1. Match & Draft (Claude limits) - Match dan Draft punya kuota terpisah,
+      // bukan kuota gabungan, jadi jangan dijumlahkan jadi satu angka.
       const txtQuotaMatchDraft = document.getElementById('txtQuotaMatchDraft');
       const barQuotaMatchDraft = document.getElementById('barQuotaMatchDraft');
-      
+      const lblMatchDraftLimitNote = document.getElementById('lblMatchDraftLimitNote');
+
       const matchUsed = user.matchCountThisMonth || 0;
       const draftUsed = user.draftCountThisMonth || 0;
-      const totalClaudeUsed = matchUsed + draftUsed;
 
       if (user.type === 'ultimate') {
         txtQuotaMatchDraft.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
         barQuotaMatchDraft.style.width = '100%';
         barQuotaMatchDraft.style.background = '#10b981'; // Green for unlimited/success
-      } else {
-        const limit = user.type === 'premium' ? 30 : 2; // 15 match + 15 draft for premium, 1+1 for free
-        txtQuotaMatchDraft.textContent = `${totalClaudeUsed} / ${limit}`;
-        const pct = Math.min(100, (totalClaudeUsed / limit) * 100);
+        if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match & Draft unlimited' : 'Match & Draft tanpa batas';
+      } else if (user.type === 'premium') {
+        // Match tanpa batas untuk Premium, hanya Draft yang dijatah 15x/bulan
+        const draftLimit = 15;
+        txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
+        const pct = Math.min(100, (draftUsed / draftLimit) * 100);
         barQuotaMatchDraft.style.width = `${pct}%`;
         barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
+        if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match unlimited · Draft 15x/month' : 'Match tanpa batas · Draft 15x/bulan';
+      } else {
+        const draftLimit = 1;
+        txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
+        const pct = Math.min(100, (draftUsed / draftLimit) * 100);
+        barQuotaMatchDraft.style.width = `${pct}%`;
+        barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
+        if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match 1x/month · Draft 1x/month' : 'Match 1x/bulan · Draft 1x/bulan';
       }
 
       // 2. Lit Review (Perplexity limits)
