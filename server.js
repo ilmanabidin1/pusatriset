@@ -176,7 +176,12 @@ app.use(session({
   saveUninitialized: false,
   name: ACCESS_COOKIE,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    // Railway's edge proxy tidak selalu meneruskan X-Forwarded-Proto secara
+    // konsisten ke tiap request, jadi secure:true (yang mensyaratkan req.secure
+    // true) bisa membuat Set-Cookie gagal terkirim sama sekali -> setiap request
+    // dianggap sesi baru -> loop login. httpOnly + sameSite=lax tetap melindungi
+    // cookie ini walau secure di-nonaktifkan, dan Railway selalu diakses via HTTPS.
+    secure: false,
     httpOnly: true,
     maxAge: 2592000000, // 30 hari
     sameSite: 'lax'
