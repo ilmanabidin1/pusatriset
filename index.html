@@ -21,6 +21,14 @@
   <!-- Core styles (we will override specific layout styles below) -->
   <link rel="stylesheet" href="styles.css">
 
+  <!-- Anti-FOUC: Apply saved theme before CSS renders to prevent flash -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('jurnalhub_theme');
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+
   <style>
     /* Dashboard Specific Theme and Layout Overrides */
     :root {
@@ -46,6 +54,239 @@
       
       --font-outfit: 'Outfit', sans-serif;
       --font-primary: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* ========================================
+       DARK MODE — data-theme="dark"
+       ======================================== */
+    [data-theme="dark"] {
+      --bg-body:   #0d1117;
+      --bg-card:   #161b22;
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+      --border-light: rgba(255,255,255,0.06);
+      --border-light-hover: rgba(255,255,255,0.12);
+      --brand-blue-glow: rgba(7, 135, 220, 0.2);
+
+      /* Sidebar — slightly lighter in dark mode for separation */
+      --bg-sidebar: #0d1117;
+      --bg-sidebar-hover: #1c2128;
+      --bg-sidebar-active: #21262d;
+    }
+
+    /* Header */
+    [data-theme="dark"] .dashboard-header {
+      background-color: #161b22;
+      border-bottom-color: rgba(255,255,255,0.07);
+    }
+
+    /* Search bar */
+    [data-theme="dark"] .header-search-bar input {
+      background-color: #0d1117;
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text-main);
+    }
+    [data-theme="dark"] .header-search-bar input:focus {
+      background-color: #161b22;
+    }
+    [data-theme="dark"] .header-search-bar input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Header upgrade button */
+    [data-theme="dark"] .upgrade-header-btn {
+      background-color: rgba(251,191,36,0.1);
+      border-color: rgba(251,191,36,0.2);
+      color: #fbbf24;
+    }
+    [data-theme="dark"] .upgrade-header-btn:hover {
+      background-color: rgba(251,191,36,0.18);
+    }
+
+    /* Bell icon */
+    [data-theme="dark"] .bell-icon-btn:hover {
+      background-color: rgba(255,255,255,0.06);
+    }
+
+    /* Stat cards */
+    [data-theme="dark"] .stats-row-container .stat-card {
+      background-color: var(--bg-card);
+      border-color: var(--border-light);
+      box-shadow: none;
+    }
+
+    /* Filter box card */
+    [data-theme="dark"] .filter-box-card {
+      background-color: var(--bg-card);
+      border-color: var(--border-light);
+      box-shadow: none;
+    }
+
+    /* Filter select */
+    [data-theme="dark"] .filter-dropdown-item select {
+      background-color: #0d1117;
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text-main);
+    }
+
+    /* Filter input */
+    [data-theme="dark"] input[type="text"],
+    [data-theme="dark"] input[type="password"],
+    [data-theme="dark"] textarea {
+      background-color: #0d1117 !important;
+      border-color: rgba(255,255,255,0.12) !important;
+      color: var(--text-main) !important;
+    }
+    [data-theme="dark"] input[type="text"]::placeholder,
+    [data-theme="dark"] input[type="password"]::placeholder,
+    [data-theme="dark"] textarea::placeholder {
+      color: var(--text-muted) !important;
+    }
+
+    /* Checkbox indicator */
+    [data-theme="dark"] .checkbox-indicator {
+      background-color: #0d1117;
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    /* AI Research cards */
+    [data-theme="dark"] .ai-research-card {
+      background-color: var(--bg-card);
+      border-color: var(--border-light);
+      box-shadow: none;
+    }
+
+    /* Match card content */
+    [data-theme="dark"] .match-card-content {
+      background-color: var(--bg-card);
+      border-color: var(--border-light);
+    }
+
+    /* Load more button */
+    [data-theme="dark"] .load-more-btn {
+      background-color: var(--bg-card);
+      border-color: var(--border-light-hover);
+      color: var(--text-main);
+    }
+    [data-theme="dark"] .load-more-btn:hover {
+      background-color: #21262d;
+    }
+
+    /* Layout toggle buttons */
+    [data-theme="dark"] .layout-toggle-btns {
+      background-color: #21262d;
+    }
+    [data-theme="dark"] .layout-toggle-btn.active {
+      background-color: #30363d;
+      color: var(--text-main);
+    }
+
+    /* Modal */
+    [data-theme="dark"] .modal-card {
+      background: #161b22;
+    }
+    [data-theme="dark"] .modal-features-box {
+      background: #0d1117;
+      border-color: rgba(255,255,255,0.06);
+    }
+    [data-theme="dark"] .feature-item {
+      color: #c9d1d9;
+    }
+    [data-theme="dark"] .billing-switcher {
+      background: #0d1117;
+      border-color: rgba(255,255,255,0.1);
+    }
+    [data-theme="dark"] .switcher-btn.active {
+      background: #21262d;
+      color: var(--text-main);
+    }
+    [data-theme="dark"] .price-title {
+      color: var(--text-main);
+    }
+    [data-theme="dark"] .price-period,
+    [data-theme="dark"] .price-detail {
+      color: var(--text-muted);
+    }
+
+    /* Quota progress bar background */
+    [data-theme="dark"] #homeQuotaTrackerCard > div > div {
+      background: #21262d !important;
+    }
+
+    /* History detail modal */
+    [data-theme="dark"] #historyDetailModal .modal-card {
+      background: #161b22;
+    }
+
+    /* Billing table */
+    [data-theme="dark"] #billingHistoryContainer table thead tr {
+      border-bottom-color: rgba(255,255,255,0.1);
+    }
+
+    /* Journal cards */
+    [data-theme="dark"] .journal-card {
+      background-color: var(--bg-card) !important;
+      border-color: var(--border-light) !important;
+    }
+    [data-theme="dark"] .journal-card:hover {
+      border-color: rgba(7,135,220,0.35) !important;
+    }
+
+    /* Lang switcher */
+    [data-theme="dark"] .lang-switcher {
+      background: rgba(255,255,255,0.05) !important;
+      border-color: rgba(255,255,255,0.1) !important;
+    }
+    [data-theme="dark"] #langBtnId.active,
+    [data-theme="dark"] #langBtnEn.active {
+      background: #21262d !important;
+    }
+
+    /* Humanizer / lit review textarea panels */
+    [data-theme="dark"] .humanizer-output-panel,
+    [data-theme="dark"] .humanizer-result-panel {
+      background-color: #0d1117;
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    /* Dark mode toggle button itself */
+    .dark-mode-toggle-btn {
+      background: none;
+      border: 1px solid var(--border-light-hover);
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1rem;
+      transition: all 0.25s ease;
+    }
+    .dark-mode-toggle-btn:hover {
+      background-color: rgba(7,135,220,0.08);
+      border-color: var(--brand-blue);
+      color: var(--brand-blue);
+      transform: rotate(15deg);
+    }
+    [data-theme="dark"] .dark-mode-toggle-btn {
+      border-color: rgba(255,255,255,0.12);
+      color: #fbbf24;
+    }
+    [data-theme="dark"] .dark-mode-toggle-btn:hover {
+      background-color: rgba(251,191,36,0.08);
+      border-color: #fbbf24;
+      color: #fbbf24;
+      transform: rotate(-15deg);
+    }
+
+    /* Transition for smooth dark mode switch */
+    body, .dashboard-header, .filter-box-card,
+    .stats-row-container .stat-card, .ai-research-card,
+    .match-card-content, .load-more-btn, .modal-card,
+    .journal-card {
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
     }
 
     /* Reset global layout for Dashboard view */
@@ -1595,6 +1836,88 @@
         grid-template-columns: 1fr !important;
       }
     }
+
+    /* ========================================
+       DARK MODE — extra overrides for
+       inline-styled containers & AI tabs
+       ======================================== */
+    [data-theme="dark"] .match-box-wrapper,
+    [data-theme="dark"] [style*="background: #ffffff"],
+    [data-theme="dark"] [style*="background-color: #ffffff"] {
+      background: #161b22 !important;
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+    [data-theme="dark"] [style*="background: #f8fafc"],
+    [data-theme="dark"] [style*="background-color: #f8fafc"],
+    [data-theme="dark"] [style*="background: #f9fafb"],
+    [data-theme="dark"] [style*="background-color: #f9fafb"] {
+      background: #0d1117 !important;
+    }
+    [data-theme="dark"] [style*="background: #f1f5f9"],
+    [data-theme="dark"] [style*="background-color: #f1f5f9"] {
+      background: #21262d !important;
+    }
+    /* border-color overrides for dark inline borders */
+    [data-theme="dark"] [style*="border: 1px solid rgba(8,34,64"] {
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+    [data-theme="dark"] [style*="border: 1px solid var(--border-light-hover)"] {
+      border-color: rgba(255,255,255,0.12) !important;
+    }
+    /* Text color for dark mode inline color overrides */
+    [data-theme="dark"] [style*="color: #0a2540"],
+    [data-theme="dark"] [style*="color: #0f172a"],
+    [data-theme="dark"] [style*="color: #1f2937"],
+    [data-theme="dark"] [style*="color: #374151"] {
+      color: #e6edf3 !important;
+    }
+    [data-theme="dark"] [style*="color: #5f6f82"],
+    [data-theme="dark"] [style*="color: #6b7280"],
+    [data-theme="dark"] [style*="color: #64748b"],
+    [data-theme="dark"] [style*="color: #9ca3af"],
+    [data-theme="dark"] [style*="color: #4b5563"] {
+      color: #8b949e !important;
+    }
+    /* Dashboard body bg */
+    [data-theme="dark"] .dashboard-body {
+      background-color: #0d1117;
+    }
+    /* History modal inner content */
+    [data-theme="dark"] #historyDetailModal .modal-body > div {
+      background: #0d1117 !important;
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+    /* Prompt bank list items */
+    [data-theme="dark"] #promptsListContainer .prompt-item,
+    [data-theme="dark"] #promptStagesList button {
+      background: #0d1117 !important;
+      color: var(--text-main) !important;
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+    /* Quota tracker inner boxes */
+    [data-theme="dark"] #homeQuotaTrackerCard [style*="background: #f8fafc"] {
+      background: #21262d !important;
+      border-color: rgba(255,255,255,0.1) !important;
+    }
+    /* Input fields inside settings */
+    [data-theme="dark"] .settings-container input,
+    [data-theme="dark"] .settings-container select,
+    [data-theme="dark"] .settings-container textarea {
+      background-color: #0d1117 !important;
+      border-color: rgba(255,255,255,0.12) !important;
+      color: var(--text-main) !important;
+    }
+    /* History filter badges */
+    [data-theme="dark"] .filter-badge {
+      background: #21262d !important;
+      border-color: rgba(255,255,255,0.1) !important;
+      color: var(--text-muted) !important;
+    }
+    [data-theme="dark"] .filter-badge.active {
+      background: rgba(7,135,220,0.15) !important;
+      border-color: rgba(7,135,220,0.4) !important;
+      color: var(--brand-blue) !important;
+    }
   </style>
 
   <!-- CDNs for client-side docx rendering & PDF export -->
@@ -1688,6 +2011,9 @@
           <button id="langBtnEn" class="lang-btn" style="border: none; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-muted); transition: all 0.2s;" type="button">EN</button>
         </div>
         <button class="bell-icon-btn" title="Notifikasi"><i class="fa-regular fa-bell"></i></button>
+        <button class="dark-mode-toggle-btn" id="darkModeToggleBtn" title="Toggle Dark/Light Mode">
+          <i class="fa-solid fa-moon" id="darkModeIcon"></i>
+        </button>
         <button class="upgrade-header-btn btn-upgrade-trigger" id="headerUpgradeBtn">
           <i class="fa-solid fa-crown"></i> Upgrade
         </button>
@@ -1765,6 +2091,52 @@
             <span class="banner-dot" data-dot-index="1"></span>
             <span class="banner-dot" data-dot-index="2"></span>
             <span class="banner-dot" data-dot-index="3"></span>
+          </div>
+        </div>
+
+        <!-- Visual Quota Tracker Card -->
+        <div class="filter-box-card" id="homeQuotaTrackerCard" style="padding: 1.5rem 2rem; margin-bottom: 2rem; display: none;">
+          <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; color: var(--text-main); margin: 0 0 1.25rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <span><i class="fa-solid fa-chart-line" style="color: var(--brand-blue); margin-right: 0.5rem;"></i> <span id="lblQuotaTitle">Status & Kuota Asisten AI</span></span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;" id="lblQuotaAccountType">Tipe Akun: Free</span>
+          </h3>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+            <!-- Column 1: Match & Draft -->
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 12px; padding: 1rem; text-align: left;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.5rem;">
+                <span style="color: var(--brand-blue);"><i class="fa-solid fa-magnifying-glass-chart"></i> Match & Draft</span>
+                <span id="txtQuotaMatchDraft">0 / 0</span>
+              </div>
+              <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 0.25rem;">
+                <div id="barQuotaMatchDraft" style="height: 100%; width: 0%; background: var(--brand-blue); border-radius: 4px; transition: width 0.4s;"></div>
+              </div>
+              <span style="font-size: 0.7rem; color: var(--text-muted);" id="lblMatchDraftLimitNote">Limit bulanan Claude</span>
+            </div>
+
+            <!-- Column 2: Lit Review -->
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 12px; padding: 1rem; text-align: left;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.5rem;">
+                <span style="color: #8b5cf6;"><i class="fa-solid fa-book-open-reader"></i> Lit Review</span>
+                <span id="txtQuotaLitReview">0 / 0</span>
+              </div>
+              <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 0.25rem;">
+                <div id="barQuotaLitReview" style="height: 100%; width: 0%; background: #8b5cf6; border-radius: 4px; transition: width 0.4s;"></div>
+              </div>
+              <span style="font-size: 0.7rem; color: var(--text-muted);" id="lblLitReviewLimitNote">Limit bulanan Perplexity</span>
+            </div>
+
+            <!-- Column 3: Humanizer Words -->
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 12px; padding: 1rem; text-align: left;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.5rem;">
+                <span style="color: #f59e0b;"><i class="fa-solid fa-wand-magic-sparkles"></i> Humanizer Words</span>
+                <span id="txtQuotaHumanizer">0 / 0</span>
+              </div>
+              <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 0.25rem;">
+                <div id="barQuotaHumanizer" style="height: 100%; width: 0%; background: #f59e0b; border-radius: 4px; transition: width 0.4s;"></div>
+              </div>
+              <span style="font-size: 0.7rem; color: var(--text-muted);" id="lblHumanizerLimitNote">Sisa kuota kata Humanizer</span>
+            </div>
           </div>
         </div>
 
@@ -2585,6 +2957,32 @@
                 <div id="changePasswordMessage" style="font-size: 0.88rem; display: none; font-weight: 600;"></div>
                 <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.75rem; font-size: 0.88rem; width: fit-content; margin-top: 0.5rem;">Perbarui Kata Sandi</button>
               </form>
+            </div>
+
+            <!-- Section 4: Riwayat Transaksi & Kuitansi -->
+            <div class="filter-box-card" style="padding: 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-receipt" style="color: var(--brand-blue);"></i> Transaksi & Kuitansi
+              </h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;" id="billingSectionDesc">Berikut adalah riwayat pembayaran langganan atau pembelian kuota kata Anda. Gunakan tombol kuitansi untuk mengunduh bukti bayar resmi guna reimbursement kampus/hibah.</p>
+              
+              <!-- Billing Table -->
+              <div id="billingHistoryContainer" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; min-width: 500px;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid var(--border-light-hover); color: var(--text-muted); font-weight: 700;">
+                      <th style="padding: 0.75rem 0.5rem;" id="thBillDate">Tanggal</th>
+                      <th style="padding: 0.75rem 0.5rem;" id="thBillDesc">Deskripsi</th>
+                      <th style="padding: 0.75rem 0.5rem;" id="thBillAmount">Nominal</th>
+                      <th style="padding: 0.75rem 0.5rem;" id="thBillStatus">Status</th>
+                      <th style="padding: 0.75rem 0.5rem; text-align: right;" id="thBillAction">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="billingHistoryTableBody">
+                    <!-- Dynamic Rows loaded via JS -->
+                  </tbody>
+                </table>
+              </div>
             </div>
 
           </div>

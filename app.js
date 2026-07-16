@@ -52,6 +52,36 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthState();
   };
 
+  // --- DARK MODE TOGGLE ---
+  (function initDarkMode() {
+    const html = document.documentElement;
+    const toggleBtn = document.getElementById('darkModeToggleBtn');
+    const icon = document.getElementById('darkModeIcon');
+    const savedTheme = localStorage.getItem('jurnalhub_theme') || 'light';
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        html.setAttribute('data-theme', 'dark');
+        if (icon) { icon.className = 'fa-solid fa-sun'; }
+        if (toggleBtn) toggleBtn.title = 'Beralih ke Mode Terang';
+      } else {
+        html.removeAttribute('data-theme');
+        if (icon) { icon.className = 'fa-solid fa-moon'; }
+        if (toggleBtn) toggleBtn.title = 'Beralih ke Mode Gelap';
+      }
+      localStorage.setItem('jurnalhub_theme', theme);
+    }
+
+    applyTheme(savedTheme);
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const current = html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+      });
+    }
+  })();
+
   // --- 0. AUTHENTICATION & USER STATE ---
   async function checkAuthState() {
     try {
@@ -330,6 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             }
           }
+        }
+
+        if (currentUser.loggedIn && currentUser.user) {
+          updateVisualQuotaTracker(currentUser.user);
+          renderBillingHistory();
         }
 
         // Logout handler
@@ -858,6 +893,8 @@ document.addEventListener('DOMContentLoaded', () => {
           matchQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 0/1 Bulan Ini</span>';
         }
       }
+
+      await checkAuthState();
 
       // Tampilkan panel review AI jika tersedia
       if (data.review && matchResultsContainer) {
@@ -1539,6 +1576,8 @@ document.addEventListener('DOMContentLoaded', () => {
             runDraftGenerator.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
             runDraftGenerator.classList.add('btn-upgrade-trigger');
           }
+
+          await checkAuthState();
         }
       } catch (error) {
         console.error(error);
@@ -3149,7 +3188,15 @@ document.addEventListener('DOMContentLoaded', () => {
         history_title: "Riwayat Penggunaan AI",
         history_clear_btn: "Bersihkan Semua Riwayat",
         history_empty: "Tidak Ada Riwayat",
-        history_empty_desc: "Anda belum pernah menggunakan alat AI dengan kategori ini."
+        history_empty_desc: "Anda belum pernah menggunakan alat AI dengan kategori ini.",
+        // Quota
+        quota_title: "Status & Kuota Asisten AI",
+        quota_note_match: "Limit bulanan Claude",
+        quota_note_lit: "Limit bulanan Perplexity",
+        quota_note_humanizer: "Sisa kuota kata Humanizer",
+        // Billing
+        billing_title: "Transaksi & Kuitansi",
+        billing_desc: "Berikut adalah riwayat pembayaran langganan atau pembelian kuota kata Anda. Gunakan tombol kuitansi untuk mengunduh bukti bayar resmi guna reimbursement kampus/hibah."
       },
       en: {
         beranda: "Home",
@@ -3196,7 +3243,15 @@ document.addEventListener('DOMContentLoaded', () => {
         history_title: "AI Usage History",
         history_clear_btn: "Clear All History",
         history_empty: "No History Found",
-        history_empty_desc: "You haven't used any AI tools in this category. Start an analysis or paraphrasing to create history."
+        history_empty_desc: "You haven't used any AI tools in this category. Start an analysis or paraphrasing to create history.",
+        // Quota
+        quota_title: "AI Assistant Quota Status",
+        quota_note_match: "Claude monthly limit",
+        quota_note_lit: "Perplexity monthly limit",
+        quota_note_humanizer: "Remaining Humanizer words",
+        // Billing
+        billing_title: "Transactions & Receipts",
+        billing_desc: "Here is your payment subscription or word quota purchase history. Use the receipt button to download official payment proof for university/grant reimbursement."
       }
     };
 
@@ -3405,6 +3460,50 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (type === 'humanizer') badge.textContent = lang === 'id' ? 'Humanizer Engine' : 'Humanizer Engine';
       });
 
+      // Translate Quota Tracker Card static items
+      const lblQuotaTitle = document.getElementById('lblQuotaTitle');
+      const lblMatchDraftLimitNote = document.getElementById('lblMatchDraftLimitNote');
+      const lblLitReviewLimitNote = document.getElementById('lblLitReviewLimitNote');
+      const lblHumanizerLimitNote = document.getElementById('lblHumanizerLimitNote');
+      if (lblQuotaTitle) lblQuotaTitle.textContent = TRANSLATIONS[lang].quota_title;
+      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = TRANSLATIONS[lang].quota_note_match;
+      if (lblLitReviewLimitNote) lblLitReviewLimitNote.textContent = TRANSLATIONS[lang].quota_note_lit;
+      if (lblHumanizerLimitNote) lblHumanizerLimitNote.textContent = TRANSLATIONS[lang].quota_note_humanizer;
+
+      // Translate Billing Section static items
+      const billingTitleEl = document.querySelector('#tabContentPengaturan h3 i.fa-receipt')?.parentElement;
+      const billingDescEl = document.getElementById('billingSectionDesc');
+      const thBillDate = document.getElementById('thBillDate');
+      const thBillDesc = document.getElementById('thBillDesc');
+      const thBillAmount = document.getElementById('thBillAmount');
+      const thBillStatus = document.getElementById('thBillStatus');
+      const thBillAction = document.getElementById('thBillAction');
+
+      if (billingTitleEl) billingTitleEl.innerHTML = `<i class="fa-solid fa-receipt" style="color: var(--brand-blue);"></i> ${TRANSLATIONS[lang].billing_title}`;
+      if (billingDescEl) billingDescEl.textContent = TRANSLATIONS[lang].billing_desc;
+      if (thBillDate) thBillDate.textContent = TRANSLATIONS[lang].th_date;
+      if (thBillDesc) thBillDesc.textContent = TRANSLATIONS[lang].th_desc;
+      if (thBillAmount) thBillAmount.textContent = TRANSLATIONS[lang].th_amount;
+      if (thBillStatus) thBillStatus.textContent = TRANSLATIONS[lang].th_status;
+      if (thBillAction) thBillAction.textContent = TRANSLATIONS[lang].th_action;
+
+      // Re-trigger visual quota tracker updates and billing history table updates
+      if (currentUser && currentUser.user) {
+        updateVisualQuotaTracker(currentUser.user);
+        renderBillingHistory();
+      }
+
+      // Update dark mode toggle tooltip for current language
+      const darkModeBtn = document.getElementById('darkModeToggleBtn');
+      if (darkModeBtn) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (lang === 'en') {
+          darkModeBtn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+        } else {
+          darkModeBtn.title = isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap';
+        }
+      }
+
       // Re-trigger history list rendering if currently on history tab to update cards
       const activeTabLink = document.querySelector('.sidebar-link.active');
       if (activeTabLink && activeTabLink.getAttribute('data-tab') === 'riwayat') {
@@ -3434,6 +3533,146 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       applyLanguage(currentLanguage);
     }, 200);
+
+    // --- VISUAL QUOTA TRACKER ---
+    function updateVisualQuotaTracker(user) {
+      const homeQuotaTrackerCard = document.getElementById('homeQuotaTrackerCard');
+      if (!homeQuotaTrackerCard) return;
+
+      homeQuotaTrackerCard.style.display = 'block';
+
+      const isEn = (window.currentLanguage === 'en');
+      
+      // Account Type label
+      const typeLabel = user.type === 'ultimate' ? (isEn ? 'Ultimate Account' : 'Akun Ultimate') : (user.type === 'premium' ? (isEn ? 'Premium Account' : 'Akun Premium') : (isEn ? 'Free Account' : 'Akun Free'));
+      document.getElementById('lblQuotaAccountType').textContent = (isEn ? 'Account Type: ' : 'Tipe Akun: ') + typeLabel;
+
+      // 1. Match & Draft (Claude limits)
+      const txtQuotaMatchDraft = document.getElementById('txtQuotaMatchDraft');
+      const barQuotaMatchDraft = document.getElementById('barQuotaMatchDraft');
+      
+      const matchUsed = user.matchCountThisMonth || 0;
+      const draftUsed = user.draftCountThisMonth || 0;
+      const totalClaudeUsed = matchUsed + draftUsed;
+
+      if (user.type === 'ultimate') {
+        txtQuotaMatchDraft.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
+        barQuotaMatchDraft.style.width = '100%';
+        barQuotaMatchDraft.style.background = '#10b981'; // Green for unlimited/success
+      } else {
+        const limit = user.type === 'premium' ? 30 : 2; // 15 match + 15 draft for premium, 1+1 for free
+        txtQuotaMatchDraft.textContent = `${totalClaudeUsed} / ${limit}`;
+        const pct = Math.min(100, (totalClaudeUsed / limit) * 100);
+        barQuotaMatchDraft.style.width = `${pct}%`;
+        barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
+      }
+
+      // 2. Lit Review (Perplexity limits)
+      const txtQuotaLitReview = document.getElementById('txtQuotaLitReview');
+      const barQuotaLitReview = document.getElementById('barQuotaLitReview');
+      const litUsed = user.litReviewCountThisMonth || 0;
+
+      if (user.type === 'ultimate') {
+        txtQuotaLitReview.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
+        barQuotaLitReview.style.width = '100%';
+        barQuotaLitReview.style.background = '#10b981';
+      } else {
+        const limit = user.type === 'premium' ? 15 : 1;
+        txtQuotaLitReview.textContent = `${litUsed} / ${limit}`;
+        const pct = Math.min(100, (litUsed / limit) * 100);
+        barQuotaLitReview.style.width = `${pct}%`;
+        barQuotaLitReview.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : '#8b5cf6');
+      }
+
+      // 3. Humanizer Words
+      const txtQuotaHumanizer = document.getElementById('txtQuotaHumanizer');
+      const barQuotaHumanizer = document.getElementById('barQuotaHumanizer');
+      const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
+      
+      let wordsLimit = 0;
+      const topup = user.humanizerTopupCredits || 0;
+      if (user.type === 'free') wordsLimit = topup;
+      else if (user.type === 'premium') wordsLimit = 5000 + topup;
+      else if (user.type === 'ultimate') wordsLimit = 15000 + topup;
+
+      txtQuotaHumanizer.textContent = `${wordsUsed.toLocaleString('id-ID')} / ${wordsLimit.toLocaleString('id-ID')}`;
+      
+      if (wordsLimit === 0) {
+        barQuotaHumanizer.style.width = '0%';
+        barQuotaHumanizer.style.background = '#e2e8f0';
+      } else {
+        const pct = Math.min(100, (wordsUsed / wordsLimit) * 100);
+        barQuotaHumanizer.style.width = `${pct}%`;
+        barQuotaHumanizer.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : '#f59e0b');
+      }
+    }
+
+    // --- BILLING HISTORY TABLE ---
+    async function renderBillingHistory() {
+      const tableBody = document.getElementById('billingHistoryTableBody');
+      if (!tableBody) return;
+
+      const isEn = (window.currentLanguage === 'en');
+
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem; color: var(--brand-blue);"></i> ${isEn ? 'Loading transactions...' : 'Memuat data transaksi...'}
+          </td>
+        </tr>
+      `;
+
+      try {
+        const response = await fetch('/api/transactions');
+        const data = await response.json();
+
+        if (data.ok && data.transactions && data.transactions.length > 0) {
+          tableBody.innerHTML = '';
+          data.transactions.forEach(tx => {
+            const dateStr = new Date(tx.timestamp).toLocaleDateString(isEn ? 'en-US' : 'id-ID', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric'
+            });
+            const amountStr = 'Rp ' + tx.amount.toLocaleString('id-ID');
+            const statusBadge = `<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 700; font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block;"><i class="fa-solid fa-circle-check"></i> ${isEn ? 'Paid' : 'Lunas'}</span>`;
+
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid var(--border-light-hover)';
+            row.innerHTML = `
+              <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 500;">${dateStr}</td>
+              <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 700;">${tx.description}</td>
+              <td style="padding: 1rem 0.5rem; color: var(--text-main); font-weight: 700;">${amountStr}</td>
+              <td style="padding: 1rem 0.5rem;">${statusBadge}</td>
+              <td style="padding: 1rem 0.5rem; text-align: right;">
+                <a href="/api/transactions/${tx.id}/invoice" target="_blank" class="upgrade-btn" style="width: auto; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; font-size: 0.78rem; background: var(--brand-blue); color: white; text-decoration: none; border-radius: 6px;">
+                  <i class="fa-solid fa-receipt"></i> ${isEn ? 'Receipt' : 'Kuitansi'}
+                </a>
+              </td>
+            `;
+            tableBody.appendChild(row);
+          });
+        } else {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;"><i class="fa-regular fa-folder-open"></i></div>
+                <div>${isEn ? 'No payment transactions recorded.' : 'Belum ada transaksi pembayaran tercatat.'}</div>
+              </td>
+            </tr>
+          `;
+        }
+      } catch (err) {
+        console.error('Fetch billing history error:', err);
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 2rem; color: #ef4444; font-weight: 600;">
+              <i class="fa-solid fa-triangle-exclamation"></i> ${isEn ? 'Failed to load transaction data.' : 'Gagal memuat data transaksi.'}
+            </td>
+          </tr>
+        `;
+      }
+    }
 
     activeJournals = JOURNAL_DATABASE;
     filterJournals(); // Apply preferences automatically

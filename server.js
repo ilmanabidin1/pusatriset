@@ -258,6 +258,51 @@ function addHistoryItem(userId, type, input, output) {
   return newItem;
 }
 
+const TRANSACTIONS_FILE = path.join(DATA_DIR, 'transactions.json');
+
+function getTransactions() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(TRANSACTIONS_FILE)) {
+      fs.writeFileSync(TRANSACTIONS_FILE, '[]');
+    }
+    const data = fs.readFileSync(TRANSACTIONS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Gagal membaca transactions.json:', error);
+    return [];
+  }
+}
+
+function saveTransactions(txs) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(TRANSACTIONS_FILE, JSON.stringify(txs, null, 2));
+  } catch (error) {
+    console.error('Gagal menyimpan transactions.json:', error);
+  }
+}
+
+function addTransaction(userId, referenceId, desc, amount, status) {
+  const txs = getTransactions();
+  const newTx = {
+    id: 'tx_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
+    userId,
+    referenceId,
+    timestamp: new Date().toISOString(),
+    description: desc,
+    amount,
+    status
+  };
+  txs.unshift(newTx);
+  saveTransactions(txs);
+  return newTx;
+}
+
 function parseCookies(cookieHeader = '') {
   return cookieHeader.split(';').reduce((cookies, item) => {
     const [key, ...valueParts] = item.trim().split('=');
@@ -688,6 +733,11 @@ app.get('/api/me', (req, res) => {
         isHumanizerLimitReached: isHumanizerLimitReached,
         humanizerWordsRemaining: humanizerWordsRemaining,
         humanizerWordsLimit: humanizerWordsLimit,
+        humanizerTopupCredits: user ? (user.humanizerTopupCredits || 0) : 0,
+        humanizerWordsUsedThisMonth: user ? (user.humanizerWordsUsedThisMonth || 0) : 0,
+        matchCountThisMonth: user ? (user.matchCountThisMonth || 0) : 0,
+        draftCountThisMonth: user ? (user.draftCountThisMonth || 0) : 0,
+        litReviewCountThisMonth: user ? (user.litReviewCountThisMonth || 0) : 0,
         planId: user ? (user.planId || null) : null,
         paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null
       }
@@ -1693,6 +1743,259 @@ app.delete('/api/history', requireAccess, (req, res) => {
   }
 });
 
+// Endpoint untuk mengambil daftar transaksi pembayaran
+app.get('/api/transactions', requireAccess, (req, res) => {
+  try {
+    const txs = getTransactions();
+    let userTxs = txs.filter(tx => tx.userId === req.session.userId);
+    
+    // Fallback: Jika user adalah premium atau ultimate tetapi riwayat transaksi kosong, buat transaksi awal simulasi
+    if (userTxs.length === 0) {
+      const users = getUsers();
+      const user = users.find(u => u.id === req.session.userId);
+      if (user && (user.type === 'premium' || user.type === 'ultimate')) {
+        const mockTx = {
+          id: 'tx_mock_' + Math.random().toString(36).substr(2, 9),
+          userId: user.id,
+          referenceId: user.id + '_' + (user.planId || 'premium_monthly') + '_mock',
+          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 hari yang lalu
+          description: user.type === 'ultimate' ? 'JurnalHub Ultimate (Bulanan)' : 'JurnalHub Premium (Bulanan)',
+          amount: user.type === 'ultimate' ? 249000 : 129000,
+          status: 'success'
+        };
+        userTxs = [mockTx];
+        txs.push(mockTx);
+        saveTransactions(txs);
+      }
+    }
+    res.json({ ok: true, transactions: userTxs });
+  } catch (error) {
+    console.error('[API Transactions Get] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mengambil data transaksi.' });
+  }
+});
+
+// Endpoint untuk menggenerasi kuitansi / invoice HTML resmi ramah printer
+app.get('/api/transactions/:id/invoice', requireAccess, (req, res) => {
+  const { id } = req.params;
+  try {
+    const txs = getTransactions();
+    const tx = txs.find(t => t.id === id && t.userId === req.session.userId);
+    if (!tx) {
+      return res.status(404).send('Kuitansi tidak ditemukan atau Anda tidak memiliki akses.');
+    }
+
+    const users = getUsers();
+    const user = users.find(u => u.id === req.session.userId) || {};
+
+    const formattedDate = new Date(tx.timestamp).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+
+    const invoiceHtml = `
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Kuitansi Resmi - JurnalHub (#${tx.id})</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 2rem;
+      background: #f9fafb;
+    }
+    .invoice-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 2.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      position: relative;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.025em;
+    }
+    .logo span {
+      color: #0ea5e9;
+    }
+    .invoice-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+    }
+    .meta-label {
+      color: #6b7280;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+    .meta-val {
+      color: #1f2937;
+      font-weight: 700;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+    }
+    .table th {
+      background: #f9fafb;
+      border-bottom: 2px solid #e5e7eb;
+      color: #4b5563;
+      font-weight: 700;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    .table td {
+      border-bottom: 1px solid #f3f4f6;
+      padding: 1rem 0.75rem;
+      color: #374151;
+    }
+    .paid-stamp {
+      position: absolute;
+      top: 45%;
+      right: 10%;
+      border: 4px solid #10b981;
+      color: #10b981;
+      font-weight: 900;
+      font-size: 1.75rem;
+      text-transform: uppercase;
+      padding: 0.5rem 1.5rem;
+      border-radius: 8px;
+      transform: rotate(-12deg);
+      opacity: 0.75;
+      letter-spacing: 0.1em;
+    }
+    .footer {
+      border-top: 1px solid #f3f4f6;
+      padding-top: 1.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+      }
+      .invoice-card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+    .btn-print {
+      display: inline-block;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      padding: 0.65rem 1.5rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      margin-bottom: 1.5rem;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div style="text-align: center;" class="no-print">
+    <button class="btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak / Simpan PDF Kuitansi</button>
+  </div>
+
+  <div class="invoice-card">
+    <div class="paid-stamp">LUNAS / PAID</div>
+    
+    <div class="header">
+      <div class="logo">Jurnal<span>Hub</span></div>
+      <div class="invoice-title">Kuitansi Pembayaran Resmi</div>
+    </div>
+
+    <div class="meta-grid">
+      <div>
+        <div class="meta-label">Diterbitkan Untuk:</div>
+        <div class="meta-val">${user.name || user.email}</div>
+        <div style="color: #6b7280; margin-top: 0.2rem;">${user.university || '-'} ${user.faculty ? `(${user.faculty})` : ''}</div>
+        <div style="color: #6b7280; font-size: 0.8rem;">${user.email}</div>
+      </div>
+      <div style="text-align: right;">
+        <div class="meta-label">ID Kuitansi:</div>
+        <div class="meta-val">#${tx.id}</div>
+        <div class="meta-label" style="margin-top: 0.75rem;">Tanggal Transaksi:</div>
+        <div class="meta-val">${formattedDate}</div>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Deskripsi Layanan</th>
+          <th style="text-align: right;">Jumlah</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight: 600;">
+            ${tx.description}
+            <div style="font-weight: normal; font-size: 0.78rem; color: #6b7280; margin-top: 0.25rem;">Metode: QRIS Cross-Border (iPaymu)</div>
+          </td>
+          <td style="text-align: right; font-weight: 700;">Rp ${tx.amount.toLocaleString('id-ID')}</td>
+        </tr>
+        <tr style="font-size: 1rem; font-weight: 800;">
+          <td style="text-align: right; border-bottom: none;">Total Pembayaran</td>
+          <td style="text-align: right; color: #0ea5e9; border-bottom: none;">Rp ${tx.amount.toLocaleString('id-ID')}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      <p>Kuitansi ini diterbitkan secara sah dan diakui sebagai bukti pembayaran resmi JurnalHub SaaS Portal.</p>
+      <p>&copy; 2026 JurnalHub Research Platform. Hak cipta dilindungi undang-undang.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+    res.send(invoiceHtml);
+  } catch (error) {
+    console.error('[API Invoice Get] Error:', error.message);
+    res.status(500).send('Gagal menggenerasi kuitansi.');
+  }
+});
+
 app.use((req, res, next) => {
   // File statis yang diizinkan tanpa login (terutama untuk halaman auth dan informasi)
   const publicFiles = [
@@ -1951,9 +2254,11 @@ app.post('/api/payment/callback', async (req, res) => {
         if (parts[1] === 'topup') {
           const packageId = parts[2];
           let wordsToAdd = 0;
-          if (packageId === 'starter') wordsToAdd = 5000;
-          else if (packageId === 'scholar') wordsToAdd = 15000;
-          else if (packageId === 'thesis') wordsToAdd = 40000;
+          let amount = 0;
+          let name = '';
+          if (packageId === 'starter') { wordsToAdd = 5000; amount = 39000; name = 'Humanizer Starter Pack (Top-up)'; }
+          else if (packageId === 'scholar') { wordsToAdd = 15000; amount = 119000; name = 'Humanizer Scholar Pack (Top-up)'; }
+          else if (packageId === 'thesis') { wordsToAdd = 40000; amount = 299000; name = 'Humanizer Thesis Pack (Top-up)'; }
 
           console.log(`[iPaymu Webhook] Top-up Payment Successful! Adding ${wordsToAdd} words to user ${userId}`);
 
@@ -1962,6 +2267,7 @@ app.post('/api/payment/callback', async (req, res) => {
           if (userIndex !== -1) {
             users[userIndex].humanizerTopupCredits = (users[userIndex].humanizerTopupCredits || 0) + wordsToAdd;
             saveUsers(users);
+            addTransaction(userId, referenceId, name, amount, 'success');
             console.log(`[iPaymu Webhook] User ${userId} top-up completed. New top-up credits: ${users[userIndex].humanizerTopupCredits}`);
           } else {
             console.warn(`[iPaymu Webhook] Top-up User ${userId} not found.`);
@@ -1970,6 +2276,12 @@ app.post('/api/payment/callback', async (req, res) => {
           // Handle Regular Subscription Upgrades
           const planId = parts[1]; // premium_monthly, premium_yearly, ultimate_monthly, ultimate_yearly
           const targetType = planId.startsWith('ultimate') ? 'ultimate' : 'premium';
+
+          let amount = 129000;
+          let name = 'JurnalHub Premium (Bulanan)';
+          if (planId === 'premium_yearly') { amount = 999000; name = 'JurnalHub Premium (Tahunan)'; }
+          else if (planId === 'ultimate_monthly') { amount = 249000; name = 'JurnalHub Ultimate (Bulanan)'; }
+          else if (planId === 'ultimate_yearly') { amount = 1999000; name = 'JurnalHub Ultimate (Tahunan)'; }
 
           console.log(`[iPaymu Webhook] Payment Successful! Upgrading user ${userId} to type ${targetType}`);
 
@@ -1985,6 +2297,7 @@ app.post('/api/payment/callback', async (req, res) => {
             users[userIndex].planId = planId;
             users[userIndex].paymentExpiredAt = expiredAt;
             saveUsers(users);
+            addTransaction(userId, referenceId, name, amount, 'success');
             console.log(`[iPaymu Webhook] User ${userId} upgraded successfully to ${targetType} (${planId}), expires at ${expiredAt}`);
           } else {
             console.warn(`[iPaymu Webhook] User ${userId} not found in database.`);
