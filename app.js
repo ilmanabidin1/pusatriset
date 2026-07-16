@@ -395,11 +395,14 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
       } else {
-         window.location.href = '/auth.html';
+        // Response HTTP gagal (mis. 500) - ini bukan bukti user belum login,
+        // jadi jangan paksa redirect (mencegah loop redirect ping-pong dengan auth.html).
+        console.error('Auth check failed: HTTP', response.status);
       }
     } catch (error) {
+      // Kegagalan jaringan (mis. fetch gagal sesaat) juga bukan bukti user
+      // belum login - biarkan halaman tetap tampil, jangan paksa redirect.
       console.error('Auth check failed', error);
-      window.location.href = '/auth.html';
     }
   }
 
