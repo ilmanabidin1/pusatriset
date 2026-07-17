@@ -2122,6 +2122,17 @@ app.post('/api/payment/create', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Plan ID wajib dipilih.' });
   }
 
+  // Saklar penyedia pembayaran - set PAYMENT_PROVIDER=faspay di env var untuk
+  // mengalihkan tombol upgrade ke Faspay Xpress (mis. saat masa UAT dengan tim
+  // Faspay), atau hapus/'ipaymu' untuk kembali ke iPaymu. Tidak perlu ubah kode.
+  if ((process.env.PAYMENT_PROVIDER || 'ipaymu').toLowerCase() === 'faspay') {
+    const plan = FASPAY_PLAN_PRICES[planId];
+    if (!plan) {
+      return res.status(400).json({ ok: false, message: 'Plan ID tidak valid.' });
+    }
+    return createFaspayTransaction(req, res, { kind: 'subscription', itemId: planId, itemDef: plan, userId: req.session.userId });
+  }
+
   // Price mapping for JurnalHub plans
   const planPrices = {
     premium_monthly: { price: 79000, name: 'Premium (Bulanan)', desc: 'Langganan JurnalHub Premium - Bulanan' },
@@ -2204,6 +2215,14 @@ app.post('/api/payment/topup/create', requireAccess, async (req, res) => {
   const { packageId } = req.body;
   if (!packageId) {
     return res.status(400).json({ ok: false, message: 'Package ID wajib disertakan.' });
+  }
+
+  if ((process.env.PAYMENT_PROVIDER || 'ipaymu').toLowerCase() === 'faspay') {
+    const pkg = FASPAY_TOPUP_PACKAGES[packageId];
+    if (!pkg) {
+      return res.status(400).json({ ok: false, message: 'Package ID tidak valid.' });
+    }
+    return createFaspayTransaction(req, res, { kind: 'topup', itemId: packageId, itemDef: pkg, userId: req.session.userId });
   }
 
   const packages = {
