@@ -2507,6 +2507,12 @@ async function createFaspayTransaction(req, res, { kind, itemId, itemDef, userId
   const billExpired = new Date(now.getTime() + 60 * 60 * 1000); // berlaku 1 jam
   const billTotal = itemDef.price;
 
+  // Beberapa akun lama (mis. akun demo internal) punya field email yang bukan
+  // format email asli (mis. "demo"), padahal Faspay mewajibkan format email valid.
+  // Fallback ke email sintetis supaya transaksi tetap bisa dibuat untuk akun manapun.
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email);
+  const faspayEmail = isValidEmail ? user.email : `user-${userId.replace(/-/g, '').slice(0, 16)}@jurnalhub.id`;
+
   const payload = {
     request: 'Post Data Transaction',
     merchant_id: FASPAY_MERCHANT_ID,
@@ -2520,12 +2526,12 @@ async function createFaspayTransaction(req, res, { kind, itemId, itemDef, userId
     // cust_no cuma informasi buat Faspay, bukan dipakai untuk mapping balik ke user
     // (itu tugas bill_no via faspay-pending.json) - aman dipotong ke 32 karakter.
     cust_no: userId.replace(/-/g, '').slice(0, 32),
-    cust_name: user.email.slice(0, 32),
+    cust_name: faspayEmail.slice(0, 32),
     return_url: `${baseUrl}/payment-success`,
     // Aplikasi belum mengumpulkan nomor HP saat registrasi - pakai placeholder
     // karena field ini wajib diisi Faspay, bukan dipakai untuk kontak nyata.
     msisdn: '080000000000',
-    email: user.email,
+    email: faspayEmail,
     item: [
       { product: itemDef.name, qty: '1', amount: String(billTotal) }
     ],
