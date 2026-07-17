@@ -2387,6 +2387,276 @@ app.post('/api/payment/callback', async (req, res) => {
   res.status(200).send('OK');
 });
 
+// ===================== FASPAY XPRESS INTEGRATION =====================
+// Kredensial diambil dari env var (jangan hardcode), supaya sandbox & production
+// bisa dipisah lewat FASPAY_SANDBOX tanpa ubah kode.
+const FASPAY_MERCHANT_ID = process.env.FASPAY_MERCHANT_ID;
+const FASPAY_USER_ID = process.env.FASPAY_USER_ID;
+const FASPAY_PASSWORD = process.env.FASPAY_PASSWORD;
+const FASPAY_SANDBOX = String(process.env.FASPAY_SANDBOX).trim().toLowerCase() === 'true';
+// Endpoint production belum didokumentasikan resmi oleh Faspay saat kode ini ditulis -
+// override via FASPAY_XPRESS_URL kalau tim Faspay konfirmasi URL production yang berbeda.
+const FASPAY_XPRESS_URL = process.env.FASPAY_XPRESS_URL || (FASPAY_SANDBOX
+  ? 'https://xpress-sandbox.faspay.co.id/v4/post'
+  : 'https://xpress.faspay.co.id/v4/post');
+
+function generateFaspaySignature(raw) {
+  const md5Hash = crypto.createHash('md5').update(raw).digest('hex');
+  return crypto.createHash('sha1').update(md5Hash).digest('hex');
+}
+
+function formatFaspayDate(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+// Faspay Xpress tidak mengirim balik userId/planId di notifikasi, hanya bill_no -
+// jadi kita simpan mapping bill_no -> {userId, kind, itemId} saat transaksi dibuat,
+// lalu dicocokkan lagi saat notifikasi pembayaran masuk.
+const FASPAY_PENDING_FILE = path.join(DATA_DIR, 'faspay-pending.json');
+
+function getFaspayPending() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(FASPAY_PENDING_FILE)) fs.writeFileSync(FASPAY_PENDING_FILE, '{}');
+    return JSON.parse(fs.readFileSync(FASPAY_PENDING_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca faspay-pending.json:', error);
+    return {};
+  }
+}
+
+function saveFaspayPending(pending) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(FASPAY_PENDING_FILE, JSON.stringify(pending, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan faspay-pending.json:', error);
+    return false;
+  }
+}
+
+// Faspay memvalidasi item.product sebagai alphanumeric murni (tanpa tanda baca
+// seperti kurung/strip), jadi nama & deskripsi di sini sengaja tanpa tanda baca.
+const FASPAY_PLAN_PRICES = {
+  premium_monthly: { price: 79000, name: 'Premium Bulanan', desc: 'Langganan JurnalHub Premium Bulanan' },
+  premium_yearly: { price: 800000, name: 'Premium Tahunan', desc: 'Langganan JurnalHub Premium Tahunan' },
+  ultimate_monthly: { price: 149000, name: 'Ultimate Bulanan', desc: 'Langganan JurnalHub Ultimate Bulanan' },
+  ultimate_yearly: { price: 1500000, name: 'Ultimate Tahunan', desc: 'Langganan JurnalHub Ultimate Tahunan' }
+};
+
+const FASPAY_TOPUP_PACKAGES = {
+  starter: { price: 39000, name: 'Humanizer Starter Pack', desc: 'Topup Kuota Kata Humanizer 5000 Kata', words: 5000 },
+  scholar: { price: 119000, name: 'Humanizer Scholar Pack', desc: 'Topup Kuota Kata Humanizer 15000 Kata', words: 15000 },
+  thesis: { price: 299000, name: 'Humanizer Thesis Pack', desc: 'Topup Kuota Kata Humanizer 40000 Kata', words: 40000 }
+};
+
+async function createFaspayTransaction(req, res, { kind, itemId, itemDef, userId }) {
+  if (!FASPAY_MERCHANT_ID || !FASPAY_USER_ID || !FASPAY_PASSWORD) {
+    return res.status(500).json({ ok: false, message: 'Kredensial Faspay belum dikonfigurasi di server.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    return res.status(401).json({ ok: false, message: 'User tidak ditemukan.' });
+  }
+
+  const hostHeader = req.headers.host || 'localhost:3000';
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const baseUrl = `${protocol}://${hostHeader}`;
+
+  const now = new Date();
+  const billNo = `JH${now.getTime().toString(36).toUpperCase()}${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+  const billExpired = new Date(now.getTime() + 60 * 60 * 1000); // berlaku 1 jam
+  const billTotal = itemDef.price;
+
+  const payload = {
+    request: 'Post Data Transaction',
+    merchant_id: FASPAY_MERCHANT_ID,
+    bill_no: billNo,
+    bill_date: formatFaspayDate(now),
+    bill_expired: formatFaspayDate(billExpired),
+    bill_desc: itemDef.desc,
+    bill_gross: String(billTotal),
+    bill_miscfee: '0',
+    bill_total: String(billTotal),
+    // cust_no cuma informasi buat Faspay, bukan dipakai untuk mapping balik ke user
+    // (itu tugas bill_no via faspay-pending.json) - aman dipotong ke 32 karakter.
+    cust_no: userId.replace(/-/g, '').slice(0, 32),
+    cust_name: user.email.slice(0, 32),
+    return_url: `${baseUrl}/payment-success`,
+    // Aplikasi belum mengumpulkan nomor HP saat registrasi - pakai placeholder
+    // karena field ini wajib diisi Faspay, bukan dipakai untuk kontak nyata.
+    msisdn: '080000000000',
+    email: user.email,
+    item: [
+      { product: itemDef.name, qty: '1', amount: String(billTotal) }
+    ],
+    signature: generateFaspaySignature(`${FASPAY_USER_ID}${FASPAY_PASSWORD}${billNo}${billTotal}`)
+  };
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const response = await fetchFn(FASPAY_XPRESS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const resData = await response.json();
+
+    if (resData && (resData.response_code === '00' || resData.response_code === 0) && resData.redirect_url) {
+      await withLock('faspay_pending', async () => {
+        const pending = getFaspayPending();
+        pending[billNo] = {
+          userId,
+          kind, // 'subscription' | 'topup'
+          itemId, // planId atau packageId
+          amount: billTotal,
+          name: itemDef.name,
+          createdAt: now.toISOString()
+        };
+        saveFaspayPending(pending);
+      });
+      res.json({ ok: true, redirectUrl: resData.redirect_url });
+    } else {
+      console.error('[Faspay Create] Error Response:', resData);
+      res.status(500).json({ ok: false, message: (resData && resData.response_desc) || 'Gagal membuat sesi pembayaran dengan Faspay.' });
+    }
+  } catch (error) {
+    console.error('[Faspay Create] Exception:', error);
+    res.status(500).json({ ok: false, message: 'Terjadi kesalahan pada server saat menghubungkan ke Faspay: ' + error.message });
+  }
+}
+
+app.post('/api/payment/faspay/create', requireAccess, async (req, res) => {
+  const { planId } = req.body;
+  const plan = planId && FASPAY_PLAN_PRICES[planId];
+  if (!plan) {
+    return res.status(400).json({ ok: false, message: 'Plan ID tidak valid.' });
+  }
+  await createFaspayTransaction(req, res, { kind: 'subscription', itemId: planId, itemDef: plan, userId: req.session.userId });
+});
+
+app.post('/api/payment/faspay/topup/create', requireAccess, async (req, res) => {
+  const { packageId } = req.body;
+  const pkg = packageId && FASPAY_TOPUP_PACKAGES[packageId];
+  if (!pkg) {
+    return res.status(400).json({ ok: false, message: 'Package ID tidak valid.' });
+  }
+  await createFaspayTransaction(req, res, { kind: 'topup', itemId: packageId, itemDef: pkg, userId: req.session.userId });
+});
+
+// Faspay akan POST notifikasi status pembayaran ke sini setiap ada perubahan status transaksi.
+// Endpoint ini publik (tanpa requireAccess) karena dipanggil server-to-server oleh Faspay,
+// bukan oleh browser user yang sedang login.
+app.post('/api/payment/faspay/callback', async (req, res) => {
+  const data = req.body || {};
+  const billNo = data.bill_no;
+  const trxId = data.trx_id;
+  const merchantId = data.merchant_id;
+  const statusCode = String(data.payment_status_code || '');
+  const signature = data.signature;
+
+  const respond = (responseCode, responseDesc) => {
+    res.status(responseCode === '00' ? 200 : 500).json({
+      response: 'Payment Notification',
+      trx_id: trxId,
+      merchant_id: merchantId,
+      bill_no: billNo,
+      response_code: responseCode,
+      response_desc: responseDesc,
+      response_date: formatFaspayDate(new Date())
+    });
+  };
+
+  if (!FASPAY_USER_ID || !FASPAY_PASSWORD) {
+    console.error('[Faspay Webhook] Kredensial Faspay belum dikonfigurasi.');
+    return respond('01', 'Server not configured');
+  }
+
+  if (!billNo || !signature) {
+    return respond('01', 'Missing required fields');
+  }
+
+  // Verifikasi signature: sha1(md5(user_id+password+bill_no+payment_status_code))
+  const expectedSignature = generateFaspaySignature(`${FASPAY_USER_ID}${FASPAY_PASSWORD}${billNo}${statusCode}`);
+  if (signature !== expectedSignature) {
+    console.error('[Faspay Webhook] Unauthorized signature. Received:', signature, 'Expected:', expectedSignature);
+    return res.status(401).json({
+      response: 'Payment Notification',
+      trx_id: trxId, merchant_id: merchantId, bill_no: billNo,
+      response_code: '01', response_desc: 'Invalid signature',
+      response_date: formatFaspayDate(new Date())
+    });
+  }
+
+  console.log('[Faspay Webhook] Received notification:', data);
+
+  const pending = getFaspayPending();
+  const record = pending[billNo];
+
+  if (!record) {
+    console.warn(`[Faspay Webhook] bill_no ${billNo} tidak ditemukan di pending store (mungkin sudah diproses sebelumnya).`);
+    return respond('00', 'Success');
+  }
+
+  // payment_status_code: '2' = Payment Success (lihat dokumentasi Faspay)
+  if (statusCode === '2') {
+    try {
+      let persisted = false;
+      await withLock('users', async () => {
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.id === record.userId);
+        if (userIndex === -1) {
+          console.warn(`[Faspay Webhook] User ${record.userId} tidak ditemukan.`);
+          persisted = true; // tidak ada state yang perlu ditulis, jangan trigger retry
+          return;
+        }
+
+        if (record.kind === 'topup') {
+          const words = (FASPAY_TOPUP_PACKAGES[record.itemId] && FASPAY_TOPUP_PACKAGES[record.itemId].words) || 0;
+          users[userIndex].humanizerTopupCredits = (users[userIndex].humanizerTopupCredits || 0) + words;
+        } else {
+          const planId = record.itemId;
+          const targetType = planId.startsWith('ultimate') ? 'ultimate' : 'premium';
+          const isYearly = planId.endsWith('yearly');
+          const durationDays = isYearly ? 365 : 30;
+          const expiredAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+          users[userIndex].type = targetType;
+          users[userIndex].planId = planId;
+          users[userIndex].paymentExpiredAt = expiredAt;
+        }
+
+        persisted = saveUsers(users);
+      });
+
+      if (!persisted) {
+        console.error(`[Faspay Webhook] GAGAL menyimpan perubahan untuk bill_no ${billNo} - membalas non-200 supaya Faspay retry.`);
+        return respond('01', 'Failed to persist');
+      }
+
+      addTransaction(record.userId, billNo, record.name, record.amount, 'success');
+
+      await withLock('faspay_pending', async () => {
+        const p = getFaspayPending();
+        delete p[billNo];
+        saveFaspayPending(p);
+      });
+
+      console.log(`[Faspay Webhook] bill_no ${billNo} berhasil diproses untuk user ${record.userId}.`);
+    } catch (error) {
+      console.error('[Faspay Webhook] Exception saat memproses notifikasi:', error);
+      return respond('01', 'Internal error');
+    }
+  } else {
+    console.log(`[Faspay Webhook] bill_no ${billNo} status ${statusCode} (${data.payment_status_desc}) - tidak diproses sebagai sukses.`);
+  }
+
+  respond('00', 'Success');
+});
+
 app.get('/payment-success', (req, res) => {
   res.sendFile(path.join(__dirname, 'payment-success.html'));
 });
