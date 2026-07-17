@@ -2424,9 +2424,25 @@ function generateFaspaySignature(raw) {
   return crypto.createHash('sha1').update(md5Hash).digest('hex');
 }
 
+// Railway menjalankan server di UTC, tapi Faspay membaca bill_date/bill_expired
+// sebagai waktu WIB (Asia/Jakarta, UTC+7) - kalau dikirim mentah-mentah pakai jam
+// server, bill_expired bisa kelihatan sudah lewat dari sudut pandang Faspay
+// ("bill expired must be greater than today"). Selalu konversi ke WIB di sini.
+const faspayDateFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Jakarta',
+  year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', second: '2-digit',
+  hour12: false
+});
+
 function formatFaspayDate(date) {
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  const parts = faspayDateFormatter.formatToParts(date).reduce((acc, p) => {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
+  // "24" jam terakhir hari itu dilaporkan Intl sebagai jam "24", bukan "00"
+  const hour = parts.hour === '24' ? '00' : parts.hour;
+  return `${parts.year}-${parts.month}-${parts.day} ${hour}:${parts.minute}:${parts.second}`;
 }
 
 // Faspay Xpress tidak mengirim balik userId/planId di notifikasi, hanya bill_no -
