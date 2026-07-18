@@ -751,6 +751,25 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Sapaan Personal di Beranda */
+    .beranda-greeting {
+      margin-bottom: 1.5rem;
+    }
+
+    .beranda-greeting #welcomeText {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--text-main);
+      margin: 0 0 0.25rem 0;
+    }
+
+    .beranda-greeting #welcomeSubtitle {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
     /* Banner Card Styling */
     .match-banner-card {
       background: linear-gradient(105deg, #0787dc 0%, #00539c 60%, #082240 100%);
@@ -2033,6 +2052,9 @@
       <a href="#" class="sidebar-link active" data-tab="beranda">
         <i class="fa-solid fa-house"></i> <span>Beranda</span>
       </a>
+      <a href="#" class="sidebar-link" data-tab="database-jurnal">
+        <i class="fa-solid fa-database"></i> <span>Database Jurnal</span>
+      </a>
       <a href="#" class="sidebar-link" data-tab="ai-research">
         <i class="fa-solid fa-flask"></i> <span>AI For Research</span>
         <span class="pro-badge">PRO</span>
@@ -2111,7 +2133,13 @@
       
       <!-- TAB 1: BERANDA (MAIN VIEW) -->
       <div id="tabContentBeranda" class="tab-content active">
-        
+
+        <!-- Sapaan Personal -->
+        <div class="beranda-greeting">
+          <h2 id="welcomeText">Halo, Peneliti</h2>
+          <p id="welcomeSubtitle">Mau nulis apa sekarang?</p>
+        </div>
+
         <!-- Banner Card matching mock style -->
         <div class="match-banner-card" id="matchBannerCard">
           <div class="banner-slides-wrapper" id="bannerSlidesWrapper">
@@ -2226,6 +2254,11 @@
             </div>
           </div>
         </div>
+
+      </div>
+
+      <!-- TAB: DATABASE JURNAL (Pencarian & Filter) -->
+      <div id="tabContentDatabaseJurnal" class="tab-content">
 
         <!-- Statistics Row Container (Dynamic from database.js) -->
         <div class="stats-row-container">

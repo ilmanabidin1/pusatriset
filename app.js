@@ -376,6 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentUser.loggedIn && currentUser.user) {
           updateVisualQuotaTracker(currentUser.user);
+          updateGreeting(currentUser.user);
           renderBillingHistory();
         }
 
@@ -416,6 +417,23 @@ document.addEventListener('DOMContentLoaded', () => {
       // belum login - biarkan halaman tetap tampil, jangan paksa redirect.
       console.error('Auth check failed', error);
     }
+  }
+
+  // --- SAPAAN PERSONAL DI BERANDA ---
+  function updateGreeting(user) {
+    const lang = window.currentLanguage || 'id';
+    const hello = lang === 'en' ? 'Hello, ' : 'Halo, ';
+    const subtitle = lang === 'en' ? 'What would you like to write today?' : 'Mau nulis apa sekarang?';
+
+    const displayName = (user && user.name && user.name.trim())
+      || (user && user.email && user.email.includes('@') && user.email.split('@')[0])
+      || 'Peneliti';
+
+    const welcomeSpan = document.getElementById('welcomeText');
+    if (welcomeSpan) welcomeSpan.textContent = hello + displayName;
+
+    const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+    if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
   }
 
   // --- VISUAL QUOTA TRACKER ---
@@ -3311,6 +3329,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const TRANSLATIONS = {
       id: {
         beranda: "Beranda",
+        "database-jurnal": "Database Jurnal",
         "ai-research": "Asisten AI",
         templates: "Template Jurnal",
         "prompt-bank": "Prompt Bank",
@@ -3321,6 +3340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         upgrade_desc: "Buka AI Match Score & filter tanpa batas",
         upgrade_btn: "Upgrade Sekarang",
         hello: "Halo, ",
+        hello_subtitle: "Mau nulis apa sekarang?",
         logout: "Keluar",
         // Matcher
         matcher_title: "AI Journal Match Score",
@@ -3366,6 +3386,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       en: {
         beranda: "Home",
+        "database-jurnal": "Journal Database",
         "ai-research": "AI Assistant",
         templates: "Journal Templates",
         "prompt-bank": "Prompt Bank",
@@ -3376,6 +3397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         upgrade_desc: "Unlock Match Score & unlimited filters",
         upgrade_btn: "Upgrade Now",
         hello: "Hello, ",
+        hello_subtitle: "What would you like to write today?",
         logout: "Log Out",
         // Matcher
         matcher_title: "AI Journal Match Score",
@@ -3530,10 +3552,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (upgradeCardBtn) upgradeCardBtn.textContent = TRANSLATIONS[lang].upgrade_btn;
 
       // 4. Translate greeting
-      const welcomeSpan = document.getElementById('welcomeText');
-      if (welcomeSpan) {
-        const email = currentUser?.email || 'user';
-        welcomeSpan.textContent = TRANSLATIONS[lang].hello + email;
+      if (currentUser?.user) {
+        updateGreeting(currentUser.user);
       }
 
       // 5. Translate Matcher Tab
