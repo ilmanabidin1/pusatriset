@@ -1852,7 +1852,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   // /api/me sempat menyinkronkan ulang session di request ini.
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const userType = (user && user.type) || 'free';
+  const userType = req.session.userId === 'access_code_user' ? 'ultimate' : ((user && user.type) || 'free');
   if (userType !== 'premium' && userType !== 'ultimate') {
     return res.status(403).json({ ok: false, message: 'JurnalHub Intelligence khusus untuk akun Premium & Ultimate.' });
   }
