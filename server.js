@@ -964,7 +964,7 @@ app.get('/api/ai-status', requireAccess, (req, res) => {
   });
 });
 
-app.post('/api/access', (req, res) => {
+app.post('/api/access', authLimiter, (req, res) => {
   if (!ACCESS_CODE) {
     res.status(503).json({ ok: false, message: 'Kode akses belum dikonfigurasi.' });
     return;

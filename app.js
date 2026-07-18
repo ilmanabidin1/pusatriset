@@ -4,6 +4,18 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Escape teks yang berasal dari input user (atau konten yang meniru input user,
+  // mis. judul/keyword/abstrak yang tersimpan di riwayat) sebelum ditulis ke
+  // innerHTML, supaya tag seperti <script>/<img onerror> tidak ikut dieksekusi.
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // DOM Elements
   const searchInput = document.getElementById('searchInput');
   const clearSearchBtn = document.getElementById('clearSearch');
@@ -1774,7 +1786,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const pointsList = points.map(pt => `
         <li style="margin-bottom: 0.75rem; display: flex; align-items: flex-start; gap: 0.6rem; line-height: 1.5; color: var(--text-main); font-size: 0.9rem; text-align: left;">
           <i class="fa-solid fa-arrow-right" style="color: ${seg.color}; font-size: 0.8rem; margin-top: 5px; flex-shrink: 0;"></i>
-          <span style="text-align: left;">${pt}</span>
+          <span style="text-align: left;">${escapeHtml(pt)}</span>
         </li>
       `).join('');
 
@@ -3139,9 +3151,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">INPUT METADATA</h5>
             <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
-              <div><strong>Judul:</strong> ${item.input.title || '-'}</div>
-              <div><strong>Kata Kunci:</strong> ${item.input.keywords || '-'}</div>
-              <div><strong>Abstrak:</strong> ${item.input.abstract || '-'}</div>
+              <div><strong>Judul:</strong> ${escapeHtml(item.input.title) || '-'}</div>
+              <div><strong>Kata Kunci:</strong> ${escapeHtml(item.input.keywords) || '-'}</div>
+              <div><strong>Abstrak:</strong> ${escapeHtml(item.input.abstract) || '-'}</div>
             </div>
           </div>
           <div>
@@ -3171,8 +3183,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">INPUT METADATA</h5>
             <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
-              <div><strong>Judul:</strong> ${item.input.title || '-'}</div>
-              <div><strong>Abstrak:</strong> ${item.input.abstract || '-'}</div>
+              <div><strong>Judul:</strong> ${escapeHtml(item.input.title) || '-'}</div>
+              <div><strong>Abstrak:</strong> ${escapeHtml(item.input.abstract) || '-'}</div>
             </div>
           </div>
           <div>
@@ -3190,7 +3202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.85rem 1rem; background: #ffffff;">
                     <strong style="color: #10b981; font-size: 0.78rem; font-weight: 800; display: block; margin-bottom: 0.5rem;">${label}</strong>
                     <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.82rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.35rem; text-align: left;">
-                      ${points.map(pt => `<li>${pt}</li>`).join('')}
+                      ${points.map(pt => `<li>${escapeHtml(pt)}</li>`).join('')}
                     </ul>
                   </div>
                 `;
@@ -3224,7 +3236,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">INPUT METADATA</h5>
             <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
-              <div><strong>Topik/Judul Penelitian:</strong> ${item.input.title || '-'}</div>
+              <div><strong>Topik/Judul Penelitian:</strong> ${escapeHtml(item.input.title) || '-'}</div>
             </div>
           </div>
           <div>
@@ -3265,7 +3277,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div>
             <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">TEKS ASLI (INPUT)</h5>
-            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; max-height: 150px; overflow-y: auto; color: var(--text-muted); line-height: 1.5; white-space: pre-wrap;">${item.input.text}</div>
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; max-height: 150px; overflow-y: auto; color: var(--text-muted); line-height: 1.5; white-space: pre-wrap;">${escapeHtml(item.input.text)}</div>
           </div>
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -3274,7 +3286,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <i class="fa-regular fa-copy"></i> Salin Hasil
               </button>
             </div>
-            <div id="historyHumanizerTextWrapper" style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1.25rem; font-size: 0.85rem; background: #ffffff; line-height: 1.6; max-height: 250px; overflow-y: auto; color: var(--text-main); white-space: pre-wrap;">${item.output.humanizedText}</div>
+            <div id="historyHumanizerTextWrapper" style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1.25rem; font-size: 0.85rem; background: #ffffff; line-height: 1.6; max-height: 250px; overflow-y: auto; color: var(--text-main); white-space: pre-wrap;">${escapeHtml(item.output.humanizedText)}</div>
           </div>
         `;
 
