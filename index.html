@@ -755,10 +755,139 @@
     .research-chat-shell {
       position: relative;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      gap: 1.5rem;
       /* 70px header + 2rem padding atas & bawah dashboard-body */
       height: calc(100vh - 134px);
       min-height: 420px;
+    }
+
+    .research-chat-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .research-chat-history-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      border-left: 1px solid var(--border-light-hover);
+      padding-left: 1.5rem;
+      height: 100%;
+    }
+
+    .research-chat-new-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.65rem 1rem;
+      background: var(--brand-blue);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .research-chat-new-btn:hover {
+      background: #082240;
+    }
+
+    .research-chat-history-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .research-chat-history-empty {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 1.5rem 0.5rem;
+      margin: 0;
+    }
+
+    .research-chat-history-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      background: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .research-chat-history-item:hover {
+      background: #f8fafc;
+    }
+
+    .research-chat-history-item.active {
+      background: rgba(7, 135, 220, 0.08);
+      border-color: rgba(7, 135, 220, 0.2);
+    }
+
+    .research-chat-history-item-title {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .research-chat-history-item-delete {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      padding: 0.25rem;
+      cursor: pointer;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s;
+    }
+
+    .research-chat-history-item:hover .research-chat-history-item-delete {
+      opacity: 1;
+    }
+
+    .research-chat-history-item-delete:hover {
+      color: #ef4444;
+    }
+
+    @media (max-width: 900px) {
+      .research-chat-shell {
+        flex-direction: column;
+      }
+      .research-chat-history-sidebar {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border-light-hover);
+        padding-left: 0;
+        padding-top: 1rem;
+        max-height: 200px;
+      }
     }
 
     .research-chat-topbar {
@@ -3147,36 +3276,48 @@
             </button>
           </div>
 
-          <!-- Slim top bar (1 baris - deskripsi singkat + kuota + tombol baru) -->
-          <div class="research-chat-topbar">
-            <p id="researchChatDesc" style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.5;"><strong>Bukan LLM biasa.</strong> JurnalHub Intelligence dikurasi khusus untuk selalu menjawab jujur, kritis, dan tidak asal mengiyakan (no yes-man) - layaknya profesor pembimbing sungguhan.</p>
-            <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
-              <div id="researchChatQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
-                <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kuota: 0/0 Bulan Ini</span>
+          <!-- Kolom utama percakapan -->
+          <div class="research-chat-main">
+
+            <!-- Slim top bar (1 baris - deskripsi singkat + kuota + tombol baru) -->
+            <div class="research-chat-topbar">
+              <p id="researchChatDesc" style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.5;"><strong>Bukan LLM biasa.</strong> JurnalHub Intelligence dikurasi khusus untuk selalu menjawab jujur, kritis, dan tidak asal mengiyakan (no yes-man) - layaknya profesor pembimbing sungguhan.</p>
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+                <div id="researchChatQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
+                  <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kuota: 0/0 Bulan Ini</span>
+                </div>
               </div>
-              <button id="researchChatClearBtn" type="button" title="Mulai percakapan baru" style="background: #f8fafc; border: 1px solid var(--border-light-hover); color: var(--text-muted); font-size: 0.85rem; cursor: pointer; padding: 0.55rem 0.75rem; border-radius: 8px; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
-                <i class="fa-solid fa-plus"></i> <span id="researchChatClearText">Mulai percakapan baru</span>
-              </button>
             </div>
+
+            <!-- Chat Messages (mengisi seluruh sisa tinggi layar) -->
+            <div id="researchChatMessages" class="research-chat-messages">
+              <div id="researchChatEmptyState" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted); max-width: 480px; margin: auto;">
+                <i class="fa-solid fa-graduation-cap" style="font-size: 2.5rem; color: var(--brand-blue); opacity: 0.5; margin-bottom: 0.75rem;"></i>
+                <p id="researchChatEmptyText" style="font-size: 0.95rem; margin: 0;">Mulai diskusi dengan mengetik pertanyaan riset Anda di bawah ini.</p>
+              </div>
+            </div>
+
+            <!-- Composer (lebar penuh, ala ChatGPT/Claude/DeepSeek) -->
+            <div class="research-chat-composer-wrapper">
+              <div class="research-chat-composer">
+                <textarea id="researchChatInput" rows="1" placeholder="Tulis pertanyaan riset Anda..."></textarea>
+                <button id="researchChatSendBtn" type="button" title="Kirim">
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-align: center; margin-top: 0.6rem;" id="researchChatDisclaimer">Asisten AI bisa saja keliru - selalu verifikasi informasi penting secara mandiri.</span>
+            </div>
+
           </div>
 
-          <!-- Chat Messages (mengisi seluruh sisa tinggi layar) -->
-          <div id="researchChatMessages" class="research-chat-messages">
-            <div id="researchChatEmptyState" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted); max-width: 480px; margin: auto;">
-              <i class="fa-solid fa-graduation-cap" style="font-size: 2.5rem; color: var(--brand-blue); opacity: 0.5; margin-bottom: 0.75rem;"></i>
-              <p id="researchChatEmptyText" style="font-size: 0.95rem; margin: 0;">Mulai diskusi dengan mengetik pertanyaan riset Anda di bawah ini.</p>
+          <!-- Sidebar riwayat percakapan -->
+          <div class="research-chat-history-sidebar">
+            <button id="researchChatClearBtn" type="button" class="research-chat-new-btn">
+              <i class="fa-solid fa-plus"></i> <span id="researchChatClearText">Percakapan Baru</span>
+            </button>
+            <div id="researchChatHistoryList" class="research-chat-history-list">
+              <p id="researchChatHistoryEmpty" class="research-chat-history-empty">Belum ada riwayat percakapan.</p>
             </div>
-          </div>
-
-          <!-- Composer (lebar penuh, ala ChatGPT/Claude/DeepSeek) -->
-          <div class="research-chat-composer-wrapper">
-            <div class="research-chat-composer">
-              <textarea id="researchChatInput" rows="1" placeholder="Tulis pertanyaan riset Anda..."></textarea>
-              <button id="researchChatSendBtn" type="button" title="Kirim">
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
-            </div>
-            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-align: center; margin-top: 0.6rem;" id="researchChatDisclaimer">Asisten AI bisa saja keliru - selalu verifikasi informasi penting secara mandiri.</span>
           </div>
 
         </div>

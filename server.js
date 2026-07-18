@@ -1787,6 +1787,60 @@ function getDeepSeekApiKey() {
   return process.env.DEEPSEEK_API_KEY;
 }
 
+// --- Penyimpanan riwayat percakapan JurnalHub Intelligence ---
+const RESEARCH_CHAT_CONVERSATIONS_FILE = path.join(DATA_DIR, 'research-chat-conversations.json');
+
+function getResearchChatConversations() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(RESEARCH_CHAT_CONVERSATIONS_FILE)) fs.writeFileSync(RESEARCH_CHAT_CONVERSATIONS_FILE, '[]');
+    return JSON.parse(fs.readFileSync(RESEARCH_CHAT_CONVERSATIONS_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca research-chat-conversations.json:', error);
+    return [];
+  }
+}
+
+function saveResearchChatConversations(conversations) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(RESEARCH_CHAT_CONVERSATIONS_FILE, JSON.stringify(conversations, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan research-chat-conversations.json:', error);
+    return false;
+  }
+}
+
+// Daftar percakapan milik user yang login, terbaru dulu - hanya metadata (tanpa isi
+// pesan) supaya ringan buat dirender di sidebar.
+app.get('/api/research-chat/conversations', requireAccess, (req, res) => {
+  const conversations = getResearchChatConversations()
+    .filter(c => c.userId === req.session.userId)
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .map(c => ({ id: c.id, title: c.title, updatedAt: c.updatedAt }));
+  res.json({ ok: true, conversations });
+});
+
+// Isi lengkap satu percakapan (dicek kepemilikannya dulu)
+app.get('/api/research-chat/conversations/:id', requireAccess, (req, res) => {
+  const conversation = getResearchChatConversations().find(c => c.id === req.params.id && c.userId === req.session.userId);
+  if (!conversation) {
+    return res.status(404).json({ ok: false, message: 'Percakapan tidak ditemukan.' });
+  }
+  res.json({ ok: true, conversation });
+});
+
+app.delete('/api/research-chat/conversations/:id', requireAccess, (req, res) => {
+  const conversations = getResearchChatConversations();
+  const filtered = conversations.filter(c => !(c.id === req.params.id && c.userId === req.session.userId));
+  if (filtered.length === conversations.length) {
+    return res.status(404).json({ ok: false, message: 'Percakapan tidak ditemukan.' });
+  }
+  saveResearchChatConversations(filtered);
+  res.json({ ok: true });
+});
+
 app.post('/api/research-chat', requireAccess, async (req, res) => {
   const apiKey = getDeepSeekApiKey();
   if (!apiKey) {
@@ -1832,6 +1886,15 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
       return res.status(400).json({ ok: false, message: 'Satu pesan maksimal 6000 karakter.' });
     }
     sanitizedMessages.push({ role, content });
+  }
+
+  // conversationId dibuat di sisi client (crypto.randomUUID) supaya bisa dikirim
+  // bareng pesan pertama sekalipun percakapannya belum ada di server.
+  const conversationId = typeof req.body.conversationId === 'string' && req.body.conversationId.trim()
+    ? req.body.conversationId.trim().slice(0, 100)
+    : null;
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, message: 'conversationId wajib diisi.' });
   }
 
   // DEEPSEEK_API_URL cuma untuk keperluan testing lokal (arahkan ke mock server) -
@@ -1925,6 +1988,31 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
         saveUsers(latestUsers);
       }
     }
+
+    // Simpan/perbarui percakapan - percaya array `sanitizedMessages` yang dikirim
+    // client sebagai riwayat terkini (sudah termasuk pesan lama + pesan baru),
+    // tinggal tambahkan balasan asisten yang baru saja selesai di-stream.
+    const conversations = getResearchChatConversations();
+    const existingIndex = conversations.findIndex(c => c.id === conversationId && c.userId === req.session.userId);
+    const updatedMessages = [...sanitizedMessages, { role: 'assistant', content: fullReply }];
+    const now = new Date().toISOString();
+
+    if (existingIndex !== -1) {
+      conversations[existingIndex].messages = updatedMessages;
+      conversations[existingIndex].updatedAt = now;
+    } else {
+      const firstUserMsg = sanitizedMessages.find(m => m.role === 'user');
+      const title = firstUserMsg ? firstUserMsg.content.slice(0, 60) : 'Percakapan Baru';
+      conversations.push({
+        id: conversationId,
+        userId: req.session.userId,
+        title,
+        messages: updatedMessages,
+        createdAt: now,
+        updatedAt: now
+      });
+    }
+    saveResearchChatConversations(conversations);
   } catch (error) {
     console.error('[Research Chat] Error:', error.message);
     if (!res.headersSent) {

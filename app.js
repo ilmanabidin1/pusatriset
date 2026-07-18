@@ -3344,11 +3344,99 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ASISTEN RISET AI (DeepSeek Chat) ---
     let researchChatMessages = [];
+    let currentResearchChatId = null;
     const researchChatMessagesEl = document.getElementById('researchChatMessages');
     const researchChatEmptyState = document.getElementById('researchChatEmptyState');
     const researchChatInput = document.getElementById('researchChatInput');
     const researchChatSendBtn = document.getElementById('researchChatSendBtn');
     const researchChatClearBtn = document.getElementById('researchChatClearBtn');
+    const researchChatHistoryListEl = document.getElementById('researchChatHistoryList');
+    const researchChatHistoryEmptyEl = document.getElementById('researchChatHistoryEmpty');
+
+    function formatResearchChatRelativeTime(isoDate) {
+      const diffMs = Date.now() - new Date(isoDate).getTime();
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return 'Baru saja';
+      if (diffMin < 60) return `${diffMin} menit lalu`;
+      const diffHour = Math.floor(diffMin / 60);
+      if (diffHour < 24) return `${diffHour} jam lalu`;
+      const diffDay = Math.floor(diffHour / 24);
+      if (diffDay < 7) return `${diffDay} hari lalu`;
+      return new Date(isoDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    async function renderResearchChatHistoryList() {
+      if (!researchChatHistoryListEl) return;
+      try {
+        const response = await fetch('/api/research-chat/conversations');
+        const data = await response.json();
+        if (!data.ok) return;
+
+        const conversations = data.conversations || [];
+        if (conversations.length === 0) {
+          researchChatHistoryListEl.innerHTML = '';
+          if (researchChatHistoryEmptyEl) researchChatHistoryListEl.appendChild(researchChatHistoryEmptyEl);
+          return;
+        }
+
+        researchChatHistoryListEl.innerHTML = conversations.map(c => `
+          <button type="button" class="research-chat-history-item ${c.id === currentResearchChatId ? 'active' : ''}" data-conv-id="${c.id}">
+            <span class="research-chat-history-item-title">${escapeHtml(c.title)}</span>
+            <span class="research-chat-history-item-delete" data-delete-conv-id="${c.id}" title="Hapus percakapan"><i class="fa-regular fa-trash-can"></i></span>
+          </button>
+        `).join('');
+      } catch (err) {
+        console.error('Gagal memuat riwayat percakapan:', err);
+      }
+    }
+
+    async function loadResearchChatConversation(id) {
+      try {
+        const response = await fetch(`/api/research-chat/conversations/${encodeURIComponent(id)}`);
+        const data = await response.json();
+        if (!data.ok) {
+          alert(data.message || 'Gagal memuat percakapan.');
+          return;
+        }
+        currentResearchChatId = id;
+        researchChatMessages = data.conversation.messages || [];
+        renderResearchChatMessages();
+        renderResearchChatHistoryList();
+      } catch (err) {
+        console.error('Gagal memuat percakapan:', err);
+        alert('Terjadi kesalahan koneksi saat memuat percakapan.');
+      }
+    }
+
+    if (researchChatHistoryListEl) {
+      researchChatHistoryListEl.addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.research-chat-history-item-delete');
+        if (deleteBtn) {
+          e.stopPropagation();
+          const id = deleteBtn.getAttribute('data-delete-conv-id');
+          if (!confirm('Hapus percakapan ini?')) return;
+          fetch(`/api/research-chat/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+              if (!data.ok) return;
+              if (id === currentResearchChatId) {
+                currentResearchChatId = null;
+                researchChatMessages = [];
+                renderResearchChatMessages();
+              }
+              renderResearchChatHistoryList();
+            })
+            .catch(() => alert('Gagal menghapus percakapan.'));
+          return;
+        }
+
+        const item = e.target.closest('.research-chat-history-item');
+        if (item) {
+          const id = item.getAttribute('data-conv-id');
+          if (id !== currentResearchChatId) loadResearchChatConversation(id);
+        }
+      });
+    }
 
     function renderResearchChatMessages() {
       if (!researchChatMessagesEl) return;
@@ -3420,11 +3508,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const originalBtnHtml = researchChatSendBtn.innerHTML;
       researchChatSendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
+      // conversationId dibuat sekali di sini kalau ini pesan pertama percakapan baru,
+      // supaya server bisa membuat entri riwayat baru begitu balasan pertama selesai.
+      if (!currentResearchChatId) {
+        currentResearchChatId = (crypto.randomUUID ? crypto.randomUUID() : `conv_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+      }
+
       try {
         const response = await fetch('/api/research-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: researchChatMessages })
+          body: JSON.stringify({ messages: researchChatMessages, conversationId: currentResearchChatId })
         });
 
         // Server menolak sebelum sempat streaming (kuota habis, belum dikonfigurasi,
@@ -3472,6 +3566,8 @@ document.addEventListener('DOMContentLoaded', () => {
         researchChatMessages.push({ role: 'assistant', content: fullText });
         // Re-render penuh supaya bubble sementara diganti struktur final (dengan tombol salin)
         renderResearchChatMessages();
+        // Percakapan baru saja disimpan/diperbarui di server - refresh daftar riwayat
+        renderResearchChatHistoryList();
 
         // Refresh kuota tampilan setelah 1 pesan terpakai (khusus Premium)
         fetch('/api/me').then(r => r.json()).then(meData => {
@@ -3511,8 +3607,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (researchChatClearBtn) {
       researchChatClearBtn.addEventListener('click', () => {
         researchChatMessages = [];
+        currentResearchChatId = null;
         renderResearchChatMessages();
+        renderResearchChatHistoryList();
       });
+    }
+
+    // Muat daftar riwayat percakapan begitu tab ini siap (kalau user Premium/Ultimate)
+    if (currentUser.loggedIn && currentUser.user && (currentUser.user.type === 'premium' || currentUser.user.type === 'ultimate')) {
+      renderResearchChatHistoryList();
     }
 
     // Top-up Modal Event Handlers
