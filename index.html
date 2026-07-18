@@ -877,12 +877,15 @@
       border-bottom-right-radius: 4px;
     }
 
+    /* Jawaban asisten ditampilkan sebagai teks polos di halaman, bukan dikurung
+       dalam kartu/bubble - hanya pesan user yang tetap pakai bubble berwarna. */
     .research-chat-bubble.assistant {
-      align-self: flex-start;
-      background: #ffffff;
+      align-self: stretch;
+      max-width: 100%;
+      background: none;
+      border: none;
+      padding: 0;
       color: var(--text-main);
-      border: 1px solid var(--border-light-hover);
-      border-bottom-left-radius: 4px;
     }
 
     .research-chat-bubble.loading {
@@ -891,6 +894,37 @@
       border: 1px solid var(--border-light-hover);
       color: var(--text-muted);
       border-bottom-left-radius: 4px;
+    }
+
+    .research-chat-assistant-block {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .research-chat-msg-actions {
+      margin-top: 0.4rem;
+    }
+
+    .research-chat-copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: none;
+      border: 1px solid var(--border-light-hover);
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      font-family: inherit;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .research-chat-copy-btn:hover {
+      background: #f8fafc;
+      color: var(--brand-blue);
+      border-color: rgba(7, 135, 220, 0.3);
     }
 
     /* Elemen hasil render Markdown di dalam bubble asisten */

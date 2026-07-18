@@ -36,6 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function inline(str) {
       return str
+        // Model kadang menyisipkan tag <br> literal di dalam sel tabel/list untuk
+        // memaksa baris baru (markdown tabel tidak punya cara lain). Karena teks
+        // sudah di-escape, ini ubah balik pola &lt;br&gt; yang sudah aman itu jadi
+        // elemen <br> sungguhan - bukan mengizinkan tag HTML sembarangan lolos.
+        .replace(/&lt;br\s*\/?&gt;/gi, '<br>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
         .replace(/`([^`]+)`/g, '<code class="chat-md-code">$1</code>');
@@ -55,7 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let i = 0;
     while (i < lines.length) {
-      const trimmed = lines[i].trim();
+      // Model kadang menaruh <br> literal di AWAL baris (sebelum "- item" berikutnya)
+      // alih-alih newline biasa - buang dulu supaya baris tetap terdeteksi sebagai
+      // list/heading/dst, bukan jadi paragraf terpisah yang mulai dengan "-" mentah.
+      const trimmed = lines[i].trim().replace(/^(&lt;br\s*\/?&gt;\s*)+/i, '');
 
       if (trimmed === '') {
         flushList();
@@ -3349,13 +3357,46 @@ document.addEventListener('DOMContentLoaded', () => {
         if (researchChatEmptyState) researchChatMessagesEl.appendChild(researchChatEmptyState);
         return;
       }
-      researchChatMessagesEl.innerHTML = researchChatMessages.map(m => {
+      researchChatMessagesEl.innerHTML = researchChatMessages.map((m, idx) => {
         if (m.role === 'user') {
           return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
         }
-        return `<div class="research-chat-bubble assistant">${renderMarkdownSafe(m.content)}</div>`;
+        return `
+          <div class="research-chat-assistant-block">
+            <div class="research-chat-bubble assistant">${renderMarkdownSafe(m.content)}</div>
+            <div class="research-chat-msg-actions">
+              <button class="research-chat-copy-btn" type="button" data-msg-index="${idx}" title="Salin jawaban">
+                <i class="fa-regular fa-copy"></i> <span>Salin</span>
+              </button>
+            </div>
+          </div>
+        `;
       }).join('');
       researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+    }
+
+    if (researchChatMessagesEl) {
+      researchChatMessagesEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.research-chat-copy-btn');
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute('data-msg-index'), 10);
+        const message = researchChatMessages[idx];
+        if (!message) return;
+        navigator.clipboard.writeText(message.content).then(() => {
+          const label = btn.querySelector('span');
+          const icon = btn.querySelector('i');
+          const originalLabel = label.textContent;
+          const originalIconClass = icon.className;
+          icon.className = 'fa-solid fa-check';
+          label.textContent = 'Tersalin!';
+          setTimeout(() => {
+            icon.className = originalIconClass;
+            label.textContent = originalLabel;
+          }, 1500);
+        }).catch(() => {
+          alert('Gagal menyalin teks.');
+        });
+      });
     }
 
     async function sendResearchChatMessage() {
@@ -3429,6 +3470,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         researchChatMessages.push({ role: 'assistant', content: fullText });
+        // Re-render penuh supaya bubble sementara diganti struktur final (dengan tombol salin)
+        renderResearchChatMessages();
 
         // Refresh kuota tampilan setelah 1 pesan terpakai (khusus Premium)
         fetch('/api/me').then(r => r.json()).then(meData => {
