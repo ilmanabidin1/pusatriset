@@ -177,28 +177,28 @@ document.addEventListener('DOMContentLoaded', () => {
       // Quota
       quota_title: "Status & Kuota Asisten AI",
       quota_note_match: "Limit bulanan Claude",
-      quota_note_lit: "Limit bulanan Perplexity",
-      quota_note_humanizer: "Sisa kuota kata Humanizer",
-      // Billing
-      billing_title: "Transaksi & Kuitansi",
-      billing_desc: "Berikut adalah riwayat pembayaran langganan atau pembelian kuota kata Anda. Gunakan tombol kuitansi untuk mengunduh bukti bayar resmi guna reimbursement kampus/hibah.",
-      // Beranda Banner Slider
-      banner: [
-        { badge: "AI Match Score", title: "Temukan jurnal paling cocok untuk artikel Anda", desc: "Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.", btn: "Mulai AI Match" },
-        { badge: "AI Lit Review", title: "Buat tinjauan pustaka ilmiah dalam hitungan detik", desc: "Masukkan topik riset Anda, dapatkan analisis komprehensif, sitasi, dan ekspor draft instan.", btn: "Coba Lit Review" },
-        { badge: "AI Drafting Companion", title: "Tulis draf manuskrip Anda bersama asisten AI", desc: "Kembangkan argumen penelitian, perbaiki tata bahasa akademis, dan optimalkan struktur manuskrip.", btn: "Mulai Menulis" },
-        { badge: "Prompt Bank", title: "Koleksi prompt pintar untuk publikasi ilmiah", desc: "Gunakan ribuan formula instruksi siap pakai untuk paraphrase akademis dan respon reviewer.", btn: "Buka Prompt Bank" }
-      ],
-      // AI For Research tab
-      ai_research_header: "AI For Research",
-      ai_research_desc: "Pilih salah satu asisten kecerdasan buatan (AI) di bawah ini untuk mempercepat riset dan penulisan ilmiah Anda.",
-      ai_research_open_btn: "Buka Fitur",
-      ai_research_cards: [
-        { title: "AI Match Score", desc: "Temukan rekomendasi jurnal Scopus & Sinta terakreditasi berdasarkan kesesuaian judul dan abstrak manuskrip riset Anda secara instan." },
-        { title: "AI Drafting Companion", desc: "Tulis draf manuskrip Anda bersama asisten AI. Kembangkan argumentasi ilmiah, perbaiki tata bahasa, dan optimalkan struktur manuskrip." },
-        { title: "AI Literature Review", desc: "Buat tinjauan pustaka (literature review) ilmiah komprehensif lengkap dengan sitasi dalam hitungan detik untuk topik pilihan Anda." },
-        { title: "JurnalHub Humanizer Engine", desc: "Ubah tulisan hasil AI agar lolos dari berbagai detektor AI (seperti Turnitin & GPTZero) dengan tata bahasa akademis yang sangat natural." }
-      ],
+       quota_note_lit: "Limit bulanan Lit Review",
+       quota_note_humanizer: "Sisa kuota kata Humanizer",
+       // Billing
+       billing_title: "Transaksi & Kuitansi",
+       billing_desc: "Berikut adalah riwayat pembayaran langganan atau pembelian kuota kata Anda. Gunakan tombol kuitansi untuk mengunduh bukti bayar resmi guna reimbursement kampus/hibah.",
+       // Beranda Banner Slider
+       banner: [
+         { badge: "AI Match Score", title: "Temukan jurnal paling cocok untuk artikel Anda", desc: "Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.", btn: "Mulai AI Match" },
+         { badge: "AI Lit Review", title: "Buat tinjauan pustaka ilmiah dalam hitungan detik", desc: "Masukkan topik riset Anda, dapatkan analisis komprehensif, sitasi, dan ekspor draft instan.", btn: "Coba Lit Review" },
+         { badge: "AI Drafting Companion", title: "Tulis draf manuskrip Anda bersama asisten AI", desc: "Kembangkan argumen penelitian, perbaiki tata bahasa akademis, dan optimalkan struktur manuskrip.", btn: "Mulai Menulis" },
+         { badge: "Prompt Bank", title: "Koleksi prompt pintar untuk publikasi ilmiah", desc: "Gunakan ribuan formula instruksi siap pakai untuk paraphrase akademis dan respon reviewer.", btn: "Buka Prompt Bank" }
+       ],
+       // AI For Research tab
+       ai_research_header: "AI For Research",
+       ai_research_desc: "Pilih salah satu asisten kecerdasan buatan (AI) di bawah ini untuk mempercepat riset dan penulisan ilmiah Anda.",
+       ai_research_open_btn: "Buka Fitur",
+       ai_research_cards: [
+         { title: "JurnalHub Humanizer Engine", desc: "Lolos deteksi Turnitin dan GPTZero hingga 98 persen, tanpa mengubah makna tulisanmu.", btn: "Humanisasi Teks" },
+         { title: "Cek Peluang Diterima Jurnal", desc: "Masukkan judul dan abstrak, dapatkan daftar jurnal Scopus & Sinta yang paling cocok lengkap dengan skor kecocokan, dalam hitungan detik.", btn: "Cek Skor Sekarang" },
+         { title: "AI Drafting Companion", desc: "Ubah ide riset jadi draf terstruktur, lengkap dengan argumentasi, referensi, dan tata bahasa akademik siap submit.", btn: "Mulai Menulis" },
+         { title: "AI Literature Review", desc: "Susun tinjauan pustaka lengkap dengan sitasi otomatis dari jurnal terpercaya, biasanya butuh berhari-hari, sekarang dalam hitungan menit.", btn: "Cari Sitasi" }
+       ],
       // Beranda widgets baru
       beranda_db_title: "Jelajahi Database Jurnal",
       beranda_db_desc_suffix: "jurnal Scopus & Sinta siap dijelajahi",
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Quota
       quota_title: "AI Assistant Quota Status",
       quota_note_match: "Claude monthly limit",
-      quota_note_lit: "Perplexity monthly limit",
+      quota_note_lit: "Lit Review monthly limit",
       quota_note_humanizer: "Remaining Humanizer words",
       // Billing
       billing_title: "Transactions & Receipts",
@@ -346,11 +346,12 @@ document.addEventListener('DOMContentLoaded', () => {
       ai_research_desc: "Pick one of the AI assistants below to speed up your research and academic writing.",
       ai_research_open_btn: "Open Feature",
       ai_research_cards: [
-        { title: "AI Match Score", desc: "Instantly find accredited Scopus & Sinta journal recommendations based on how well your title and abstract match." },
-        { title: "AI Drafting Companion", desc: "Write your manuscript draft with an AI assistant. Develop scholarly arguments, refine grammar, and optimize manuscript structure." },
-        { title: "AI Literature Review", desc: "Generate a comprehensive scholarly literature review complete with citations in seconds for your chosen topic." },
-        { title: "JurnalHub Humanizer Engine", desc: "Rewrite AI-generated text so it passes AI detectors (like Turnitin & GPTZero) with very natural academic language." }
+        { title: "JurnalHub Humanizer Engine", desc: "Rewrite AI-generated text so it passes AI detectors (like Turnitin & GPTZero) with very natural academic language.", btn: "Humanize Text" },
+        { title: "Check Journal Acceptance Probability", desc: "Enter title and abstract, get the most suitable Scopus & Sinta journals complete with matching scores, in seconds.", btn: "Check Score Now" },
+        { title: "AI Drafting Companion", desc: "Transform research ideas into structured drafts, complete with arguments, references, and ready-to-submit academic grammar.", btn: "Start Writing" },
+        { title: "AI Literature Review", desc: "Build a comprehensive literature review complete with automatic citations from trusted journals, usually takes days, now in minutes.", btn: "Search Citations" }
       ],
+
       // Beranda new widgets
       beranda_db_title: "Explore the Journal Database",
       beranda_db_desc_suffix: "Scopus & Sinta journals ready to explore",
@@ -4449,7 +4450,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (descEl) descEl.textContent = d.desc;
         if (btnEl) {
           const icon = btnEl.querySelector('i');
-          btnEl.innerHTML = `${TRANSLATIONS[lang].ai_research_open_btn} ${icon ? icon.outerHTML : ''}`;
+          const btnText = d.btn || TRANSLATIONS[lang].ai_research_open_btn;
+          btnEl.innerHTML = `${btnText} ${icon ? icon.outerHTML : ''}`;
         }
       });
 
