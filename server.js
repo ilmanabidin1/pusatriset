@@ -1882,8 +1882,8 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     if (!role || !content) {
       return res.status(400).json({ ok: false, message: 'Format pesan tidak valid.' });
     }
-    if (content.length > 6000) {
-      return res.status(400).json({ ok: false, message: 'Satu pesan maksimal 6000 karakter.' });
+    if (content.length > 100000) {
+      return res.status(400).json({ ok: false, message: 'Satu pesan maksimal 100.000 karakter.' });
     }
     sanitizedMessages.push({ role, content });
   }
