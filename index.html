@@ -934,6 +934,38 @@
       border-top: 1px solid var(--border-light-hover);
       margin: 0.85rem 0;
     }
+    .chat-md-table-wrapper {
+      overflow-x: auto;
+      margin: 0 0 0.75rem 0;
+      max-width: 100%;
+    }
+    .chat-md-table-wrapper:last-child {
+      margin-bottom: 0;
+    }
+    .chat-md-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.85rem;
+    }
+    .chat-md-table th,
+    .chat-md-table td {
+      border: 1px solid var(--border-light-hover);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .chat-md-table th {
+      background: #f8fafc;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .research-chat-bubble.user .chat-md-table th,
+    .research-chat-bubble.user .chat-md-table td {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .research-chat-bubble.user .chat-md-table th {
+      background: rgba(255, 255, 255, 0.12);
+    }
 
     /* Sapaan Personal di Beranda */
     .beranda-greeting {

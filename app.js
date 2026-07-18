@@ -41,40 +41,76 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/`([^`]+)`/g, '<code class="chat-md-code">$1</code>');
     }
 
-    lines.forEach(rawLine => {
-      const trimmed = rawLine.trim();
+    // Baris tabel GFM: "| sel | sel |" - pisah per kolom, buang sel kosong di
+    // ujung akibat pipe pembuka/penutup.
+    function isTableRow(line) {
+      return /^\|.*\|$/.test(line);
+    }
+    function isTableSeparator(line) {
+      return /^\|?[\s:|-]+\|?$/.test(line) && line.includes('-');
+    }
+    function parseTableRow(line) {
+      return line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+    }
+
+    let i = 0;
+    while (i < lines.length) {
+      const trimmed = lines[i].trim();
 
       if (trimmed === '') {
         flushList();
-        return;
+        i++;
+        continue;
       }
+
+      // Tabel: baris header diikuti baris separator (|---|---|)
+      if (isTableRow(trimmed) && i + 1 < lines.length && isTableSeparator(lines[i + 1].trim())) {
+        flushList();
+        const headerCells = parseTableRow(trimmed);
+        i += 2;
+        const bodyRows = [];
+        while (i < lines.length && isTableRow(lines[i].trim())) {
+          bodyRows.push(parseTableRow(lines[i].trim()));
+          i++;
+        }
+        const theadHtml = '<tr>' + headerCells.map(c => `<th>${inline(c)}</th>`).join('') + '</tr>';
+        const tbodyHtml = bodyRows.map(row => '<tr>' + row.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('');
+        htmlParts.push(`<div class="chat-md-table-wrapper"><table class="chat-md-table"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>`);
+        continue;
+      }
+
       if (/^-{3,}$/.test(trimmed)) {
         flushList();
         htmlParts.push('<hr class="chat-md-hr">');
-        return;
+        i++;
+        continue;
       }
       const headingMatch = trimmed.match(/^(#{1,4})\s+(.*)$/);
       if (headingMatch) {
         flushList();
         const level = Math.min(6, headingMatch[1].length + 2);
         htmlParts.push(`<h${level} class="chat-md-heading">${inline(headingMatch[2])}</h${level}>`);
-        return;
+        i++;
+        continue;
       }
       const ulMatch = trimmed.match(/^[-*]\s+(.*)$/);
       if (ulMatch) {
         if (listType !== 'ul') { flushList(); listType = 'ul'; }
         listBuffer.push(inline(ulMatch[1]));
-        return;
+        i++;
+        continue;
       }
       const olMatch = trimmed.match(/^\d+\.\s+(.*)$/);
       if (olMatch) {
         if (listType !== 'ol') { flushList(); listType = 'ol'; }
         listBuffer.push(inline(olMatch[1]));
-        return;
+        i++;
+        continue;
       }
       flushList();
       htmlParts.push(`<p class="chat-md-p">${inline(trimmed)}</p>`);
-    });
+      i++;
+    }
     flushList();
     return htmlParts.join('') || '<p class="chat-md-p"></p>';
   }

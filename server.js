@@ -1856,7 +1856,10 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
           ...sanitizedMessages
         ],
         temperature: 1,
-        max_tokens: 1500,
+        // 8000 token cukup untuk jawaban panjang/terstruktur (mis. tabel perbandingan)
+        // tanpa terpotong - deepseek-v4-flash mendukung sampai 384K token output,
+        // dan biayanya tetap sangat murah (~$0.28/1M token output).
+        max_tokens: 8000,
         stream: true
       })
     });
