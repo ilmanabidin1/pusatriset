@@ -506,6 +506,87 @@
       background-color: rgba(255, 255, 255, 0.04);
     }
 
+    /* Profile dropup menu */
+    .user-profile-section {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .user-profile-section:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+    }
+
+    .profile-menu-caret {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.35);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .user-profile-section.open .profile-menu-caret {
+      transform: rotate(180deg);
+    }
+
+    .profile-dropdown {
+      display: none;
+      flex-direction: column;
+      gap: 0.2rem;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(100% + 0.6rem);
+      background: var(--bg-sidebar-active);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.4rem;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      z-index: 60;
+    }
+
+    .user-profile-section.open .profile-dropdown {
+      display: flex;
+      animation: profileDropUpIn 0.18s ease-out;
+    }
+
+    @keyframes profileDropUpIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .sidebar-link.profile-dropdown-item {
+      padding: 0.6rem 0.75rem;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      gap: 0.75rem;
+    }
+
+    .sidebar-link.profile-dropdown-item i {
+      font-size: 0.95rem;
+    }
+
+    .profile-dropdown-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0.3rem 0.25rem;
+    }
+
+    button.profile-dropdown-item.profile-dropdown-logout {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.65);
+      text-align: left;
+      font-family: inherit;
+      font-weight: 600;
+      width: 100%;
+    }
+
+    button.profile-dropdown-item.profile-dropdown-logout:hover {
+      color: #ef4444;
+      background-color: rgba(239, 68, 68, 0.08);
+    }
+
     /* Media query for small laptop screen heights */
     @media (max-height: 800px) {
       .sidebar {
@@ -1964,15 +2045,6 @@
         <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
         <span class="pro-badge">PRO</span>
       </a>
-      <a href="#" class="sidebar-link" data-tab="tersimpan">
-        <i class="fa-solid fa-bookmark"></i> <span>Tersimpan</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="riwayat">
-        <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat AI</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="pengaturan">
-        <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
-      </a>
     </nav>
     
     <!-- Sidebar Upgrade Card -->
@@ -1983,16 +2055,31 @@
       <button class="upgrade-btn btn-upgrade-trigger">Upgrade Sekarang</button>
     </div>
 
-    <!-- User Profile Section -->
-    <div class="user-profile-section">
+    <!-- User Profile Section (klik untuk buka dropup menu) -->
+    <div class="user-profile-section" id="profileMenuTrigger">
       <div class="profile-avatar" id="profileAvatar">U</div>
       <div class="profile-details">
         <span class="profile-name" id="profileEmail">user</span>
         <span class="profile-type" id="profileType">Akun Free</span>
       </div>
-      <button class="logout-icon-btn" id="sidebarLogoutBtn" title="Keluar">
-        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-      </button>
+      <i class="fa-solid fa-chevron-up profile-menu-caret"></i>
+
+      <!-- Dropup Menu -->
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="#" class="sidebar-link profile-dropdown-item" data-tab="tersimpan">
+          <i class="fa-solid fa-bookmark"></i> <span>Tersimpan</span>
+        </a>
+        <a href="#" class="sidebar-link profile-dropdown-item" data-tab="riwayat">
+          <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat AI</span>
+        </a>
+        <a href="#" class="sidebar-link profile-dropdown-item" data-tab="pengaturan">
+          <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
+        </a>
+        <div class="profile-dropdown-divider"></div>
+        <button type="button" class="profile-dropdown-item profile-dropdown-logout" id="sidebarLogoutBtn">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Keluar</span>
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -3021,6 +3108,12 @@
           mobileMenuIcon.className = 'fa-solid fa-bars';
         }
 
+        // Close profile dropup menu if open
+        const profileMenuTrigger = document.getElementById('profileMenuTrigger');
+        if (profileMenuTrigger) {
+          profileMenuTrigger.classList.remove('open');
+        }
+
         // Clean link state and activate target
         sidebarLinks.forEach(link => {
           const currentTab = link.getAttribute('data-tab');
@@ -3094,6 +3187,30 @@
           icon.className = 'fa-solid fa-bars';
         }
       });
+
+      // Profile dropup menu (Tersimpan / Riwayat AI / Pengaturan / Keluar)
+      const profileMenuTrigger = document.getElementById('profileMenuTrigger');
+      const profileDropdown = document.getElementById('profileDropdown');
+      if (profileMenuTrigger && profileDropdown) {
+        profileMenuTrigger.addEventListener('click', (e) => {
+          // Klik di dalam panel dropdown sendiri (item tab / tombol keluar) dibiarkan
+          // ditangani handler masing-masing, bukan toggle ulang menu-nya.
+          if (profileDropdown.contains(e.target)) return;
+          profileMenuTrigger.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!profileMenuTrigger.contains(e.target)) {
+            profileMenuTrigger.classList.remove('open');
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            profileMenuTrigger.classList.remove('open');
+          }
+        });
+      }
 
       // Modal Upgrade Pop-up Logic
       const upgradeModal = document.getElementById('upgradeModal');
