@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
       beranda: "Beranda",
       "database-jurnal": "Database Jurnal",
       "ai-research": "Asisten AI",
-      "research-chat": "Asisten Riset AI",
+      "research-chat": "JurnalHub Intelligence",
       templates: "Template Jurnal",
       "prompt-bank": "Prompt Bank",
       tersimpan: "Tersimpan",
@@ -221,23 +221,23 @@ document.addEventListener('DOMContentLoaded', () => {
       hist_load_error_generic: "Terjadi kesalahan pada server.",
       hist_conn_error_title: "Kesalahan Koneksi",
       hist_conn_error_desc: "Gagal menghubungkan ke server JurnalHub.",
-      // Asisten Riset AI
-      research_chat_badge: "Asisten Riset AI",
-      research_chat_title: "Diskusi dengan Asisten Riset AI",
-      research_chat_desc: "Tanya apa saja seputar metodologi, penulisan ilmiah, atau ide penelitian Anda - dijawab jujur dan mendalam layaknya diskusi dengan profesor pembimbing.",
+      // JurnalHub Intelligence
+      research_chat_badge: "JurnalHub Intelligence",
+      research_chat_title: "Diskusi dengan JurnalHub Intelligence",
+      research_chat_desc: "<strong>Bukan LLM biasa.</strong> JurnalHub Intelligence dikurasi khusus untuk selalu menjawab jujur, kritis, dan tidak asal mengiyakan (no yes-man) - layaknya profesor pembimbing sungguhan.",
       research_chat_empty: "Mulai diskusi dengan mengetik pertanyaan riset Anda di bawah ini.",
       research_chat_input_placeholder: "Tulis pertanyaan riset Anda...",
       research_chat_clear: "Mulai percakapan baru",
       research_chat_disclaimer: "Asisten AI bisa saja keliru - selalu verifikasi informasi penting secara mandiri.",
       research_chat_lock_title: "Fitur PRO Khusus Pelanggan",
-      research_chat_lock_desc: "Asisten Riset AI hanya tersedia untuk akun Premium & Ultimate. Upgrade untuk mulai berdiskusi seputar riset Anda.",
+      research_chat_lock_desc: "JurnalHub Intelligence hanya tersedia untuk akun Premium & Ultimate. Upgrade untuk mulai berdiskusi seputar riset Anda.",
       research_chat_upgrade_btn: "Upgrade PRO"
     },
     en: {
       beranda: "Home",
       "database-jurnal": "Journal Database",
       "ai-research": "AI Assistant",
-      "research-chat": "AI Research Assistant",
+      "research-chat": "JurnalHub Intelligence",
       templates: "Journal Templates",
       "prompt-bank": "Prompt Bank",
       tersimpan: "Bookmarks",
@@ -373,16 +373,16 @@ document.addEventListener('DOMContentLoaded', () => {
       hist_load_error_generic: "A server error occurred.",
       hist_conn_error_title: "Connection Error",
       hist_conn_error_desc: "Failed to connect to the JurnalHub server.",
-      // Asisten Riset AI
-      research_chat_badge: "AI Research Assistant",
-      research_chat_title: "Discuss with the AI Research Assistant",
-      research_chat_desc: "Ask anything about methodology, academic writing, or your research ideas - answered honestly and in-depth, like a discussion with an experienced supervisor.",
+      // JurnalHub Intelligence
+      research_chat_badge: "JurnalHub Intelligence",
+      research_chat_title: "Discuss with JurnalHub Intelligence",
+      research_chat_desc: "<strong>Not just another LLM.</strong> JurnalHub Intelligence is specifically curated to always answer honestly, critically, and without being a yes-man - like a real supervising professor.",
       research_chat_empty: "Start a discussion by typing your research question below.",
       research_chat_input_placeholder: "Type your research question...",
       research_chat_clear: "Start a new conversation",
       research_chat_disclaimer: "The AI assistant can make mistakes - always verify important information independently.",
       research_chat_lock_title: "PRO Feature For Subscribers Only",
-      research_chat_lock_desc: "The AI Research Assistant is only available for Premium & Ultimate accounts. Upgrade to start discussing your research.",
+      research_chat_lock_desc: "JurnalHub Intelligence is only available for Premium & Ultimate accounts. Upgrade to start discussing your research.",
       research_chat_upgrade_btn: "Upgrade PRO"
     }
   };
@@ -3357,7 +3357,7 @@ document.addEventListener('DOMContentLoaded', () => {
           loadingBubble.remove();
           researchChatMessages.pop();
           renderResearchChatMessages();
-          alert(data.message || 'Gagal menghubungi Asisten Riset AI.');
+          alert(data.message || 'Gagal menghubungi JurnalHub Intelligence.');
           researchChatInput.value = text;
           return;
         }
@@ -3387,7 +3387,7 @@ document.addEventListener('DOMContentLoaded', () => {
           assistantBubbleEl.remove();
           researchChatMessages.pop();
           renderResearchChatMessages();
-          alert('Asisten Riset AI tidak memberikan jawaban. Coba lagi.');
+          alert('JurnalHub Intelligence tidak memberikan jawaban. Coba lagi.');
           researchChatInput.value = text;
           return;
         }
@@ -3406,7 +3406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         researchChatMessages.pop();
         renderResearchChatMessages();
         console.error('[Research Chat] Error:', error);
-        alert('Terjadi kesalahan koneksi saat menghubungi Asisten Riset AI.');
+        alert('Terjadi kesalahan koneksi saat menghubungi JurnalHub Intelligence.');
         researchChatInput.value = text;
       } finally {
         researchChatSendBtn.disabled = false;
@@ -4282,13 +4282,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const promptStagesHeadingEl = document.getElementById('promptStagesHeading');
       if (promptStagesHeadingEl) promptStagesHeadingEl.textContent = TRANSLATIONS[lang].prompt_bank_stages_heading;
 
-      // 9h. Translate Asisten Riset AI tab
-      const researchChatBadgeEl = document.getElementById('researchChatBadge');
-      if (researchChatBadgeEl) researchChatBadgeEl.textContent = TRANSLATIONS[lang].research_chat_badge;
-      const researchChatTitleEl = document.getElementById('researchChatTitle');
-      if (researchChatTitleEl) researchChatTitleEl.textContent = TRANSLATIONS[lang].research_chat_title;
+      // 9h. Translate JurnalHub Intelligence tab
       const researchChatDescEl = document.getElementById('researchChatDesc');
-      if (researchChatDescEl) researchChatDescEl.textContent = TRANSLATIONS[lang].research_chat_desc;
+      if (researchChatDescEl) researchChatDescEl.innerHTML = TRANSLATIONS[lang].research_chat_desc;
       const researchChatEmptyTextEl = document.getElementById('researchChatEmptyText');
       if (researchChatEmptyTextEl) researchChatEmptyTextEl.textContent = TRANSLATIONS[lang].research_chat_empty;
       const researchChatInputEl = document.getElementById('researchChatInput');

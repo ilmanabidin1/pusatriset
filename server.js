@@ -719,7 +719,7 @@ app.get('/api/me', (req, res) => {
     let isHumanizerLimitReached = false;
     let humanizerWordsRemaining = 0;
     let humanizerWordsLimit = 0;
-    // Asisten Riset AI - fitur khusus Premium (dijatah) & Ultimate (unlimited), Free tidak punya akses sama sekali
+    // JurnalHub Intelligence - fitur khusus Premium (dijatah) & Ultimate (unlimited), Free tidak punya akses sama sekali
     let isResearchChatLimitReached = true;
     let researchChatsRemaining = 0;
     let researchChatLimit = 0;
@@ -1773,12 +1773,13 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
 // --- ASISTEN RISET AI (DeepSeek) ---
 // Fitur khusus Premium (dijatah 100 pesan/bulan) & Ultimate (unlimited).
 // Free tier tidak punya akses sama sekali - lihat requireAccess + cek tipe di bawah.
-const RESEARCH_CHAT_SYSTEM_PROMPT = `Anda adalah seorang profesor dan asisten riset akademik yang sangat berpengalaman, membantu pengguna JurnalHub (platform riset & publikasi ilmiah Indonesia) dalam diskusi seputar penelitian, metodologi, penulisan ilmiah, pemilihan jurnal Scopus/Sinta, dan topik akademik lainnya.
+const RESEARCH_CHAT_SYSTEM_PROMPT = `Anda adalah JurnalHub Intelligence, seorang profesor dan asisten riset akademik yang sangat berpengalaman, membantu pengguna JurnalHub (platform riset & publikasi ilmiah Indonesia) dalam diskusi seputar penelitian, metodologi, penulisan ilmiah, pemilihan jurnal Scopus/Sinta, dan topik akademik lainnya. Jika ditanya "siapa/apa kamu", perkenalkan diri sebagai JurnalHub Intelligence - jangan sebut nama model/vendor AI di baliknya.
 
-Prinsip yang harus selalu Anda pegang:
+Prinsip yang harus selalu Anda pegang, ini yang membedakan Anda dari chatbot AI generik:
 - Jawab dengan JUJUR. Jika Anda tidak yakin atau tidak tahu jawaban pastinya, katakan terus terang - jangan mengarang fakta, data, atau kutipan/sitasi yang tidak Anda ketahui kebenarannya.
+- JANGAN jadi yes-man. Jangan memuji atau menyetujui ide pengguna hanya supaya terdengar sopan atau menyenangkan. Kalau ide risetnya lemah, metodologinya keliru, atau argumennya tidak solid, katakan terus terang beserta alasannya - seperti pembimbing yang benar-benar peduli pada kualitas riset mahasiswanya, bukan yang asal menyenangkan.
+- Bersikap kritis dan konstruktif: tunjukkan kelemahan, tapi selalu sertai saran perbaikan yang konkret, bukan sekadar menolak.
 - Berikan penjelasan yang mendalam, terstruktur, dan berbasis prinsip keilmuan yang benar, layaknya seorang profesor pembimbing yang berpengalaman.
-- Bersikap kritis dan konstruktif terhadap ide penelitian pengguna, bukan sekadar mengiyakan.
 - Gunakan Bahasa Indonesia akademik yang jelas, kecuali pengguna menulis dalam Bahasa Inggris.
 - Anda TIDAK bisa mengakses internet atau database jurnal secara real-time, jadi jangan mengklaim mengetahui status akreditasi/indeksasi jurnal terkini secara pasti - sarankan pengguna memverifikasi lewat fitur AI Match Score atau Database Jurnal di JurnalHub untuk data yang akurat.`;
 
@@ -1789,7 +1790,7 @@ function getDeepSeekApiKey() {
 app.post('/api/research-chat', requireAccess, async (req, res) => {
   const apiKey = getDeepSeekApiKey();
   if (!apiKey) {
-    return res.status(500).json({ ok: false, message: 'Asisten Riset AI belum dikonfigurasi di server.' });
+    return res.status(500).json({ ok: false, message: 'JurnalHub Intelligence belum dikonfigurasi di server.' });
   }
 
   // Cek tipe akun langsung dari database, bukan req.session.userType - session bisa
@@ -1799,7 +1800,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const userType = (user && user.type) || 'free';
   if (userType !== 'premium' && userType !== 'ultimate') {
-    return res.status(403).json({ ok: false, message: 'Asisten Riset AI khusus untuk akun Premium & Ultimate.' });
+    return res.status(403).json({ ok: false, message: 'JurnalHub Intelligence khusus untuk akun Premium & Ultimate.' });
   }
 
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -1807,7 +1808,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   if (userType === 'premium' && user) {
     const chatUsed = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
     if (chatUsed >= 100) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan Asisten Riset AI tercapai (100 pesan/bulan untuk akun Premium).' });
+      return res.status(403).json({ ok: false, message: 'Limit bulanan JurnalHub Intelligence tercapai (100 pesan/bulan untuk akun Premium).' });
     }
   }
 
@@ -1924,7 +1925,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   } catch (error) {
     console.error('[Research Chat] Error:', error.message);
     if (!res.headersSent) {
-      res.status(500).json({ ok: false, message: 'Gagal menghubungi Asisten Riset AI: ' + error.message });
+      res.status(500).json({ ok: false, message: 'Gagal menghubungi JurnalHub Intelligence: ' + error.message });
     } else {
       // Header/stream sudah terkirim sebagian - tidak bisa lagi ganti jadi respons
       // JSON error, cukup tutup koneksinya.

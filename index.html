@@ -751,7 +751,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Asisten Riset AI - Full-height chat shell (ala ChatGPT/Claude/DeepSeek) */
+    /* JurnalHub Intelligence - Full-height chat shell (ala ChatGPT/Claude/DeepSeek) */
     .research-chat-shell {
       position: relative;
       display: flex;
@@ -764,13 +764,18 @@
     .research-chat-topbar {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       flex-wrap: wrap;
       gap: 1rem;
-      padding-bottom: 1rem;
+      padding-bottom: 0.75rem;
       border-bottom: 1px solid var(--border-light-hover);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       flex-shrink: 0;
+    }
+
+    .research-chat-topbar #researchChatDesc {
+      flex: 1;
+      min-width: 260px;
     }
 
     .research-chat-messages {
@@ -854,7 +859,7 @@
       }
     }
 
-    /* Asisten Riset AI - Chat Bubbles */
+    /* JurnalHub Intelligence - Chat Bubbles */
     .research-chat-bubble {
       max-width: 78%;
       padding: 0.75rem 1rem;
@@ -2239,7 +2244,7 @@
         <span class="pro-badge">PRO</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="research-chat">
-        <i class="fa-solid fa-comments"></i> <span>Asisten Riset AI</span>
+        <i class="fa-solid fa-comments"></i> <span>JurnalHub Intelligence</span>
         <span class="pro-badge">PRO</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="templates">
@@ -3069,24 +3074,21 @@
             <i class="fa-solid fa-lock" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
             <h3 id="researchChatLockTitle">Fitur PRO Khusus Pelanggan</h3>
             <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;" id="researchChatLockDesc">
-              Asisten Riset AI hanya tersedia untuk akun Premium & Ultimate. Upgrade untuk mulai berdiskusi seputar riset Anda.
+              JurnalHub Intelligence hanya tersedia untuk akun Premium & Ultimate. Upgrade untuk mulai berdiskusi seputar riset Anda.
             </p>
             <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
               <i class="fa-solid fa-crown"></i> <span id="researchChatUpgradeBtnText">Upgrade PRO</span>
             </button>
           </div>
 
-          <!-- Slim top bar -->
+          <!-- Slim top bar (1 baris - deskripsi singkat + kuota + tombol baru) -->
           <div class="research-chat-topbar">
-            <div>
-              <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-comments"></i> <span id="researchChatBadge">Asisten Riset AI</span></span>
-              <p id="researchChatDesc" style="font-size: 0.82rem; color: var(--text-muted); margin: 0.4rem 0 0 0;">Tanya apa saja seputar metodologi, penulisan ilmiah, atau ide penelitian Anda - dijawab jujur dan mendalam layaknya diskusi dengan profesor pembimbing.</p>
-            </div>
+            <p id="researchChatDesc" style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.5;"><strong>Bukan LLM biasa.</strong> JurnalHub Intelligence dikurasi khusus untuk selalu menjawab jujur, kritis, dan tidak asal mengiyakan (no yes-man) - layaknya profesor pembimbing sungguhan.</p>
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
               <div id="researchChatQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
                 <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kuota: 0/0 Bulan Ini</span>
               </div>
-              <button id="researchChatClearBtn" type="button" title="Mulai percakapan baru" style="background: #f8fafc; border: 1px solid var(--border-light-hover); color: var(--text-muted); font-size: 0.85rem; cursor: pointer; padding: 0.55rem 0.75rem; border-radius: 8px; display: flex; align-items: center; gap: 0.4rem;">
+              <button id="researchChatClearBtn" type="button" title="Mulai percakapan baru" style="background: #f8fafc; border: 1px solid var(--border-light-hover); color: var(--text-muted); font-size: 0.85rem; cursor: pointer; padding: 0.55rem 0.75rem; border-radius: 8px; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
                 <i class="fa-solid fa-plus"></i> <span id="researchChatClearText">Mulai percakapan baru</span>
               </button>
             </div>
