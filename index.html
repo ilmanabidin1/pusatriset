@@ -2262,19 +2262,19 @@
               <i class="fa-solid fa-database"></i>
             </div>
             <div>
-              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin: 0 0 0.15rem 0;">Jelajahi Database Jurnal</h4>
-              <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;"><span id="berandaDbJurnalCount">0</span> jurnal Scopus & Sinta siap dijelajahi</p>
+              <h4 id="berandaDbJurnalTitle" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin: 0 0 0.15rem 0;">Jelajahi Database Jurnal</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;"><span id="berandaDbJurnalCount">0</span> <span id="berandaDbJurnalDescSuffix">jurnal Scopus & Sinta siap dijelajahi</span></p>
             </div>
           </div>
-          <button class="upgrade-btn" style="width: auto; padding: 0.7rem 1.5rem;" onclick="switchTab('database-jurnal')">
-            Buka Database Jurnal <i class="fa-solid fa-arrow-right"></i>
+          <button class="upgrade-btn" id="berandaDbJurnalBtn" style="width: auto; padding: 0.7rem 1.5rem;" onclick="switchTab('database-jurnal')">
+            <span>Buka Database Jurnal</span> <i class="fa-solid fa-arrow-right"></i>
           </button>
         </div>
 
         <!-- Aktivitas Terakhir -->
         <div class="filter-box-card" style="padding: 1.5rem 2rem; margin-bottom: 2rem;">
-          <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.1rem; color: var(--text-main); margin: 0 0 1rem 0;">
-            <i class="fa-regular fa-clock" style="color: var(--brand-blue); margin-right: 0.5rem;"></i> Aktivitas Terakhir
+          <h3 id="berandaRecentActivityTitle" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.1rem; color: var(--text-main); margin: 0 0 1rem 0;">
+            <i class="fa-regular fa-clock" style="color: var(--brand-blue); margin-right: 0.5rem;"></i> <span>Aktivitas Terakhir</span>
           </h3>
           <div id="berandaRecentActivityList" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
           <div id="berandaRecentActivityEmpty" style="text-align: center; padding: 1.5rem 1rem; display: none;">

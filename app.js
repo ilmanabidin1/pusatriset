@@ -16,6 +16,222 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;');
   }
 
+  // --- BILINGUAL (LOCALIZATION) SYSTEM ---
+  const TRANSLATIONS = {
+    id: {
+      beranda: "Beranda",
+      "database-jurnal": "Database Jurnal",
+      "ai-research": "Asisten AI",
+      templates: "Template Jurnal",
+      "prompt-bank": "Prompt Bank",
+      tersimpan: "Tersimpan",
+      riwayat: "Riwayat AI",
+      pengaturan: "Pengaturan",
+      upgrade_pro: "Upgrade ke PRO",
+      upgrade_desc: "Buka AI Match Score & filter tanpa batas",
+      upgrade_btn: "Upgrade Sekarang",
+      hello: "Halo, ",
+      hello_subtitle: "Mau nulis apa sekarang?",
+      logout: "Keluar",
+      // Matcher
+      matcher_title: "AI Journal Match Score",
+      matcher_desc: "Masukkan metadata artikel Anda untuk menemukan kecocokan jurnal Scopus & Sinta terbaik.",
+      matcher_input_title: "JUDUL ARTIKEL",
+      matcher_input_keywords: "KATA KUNCI (SEPARASI DENGAN KOMA)",
+      matcher_input_abstract: "ABSTRAK ARTIKEL",
+      matcher_btn_run: "Mulai Analisis Jurnal",
+      matcher_btn_running: "Menganalisis Jurnal...",
+      // Drafting
+      drafting_title: "AI Drafting Companion",
+      drafting_desc: "Buat kerangka naskah jurnal ilmiah terstruktur secara otomatis berdasarkan judul dan abstrak riset Anda.",
+      drafting_btn_run: "Susun Outline Draf",
+      drafting_btn_running: "Menyusun Outline Draf...",
+      // Lit Review
+      lit_title: "AI Literature Review & Citation Finder",
+      lit_desc: "Temukan publikasi Scopus & Sinta yang relevan, cari referensi terpercaya, dan buat naskah tinjauan pustaka.",
+      lit_input_title: "TOPIK / JUDUL PENELITIAN",
+      lit_btn_run: "Cari Referensi & Review",
+      lit_btn_running: "Mencari & Meninjau Pustaka...",
+      // Humanizer
+      humanizer_title: "AI Humanizer & Paraphraser",
+      humanizer_desc: "Paragrafkan ulang tulisan AI Anda agar memiliki gaya bahasa akademis yang natural dan lolos dari Turnitin AI detector.",
+      humanizer_btn_run: "Mulai Humanisasi Teks",
+      humanizer_btn_running: "Memproses Humanisasi...",
+      humanizer_lbl_quota: "Sisa Kuota Kata",
+      humanizer_lbl_quota_desc: "Kuota dihitung dari total kata: Input + Output",
+      humanizer_input_lbl: "TEKS MASUKAN (AI)",
+      humanizer_output_lbl: "HASIL HUMANISASI",
+      // History
+      history_title: "Riwayat Penggunaan AI",
+      history_clear_btn: "Bersihkan Semua Riwayat",
+      history_empty: "Tidak Ada Riwayat",
+      history_empty_desc: "Anda belum pernah menggunakan alat AI dengan kategori ini.",
+      // Quota
+      quota_title: "Status & Kuota Asisten AI",
+      quota_note_match: "Limit bulanan Claude",
+      quota_note_lit: "Limit bulanan Perplexity",
+      quota_note_humanizer: "Sisa kuota kata Humanizer",
+      // Billing
+      billing_title: "Transaksi & Kuitansi",
+      billing_desc: "Berikut adalah riwayat pembayaran langganan atau pembelian kuota kata Anda. Gunakan tombol kuitansi untuk mengunduh bukti bayar resmi guna reimbursement kampus/hibah.",
+      // Beranda Banner Slider
+      banner: [
+        { badge: "AI Match Score", title: "Temukan jurnal paling cocok untuk artikel Anda", desc: "Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.", btn: "Mulai AI Match" },
+        { badge: "AI Lit Review", title: "Buat tinjauan pustaka ilmiah dalam hitungan detik", desc: "Masukkan topik riset Anda, dapatkan analisis komprehensif, sitasi, dan ekspor draft instan.", btn: "Coba Lit Review" },
+        { badge: "AI Drafting Companion", title: "Tulis draf manuskrip Anda bersama asisten AI", desc: "Kembangkan argumen penelitian, perbaiki tata bahasa akademis, dan optimalkan struktur manuskrip.", btn: "Mulai Menulis" },
+        { badge: "Prompt Bank", title: "Koleksi prompt pintar untuk publikasi ilmiah", desc: "Gunakan ribuan formula instruksi siap pakai untuk paraphrase akademis dan respon reviewer.", btn: "Buka Prompt Bank" }
+      ],
+      // AI For Research tab
+      ai_research_header: "AI For Research",
+      ai_research_desc: "Pilih salah satu asisten kecerdasan buatan (AI) di bawah ini untuk mempercepat riset dan penulisan ilmiah Anda.",
+      ai_research_open_btn: "Buka Fitur",
+      ai_research_cards: [
+        { title: "AI Match Score", desc: "Temukan rekomendasi jurnal Scopus & Sinta terakreditasi berdasarkan kesesuaian judul dan abstrak manuskrip riset Anda secara instan." },
+        { title: "AI Drafting Companion", desc: "Tulis draf manuskrip Anda bersama asisten AI. Kembangkan argumentasi ilmiah, perbaiki tata bahasa, dan optimalkan struktur manuskrip." },
+        { title: "AI Literature Review", desc: "Buat tinjauan pustaka (literature review) ilmiah komprehensif lengkap dengan sitasi dalam hitungan detik untuk topik pilihan Anda." },
+        { title: "JurnalHub Humanizer Engine", desc: "Ubah tulisan hasil AI agar lolos dari berbagai detektor AI (seperti Turnitin & GPTZero) dengan tata bahasa akademis yang sangat natural." }
+      ],
+      // Beranda widgets baru
+      beranda_db_title: "Jelajahi Database Jurnal",
+      beranda_db_desc_suffix: "jurnal Scopus & Sinta siap dijelajahi",
+      beranda_db_btn: "Buka Database Jurnal",
+      beranda_recent_title: "Aktivitas Terakhir",
+      beranda_recent_empty: "Belum ada aktivitas AI. Yuk mulai dari salah satu fitur di atas!",
+      // Label tipe riwayat & teks fallback (dipakai di widget Beranda & tab Riwayat)
+      hist_type_match: "Journal Matcher",
+      hist_type_draft: "Drafting Companion",
+      hist_type_litreview: "Literature Review",
+      hist_type_humanizer: "Humanizer Engine",
+      hist_type_generic: "AI Tool",
+      hist_fallback_match: "Pencarian Kesesuaian Jurnal",
+      hist_fallback_draft: "Pembuatan Draf Jurnal",
+      hist_fallback_litreview: "AI Literature Review",
+      hist_fallback_humanizer: "Teks Terhumanisasi",
+      hist_fallback_generic: "Penggunaan Alat AI",
+      hist_desc_keywords: "Keywords",
+      hist_desc_recommendations: "Rekomendasi",
+      hist_desc_journals: "jurnal",
+      hist_desc_abstract: "Abstrak",
+      hist_desc_references: "Referensi",
+      hist_desc_papers: "paper ilmiah",
+      hist_desc_mode: "Mode",
+      hist_desc_mode_academic: "Akademik",
+      hist_desc_mode_standard: "Standar",
+      hist_desc_originality: "Nilai Keaslian",
+      hist_desc_cost: "Biaya",
+      hist_desc_words: "kata",
+      hist_btn_detail: "Lihat Detail",
+      hist_btn_delete_title: "Hapus riwayat ini",
+      banner_slide0_free_btn: "Coba AI Match (Gratis 1x/Bulan)"
+    },
+    en: {
+      beranda: "Home",
+      "database-jurnal": "Journal Database",
+      "ai-research": "AI Assistant",
+      templates: "Journal Templates",
+      "prompt-bank": "Prompt Bank",
+      tersimpan: "Bookmarks",
+      riwayat: "AI History",
+      pengaturan: "Settings",
+      upgrade_pro: "Upgrade to PRO",
+      upgrade_desc: "Unlock Match Score & unlimited filters",
+      upgrade_btn: "Upgrade Now",
+      hello: "Hello, ",
+      hello_subtitle: "What would you like to write today?",
+      logout: "Log Out",
+      // Matcher
+      matcher_title: "AI Journal Match Score",
+      matcher_desc: "Enter your article metadata to find the best matching Scopus & Sinta journals.",
+      matcher_input_title: "ARTICLE TITLE",
+      matcher_input_keywords: "KEYWORDS (SEPARATED BY COMMA)",
+      matcher_input_abstract: "ARTICLE ABSTRACT",
+      matcher_btn_run: "Start Journal Matching",
+      matcher_btn_running: "Matching Journals...",
+      // Drafting
+      drafting_title: "AI Drafting Companion",
+      drafting_desc: "Create a structured scientific journal outline automatically based on your research title and abstract.",
+      drafting_btn_run: "Generate Draft Outline",
+      drafting_btn_running: "Generating Draft Outline...",
+      // Lit Review
+      lit_title: "AI Literature Review & Citation Finder",
+      lit_desc: "Find relevant Scopus & Sinta publications, search trusted references, and generate literature review texts.",
+      lit_input_title: "RESEARCH TOPIC / TITLE",
+      lit_btn_run: "Search References & Review",
+      lit_btn_running: "Searching & Generating Review...",
+      // Humanizer
+      humanizer_title: "AI Humanizer & Paraphraser",
+      humanizer_desc: "Paraphrase your AI text to have a natural academic writing style that passes Turnitin AI detectors.",
+      humanizer_btn_run: "Start Paraphrasing Text",
+      humanizer_btn_running: "Paraphrasing Text...",
+      humanizer_lbl_quota: "Remaining Words Quota",
+      humanizer_lbl_quota_desc: "Quota calculated from total words: Input + Output",
+      humanizer_input_lbl: "INPUT TEXT (AI)",
+      humanizer_output_lbl: "HUMANIZED RESULT",
+      // History
+      history_title: "AI Usage History",
+      history_clear_btn: "Clear All History",
+      history_empty: "No History Found",
+      history_empty_desc: "You haven't used any AI tools in this category. Start an analysis or paraphrasing to create history.",
+      // Quota
+      quota_title: "AI Assistant Quota Status",
+      quota_note_match: "Claude monthly limit",
+      quota_note_lit: "Perplexity monthly limit",
+      quota_note_humanizer: "Remaining Humanizer words",
+      // Billing
+      billing_title: "Transactions & Receipts",
+      billing_desc: "Here is your payment subscription or word quota purchase history. Use the receipt button to download official payment proof for university/grant reimbursement.",
+      // Beranda Banner Slider
+      banner: [
+        { badge: "AI Match Score", title: "Find the best matching journal for your article", desc: "Paste your title & abstract, let AI match it to thousands of Scopus & Sinta journals.", btn: "Start AI Match" },
+        { badge: "AI Lit Review", title: "Build a scholarly literature review in seconds", desc: "Enter your research topic, get a comprehensive analysis, citations, and instant draft export.", btn: "Try Lit Review" },
+        { badge: "AI Drafting Companion", title: "Write your manuscript draft with an AI assistant", desc: "Develop your research arguments, refine academic writing, and optimize manuscript structure.", btn: "Start Writing" },
+        { badge: "Prompt Bank", title: "A smart prompt collection for scholarly publishing", desc: "Use thousands of ready-made instruction formulas for academic paraphrasing and reviewer responses.", btn: "Open Prompt Bank" }
+      ],
+      // AI For Research tab
+      ai_research_header: "AI For Research",
+      ai_research_desc: "Pick one of the AI assistants below to speed up your research and academic writing.",
+      ai_research_open_btn: "Open Feature",
+      ai_research_cards: [
+        { title: "AI Match Score", desc: "Instantly find accredited Scopus & Sinta journal recommendations based on how well your title and abstract match." },
+        { title: "AI Drafting Companion", desc: "Write your manuscript draft with an AI assistant. Develop scholarly arguments, refine grammar, and optimize manuscript structure." },
+        { title: "AI Literature Review", desc: "Generate a comprehensive scholarly literature review complete with citations in seconds for your chosen topic." },
+        { title: "JurnalHub Humanizer Engine", desc: "Rewrite AI-generated text so it passes AI detectors (like Turnitin & GPTZero) with very natural academic language." }
+      ],
+      // Beranda new widgets
+      beranda_db_title: "Explore the Journal Database",
+      beranda_db_desc_suffix: "Scopus & Sinta journals ready to explore",
+      beranda_db_btn: "Open Journal Database",
+      beranda_recent_title: "Recent Activity",
+      beranda_recent_empty: "No AI activity yet. Start with one of the features above!",
+      // History type labels & fallback text (used in Beranda widget & Riwayat tab)
+      hist_type_match: "Journal Matcher",
+      hist_type_draft: "Drafting Companion",
+      hist_type_litreview: "Literature Review",
+      hist_type_humanizer: "Humanizer Engine",
+      hist_type_generic: "AI Tool",
+      hist_fallback_match: "Journal Match Search",
+      hist_fallback_draft: "Journal Draft Creation",
+      hist_fallback_litreview: "AI Literature Review",
+      hist_fallback_humanizer: "Humanized Text",
+      hist_fallback_generic: "AI Tool Usage",
+      hist_desc_keywords: "Keywords",
+      hist_desc_recommendations: "Recommendations",
+      hist_desc_journals: "journals",
+      hist_desc_abstract: "Abstract",
+      hist_desc_references: "References",
+      hist_desc_papers: "papers",
+      hist_desc_mode: "Mode",
+      hist_desc_mode_academic: "Academic",
+      hist_desc_mode_standard: "Standard",
+      hist_desc_originality: "Originality Score",
+      hist_desc_cost: "Cost",
+      hist_desc_words: "words",
+      hist_btn_detail: "View Detail",
+      hist_btn_delete_title: "Delete this entry",
+      banner_slide0_free_btn: "Try AI Match (Free 1x/Month)"
+    }
+  };
+
   // DOM Elements
   const searchInput = document.getElementById('searchInput');
   const clearSearchBtn = document.getElementById('clearSearch');
@@ -210,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             }
             if (bannerUpgradeBtn) {
-              bannerUpgradeBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Mulai AI Match';
+              bannerUpgradeBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${TRANSLATIONS[window.currentLanguage || 'id'].banner[0].btn}`;
               bannerUpgradeBtn.style.background = 'var(--brand-blue)';
               bannerUpgradeBtn.style.boxShadow = '0 4px 15px rgba(7, 135, 220, 0.3)';
               // Change click to go to match tab
@@ -259,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Ubah banner upgrade di beranda agar mengarahkan ke tab Match Score jika diklik
             if (bannerUpgradeBtn) {
-              bannerUpgradeBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Coba AI Match (Gratis 1x/Bulan)';
+              bannerUpgradeBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${TRANSLATIONS[window.currentLanguage || 'id'].banner_slide0_free_btn}`;
               bannerUpgradeBtn.style.background = 'linear-gradient(135deg, #059669, #10b981)';
               bannerUpgradeBtn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
               bannerUpgradeBtn.className = 'banner-upgrade-btn'; 
@@ -438,19 +654,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- AKTIVITAS TERAKHIR DI BERANDA ---
-  const berandaHistoryTypeMeta = {
-    match: { label: 'Journal Matcher', icon: 'fa-solid fa-magnifying-glass-chart', bg: 'rgba(7, 135, 220, 0.08)', color: 'var(--brand-blue)' },
-    draft: { label: 'Drafting Companion', icon: 'fa-regular fa-file-lines', bg: 'rgba(16, 185, 129, 0.08)', color: '#10b981' },
-    'lit-review': { label: 'Literature Review', icon: 'fa-solid fa-book-open-reader', bg: 'rgba(139, 92, 246, 0.08)', color: '#8b5cf6' },
-    humanizer: { label: 'Humanizer Engine', icon: 'fa-solid fa-wand-magic-sparkles', bg: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }
-  };
+  function berandaHistoryTypeMeta(lang) {
+    const t = TRANSLATIONS[lang] || TRANSLATIONS.id;
+    return {
+      match: { label: t.hist_type_match, icon: 'fa-solid fa-magnifying-glass-chart', bg: 'rgba(7, 135, 220, 0.08)', color: 'var(--brand-blue)' },
+      draft: { label: t.hist_type_draft, icon: 'fa-regular fa-file-lines', bg: 'rgba(16, 185, 129, 0.08)', color: '#10b981' },
+      'lit-review': { label: t.hist_type_litreview, icon: 'fa-solid fa-book-open-reader', bg: 'rgba(139, 92, 246, 0.08)', color: '#8b5cf6' },
+      humanizer: { label: t.hist_type_humanizer, icon: 'fa-solid fa-wand-magic-sparkles', bg: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }
+    };
+  }
 
-  function berandaHistoryItemTitle(item) {
-    if (item.type === 'match') return item.input.title || 'Pencarian Kesesuaian Jurnal';
-    if (item.type === 'draft') return item.input.title || 'Pembuatan Draf Jurnal';
-    if (item.type === 'lit-review') return item.input.title || 'AI Literature Review';
-    if (item.type === 'humanizer') return item.input.text ? item.input.text.slice(0, 60) + '...' : 'Teks Terhumanisasi';
-    return 'Penggunaan Alat AI';
+  function berandaHistoryItemTitle(item, lang) {
+    const t = TRANSLATIONS[lang] || TRANSLATIONS.id;
+    if (item.type === 'match') return item.input.title || t.hist_fallback_match;
+    if (item.type === 'draft') return item.input.title || t.hist_fallback_draft;
+    if (item.type === 'lit-review') return item.input.title || t.hist_fallback_litreview;
+    if (item.type === 'humanizer') return item.input.text ? item.input.text.slice(0, 60) + '...' : t.hist_fallback_humanizer;
+    return t.hist_fallback_generic;
   }
 
   async function renderBerandaRecentActivity() {
@@ -473,10 +693,13 @@ document.addEventListener('DOMContentLoaded', () => {
       container.style.display = 'flex';
       if (emptyState) emptyState.style.display = 'none';
 
+      const lang = window.currentLanguage || 'id';
+      const typeMeta = berandaHistoryTypeMeta(lang);
+
       container.innerHTML = items.map(item => {
-        const meta = berandaHistoryTypeMeta[item.type] || { label: 'AI Tool', icon: 'fa-solid fa-robot', bg: 'rgba(7, 135, 220, 0.08)', color: 'var(--brand-blue)' };
-        const dateStr = new Date(item.timestamp).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-        const title = escapeHtml(berandaHistoryItemTitle(item));
+        const meta = typeMeta[item.type] || { label: TRANSLATIONS[lang].hist_type_generic, icon: 'fa-solid fa-robot', bg: 'rgba(7, 135, 220, 0.08)', color: 'var(--brand-blue)' };
+        const dateStr = new Date(item.timestamp).toLocaleString(lang === 'en' ? 'en-US' : 'id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const title = escapeHtml(berandaHistoryItemTitle(item, lang));
         return `
           <button type="button" class="beranda-recent-activity-item" data-history-id="${item.id}" style="display: flex; align-items: center; gap: 1rem; width: 100%; text-align: left; padding: 0.85rem 1rem; background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 10px; cursor: pointer; font-family: inherit;">
             <div style="width: 38px; height: 38px; border-radius: 10px; background: ${meta.bg}; color: ${meta.color}; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">
@@ -3042,14 +3265,16 @@ document.addEventListener('DOMContentLoaded', () => {
         ? allHistory 
         : allHistory.filter(item => item.type === activeHistoryFilter);
 
+      const t = TRANSLATIONS[currentLanguage] || TRANSLATIONS.id;
+
       if (filtered.length === 0) {
         historyListContainer.innerHTML = `
           <div style="text-align: center; padding: 5rem 2rem; background: #ffffff; border: 1px solid var(--border-light-hover); border-radius: 16px; box-shadow: 0 4px 20px rgba(8,34,64,0.02);">
             <div style="width: 64px; height: 64px; border-radius: 50%; background: #f8fafc; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--text-muted); font-size: 1.75rem;">
               <i class="fa-regular fa-clock"></i>
             </div>
-            <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.5rem;">Tidak Ada Riwayat</h4>
-            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 400px; margin: 0 auto;">Anda belum pernah menggunakan alat AI dengan kategori ini. Mulai analisis atau humanisasi teks untuk membuat riwayat.</p>
+            <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.5rem;">${t.history_empty}</h4>
+            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 400px; margin: 0 auto;">${t.history_empty_desc}</p>
           </div>
         `;
         return;
@@ -3057,7 +3282,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       historyListContainer.innerHTML = '';
       filtered.forEach(item => {
-        const dateStr = new Date(item.timestamp).toLocaleString('id-ID', {
+        const dateStr = new Date(item.timestamp).toLocaleString(currentLanguage === 'en' ? 'en-US' : 'id-ID', {
           day: '2-digit',
           month: 'short',
           year: 'numeric',
@@ -3065,41 +3290,41 @@ document.addEventListener('DOMContentLoaded', () => {
           minute: '2-digit'
         });
 
-        let typeLabel = 'AI Tool';
+        let typeLabel = t.hist_type_generic;
         let typeIcon = 'fa-solid fa-robot';
         let iconBg = 'rgba(7, 135, 220, 0.08)';
         let iconColor = 'var(--brand-blue)';
-        let titleText = 'Penggunaan Alat AI';
+        let titleText = t.hist_fallback_generic;
         let descText = '';
 
         if (item.type === 'match') {
-          typeLabel = 'Journal Matcher';
+          typeLabel = t.hist_type_match;
           typeIcon = 'fa-solid fa-magnifying-glass-chart';
           iconBg = 'rgba(7, 135, 220, 0.08)';
           iconColor = 'var(--brand-blue)';
-          titleText = item.input.title || 'Pencarian Kesesuaian Jurnal';
-          descText = `Keywords: ${item.input.keywords || '-'} | Rekomendasi: ${item.output.recommendations ? item.output.recommendations.length : 0} jurnal`;
+          titleText = item.input.title || t.hist_fallback_match;
+          descText = `${t.hist_desc_keywords}: ${item.input.keywords || '-'} | ${t.hist_desc_recommendations}: ${item.output.recommendations ? item.output.recommendations.length : 0} ${t.hist_desc_journals}`;
         } else if (item.type === 'draft') {
-          typeLabel = 'Drafting Companion';
+          typeLabel = t.hist_type_draft;
           typeIcon = 'fa-regular fa-file-lines';
           iconBg = 'rgba(16, 185, 129, 0.08)';
           iconColor = '#10b981';
-          titleText = item.input.title || 'Pembuatan Draf Jurnal';
-          descText = `Abstrak: ${item.input.abstract ? item.input.abstract.slice(0, 100) + '...' : '-'}`;
+          titleText = item.input.title || t.hist_fallback_draft;
+          descText = `${t.hist_desc_abstract}: ${item.input.abstract ? item.input.abstract.slice(0, 100) + '...' : '-'}`;
         } else if (item.type === 'lit-review') {
-          typeLabel = 'Literature Review';
+          typeLabel = t.hist_type_litreview;
           typeIcon = 'fa-solid fa-book-open-reader';
           iconBg = 'rgba(139, 92, 246, 0.08)';
           iconColor = '#8b5cf6';
-          titleText = item.input.title || 'AI Literature Review';
-          descText = `Referensi: ${item.output.citations ? item.output.citations.length : 0} paper ilmiah`;
+          titleText = item.input.title || t.hist_fallback_litreview;
+          descText = `${t.hist_desc_references}: ${item.output.citations ? item.output.citations.length : 0} ${t.hist_desc_papers}`;
         } else if (item.type === 'humanizer') {
-          typeLabel = 'Humanizer Engine';
+          typeLabel = t.hist_type_humanizer;
           typeIcon = 'fa-solid fa-wand-magic-sparkles';
           iconBg = 'rgba(245, 158, 11, 0.08)';
           iconColor = '#f59e0b';
-          titleText = item.input.text ? item.input.text.slice(0, 80) + '...' : 'Teks Terhumanisasi';
-          descText = `Mode: ${item.input.mode === 'academic' ? 'Akademik' : 'Standar'} | Nilai Keaslian: ${item.output.originalityScore}% | Biaya: ${item.output.actualCost} kata`;
+          titleText = item.input.text ? item.input.text.slice(0, 80) + '...' : t.hist_fallback_humanizer;
+          descText = `${t.hist_desc_mode}: ${item.input.mode === 'academic' ? t.hist_desc_mode_academic : t.hist_desc_mode_standard} | ${t.hist_desc_originality}: ${item.output.originalityScore}% | ${t.hist_desc_cost}: ${item.output.actualCost} ${t.hist_desc_words}`;
         }
 
         const card = document.createElement('div');
@@ -3128,9 +3353,9 @@ document.addEventListener('DOMContentLoaded', () => {
           
           <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
             <button class="upgrade-btn show-history-detail-btn" data-id="${item.id}" style="width: auto; padding: 0.5rem 1.25rem; font-size: 0.8rem; background: var(--brand-blue); color: #ffffff;" type="button">
-              <i class="fa-regular fa-eye"></i> Lihat Detail
+              <i class="fa-regular fa-eye"></i> ${t.hist_btn_detail}
             </button>
-            <button class="upgrade-btn delete-history-item-btn" data-id="${item.id}" style="width: auto; padding: 0.5rem; font-size: 0.8rem; background: transparent; border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;" type="button" title="Hapus riwayat ini">
+            <button class="upgrade-btn delete-history-item-btn" data-id="${item.id}" style="width: auto; padding: 0.5rem; font-size: 0.8rem; background: transparent; border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;" type="button" title="${t.hist_btn_delete_title}">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </div>
@@ -3402,124 +3627,6 @@ document.addEventListener('DOMContentLoaded', () => {
       historyDetailModal.classList.add('active');
     }
 
-    // --- BILINGUAL (LOCALIZATION) SYSTEM ---
-    const TRANSLATIONS = {
-      id: {
-        beranda: "Beranda",
-        "database-jurnal": "Database Jurnal",
-        "ai-research": "Asisten AI",
-        templates: "Template Jurnal",
-        "prompt-bank": "Prompt Bank",
-        tersimpan: "Tersimpan",
-        riwayat: "Riwayat AI",
-        pengaturan: "Pengaturan",
-        upgrade_pro: "Upgrade ke PRO",
-        upgrade_desc: "Buka AI Match Score & filter tanpa batas",
-        upgrade_btn: "Upgrade Sekarang",
-        hello: "Halo, ",
-        hello_subtitle: "Mau nulis apa sekarang?",
-        logout: "Keluar",
-        // Matcher
-        matcher_title: "AI Journal Match Score",
-        matcher_desc: "Masukkan metadata artikel Anda untuk menemukan kecocokan jurnal Scopus & Sinta terbaik.",
-        matcher_input_title: "JUDUL ARTIKEL",
-        matcher_input_keywords: "KATA KUNCI (SEPARASI DENGAN KOMA)",
-        matcher_input_abstract: "ABSTRAK ARTIKEL",
-        matcher_btn_run: "Mulai Analisis Jurnal",
-        matcher_btn_running: "Menganalisis Jurnal...",
-        // Drafting
-        drafting_title: "AI Drafting Companion",
-        drafting_desc: "Buat kerangka naskah jurnal ilmiah terstruktur secara otomatis berdasarkan judul dan abstrak riset Anda.",
-        drafting_btn_run: "Susun Outline Draf",
-        drafting_btn_running: "Menyusun Outline Draf...",
-        // Lit Review
-        lit_title: "AI Literature Review & Citation Finder",
-        lit_desc: "Temukan publikasi Scopus & Sinta yang relevan, cari referensi terpercaya, dan buat naskah tinjauan pustaka.",
-        lit_input_title: "TOPIK / JUDUL PENELITIAN",
-        lit_btn_run: "Cari Referensi & Review",
-        lit_btn_running: "Mencari & Meninjau Pustaka...",
-        // Humanizer
-        humanizer_title: "AI Humanizer & Paraphraser",
-        humanizer_desc: "Paragrafkan ulang tulisan AI Anda agar memiliki gaya bahasa akademis yang natural dan lolos dari Turnitin AI detector.",
-        humanizer_btn_run: "Mulai Humanisasi Teks",
-        humanizer_btn_running: "Memproses Humanisasi...",
-        humanizer_lbl_quota: "Sisa Kuota Kata",
-        humanizer_lbl_quota_desc: "Kuota dihitung dari total kata: Input + Output",
-        humanizer_input_lbl: "TEKS MASUKAN (AI)",
-        humanizer_output_lbl: "HASIL HUMANISASI",
-        // History
-        history_title: "Riwayat Penggunaan AI",
-        history_clear_btn: "Bersihkan Semua Riwayat",
-        history_empty: "Tidak Ada Riwayat",
-        history_empty_desc: "Anda belum pernah menggunakan alat AI dengan kategori ini.",
-        // Quota
-        quota_title: "Status & Kuota Asisten AI",
-        quota_note_match: "Limit bulanan Claude",
-        quota_note_lit: "Limit bulanan Perplexity",
-        quota_note_humanizer: "Sisa kuota kata Humanizer",
-        // Billing
-        billing_title: "Transaksi & Kuitansi",
-        billing_desc: "Berikut adalah riwayat pembayaran langganan atau pembelian kuota kata Anda. Gunakan tombol kuitansi untuk mengunduh bukti bayar resmi guna reimbursement kampus/hibah."
-      },
-      en: {
-        beranda: "Home",
-        "database-jurnal": "Journal Database",
-        "ai-research": "AI Assistant",
-        templates: "Journal Templates",
-        "prompt-bank": "Prompt Bank",
-        tersimpan: "Bookmarks",
-        riwayat: "AI History",
-        pengaturan: "Settings",
-        upgrade_pro: "Upgrade to PRO",
-        upgrade_desc: "Unlock Match Score & unlimited filters",
-        upgrade_btn: "Upgrade Now",
-        hello: "Hello, ",
-        hello_subtitle: "What would you like to write today?",
-        logout: "Log Out",
-        // Matcher
-        matcher_title: "AI Journal Match Score",
-        matcher_desc: "Enter your article metadata to find the best matching Scopus & Sinta journals.",
-        matcher_input_title: "ARTICLE TITLE",
-        matcher_input_keywords: "KEYWORDS (SEPARATED BY COMMA)",
-        matcher_input_abstract: "ARTICLE ABSTRACT",
-        matcher_btn_run: "Start Journal Matching",
-        matcher_btn_running: "Matching Journals...",
-        // Drafting
-        drafting_title: "AI Drafting Companion",
-        drafting_desc: "Create a structured scientific journal outline automatically based on your research title and abstract.",
-        drafting_btn_run: "Generate Draft Outline",
-        drafting_btn_running: "Generating Draft Outline...",
-        // Lit Review
-        lit_title: "AI Literature Review & Citation Finder",
-        lit_desc: "Find relevant Scopus & Sinta publications, search trusted references, and generate literature review texts.",
-        lit_input_title: "RESEARCH TOPIC / TITLE",
-        lit_btn_run: "Search References & Review",
-        lit_btn_running: "Searching & Generating Review...",
-        // Humanizer
-        humanizer_title: "AI Humanizer & Paraphraser",
-        humanizer_desc: "Paraphrase your AI text to have a natural academic writing style that passes Turnitin AI detectors.",
-        humanizer_btn_run: "Start Paraphrasing Text",
-        humanizer_btn_running: "Paraphrasing Text...",
-        humanizer_lbl_quota: "Remaining Words Quota",
-        humanizer_lbl_quota_desc: "Quota calculated from total words: Input + Output",
-        humanizer_input_lbl: "INPUT TEXT (AI)",
-        humanizer_output_lbl: "HUMANIZED RESULT",
-        // History
-        history_title: "AI Usage History",
-        history_clear_btn: "Clear All History",
-        history_empty: "No History Found",
-        history_empty_desc: "You haven't used any AI tools in this category. Start an analysis or paraphrasing to create history.",
-        // Quota
-        quota_title: "AI Assistant Quota Status",
-        quota_note_match: "Claude monthly limit",
-        quota_note_lit: "Perplexity monthly limit",
-        quota_note_humanizer: "Remaining Humanizer words",
-        // Billing
-        billing_title: "Transactions & Receipts",
-        billing_desc: "Here is your payment subscription or word quota purchase history. Use the receipt button to download official payment proof for university/grant reimbursement."
-      }
-    };
-
     let currentLanguage = localStorage.getItem('jurnalhub_lang') || 'id';
 
     function applyLanguage(lang) {
@@ -3703,6 +3810,79 @@ document.addEventListener('DOMContentLoaded', () => {
           lbl.textContent = TRANSLATIONS[lang].humanizer_output_lbl;
         }
       });
+
+      // 9b. Translate Beranda Banner Slider
+      const bannerSlideEls = document.querySelectorAll('.banner-slide');
+      const bannerData = TRANSLATIONS[lang].banner;
+      bannerSlideEls.forEach((slideEl, index) => {
+        const d = bannerData[index];
+        if (!d) return;
+        const badgeEl = slideEl.querySelector('.banner-badge');
+        const titleEl = slideEl.querySelector('h3');
+        const descEl = slideEl.querySelector('p');
+        // Tombol slide pertama diganti class-nya jadi .banner-upgrade-btn oleh
+        // checkAuthState() tergantung tier user (Free vs Premium/Ultimate), jadi
+        // harus dicari via kedua kemungkinan class, bukan cuma .banner-action-btn.
+        const btnEl = slideEl.querySelector('.banner-action-btn, .banner-upgrade-btn');
+        if (badgeEl) {
+          const icon = badgeEl.querySelector('i');
+          badgeEl.innerHTML = `${icon ? icon.outerHTML : ''} ${d.badge}`;
+        }
+        if (titleEl) titleEl.textContent = d.title;
+        if (descEl) descEl.textContent = d.desc;
+        if (btnEl) {
+          const icon = btnEl.querySelector('i');
+          const isFreeTierSlide0 = index === 0 && btnEl.classList.contains('banner-upgrade-btn') && (!currentUser?.user || (currentUser.user.type !== 'premium' && currentUser.user.type !== 'ultimate'));
+          const btnText = isFreeTierSlide0 ? TRANSLATIONS[lang].banner_slide0_free_btn : d.btn;
+          btnEl.innerHTML = `${icon ? icon.outerHTML : ''} ${btnText}`;
+        }
+      });
+
+      // 9c. Translate AI For Research tab (header + 4 cards)
+      const aiResearchHeaderEl = document.querySelector('.ai-research-header h3');
+      const aiResearchDescEl = document.querySelector('.ai-research-header p');
+      if (aiResearchHeaderEl) aiResearchHeaderEl.textContent = TRANSLATIONS[lang].ai_research_header;
+      if (aiResearchDescEl) aiResearchDescEl.textContent = TRANSLATIONS[lang].ai_research_desc;
+
+      const aiResearchCardEls = document.querySelectorAll('.ai-research-card');
+      const aiResearchCardData = TRANSLATIONS[lang].ai_research_cards;
+      aiResearchCardEls.forEach((cardEl, index) => {
+        const d = aiResearchCardData[index];
+        if (!d) return;
+        const titleEl = cardEl.querySelector('h4');
+        const descEl = cardEl.querySelector('p');
+        const btnEl = cardEl.querySelector('.ai-research-btn');
+        if (titleEl) titleEl.textContent = d.title;
+        if (descEl) descEl.textContent = d.desc;
+        if (btnEl) {
+          const icon = btnEl.querySelector('i');
+          btnEl.innerHTML = `${TRANSLATIONS[lang].ai_research_open_btn} ${icon ? icon.outerHTML : ''}`;
+        }
+      });
+
+      // 9d. Translate Beranda widgets (Database Jurnal quick link + Aktivitas Terakhir)
+      const berandaDbTitleEl = document.getElementById('berandaDbJurnalTitle');
+      if (berandaDbTitleEl) berandaDbTitleEl.textContent = TRANSLATIONS[lang].beranda_db_title;
+      const berandaDbDescSuffixEl = document.getElementById('berandaDbJurnalDescSuffix');
+      if (berandaDbDescSuffixEl) berandaDbDescSuffixEl.textContent = TRANSLATIONS[lang].beranda_db_desc_suffix;
+      const berandaDbBtnEl = document.getElementById('berandaDbJurnalBtn');
+      if (berandaDbBtnEl) {
+        const span = berandaDbBtnEl.querySelector('span');
+        if (span) span.textContent = TRANSLATIONS[lang].beranda_db_btn;
+      }
+      const berandaRecentTitleEl = document.getElementById('berandaRecentActivityTitle');
+      if (berandaRecentTitleEl) {
+        const span = berandaRecentTitleEl.querySelector('span');
+        if (span) span.textContent = TRANSLATIONS[lang].beranda_recent_title;
+      }
+      const berandaRecentEmptyEl = document.getElementById('berandaRecentActivityEmpty');
+      if (berandaRecentEmptyEl) {
+        const p = berandaRecentEmptyEl.querySelector('p');
+        if (p) p.textContent = TRANSLATIONS[lang].beranda_recent_empty;
+      }
+      if (typeof renderBerandaRecentActivity === 'function' && currentUser?.user) {
+        renderBerandaRecentActivity();
+      }
 
       // 10. Translate History Tab static elements
       const historyTitleEl = document.querySelector('#tabContentRiwayat h3');
