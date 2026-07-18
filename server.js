@@ -1888,7 +1888,8 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     sanitizedMessages.push({ role, content });
   }
 
-  // conversationId dibuat di sisi client (crypto.randomUUID) supaya bisa dikirim
+
+    // conversationId dibuat di sisi client (crypto.randomUUID) supaya bisa dikirim
   // bareng pesan pertama sekalipun percakapannya belum ada di server.
   const conversationId = typeof req.body.conversationId === 'string' && req.body.conversationId.trim()
     ? req.body.conversationId.trim().slice(0, 100)
@@ -1897,13 +1898,52 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'conversationId wajib diisi.' });
   }
 
+  // Tentukan model dan tipe thinking berdasarkan parameter request
+  const modelType = req.body.modelType || 'lite';
+  const thinkingType = req.body.thinkingType || 'basic';
+
+  let dsModel = 'deepseek-v4-flash';
+  if (modelType === 'pro') {
+    dsModel = 'deepseek-v4-pro';
+  }
+
+  const thinkingEnabled = thinkingType === 'thinking';
+
   // DEEPSEEK_API_URL cuma untuk keperluan testing lokal (arahkan ke mock server) -
   // di production selalu pakai endpoint resmi DeepSeek.
   const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
 
+  let fullReply = '';
+  let fullReasoning = '';
+
   try {
     if (typeof globalThis.fetch !== 'function') {
       throw new Error('Runtime Node ini tidak mendukung streaming fetch (butuh Node 18+).');
+    }
+
+    const bodyPayload = {
+      model: dsModel,
+      messages: [
+        { role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT },
+        ...sanitizedMessages
+      ],
+      max_tokens: 8000,
+      stream: true
+    };
+
+    if (thinkingEnabled) {
+      bodyPayload.reasoning_effort = "high";
+      bodyPayload.extra_body = {
+        thinking: {
+          type: "enabled"
+        }
+      };
+    } else {
+      bodyPayload.extra_body = {
+        thinking: {
+          type: "disabled"
+        }
+      };
     }
 
     const dsResponse = await globalThis.fetch(deepSeekUrl, {
@@ -1912,19 +1952,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model: 'deepseek-v4-flash',
-        messages: [
-          { role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT },
-          ...sanitizedMessages
-        ],
-        temperature: 1,
-        // 8000 token cukup untuk jawaban panjang/terstruktur (mis. tabel perbandingan)
-        // tanpa terpotong - deepseek-v4-flash mendukung sampai 384K token output,
-        // dan biayanya tetap sangat murah (~$0.28/1M token output).
-        max_tokens: 8000,
-        stream: true
-      })
+      body: JSON.stringify(bodyPayload)
     });
 
     if (!dsResponse.ok) {
@@ -1932,13 +1960,10 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
       throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
     }
 
-    // Streaming ke client mentah (bukan JSON) - frontend membaca chunk demi chunk
-    // supaya jawaban muncul progresif seperti ChatGPT/Claude, bukan menunggu utuh.
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('X-Accel-Buffering', 'no');
 
-    let fullReply = '';
     let sseBuffer = '';
     const reader = dsResponse.body.getReader();
     const decoder = new TextDecoder();
@@ -1949,7 +1974,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
       sseBuffer += decoder.decode(value, { stream: true });
       const lines = sseBuffer.split('\n');
-      sseBuffer = lines.pop(); // baris terakhir mungkin belum lengkap, simpan utk chunk berikutnya
+      sseBuffer = lines.pop();
 
       for (const line of lines) {
         const trimmed = line.trim();
@@ -1959,19 +1984,23 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
         try {
           const parsed = JSON.parse(payload);
           const delta = parsed?.choices?.[0]?.delta?.content;
-          if (delta) {
+          const reasoning = parsed?.choices?.[0]?.delta?.reasoning_content;
+          if (reasoning) {
+            fullReasoning += reasoning;
+            res.write(JSON.stringify({ type: 'thinking', content: reasoning }) + '\n');
+          } else if (delta) {
             fullReply += delta;
-            res.write(delta);
+            res.write(JSON.stringify({ type: 'content', content: delta }) + '\n');
           }
         } catch (e) {
-          // Baris SSE parsial/tidak valid - abaikan, akan lengkap di chunk berikutnya
+          // Baris SSE parsial/tidak valid - abaikan
         }
       }
     }
 
     res.end();
 
-    if (!fullReply) {
+    if (!fullReply && !fullReasoning) {
       console.error('[Research Chat] Respons stream kosong dari DeepSeek.');
       return;
     }
@@ -1994,7 +2023,11 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     // tinggal tambahkan balasan asisten yang baru saja selesai di-stream.
     const conversations = getResearchChatConversations();
     const existingIndex = conversations.findIndex(c => c.id === conversationId && c.userId === req.session.userId);
-    const updatedMessages = [...sanitizedMessages, { role: 'assistant', content: fullReply }];
+    const assistantMsg = { role: 'assistant', content: fullReply };
+    if (fullReasoning) {
+      assistantMsg.reasoning = fullReasoning;
+    }
+    const updatedMessages = [...sanitizedMessages, assistantMsg];
     const now = new Date().toISOString();
 
     if (existingIndex !== -1) {

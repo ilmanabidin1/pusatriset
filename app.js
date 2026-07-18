@@ -3345,6 +3345,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ASISTEN RISET AI (DeepSeek Chat) ---
     let researchChatMessages = [];
     let currentResearchChatId = null;
+    let selectedResearchModel = 'lite';
+    let selectedResearchMode = 'basic';
     const researchChatMessagesEl = document.getElementById('researchChatMessages');
     const researchChatEmptyState = document.getElementById('researchChatEmptyState');
     const researchChatInput = document.getElementById('researchChatInput');
@@ -3449,9 +3451,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (m.role === 'user') {
           return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
         }
+        let bodyHtml = '';
+        if (m.reasoning) {
+          bodyHtml += `
+            <details class="chat-thinking-block">
+              <summary class="chat-thinking-summary">
+                <i class="fa-solid fa-brain"></i> Pemikiran JurnalHub Intelligence (Selesai)
+              </summary>
+              <div class="chat-thinking-content">${escapeHtml(m.reasoning)}</div>
+            </details>
+          `;
+        }
+        bodyHtml += `<div class="chat-main-content">${renderMarkdownSafe(m.content)}</div>`;
         return `
           <div class="research-chat-assistant-block">
-            <div class="research-chat-bubble assistant">${renderMarkdownSafe(m.content)}</div>
+            <div class="research-chat-bubble assistant">${bodyHtml}</div>
             <div class="research-chat-msg-actions">
               <button class="research-chat-copy-btn" type="button" data-msg-index="${idx}" title="Salin jawaban">
                 <i class="fa-regular fa-copy"></i> <span>Salin</span>
@@ -3518,7 +3532,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/research-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: researchChatMessages, conversationId: currentResearchChatId })
+          body: JSON.stringify({ 
+            messages: researchChatMessages, 
+            conversationId: currentResearchChatId,
+            modelType: selectedResearchModel,
+            thinkingType: selectedResearchMode
+          })
         });
 
         // Server menolak sebelum sempat streaming (kuota habis, belum dikonfigurasi,
@@ -3544,17 +3563,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let fullText = '';
+        let buffer = '';
+        let thinkingText = '';
+        let contentText = '';
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          fullText += decoder.decode(value, { stream: true });
-          assistantBubbleEl.innerHTML = renderMarkdownSafe(fullText);
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            try {
+              const data = JSON.parse(trimmed);
+              if (data.type === 'thinking') {
+                thinkingText += data.content;
+              } else if (data.type === 'content') {
+                contentText += data.content;
+              }
+            } catch (e) {
+              // Abaikan line parsial yang corrupt
+            }
+          }
+
+          let html = '';
+          if (thinkingText) {
+            html += `
+              <details class="chat-thinking-block" open>
+                <summary class="chat-thinking-summary">
+                  <i class="fa-solid fa-brain fa-spin-pulse"></i> Pemikiran JurnalHub Intelligence...
+                </summary>
+                <div class="chat-thinking-content">${escapeHtml(thinkingText)}</div>
+              </details>
+            `;
+          }
+          if (contentText) {
+            html += `<div class="chat-main-content">${renderMarkdownSafe(contentText)}</div>`;
+          }
+
+          assistantBubbleEl.innerHTML = html || '...';
           researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
         }
 
-        if (!fullText) {
+        if (!contentText && !thinkingText) {
           assistantBubbleEl.remove();
           researchChatMessages.pop();
           renderResearchChatMessages();
@@ -3563,7 +3618,11 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        researchChatMessages.push({ role: 'assistant', content: fullText });
+        const newMsg = { role: 'assistant', content: contentText };
+        if (thinkingText) {
+          newMsg.reasoning = thinkingText;
+        }
+        researchChatMessages.push(newMsg);
         // Re-render penuh supaya bubble sementara diganti struktur final (dengan tombol salin)
         renderResearchChatMessages();
         // Percakapan baru saja disimpan/diperbarui di server - refresh daftar riwayat
@@ -3610,6 +3669,38 @@ document.addEventListener('DOMContentLoaded', () => {
         currentResearchChatId = null;
         renderResearchChatMessages();
         renderResearchChatHistoryList();
+      });
+    }
+
+    // Setup model and mode selection event listeners
+    const pillModelLite = document.getElementById('pillModelLite');
+    const pillModelPro = document.getElementById('pillModelPro');
+    const pillModeBasic = document.getElementById('pillModeBasic');
+    const pillModeThinking = document.getElementById('pillModeThinking');
+
+    if (pillModelLite && pillModelPro) {
+      pillModelLite.addEventListener('click', () => {
+        selectedResearchModel = 'lite';
+        pillModelLite.classList.add('active');
+        pillModelPro.classList.remove('active');
+      });
+      pillModelPro.addEventListener('click', () => {
+        selectedResearchModel = 'pro';
+        pillModelPro.classList.add('active');
+        pillModelLite.classList.remove('active');
+      });
+    }
+
+    if (pillModeBasic && pillModeThinking) {
+      pillModeBasic.addEventListener('click', () => {
+        selectedResearchMode = 'basic';
+        pillModeBasic.classList.add('active');
+        pillModeThinking.classList.remove('active');
+      });
+      pillModeThinking.addEventListener('click', () => {
+        selectedResearchMode = 'thinking';
+        pillModeThinking.classList.add('active');
+        pillModeBasic.classList.remove('active');
       });
     }
 

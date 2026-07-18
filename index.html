@@ -928,6 +928,31 @@
       padding-top: 0.5rem;
     }
 
+    .composer-pill {
+      border: none;
+      background: transparent;
+      padding: 0.35rem 0.9rem;
+      border-radius: 18px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s;
+      color: var(--text-muted);
+    }
+    .composer-pill.active {
+      background: var(--brand-blue) !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 6px rgba(7, 135, 220, 0.25);
+    }
+    [data-theme="dark"] .composer-pill.active {
+      background: var(--brand-blue) !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
     .research-chat-composer {
       display: flex;
       align-items: flex-end;
@@ -1016,6 +1041,42 @@
       border: none;
       padding: 0;
       color: var(--text-main);
+    }
+
+    /* Thinking Mode Block */
+    .chat-thinking-block {
+      background: rgba(99, 102, 241, 0.05);
+      border-left: 3px solid #6366f1;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.88rem;
+    }
+    .chat-thinking-summary {
+      font-weight: 700;
+      color: #4f46e5;
+      cursor: pointer;
+      list-style: none; /* Hide default arrow */
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .chat-thinking-summary::-webkit-details-marker {
+      display: none; /* Hide Webkit arrow */
+    }
+    .chat-thinking-content {
+      margin-top: 0.5rem;
+      color: var(--text-muted);
+      white-space: pre-wrap;
+      font-style: italic;
+      line-height: 1.5;
+    }
+    [data-theme="dark"] .chat-thinking-block {
+      background: rgba(99, 102, 241, 0.1);
+      border-left-color: #818cf8;
+    }
+    [data-theme="dark"] .chat-thinking-summary {
+      color: #a5b4fc;
     }
 
     .research-chat-bubble.loading {
@@ -3300,6 +3361,29 @@
 
             <!-- Composer (lebar penuh, ala ChatGPT/Claude/DeepSeek) -->
             <div class="research-chat-composer-wrapper">
+              <!-- Composer Controls -->
+              <div class="research-chat-composer-controls" style="display: flex; gap: 0.75rem; margin-bottom: 0.6rem; align-items: center; justify-content: flex-start; flex-wrap: wrap;">
+                <!-- Model Selection -->
+                <div style="display: inline-flex; background: rgba(8,34,64,0.05); border: 1px solid rgba(8,34,64,0.08); border-radius: 20px; padding: 2px;">
+                  <button type="button" class="composer-pill active" id="pillModelLite" data-model="lite">
+                    <i class="fa-solid fa-bolt"></i> Lite (Cepat)
+                  </button>
+                  <button type="button" class="composer-pill" id="pillModelPro" data-model="pro">
+                    <i class="fa-solid fa-crown"></i> Pro (V4)
+                  </button>
+                </div>
+
+                <!-- Mode Selection -->
+                <div style="display: inline-flex; background: rgba(8,34,64,0.05); border: 1px solid rgba(8,34,64,0.08); border-radius: 20px; padding: 2px;">
+                  <button type="button" class="composer-pill active" id="pillModeBasic" data-mode="basic">
+                    <i class="fa-solid fa-align-left"></i> Standar
+                  </button>
+                  <button type="button" class="composer-pill" id="pillModeThinking" data-mode="thinking">
+                    <i class="fa-solid fa-brain"></i> Deep Thinking
+                  </button>
+                </div>
+              </div>
+
               <div class="research-chat-composer">
                 <textarea id="researchChatInput" rows="1" placeholder="Tulis pertanyaan riset Anda..."></textarea>
                 <button id="researchChatSendBtn" type="button" title="Kirim">
