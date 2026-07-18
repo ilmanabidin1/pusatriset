@@ -93,10 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
         i++;
         continue;
       }
-      const headingMatch = trimmed.match(/^(#{1,4})\s+(.*)$/);
+      const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
       if (headingMatch) {
         flushList();
-        const level = Math.min(6, headingMatch[1].length + 2);
+        const level = headingMatch[1].length;
         htmlParts.push(`<h${level} class="chat-md-heading">${inline(headingMatch[2])}</h${level}>`);
         i++;
         continue;
@@ -3593,7 +3593,7 @@ document.addEventListener('DOMContentLoaded', () => {
           let html = '';
           if (thinkingText) {
             html += `
-              <details class="chat-thinking-block" open>
+              <details class="chat-thinking-block">
                 <summary class="chat-thinking-summary">
                   <i class="fa-solid fa-brain fa-spin-pulse"></i> Pemikiran JurnalHub Intelligence...
                 </summary>
