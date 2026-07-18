@@ -1833,9 +1833,16 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     sanitizedMessages.push({ role, content });
   }
 
+  // DEEPSEEK_API_URL cuma untuk keperluan testing lokal (arahkan ke mock server) -
+  // di production selalu pakai endpoint resmi DeepSeek.
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
   try {
-    const fetchFn = globalThis.fetch || require('node-fetch');
-    const response = await fetchFn('https://api.deepseek.com/chat/completions', {
+    if (typeof globalThis.fetch !== 'function') {
+      throw new Error('Runtime Node ini tidak mendukung streaming fetch (butuh Node 18+).');
+    }
+
+    const dsResponse = await globalThis.fetch(deepSeekUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1849,38 +1856,80 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
         ],
         temperature: 1,
         max_tokens: 1500,
-        stream: false
+        stream: true
       })
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`DeepSeek API Error Status: ${response.status} - ${errText}`);
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
     }
 
-    const resData = await response.json();
-    const reply = resData?.choices?.[0]?.message?.content || '';
+    // Streaming ke client mentah (bukan JSON) - frontend membaca chunk demi chunk
+    // supaya jawaban muncul progresif seperti ChatGPT/Claude, bukan menunggu utuh.
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
 
-    if (!reply) {
-      throw new Error('Respons kosong dari DeepSeek API.');
-    }
+    let fullReply = '';
+    let sseBuffer = '';
+    const reader = dsResponse.body.getReader();
+    const decoder = new TextDecoder();
 
-    if (userType === 'premium' && user) {
-      const userIndex = users.findIndex(u => u.id === req.session.userId);
-      if (userIndex !== -1) {
-        if (users[userIndex].lastResearchChatMonth !== currentMonth) {
-          users[userIndex].lastResearchChatMonth = currentMonth;
-          users[userIndex].researchChatCountThisMonth = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split('\n');
+      sseBuffer = lines.pop(); // baris terakhir mungkin belum lengkap, simpan utk chunk berikutnya
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const payload = trimmed.slice(5).trim();
+        if (payload === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(payload);
+          const delta = parsed?.choices?.[0]?.delta?.content;
+          if (delta) {
+            fullReply += delta;
+            res.write(delta);
+          }
+        } catch (e) {
+          // Baris SSE parsial/tidak valid - abaikan, akan lengkap di chunk berikutnya
         }
-        users[userIndex].researchChatCountThisMonth = (users[userIndex].researchChatCountThisMonth || 0) + 1;
-        saveUsers(users);
       }
     }
 
-    res.json({ ok: true, reply });
+    res.end();
+
+    if (!fullReply) {
+      console.error('[Research Chat] Respons stream kosong dari DeepSeek.');
+      return;
+    }
+
+    if (userType === 'premium' && user) {
+      const latestUsers = getUsers();
+      const userIndex = latestUsers.findIndex(u => u.id === req.session.userId);
+      if (userIndex !== -1) {
+        if (latestUsers[userIndex].lastResearchChatMonth !== currentMonth) {
+          latestUsers[userIndex].lastResearchChatMonth = currentMonth;
+          latestUsers[userIndex].researchChatCountThisMonth = 0;
+        }
+        latestUsers[userIndex].researchChatCountThisMonth = (latestUsers[userIndex].researchChatCountThisMonth || 0) + 1;
+        saveUsers(latestUsers);
+      }
+    }
   } catch (error) {
     console.error('[Research Chat] Error:', error.message);
-    res.status(500).json({ ok: false, message: 'Gagal menghubungi Asisten Riset AI: ' + error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ ok: false, message: 'Gagal menghubungi Asisten Riset AI: ' + error.message });
+    } else {
+      // Header/stream sudah terkirim sebagian - tidak bisa lagi ganti jadi respons
+      // JSON error, cukup tutup koneksinya.
+      res.end();
+    }
   }
 });
 

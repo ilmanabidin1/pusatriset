@@ -888,6 +888,48 @@
       border-bottom-left-radius: 4px;
     }
 
+    /* Elemen hasil render Markdown di dalam bubble asisten */
+    .chat-md-p {
+      margin: 0 0 0.65rem 0;
+    }
+    .chat-md-p:last-child {
+      margin-bottom: 0;
+    }
+    .chat-md-heading {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      margin: 0.9rem 0 0.5rem 0;
+      line-height: 1.3;
+    }
+    .chat-md-heading:first-child {
+      margin-top: 0;
+    }
+    .chat-md-list {
+      margin: 0 0 0.65rem 0;
+      padding-left: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .chat-md-list:last-child {
+      margin-bottom: 0;
+    }
+    .chat-md-code {
+      background: rgba(8, 34, 64, 0.06);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-family: 'Courier New', monospace;
+    }
+    .research-chat-bubble.user .chat-md-code {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .chat-md-hr {
+      border: none;
+      border-top: 1px solid var(--border-light-hover);
+      margin: 0.85rem 0;
+    }
+
     /* Sapaan Personal di Beranda */
     .beranda-greeting {
       margin-bottom: 1.5rem;

@@ -16,6 +16,69 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;');
   }
 
+  // Render subset Markdown (heading, bold, italic, kode inline, list, hr) jadi HTML
+  // dengan aman: escape dulu SEMUA teks, baru transformasi pola markdown di atas
+  // teks yang sudah di-escape - jadi HTML mentah dari input tetap tidak bisa lolos.
+  function renderMarkdownSafe(text) {
+    const escaped = escapeHtml(text);
+    const lines = escaped.split('\n');
+    const htmlParts = [];
+    let listBuffer = [];
+    let listType = null;
+
+    function flushList() {
+      if (listBuffer.length > 0 && listType) {
+        htmlParts.push(`<${listType} class="chat-md-list">` + listBuffer.map(li => `<li>${li}</li>`).join('') + `</${listType}>`);
+      }
+      listBuffer = [];
+      listType = null;
+    }
+
+    function inline(str) {
+      return str
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code class="chat-md-code">$1</code>');
+    }
+
+    lines.forEach(rawLine => {
+      const trimmed = rawLine.trim();
+
+      if (trimmed === '') {
+        flushList();
+        return;
+      }
+      if (/^-{3,}$/.test(trimmed)) {
+        flushList();
+        htmlParts.push('<hr class="chat-md-hr">');
+        return;
+      }
+      const headingMatch = trimmed.match(/^(#{1,4})\s+(.*)$/);
+      if (headingMatch) {
+        flushList();
+        const level = Math.min(6, headingMatch[1].length + 2);
+        htmlParts.push(`<h${level} class="chat-md-heading">${inline(headingMatch[2])}</h${level}>`);
+        return;
+      }
+      const ulMatch = trimmed.match(/^[-*]\s+(.*)$/);
+      if (ulMatch) {
+        if (listType !== 'ul') { flushList(); listType = 'ul'; }
+        listBuffer.push(inline(ulMatch[1]));
+        return;
+      }
+      const olMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+      if (olMatch) {
+        if (listType !== 'ol') { flushList(); listType = 'ol'; }
+        listBuffer.push(inline(olMatch[1]));
+        return;
+      }
+      flushList();
+      htmlParts.push(`<p class="chat-md-p">${inline(trimmed)}</p>`);
+    });
+    flushList();
+    return htmlParts.join('') || '<p class="chat-md-p"></p>';
+  }
+
   // --- BILINGUAL (LOCALIZATION) SYSTEM ---
   const TRANSLATIONS = {
     id: {
@@ -3250,9 +3313,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (researchChatEmptyState) researchChatMessagesEl.appendChild(researchChatEmptyState);
         return;
       }
-      researchChatMessagesEl.innerHTML = researchChatMessages.map(m => `
-        <div class="research-chat-bubble ${m.role === 'user' ? 'user' : 'assistant'}">${escapeHtml(m.content)}</div>
-      `).join('');
+      researchChatMessagesEl.innerHTML = researchChatMessages.map(m => {
+        if (m.role === 'user') {
+          return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
+        }
+        return `<div class="research-chat-bubble assistant">${renderMarkdownSafe(m.content)}</div>`;
+      }).join('');
       researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
     }
 
@@ -3266,7 +3332,7 @@ document.addEventListener('DOMContentLoaded', () => {
       researchChatInput.style.height = 'auto';
       renderResearchChatMessages();
 
-      // Bubble loading sementara jawaban diproses
+      // Bubble loading sementara menunggu token pertama dari stream
       const loadingBubble = document.createElement('div');
       loadingBubble.className = 'research-chat-bubble loading';
       loadingBubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -3283,20 +3349,50 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: researchChatMessages })
         });
-        const data = await response.json();
 
-        loadingBubble.remove();
-
-        if (!response.ok || !data.ok) {
-          researchChatMessages.pop(); // batalkan pesan user yang gagal diproses supaya tidak dikirim ulang otomatis
+        // Server menolak sebelum sempat streaming (kuota habis, belum dikonfigurasi,
+        // dsb) - responsnya JSON biasa, bukan stream teks.
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          loadingBubble.remove();
+          researchChatMessages.pop();
           renderResearchChatMessages();
           alert(data.message || 'Gagal menghubungi Asisten Riset AI.');
           researchChatInput.value = text;
           return;
         }
 
-        researchChatMessages.push({ role: 'assistant', content: data.reply });
-        renderResearchChatMessages();
+        if (!response.body || typeof response.body.getReader !== 'function') {
+          throw new Error('Browser tidak mendukung streaming respons.');
+        }
+
+        loadingBubble.remove();
+        const assistantBubbleEl = document.createElement('div');
+        assistantBubbleEl.className = 'research-chat-bubble assistant';
+        researchChatMessagesEl.appendChild(assistantBubbleEl);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          fullText += decoder.decode(value, { stream: true });
+          assistantBubbleEl.innerHTML = renderMarkdownSafe(fullText);
+          researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+        }
+
+        if (!fullText) {
+          assistantBubbleEl.remove();
+          researchChatMessages.pop();
+          renderResearchChatMessages();
+          alert('Asisten Riset AI tidak memberikan jawaban. Coba lagi.');
+          researchChatInput.value = text;
+          return;
+        }
+
+        researchChatMessages.push({ role: 'assistant', content: fullText });
 
         // Refresh kuota tampilan setelah 1 pesan terpakai (khusus Premium)
         fetch('/api/me').then(r => r.json()).then(meData => {
