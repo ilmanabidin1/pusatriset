@@ -122,7 +122,41 @@ document.addEventListener('DOMContentLoaded', () => {
       hist_desc_words: "kata",
       hist_btn_detail: "Lihat Detail",
       hist_btn_delete_title: "Hapus riwayat ini",
-      banner_slide0_free_btn: "Coba AI Match (Gratis 1x/Bulan)"
+      banner_slide0_free_btn: "Coba AI Match (Gratis 1x/Bulan)",
+      // Pengaturan (Settings)
+      settings_profile_title: "Profil & Keanggotaan",
+      settings_membership_label: "Tipe Keanggotaan",
+      lbl_profile_name: "Nama Lengkap",
+      lbl_profile_faculty: "Fakultas",
+      lbl_profile_university: "Universitas / Instansi",
+      btn_save_profile: "Simpan Perubahan Profil",
+      settings_prefs_title: "Preferensi Riset Default",
+      settings_prefs_desc: "Setel rumpun keilmuan bawaan agar aplikasi langsung menyaring daftar jurnal sesuai bidang Anda saat dibuka.",
+      lbl_prefs_subject: "RUMPUN UTAMA",
+      lbl_prefs_type: "KATEGORI JURNAL",
+      btn_save_prefs: "Simpan Preferensi",
+      settings_security_title: "Keamanan & Kata Sandi",
+      lbl_old_password: "Kata Sandi Lama",
+      lbl_new_password: "Kata Sandi Baru",
+      lbl_confirm_password: "Konfirmasi Kata Sandi Baru",
+      btn_update_password: "Perbarui Kata Sandi",
+      // Template Jurnal
+      templates_badge: "Template Jurnal Internasional",
+      templates_title: "Unduh Template Jurnal (.docx)",
+      templates_desc: "Gunakan template resmi ini untuk memformat manuskrip Anda sesuai standar penerbit internasional.",
+      // Prompt Bank
+      prompt_bank_badge: "Database Prompt Akademisi",
+      prompt_bank_desc: "Koleksi 2100+ prompt super siap pakai untuk mempercepat riset Scopus dan penulisan Tesis/Disertasi Anda.",
+      prompt_bank_tab_scopus: "Jurnal Scopus",
+      prompt_bank_tab_tesis: "Tesis & Disertasi",
+      prompt_bank_search_placeholder: "Cari kata di dalam prompt...",
+      prompt_bank_stages_heading: "Kategori Tahapan",
+      // Riwayat loading/error
+      hist_loading: "Memuat riwayat penggunaan...",
+      hist_load_error_title: "Gagal Memuat Riwayat",
+      hist_load_error_generic: "Terjadi kesalahan pada server.",
+      hist_conn_error_title: "Kesalahan Koneksi",
+      hist_conn_error_desc: "Gagal menghubungkan ke server JurnalHub."
     },
     en: {
       beranda: "Home",
@@ -228,7 +262,41 @@ document.addEventListener('DOMContentLoaded', () => {
       hist_desc_words: "words",
       hist_btn_detail: "View Detail",
       hist_btn_delete_title: "Delete this entry",
-      banner_slide0_free_btn: "Try AI Match (Free 1x/Month)"
+      banner_slide0_free_btn: "Try AI Match (Free 1x/Month)",
+      // Pengaturan (Settings)
+      settings_profile_title: "Profile & Membership",
+      settings_membership_label: "Membership Type",
+      lbl_profile_name: "Full Name",
+      lbl_profile_faculty: "Faculty",
+      lbl_profile_university: "University / Institution",
+      btn_save_profile: "Save Profile Changes",
+      settings_prefs_title: "Default Research Preferences",
+      settings_prefs_desc: "Set a default subject area so the app filters the journal list to your field as soon as it opens.",
+      lbl_prefs_subject: "MAIN SUBJECT AREA",
+      lbl_prefs_type: "JOURNAL CATEGORY",
+      btn_save_prefs: "Save Preferences",
+      settings_security_title: "Security & Password",
+      lbl_old_password: "Current Password",
+      lbl_new_password: "New Password",
+      lbl_confirm_password: "Confirm New Password",
+      btn_update_password: "Update Password",
+      // Template Jurnal
+      templates_badge: "International Journal Templates",
+      templates_title: "Download Journal Template (.docx)",
+      templates_desc: "Use this official template to format your manuscript to international publisher standards.",
+      // Prompt Bank
+      prompt_bank_badge: "Academic Prompt Database",
+      prompt_bank_desc: "A collection of 2100+ ready-to-use prompts to speed up your Scopus research and Thesis/Dissertation writing.",
+      prompt_bank_tab_scopus: "Scopus Journal",
+      prompt_bank_tab_tesis: "Thesis & Dissertation",
+      prompt_bank_search_placeholder: "Search words within prompts...",
+      prompt_bank_stages_heading: "Stage Categories",
+      // Riwayat loading/error
+      hist_loading: "Loading usage history...",
+      hist_load_error_title: "Failed to Load History",
+      hist_load_error_generic: "A server error occurred.",
+      hist_conn_error_title: "Connection Error",
+      hist_conn_error_desc: "Failed to connect to the JurnalHub server."
     }
   };
 
@@ -3220,17 +3288,19 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderHistoryTab() {
       if (!historyListContainer) return;
 
+      const t = TRANSLATIONS[currentLanguage] || TRANSLATIONS.id;
+
       historyListContainer.innerHTML = `
         <div style="text-align: center; padding: 4rem 2rem; background: rgba(255,255,255,0.6); border: 1px dashed var(--border-light-hover); border-radius: 16px;">
           <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--brand-blue); margin-bottom: 1rem;"></i>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Memuat riwayat penggunaan...</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">${t.hist_loading}</p>
         </div>
       `;
 
       try {
         const response = await fetch('/api/history');
         const data = await response.json();
-        
+
         if (data.ok) {
           allHistory = data.history || [];
           displayHistoryList();
@@ -3238,8 +3308,8 @@ document.addEventListener('DOMContentLoaded', () => {
           historyListContainer.innerHTML = `
             <div style="text-align: center; padding: 4rem 2rem; background: #fff; border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 16px;">
               <i class="fa-solid fa-circle-xmark" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 1rem;"></i>
-              <p style="color: #ef4444; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">Gagal Memuat Riwayat</p>
-              <p style="color: var(--text-muted); font-size: 0.85rem;">${data.message || 'Terjadi kesalahan pada server.'}</p>
+              <p style="color: #ef4444; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">${t.hist_load_error_title}</p>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">${data.message || t.hist_load_error_generic}</p>
             </div>
           `;
         }
@@ -3248,8 +3318,8 @@ document.addEventListener('DOMContentLoaded', () => {
         historyListContainer.innerHTML = `
           <div style="text-align: center; padding: 4rem 2rem; background: #fff; border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 16px;">
             <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 1rem;"></i>
-            <p style="color: #ef4444; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">Kesalahan Koneksi</p>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">Gagal menghubungkan ke server JurnalHub.</p>
+            <p style="color: #ef4444; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">${t.hist_conn_error_title}</p>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">${t.hist_conn_error_desc}</p>
           </div>
         `;
       }
@@ -3883,6 +3953,84 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof renderBerandaRecentActivity === 'function' && currentUser?.user) {
         renderBerandaRecentActivity();
       }
+
+      // 9e. Translate Pengaturan (Settings) tab
+      const settingsProfileTitleEl = document.getElementById('settingsProfileTitle');
+      if (settingsProfileTitleEl) settingsProfileTitleEl.textContent = TRANSLATIONS[lang].settings_profile_title;
+      const settingsMembershipLabelEl = document.getElementById('settingsMembershipLabel');
+      if (settingsMembershipLabelEl) settingsMembershipLabelEl.textContent = TRANSLATIONS[lang].settings_membership_label;
+      const lblProfileNameEl = document.getElementById('lblProfileName');
+      if (lblProfileNameEl) lblProfileNameEl.textContent = TRANSLATIONS[lang].lbl_profile_name;
+      const lblProfileFacultyEl = document.getElementById('lblProfileFaculty');
+      if (lblProfileFacultyEl) lblProfileFacultyEl.textContent = TRANSLATIONS[lang].lbl_profile_faculty;
+      const lblProfileUniversityEl = document.getElementById('lblProfileUniversity');
+      if (lblProfileUniversityEl) lblProfileUniversityEl.textContent = TRANSLATIONS[lang].lbl_profile_university;
+      const btnSaveProfileEl = document.getElementById('btnSaveProfile');
+      if (btnSaveProfileEl) btnSaveProfileEl.textContent = TRANSLATIONS[lang].btn_save_profile;
+
+      const settingsPrefsTitleEl = document.getElementById('settingsPrefsTitle');
+      if (settingsPrefsTitleEl) settingsPrefsTitleEl.textContent = TRANSLATIONS[lang].settings_prefs_title;
+      const settingsPrefsDescEl = document.getElementById('settingsPrefsDesc');
+      if (settingsPrefsDescEl) settingsPrefsDescEl.textContent = TRANSLATIONS[lang].settings_prefs_desc;
+      const lblPrefsSubjectEl = document.getElementById('lblPrefsSubject');
+      if (lblPrefsSubjectEl) lblPrefsSubjectEl.textContent = TRANSLATIONS[lang].lbl_prefs_subject;
+      const lblPrefsTypeEl = document.getElementById('lblPrefsType');
+      if (lblPrefsTypeEl) lblPrefsTypeEl.textContent = TRANSLATIONS[lang].lbl_prefs_type;
+      const savePreferencesBtnEl = document.getElementById('savePreferencesBtn');
+      if (savePreferencesBtnEl) savePreferencesBtnEl.textContent = TRANSLATIONS[lang].btn_save_prefs;
+
+      // Opsi dropdown preferensi sama persis dengan filter Database Jurnal, jadi index-nya konsisten
+      const settingsSubjectOptions = document.querySelectorAll('#settingsDefaultSubject option');
+      if (settingsSubjectOptions.length >= 5) {
+        settingsSubjectOptions[0].textContent = lang === 'id' ? 'Semua Rumpun' : 'All Subjects';
+        settingsSubjectOptions[1].textContent = lang === 'id' ? 'Sains & Teknologi' : 'Science & Technology';
+        settingsSubjectOptions[2].textContent = lang === 'id' ? 'Sosial & Humaniora' : 'Social Sciences & Humanities';
+        settingsSubjectOptions[3].textContent = lang === 'id' ? 'Kesehatan' : 'Health & Medical';
+        settingsSubjectOptions[4].textContent = lang === 'id' ? 'Ekonomi & Bisnis' : 'Economics & Business';
+      }
+      const settingsTypeOptions = document.querySelectorAll('#settingsDefaultType option');
+      if (settingsTypeOptions.length >= 3) {
+        settingsTypeOptions[0].textContent = lang === 'id' ? 'Semua Jurnal' : 'All Journals';
+      }
+
+      const settingsSecurityTitleEl = document.getElementById('settingsSecurityTitle');
+      if (settingsSecurityTitleEl) settingsSecurityTitleEl.textContent = TRANSLATIONS[lang].settings_security_title;
+      const lblOldPasswordEl = document.getElementById('lblOldPassword');
+      if (lblOldPasswordEl) lblOldPasswordEl.textContent = TRANSLATIONS[lang].lbl_old_password;
+      const lblNewPasswordEl = document.getElementById('lblNewPassword');
+      if (lblNewPasswordEl) lblNewPasswordEl.textContent = TRANSLATIONS[lang].lbl_new_password;
+      const lblConfirmPasswordEl = document.getElementById('lblConfirmPassword');
+      if (lblConfirmPasswordEl) lblConfirmPasswordEl.textContent = TRANSLATIONS[lang].lbl_confirm_password;
+      const btnUpdatePasswordEl = document.getElementById('btnUpdatePassword');
+      if (btnUpdatePasswordEl) btnUpdatePasswordEl.textContent = TRANSLATIONS[lang].btn_update_password;
+
+      // 9f. Translate Template Jurnal tab
+      const templatesBadgeEl = document.getElementById('templatesBadge');
+      if (templatesBadgeEl) templatesBadgeEl.textContent = TRANSLATIONS[lang].templates_badge;
+      const templatesTitleEl = document.getElementById('templatesTitle');
+      if (templatesTitleEl) templatesTitleEl.textContent = TRANSLATIONS[lang].templates_title;
+      const templatesDescEl = document.getElementById('templatesDesc');
+      if (templatesDescEl) templatesDescEl.textContent = TRANSLATIONS[lang].templates_desc;
+
+      // 9g. Translate Prompt Bank tab
+      const promptBankBadgeEl = document.getElementById('promptBankBadge');
+      if (promptBankBadgeEl) promptBankBadgeEl.textContent = TRANSLATIONS[lang].prompt_bank_badge;
+      const promptBankDescEl = document.getElementById('promptBankDesc');
+      if (promptBankDescEl) promptBankDescEl.textContent = TRANSLATIONS[lang].prompt_bank_desc;
+      const promptTabScopusEl = document.getElementById('promptTabScopus');
+      if (promptTabScopusEl) {
+        const span = promptTabScopusEl.querySelector('span');
+        if (span) span.textContent = TRANSLATIONS[lang].prompt_bank_tab_scopus;
+      }
+      const promptTabTesisEl = document.getElementById('promptTabTesis');
+      if (promptTabTesisEl) {
+        const span = promptTabTesisEl.querySelector('span');
+        if (span) span.textContent = TRANSLATIONS[lang].prompt_bank_tab_tesis;
+      }
+      const promptSearchInputEl = document.getElementById('promptSearchInput');
+      if (promptSearchInputEl) promptSearchInputEl.placeholder = TRANSLATIONS[lang].prompt_bank_search_placeholder;
+      const promptStagesHeadingEl = document.getElementById('promptStagesHeading');
+      if (promptStagesHeadingEl) promptStagesHeadingEl.textContent = TRANSLATIONS[lang].prompt_bank_stages_heading;
 
       // 10. Translate History Tab static elements
       const historyTitleEl = document.querySelector('#tabContentRiwayat h3');

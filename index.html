@@ -2883,9 +2883,9 @@
           <div class="match-box-wrapper" id="templateBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
             <div style="margin-bottom: 2rem;">
-              <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-file-word"></i> Template Jurnal Internasional</span>
-              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Unduh Template Jurnal (.docx)</h3>
-              <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Gunakan template resmi ini untuk memformat manuskrip Anda sesuai standar penerbit internasional.</p>
+              <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-file-word"></i> <span id="templatesBadge">Template Jurnal Internasional</span></span>
+              <h3 id="templatesTitle" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Unduh Template Jurnal (.docx)</h3>
+              <p id="templatesDesc" style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Gunakan template resmi ini untuk memformat manuskrip Anda sesuai standar penerbit internasional.</p>
             </div>
             
             <!-- Template Grid -->
@@ -2905,38 +2905,38 @@
             <!-- Header -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
               <div>
-                <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-folder-open"></i> Database Prompt Akademisi</span>
+                <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-folder-open"></i> <span id="promptBankBadge">Database Prompt Akademisi</span></span>
                 <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Prompt Bank JurnalHub</h3>
-                <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Koleksi 2100+ prompt super siap pakai untuk mempercepat riset Scopus dan penulisan Tesis/Disertasi Anda.</p>
+                <p id="promptBankDesc" style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Koleksi 2100+ prompt super siap pakai untuk mempercepat riset Scopus dan penulisan Tesis/Disertasi Anda.</p>
               </div>
             </div>
- 
+
             <!-- Switcher & Search Bar -->
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
               <!-- Segment Switcher -->
               <div class="billing-switcher" style="max-width: 420px; margin: 0;">
                 <button class="switcher-btn active" id="promptTabScopus" type="button" style="padding: 0.6rem 1.2rem; font-size: 0.88rem;">
-                  <i class="fa-solid fa-globe"></i> Jurnal Scopus
+                  <i class="fa-solid fa-globe"></i> <span>Jurnal Scopus</span>
                 </button>
                 <button class="switcher-btn" id="promptTabTesis" type="button" style="padding: 0.6rem 1.2rem; font-size: 0.88rem;">
-                  <i class="fa-solid fa-graduation-cap"></i> Tesis & Disertasi
+                  <i class="fa-solid fa-graduation-cap"></i> <span>Tesis & Disertasi</span>
                 </button>
               </div>
- 
+
               <!-- Search Input -->
               <div style="position: relative; width: 100%; max-width: 360px;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
                 <input type="search" id="promptSearchInput" placeholder="Cari kata di dalam prompt..." style="width: 100%; padding: 0.7rem 1rem 0.7rem 2.5rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.88rem; outline: none; background: #f8fafc;">
               </div>
             </div>
- 
+
             <!-- Split Layout Container -->
             <div style="display: grid; grid-template-columns: 300px 1fr; gap: 2rem;" id="promptSplitLayout">
-              
+
               <!-- Left Side: Stages list -->
               <div style="border-right: 1px solid rgba(8,34,64,0.06); padding-right: 1.5rem;" id="promptStagesContainer">
                 <h5 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; text-transform: uppercase; color: var(--brand-dark); letter-spacing: 0.05em; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                  <i class="fa-solid fa-list" style="color: var(--brand-blue);"></i> Kategori Tahapan
+                  <i class="fa-solid fa-list" style="color: var(--brand-blue);"></i> <span id="promptStagesHeading">Kategori Tahapan</span>
                 </h5>
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;" id="promptStagesList">
                   <!-- Diisi secara dinamis -->
@@ -3006,9 +3006,9 @@
             <!-- Section 1: Profil Akun -->
             <div class="filter-box-card" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-                <i class="fa-regular fa-user" style="color: var(--brand-blue);"></i> Profil & Keanggotaan
+                <i class="fa-regular fa-user" style="color: var(--brand-blue);"></i> <span id="settingsProfileTitle">Profil & Keanggotaan</span>
               </h3>
-              
+
               <!-- Avatar Upload & Info Row -->
               <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
                 <!-- Avatar Circle -->
@@ -3023,9 +3023,9 @@
                   </div>
                 </div>
                 <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
-                
+
                 <div>
-                  <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.25rem; text-transform: uppercase;">Tipe Keanggotaan</span>
+                  <span id="settingsMembershipLabel" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.25rem; text-transform: uppercase;">Tipe Keanggotaan</span>
                   <span style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); display: inline-flex; align-items: center; gap: 0.5rem;" id="settingsAccountType">Free Account</span>
                   <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.2rem;" id="settingsEmail">email@domain.com</span>
                 </div>
@@ -3034,20 +3034,20 @@
               <!-- Form Details -->
               <form id="profileForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
                 <div class="filter-dropdown-item" style="grid-column: span 2;">
-                  <label>Nama Lengkap</label>
+                  <label id="lblProfileName">Nama Lengkap</label>
                   <input type="text" id="profileName" placeholder="Masukkan nama lengkap Anda" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
                 </div>
                 <div class="filter-dropdown-item">
-                  <label>Fakultas</label>
+                  <label id="lblProfileFaculty">Fakultas</label>
                   <input type="text" id="profileFaculty" placeholder="Contoh: Fakultas Teknik" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
                 </div>
                 <div class="filter-dropdown-item">
-                  <label>Universitas / Instansi</label>
+                  <label id="lblProfileUniversity">Universitas / Instansi</label>
                   <input type="text" id="profileUniversity" placeholder="Contoh: Universitas Indonesia" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
                 </div>
                 <div id="profileMessage" style="font-size: 0.88rem; display: none; font-weight: 600; grid-column: span 2;"></div>
                 <div style="grid-column: span 2; margin-top: 0.5rem;">
-                  <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.75rem; font-size: 0.88rem;">Simpan Perubahan Profil</button>
+                  <button type="submit" class="btn btn-primary" id="btnSaveProfile" style="padding: 0.7rem 1.75rem; font-size: 0.88rem;">Simpan Perubahan Profil</button>
                 </div>
               </form>
             </div>
@@ -3055,13 +3055,13 @@
             <!-- Section 2: Preferensi Pencarian -->
             <div class="filter-box-card" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-                <i class="fa-solid fa-sliders" style="color: var(--brand-blue);"></i> Preferensi Riset Default
+                <i class="fa-solid fa-sliders" style="color: var(--brand-blue);"></i> <span id="settingsPrefsTitle">Preferensi Riset Default</span>
               </h3>
-              <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;">Setel rumpun keilmuan bawaan agar aplikasi langsung menyaring daftar jurnal sesuai bidang Anda saat dibuka.</p>
-              
+              <p id="settingsPrefsDesc" style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;">Setel rumpun keilmuan bawaan agar aplikasi langsung menyaring daftar jurnal sesuai bidang Anda saat dibuka.</p>
+
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
                 <div class="filter-dropdown-item">
-                  <label>RUMPUN UTAMA</label>
+                  <label id="lblPrefsSubject">RUMPUN UTAMA</label>
                   <select id="settingsDefaultSubject">
                     <option value="all">Semua Rumpun</option>
                     <option value="Sains & Teknologi">Sains & Teknologi</option>
@@ -3071,7 +3071,7 @@
                   </select>
                 </div>
                 <div class="filter-dropdown-item">
-                  <label>KATEGORI JURNAL</label>
+                  <label id="lblPrefsType">KATEGORI JURNAL</label>
                   <select id="settingsDefaultType">
                     <option value="all">Semua Jurnal</option>
                     <option value="Scopus">Scopus Only</option>
@@ -3085,24 +3085,24 @@
             <!-- Section 3: Keamanan (Ganti Password) -->
             <div class="filter-box-card" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-                <i class="fa-solid fa-shield-halved" style="color: var(--brand-blue);"></i> Keamanan & Kata Sandi
+                <i class="fa-solid fa-shield-halved" style="color: var(--brand-blue);"></i> <span id="settingsSecurityTitle">Keamanan & Kata Sandi</span>
               </h3>
-              
+
               <form id="changePasswordForm" style="display: grid; gap: 1.25rem; max-width: 500px;">
                 <div class="filter-dropdown-item">
-                  <label>Kata Sandi Lama</label>
+                  <label id="lblOldPassword">Kata Sandi Lama</label>
                   <input type="password" id="oldPassword" placeholder="Masukkan kata sandi saat ini" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
                 </div>
                 <div class="filter-dropdown-item">
-                  <label>Kata Sandi Baru</label>
+                  <label id="lblNewPassword">Kata Sandi Baru</label>
                   <input type="password" id="newPassword" placeholder="Kata sandi baru (minimal 6 karakter)" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
                 </div>
                 <div class="filter-dropdown-item">
-                  <label>Konfirmasi Kata Sandi Baru</label>
+                  <label id="lblConfirmPassword">Konfirmasi Kata Sandi Baru</label>
                   <input type="password" id="confirmNewPassword" placeholder="Ulangi kata sandi baru" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
                 </div>
                 <div id="changePasswordMessage" style="font-size: 0.88rem; display: none; font-weight: 600;"></div>
-                <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.75rem; font-size: 0.88rem; width: fit-content; margin-top: 0.5rem;">Perbarui Kata Sandi</button>
+                <button type="submit" class="btn btn-primary" id="btnUpdatePassword" style="padding: 0.7rem 1.75rem; font-size: 0.88rem; width: fit-content; margin-top: 0.5rem;">Perbarui Kata Sandi</button>
               </form>
             </div>
 
