@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
       beranda: "Beranda",
       "database-jurnal": "Database Jurnal",
       "ai-research": "Asisten AI",
+      "research-chat": "Asisten Riset AI",
       templates: "Template Jurnal",
       "prompt-bank": "Prompt Bank",
       tersimpan: "Tersimpan",
@@ -156,12 +157,24 @@ document.addEventListener('DOMContentLoaded', () => {
       hist_load_error_title: "Gagal Memuat Riwayat",
       hist_load_error_generic: "Terjadi kesalahan pada server.",
       hist_conn_error_title: "Kesalahan Koneksi",
-      hist_conn_error_desc: "Gagal menghubungkan ke server JurnalHub."
+      hist_conn_error_desc: "Gagal menghubungkan ke server JurnalHub.",
+      // Asisten Riset AI
+      research_chat_badge: "Asisten Riset AI",
+      research_chat_title: "Diskusi dengan Asisten Riset AI",
+      research_chat_desc: "Tanya apa saja seputar metodologi, penulisan ilmiah, atau ide penelitian Anda - dijawab jujur dan mendalam layaknya diskusi dengan profesor pembimbing.",
+      research_chat_empty: "Mulai diskusi dengan mengetik pertanyaan riset Anda di bawah ini.",
+      research_chat_input_placeholder: "Tulis pertanyaan riset Anda...",
+      research_chat_clear: "Mulai percakapan baru",
+      research_chat_disclaimer: "Asisten AI bisa saja keliru - selalu verifikasi informasi penting secara mandiri.",
+      research_chat_lock_title: "Fitur PRO Khusus Pelanggan",
+      research_chat_lock_desc: "Asisten Riset AI hanya tersedia untuk akun Premium & Ultimate. Upgrade untuk mulai berdiskusi seputar riset Anda.",
+      research_chat_upgrade_btn: "Upgrade PRO"
     },
     en: {
       beranda: "Home",
       "database-jurnal": "Journal Database",
       "ai-research": "AI Assistant",
+      "research-chat": "AI Research Assistant",
       templates: "Journal Templates",
       "prompt-bank": "Prompt Bank",
       tersimpan: "Bookmarks",
@@ -296,7 +309,18 @@ document.addEventListener('DOMContentLoaded', () => {
       hist_load_error_title: "Failed to Load History",
       hist_load_error_generic: "A server error occurred.",
       hist_conn_error_title: "Connection Error",
-      hist_conn_error_desc: "Failed to connect to the JurnalHub server."
+      hist_conn_error_desc: "Failed to connect to the JurnalHub server.",
+      // Asisten Riset AI
+      research_chat_badge: "AI Research Assistant",
+      research_chat_title: "Discuss with the AI Research Assistant",
+      research_chat_desc: "Ask anything about methodology, academic writing, or your research ideas - answered honestly and in-depth, like a discussion with an experienced supervisor.",
+      research_chat_empty: "Start a discussion by typing your research question below.",
+      research_chat_input_placeholder: "Type your research question...",
+      research_chat_clear: "Start a new conversation",
+      research_chat_disclaimer: "The AI assistant can make mistakes - always verify important information independently.",
+      research_chat_lock_title: "PRO Feature For Subscribers Only",
+      research_chat_lock_desc: "The AI Research Assistant is only available for Premium & Ultimate accounts. Upgrade to start discussing your research.",
+      research_chat_upgrade_btn: "Upgrade PRO"
     }
   };
 
@@ -663,6 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateGreeting(currentUser.user);
           renderBillingHistory();
           renderBerandaRecentActivity();
+          updateResearchChatAccess(currentUser.user);
         }
 
         // Logout handler
@@ -800,6 +825,30 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = '';
       container.style.display = 'none';
       if (emptyState) emptyState.style.display = 'block';
+    }
+  }
+
+  // --- ASISTEN RISET AI: akses & kuota ---
+  function updateResearchChatAccess(user) {
+    const lock = document.getElementById('researchChatPremiumLock');
+    const quotaText = document.getElementById('researchChatQuotaText');
+    if (!lock) return;
+
+    const isPro = user.type === 'premium' || user.type === 'ultimate';
+    lock.style.display = isPro ? 'none' : 'flex';
+
+    if (quotaText) {
+      if (user.type === 'ultimate') {
+        quotaText.textContent = window.currentLanguage === 'en' ? 'Unlimited' : 'Tanpa Batas';
+      } else if (user.type === 'premium') {
+        const used = user.researchChatCountThisMonth || 0;
+        const limit = user.researchChatLimit || 100;
+        quotaText.textContent = window.currentLanguage === 'en'
+          ? `Quota: ${used}/${limit} This Month`
+          : `Kuota: ${used}/${limit} Bulan Ini`;
+      } else {
+        quotaText.textContent = window.currentLanguage === 'en' ? 'Premium/Ultimate only' : 'Khusus Premium/Ultimate';
+      }
     }
   }
 
@@ -3186,6 +3235,111 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // --- ASISTEN RISET AI (DeepSeek Chat) ---
+    let researchChatMessages = [];
+    const researchChatMessagesEl = document.getElementById('researchChatMessages');
+    const researchChatEmptyState = document.getElementById('researchChatEmptyState');
+    const researchChatInput = document.getElementById('researchChatInput');
+    const researchChatSendBtn = document.getElementById('researchChatSendBtn');
+    const researchChatClearBtn = document.getElementById('researchChatClearBtn');
+
+    function renderResearchChatMessages() {
+      if (!researchChatMessagesEl) return;
+      if (researchChatMessages.length === 0) {
+        researchChatMessagesEl.innerHTML = '';
+        if (researchChatEmptyState) researchChatMessagesEl.appendChild(researchChatEmptyState);
+        return;
+      }
+      researchChatMessagesEl.innerHTML = researchChatMessages.map(m => `
+        <div class="research-chat-bubble ${m.role === 'user' ? 'user' : 'assistant'}">${escapeHtml(m.content)}</div>
+      `).join('');
+      researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+    }
+
+    async function sendResearchChatMessage() {
+      if (!researchChatInput) return;
+      const text = researchChatInput.value.trim();
+      if (!text || researchChatSendBtn.disabled) return;
+
+      researchChatMessages.push({ role: 'user', content: text });
+      researchChatInput.value = '';
+      researchChatInput.style.height = 'auto';
+      renderResearchChatMessages();
+
+      // Bubble loading sementara jawaban diproses
+      const loadingBubble = document.createElement('div');
+      loadingBubble.className = 'research-chat-bubble loading';
+      loadingBubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      researchChatMessagesEl.appendChild(loadingBubble);
+      researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+
+      researchChatSendBtn.disabled = true;
+      const originalBtnHtml = researchChatSendBtn.innerHTML;
+      researchChatSendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+      try {
+        const response = await fetch('/api/research-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: researchChatMessages })
+        });
+        const data = await response.json();
+
+        loadingBubble.remove();
+
+        if (!response.ok || !data.ok) {
+          researchChatMessages.pop(); // batalkan pesan user yang gagal diproses supaya tidak dikirim ulang otomatis
+          renderResearchChatMessages();
+          alert(data.message || 'Gagal menghubungi Asisten Riset AI.');
+          researchChatInput.value = text;
+          return;
+        }
+
+        researchChatMessages.push({ role: 'assistant', content: data.reply });
+        renderResearchChatMessages();
+
+        // Refresh kuota tampilan setelah 1 pesan terpakai (khusus Premium)
+        fetch('/api/me').then(r => r.json()).then(meData => {
+          if (meData.loggedIn && meData.user) {
+            currentUser = meData;
+            updateResearchChatAccess(meData.user);
+          }
+        }).catch(() => {});
+      } catch (error) {
+        loadingBubble.remove();
+        researchChatMessages.pop();
+        renderResearchChatMessages();
+        console.error('[Research Chat] Error:', error);
+        alert('Terjadi kesalahan koneksi saat menghubungi Asisten Riset AI.');
+        researchChatInput.value = text;
+      } finally {
+        researchChatSendBtn.disabled = false;
+        researchChatSendBtn.innerHTML = originalBtnHtml;
+      }
+    }
+
+    if (researchChatSendBtn) {
+      researchChatSendBtn.addEventListener('click', sendResearchChatMessage);
+    }
+    if (researchChatInput) {
+      researchChatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendResearchChatMessage();
+        }
+      });
+      researchChatInput.addEventListener('input', () => {
+        researchChatInput.style.height = 'auto';
+        researchChatInput.style.height = Math.min(researchChatInput.scrollHeight, 150) + 'px';
+      });
+    }
+    if (researchChatClearBtn) {
+      researchChatClearBtn.addEventListener('click', () => {
+        researchChatMessages = [];
+        renderResearchChatMessages();
+      });
+    }
+
     // Top-up Modal Event Handlers
     const openTopupModalBtn = document.getElementById('openTopupModalBtn');
     const closeTopupModalBtn = document.getElementById('closeTopupModalBtn');
@@ -4031,6 +4185,31 @@ document.addEventListener('DOMContentLoaded', () => {
       if (promptSearchInputEl) promptSearchInputEl.placeholder = TRANSLATIONS[lang].prompt_bank_search_placeholder;
       const promptStagesHeadingEl = document.getElementById('promptStagesHeading');
       if (promptStagesHeadingEl) promptStagesHeadingEl.textContent = TRANSLATIONS[lang].prompt_bank_stages_heading;
+
+      // 9h. Translate Asisten Riset AI tab
+      const researchChatBadgeEl = document.getElementById('researchChatBadge');
+      if (researchChatBadgeEl) researchChatBadgeEl.textContent = TRANSLATIONS[lang].research_chat_badge;
+      const researchChatTitleEl = document.getElementById('researchChatTitle');
+      if (researchChatTitleEl) researchChatTitleEl.textContent = TRANSLATIONS[lang].research_chat_title;
+      const researchChatDescEl = document.getElementById('researchChatDesc');
+      if (researchChatDescEl) researchChatDescEl.textContent = TRANSLATIONS[lang].research_chat_desc;
+      const researchChatEmptyTextEl = document.getElementById('researchChatEmptyText');
+      if (researchChatEmptyTextEl) researchChatEmptyTextEl.textContent = TRANSLATIONS[lang].research_chat_empty;
+      const researchChatInputEl = document.getElementById('researchChatInput');
+      if (researchChatInputEl) researchChatInputEl.placeholder = TRANSLATIONS[lang].research_chat_input_placeholder;
+      const researchChatClearTextEl = document.getElementById('researchChatClearText');
+      if (researchChatClearTextEl) researchChatClearTextEl.textContent = TRANSLATIONS[lang].research_chat_clear;
+      const researchChatDisclaimerEl = document.getElementById('researchChatDisclaimer');
+      if (researchChatDisclaimerEl) researchChatDisclaimerEl.textContent = TRANSLATIONS[lang].research_chat_disclaimer;
+      const researchChatLockTitleEl = document.getElementById('researchChatLockTitle');
+      if (researchChatLockTitleEl) researchChatLockTitleEl.textContent = TRANSLATIONS[lang].research_chat_lock_title;
+      const researchChatLockDescEl = document.getElementById('researchChatLockDesc');
+      if (researchChatLockDescEl) researchChatLockDescEl.textContent = TRANSLATIONS[lang].research_chat_lock_desc;
+      const researchChatUpgradeBtnTextEl = document.getElementById('researchChatUpgradeBtnText');
+      if (researchChatUpgradeBtnTextEl) researchChatUpgradeBtnTextEl.textContent = TRANSLATIONS[lang].research_chat_upgrade_btn;
+      if (currentUser?.user) {
+        updateResearchChatAccess(currentUser.user);
+      }
 
       // 10. Translate History Tab static elements
       const historyTitleEl = document.querySelector('#tabContentRiwayat h3');

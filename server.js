@@ -719,6 +719,10 @@ app.get('/api/me', (req, res) => {
     let isHumanizerLimitReached = false;
     let humanizerWordsRemaining = 0;
     let humanizerWordsLimit = 0;
+    // Asisten Riset AI - fitur khusus Premium (dijatah) & Ultimate (unlimited), Free tidak punya akses sama sekali
+    let isResearchChatLimitReached = true;
+    let researchChatsRemaining = 0;
+    let researchChatLimit = 0;
 
     const userType = req.session.userType || 'free';
     const isFree = userType === 'free';
@@ -758,12 +762,20 @@ app.get('/api/me', (req, res) => {
       const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
       humanizerWordsRemaining = Math.max(0, humanizerWordsLimit - wordsUsed);
       isHumanizerLimitReached = humanizerWordsRemaining <= 0;
+
+      researchChatLimit = 100;
+      const chatUsed = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
+      researchChatsRemaining = Math.max(0, researchChatLimit - chatUsed);
+      isResearchChatLimitReached = researchChatsRemaining <= 0;
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
       draftsRemaining = 999;
       isLitReviewLimitReached = false;
       litReviewsRemaining = 999;
+      isResearchChatLimitReached = false;
+      researchChatsRemaining = 999;
+      researchChatLimit = 999;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
@@ -807,6 +819,10 @@ app.get('/api/me', (req, res) => {
         matchCountThisMonth: user ? (user.matchCountThisMonth || 0) : 0,
         draftCountThisMonth: user ? (user.draftCountThisMonth || 0) : 0,
         litReviewCountThisMonth: user ? (user.litReviewCountThisMonth || 0) : 0,
+        isResearchChatLimitReached: isResearchChatLimitReached,
+        researchChatsRemaining: researchChatsRemaining,
+        researchChatLimit: researchChatLimit,
+        researchChatCountThisMonth: user ? (user.researchChatCountThisMonth || 0) : 0,
         planId: user ? (user.planId || null) : null,
         paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null
       }
@@ -1752,6 +1768,120 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
     actualCost: actualCost,
     originalityScore: originalityScore
   });
+});
+
+// --- ASISTEN RISET AI (DeepSeek) ---
+// Fitur khusus Premium (dijatah 100 pesan/bulan) & Ultimate (unlimited).
+// Free tier tidak punya akses sama sekali - lihat requireAccess + cek tipe di bawah.
+const RESEARCH_CHAT_SYSTEM_PROMPT = `Anda adalah seorang profesor dan asisten riset akademik yang sangat berpengalaman, membantu pengguna JurnalHub (platform riset & publikasi ilmiah Indonesia) dalam diskusi seputar penelitian, metodologi, penulisan ilmiah, pemilihan jurnal Scopus/Sinta, dan topik akademik lainnya.
+
+Prinsip yang harus selalu Anda pegang:
+- Jawab dengan JUJUR. Jika Anda tidak yakin atau tidak tahu jawaban pastinya, katakan terus terang - jangan mengarang fakta, data, atau kutipan/sitasi yang tidak Anda ketahui kebenarannya.
+- Berikan penjelasan yang mendalam, terstruktur, dan berbasis prinsip keilmuan yang benar, layaknya seorang profesor pembimbing yang berpengalaman.
+- Bersikap kritis dan konstruktif terhadap ide penelitian pengguna, bukan sekadar mengiyakan.
+- Gunakan Bahasa Indonesia akademik yang jelas, kecuali pengguna menulis dalam Bahasa Inggris.
+- Anda TIDAK bisa mengakses internet atau database jurnal secara real-time, jadi jangan mengklaim mengetahui status akreditasi/indeksasi jurnal terkini secara pasti - sarankan pengguna memverifikasi lewat fitur AI Match Score atau Database Jurnal di JurnalHub untuk data yang akurat.`;
+
+function getDeepSeekApiKey() {
+  return process.env.DEEPSEEK_API_KEY;
+}
+
+app.post('/api/research-chat', requireAccess, async (req, res) => {
+  const apiKey = getDeepSeekApiKey();
+  if (!apiKey) {
+    return res.status(500).json({ ok: false, message: 'Asisten Riset AI belum dikonfigurasi di server.' });
+  }
+
+  // Cek tipe akun langsung dari database, bukan req.session.userType - session bisa
+  // basi kalau downgrade terjadi di request lain (mis. langganan expired) sebelum
+  // /api/me sempat menyinkronkan ulang session di request ini.
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const userType = (user && user.type) || 'free';
+  if (userType !== 'premium' && userType !== 'ultimate') {
+    return res.status(403).json({ ok: false, message: 'Asisten Riset AI khusus untuk akun Premium & Ultimate.' });
+  }
+
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  if (userType === 'premium' && user) {
+    const chatUsed = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
+    if (chatUsed >= 100) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan Asisten Riset AI tercapai (100 pesan/bulan untuk akun Premium).' });
+    }
+  }
+
+  const incomingMessages = Array.isArray(req.body.messages) ? req.body.messages : [];
+  if (incomingMessages.length === 0) {
+    return res.status(400).json({ ok: false, message: 'Pesan wajib diisi.' });
+  }
+  // Batasi ukuran percakapan supaya tidak disalahgunakan untuk payload raksasa /
+  // biaya API yang tidak wajar per request.
+  if (incomingMessages.length > 40) {
+    return res.status(400).json({ ok: false, message: 'Percakapan terlalu panjang, mulai sesi baru.' });
+  }
+  const sanitizedMessages = [];
+  for (const m of incomingMessages) {
+    const role = m && (m.role === 'user' || m.role === 'assistant') ? m.role : null;
+    const content = m && typeof m.content === 'string' ? m.content.trim() : '';
+    if (!role || !content) {
+      return res.status(400).json({ ok: false, message: 'Format pesan tidak valid.' });
+    }
+    if (content.length > 6000) {
+      return res.status(400).json({ ok: false, message: 'Satu pesan maksimal 6000 karakter.' });
+    }
+    sanitizedMessages.push({ role, content });
+  }
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const response = await fetchFn('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        messages: [
+          { role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT },
+          ...sanitizedMessages
+        ],
+        temperature: 1,
+        max_tokens: 1500,
+        stream: false
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`DeepSeek API Error Status: ${response.status} - ${errText}`);
+    }
+
+    const resData = await response.json();
+    const reply = resData?.choices?.[0]?.message?.content || '';
+
+    if (!reply) {
+      throw new Error('Respons kosong dari DeepSeek API.');
+    }
+
+    if (userType === 'premium' && user) {
+      const userIndex = users.findIndex(u => u.id === req.session.userId);
+      if (userIndex !== -1) {
+        if (users[userIndex].lastResearchChatMonth !== currentMonth) {
+          users[userIndex].lastResearchChatMonth = currentMonth;
+          users[userIndex].researchChatCountThisMonth = 0;
+        }
+        users[userIndex].researchChatCountThisMonth = (users[userIndex].researchChatCountThisMonth || 0) + 1;
+        saveUsers(users);
+      }
+    }
+
+    res.json({ ok: true, reply });
+  } catch (error) {
+    console.error('[Research Chat] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal menghubungi Asisten Riset AI: ' + error.message });
+  }
 });
 
 // Endpoint untuk mengambil data Prompt Bank
