@@ -2255,6 +2255,33 @@
           </div>
         </div>
 
+        <!-- Quick Link: Database Jurnal -->
+        <div class="filter-box-card" style="padding: 1.5rem 2rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 1.25rem;">
+            <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(7, 135, 220, 0.08); color: var(--brand-blue); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+              <i class="fa-solid fa-database"></i>
+            </div>
+            <div>
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin: 0 0 0.15rem 0;">Jelajahi Database Jurnal</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;"><span id="berandaDbJurnalCount">0</span> jurnal Scopus & Sinta siap dijelajahi</p>
+            </div>
+          </div>
+          <button class="upgrade-btn" style="width: auto; padding: 0.7rem 1.5rem;" onclick="switchTab('database-jurnal')">
+            Buka Database Jurnal <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Aktivitas Terakhir -->
+        <div class="filter-box-card" style="padding: 1.5rem 2rem; margin-bottom: 2rem;">
+          <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.1rem; color: var(--text-main); margin: 0 0 1rem 0;">
+            <i class="fa-regular fa-clock" style="color: var(--brand-blue); margin-right: 0.5rem;"></i> Aktivitas Terakhir
+          </h3>
+          <div id="berandaRecentActivityList" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+          <div id="berandaRecentActivityEmpty" style="text-align: center; padding: 1.5rem 1rem; display: none;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.75rem 0;">Belum ada aktivitas AI. Yuk mulai dari salah satu fitur di atas!</p>
+          </div>
+        </div>
+
       </div>
 
       <!-- TAB: DATABASE JURNAL (Pencarian & Filter) -->

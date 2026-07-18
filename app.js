@@ -378,6 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateVisualQuotaTracker(currentUser.user);
           updateGreeting(currentUser.user);
           renderBillingHistory();
+          renderBerandaRecentActivity();
         }
 
         // Logout handler
@@ -434,6 +435,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const welcomeSubtitle = document.getElementById('welcomeSubtitle');
     if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+  }
+
+  // --- AKTIVITAS TERAKHIR DI BERANDA ---
+  const berandaHistoryTypeMeta = {
+    match: { label: 'Journal Matcher', icon: 'fa-solid fa-magnifying-glass-chart', bg: 'rgba(7, 135, 220, 0.08)', color: 'var(--brand-blue)' },
+    draft: { label: 'Drafting Companion', icon: 'fa-regular fa-file-lines', bg: 'rgba(16, 185, 129, 0.08)', color: '#10b981' },
+    'lit-review': { label: 'Literature Review', icon: 'fa-solid fa-book-open-reader', bg: 'rgba(139, 92, 246, 0.08)', color: '#8b5cf6' },
+    humanizer: { label: 'Humanizer Engine', icon: 'fa-solid fa-wand-magic-sparkles', bg: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }
+  };
+
+  function berandaHistoryItemTitle(item) {
+    if (item.type === 'match') return item.input.title || 'Pencarian Kesesuaian Jurnal';
+    if (item.type === 'draft') return item.input.title || 'Pembuatan Draf Jurnal';
+    if (item.type === 'lit-review') return item.input.title || 'AI Literature Review';
+    if (item.type === 'humanizer') return item.input.text ? item.input.text.slice(0, 60) + '...' : 'Teks Terhumanisasi';
+    return 'Penggunaan Alat AI';
+  }
+
+  async function renderBerandaRecentActivity() {
+    const container = document.getElementById('berandaRecentActivityList');
+    const emptyState = document.getElementById('berandaRecentActivityEmpty');
+    if (!container) return;
+
+    try {
+      const response = await fetch('/api/history');
+      const data = await response.json();
+      const items = (data.ok ? (data.history || []) : []).slice(0, 3);
+
+      if (items.length === 0) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+      }
+
+      container.style.display = 'flex';
+      if (emptyState) emptyState.style.display = 'none';
+
+      container.innerHTML = items.map(item => {
+        const meta = berandaHistoryTypeMeta[item.type] || { label: 'AI Tool', icon: 'fa-solid fa-robot', bg: 'rgba(7, 135, 220, 0.08)', color: 'var(--brand-blue)' };
+        const dateStr = new Date(item.timestamp).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const title = escapeHtml(berandaHistoryItemTitle(item));
+        return `
+          <button type="button" class="beranda-recent-activity-item" data-history-id="${item.id}" style="display: flex; align-items: center; gap: 1rem; width: 100%; text-align: left; padding: 0.85rem 1rem; background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 10px; cursor: pointer; font-family: inherit;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: ${meta.bg}; color: ${meta.color}; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">
+              <i class="${meta.icon}"></i>
+            </div>
+            <div style="overflow: hidden; flex: 1;">
+              <h5 style="margin: 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</h5>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">${meta.label} · ${dateStr}</span>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color: var(--text-muted); font-size: 0.8rem; flex-shrink: 0;"></i>
+          </button>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.beranda-recent-activity-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-history-id');
+          if (window.switchTab) window.switchTab('riwayat');
+          setTimeout(() => {
+            if (window.renderHistoryTab) {
+              window.renderHistoryTab().then(() => {
+                if (window.showHistoryDetailsById) window.showHistoryDetailsById(id);
+              });
+            }
+          }, 50);
+        });
+      });
+    } catch (err) {
+      console.error('Gagal memuat aktivitas terakhir:', err);
+      container.innerHTML = '';
+      container.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'block';
+    }
   }
 
   // --- VISUAL QUOTA TRACKER ---
@@ -2956,6 +3032,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     window.renderHistoryTab = renderHistoryTab;
+    window.showHistoryDetailsById = showHistoryDetails;
 
     // Display history items
     function displayHistoryList() {
@@ -3044,8 +3121,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span style="font-size: 0.72rem; font-weight: 700; color: ${iconColor}; text-transform: uppercase; background: ${iconBg}; padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block;">${typeLabel}</span>
                 <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;"><i class="fa-regular fa-clock" style="margin-right: 0.15rem;"></i> ${dateStr}</span>
               </div>
-              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-main); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${titleText}">${titleText}</h4>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${descText}</p>
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-main); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(titleText)}">${escapeHtml(titleText)}</h4>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(descText)}</p>
             </div>
           </div>
           
@@ -3723,6 +3800,11 @@ document.addEventListener('DOMContentLoaded', () => {
     activeJournals = JOURNAL_DATABASE;
     filterJournals(); // Apply preferences automatically
     calculateStats();
+
+    const berandaDbJurnalCount = document.getElementById('berandaDbJurnalCount');
+    if (berandaDbJurnalCount) {
+      berandaDbJurnalCount.textContent = JOURNAL_DATABASE.length.toLocaleString('id-ID');
+    }
   }
 
   init();
