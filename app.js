@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
       matcher_btn_run: "Mulai Analisis Jurnal",
       matcher_btn_running: "Menganalisis Jurnal...",
       // Drafting
-      drafting_title: "AI Drafting Companion",
+      drafting_title: "AI Outline Generator",
       drafting_desc: "Buat kerangka naskah jurnal ilmiah terstruktur secara otomatis berdasarkan judul dan abstrak riset Anda.",
       drafting_btn_run: "Susun Outline Draf",
       drafting_btn_running: "Menyusun Outline Draf...",
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
        banner: [
          { badge: "AI Match Score", title: "Temukan jurnal paling cocok untuk artikel Anda", desc: "Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.", btn: "Mulai AI Match" },
          { badge: "AI Lit Review", title: "Buat tinjauan pustaka ilmiah dalam hitungan detik", desc: "Masukkan topik riset Anda, dapatkan analisis komprehensif, sitasi, dan ekspor draft instan.", btn: "Coba Lit Review" },
-         { badge: "AI Drafting Companion", title: "Tulis draf manuskrip Anda bersama asisten AI", desc: "Kembangkan argumen penelitian, perbaiki tata bahasa akademis, dan optimalkan struktur manuskrip.", btn: "Mulai Menulis" },
+         { badge: "AI Outline Generator", title: "Buat kerangka naskah jurnal dalam hitungan menit", desc: "Susun outline Bab 1 s.d. Bab 5 secara sistematis dan terstruktur untuk memandu penulisan ilmiah Anda.", btn: "Mulai Outline" },
          { badge: "Prompt Bank", title: "Koleksi prompt pintar untuk publikasi ilmiah", desc: "Gunakan ribuan formula instruksi siap pakai untuk paraphrase akademis dan respon reviewer.", btn: "Buka Prompt Bank" }
        ],
        // AI For Research tab
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
        ai_research_cards: [
          { title: "JurnalHub Humanizer Engine", desc: "Lolos deteksi Turnitin dan GPTZero hingga 98 persen, tanpa mengubah makna tulisanmu.", btn: "Humanisasi Teks" },
          { title: "Cek Peluang Diterima Jurnal", desc: "Masukkan judul dan abstrak, dapatkan daftar jurnal Scopus & Sinta yang paling cocok lengkap dengan skor kecocokan, dalam hitungan detik.", btn: "Cek Skor Sekarang" },
-         { title: "AI Drafting Companion", desc: "Ubah ide riset jadi draf terstruktur, lengkap dengan argumentasi, referensi, dan tata bahasa akademik siap submit.", btn: "Mulai Menulis" },
+         { title: "AI Outline Generator", desc: "Buat kerangka naskah (outline) jurnal terstruktur dari Bab 1 s.d Bab 5 secara sistematis untuk memandu penulisan karya ilmiah Anda.", btn: "Buat Outline" },
          { title: "AI Literature Review", desc: "Susun tinjauan pustaka lengkap dengan sitasi otomatis dari jurnal terpercaya, biasanya butuh berhari-hari, sekarang dalam hitungan menit.", btn: "Cari Sitasi" }
        ],
       // Beranda widgets baru
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
       matcher_btn_run: "Start Journal Matching",
       matcher_btn_running: "Matching Journals...",
       // Drafting
-      drafting_title: "AI Drafting Companion",
+      drafting_title: "AI Outline Generator",
       drafting_desc: "Create a structured scientific journal outline automatically based on your research title and abstract.",
       drafting_btn_run: "Generate Draft Outline",
       drafting_btn_running: "Generating Draft Outline...",
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
       banner: [
         { badge: "AI Match Score", title: "Find the best matching journal for your article", desc: "Paste your title & abstract, let AI match it to thousands of Scopus & Sinta journals.", btn: "Start AI Match" },
         { badge: "AI Lit Review", title: "Build a scholarly literature review in seconds", desc: "Enter your research topic, get a comprehensive analysis, citations, and instant draft export.", btn: "Try Lit Review" },
-        { badge: "AI Drafting Companion", title: "Write your manuscript draft with an AI assistant", desc: "Develop your research arguments, refine academic writing, and optimize manuscript structure.", btn: "Start Writing" },
+        { badge: "AI Outline Generator", title: "Build a scholarly journal outline in minutes", desc: "Construct a structured outline from Chapter 1 to Chapter 5 systematically to guide your scientific writing.", btn: "Start Outline" },
         { badge: "Prompt Bank", title: "A smart prompt collection for scholarly publishing", desc: "Use thousands of ready-made instruction formulas for academic paraphrasing and reviewer responses.", btn: "Open Prompt Bank" }
       ],
       // AI For Research tab
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ai_research_cards: [
         { title: "JurnalHub Humanizer Engine", desc: "Rewrite AI-generated text so it passes AI detectors (like Turnitin & GPTZero) with very natural academic language.", btn: "Humanize Text" },
         { title: "Check Journal Acceptance Probability", desc: "Enter title and abstract, get the most suitable Scopus & Sinta journals complete with matching scores, in seconds.", btn: "Check Score Now" },
-        { title: "AI Drafting Companion", desc: "Transform research ideas into structured drafts, complete with arguments, references, and ready-to-submit academic grammar.", btn: "Start Writing" },
+        { title: "AI Outline Generator", desc: "Create a structured manuscript outline from Chapter 1 to Chapter 5 systematically to guide your scientific writing process.", btn: "Generate Outline" },
         { title: "AI Literature Review", desc: "Build a comprehensive literature review complete with automatic citations from trusted journals, usually takes days, now in minutes.", btn: "Search Citations" }
       ],
 
@@ -994,14 +994,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const pct = Math.min(100, (draftUsed / draftLimit) * 100);
       barQuotaMatchDraft.style.width = `${pct}%`;
       barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
-      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match unlimited · Draft 15x/month' : 'Match tanpa batas · Draft 15x/bulan';
+      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match unlimited · Outline 15x/month' : 'Match tanpa batas · Outline 15x/bulan';
     } else {
       const draftLimit = 1;
       txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
       const pct = Math.min(100, (draftUsed / draftLimit) * 100);
       barQuotaMatchDraft.style.width = `${pct}%`;
       barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
-      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match 1x/month · Draft 1x/month' : 'Match 1x/bulan · Draft 1x/bulan';
+      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match 1x/month · Outline 1x/month' : 'Match 1x/bulan · Outline 1x/bulan';
     }
 
     // 2. Lit Review (Perplexity limits)
@@ -4036,7 +4036,7 @@ document.addEventListener('DOMContentLoaded', () => {
         typeIcon = 'fa-regular fa-file-lines';
         iconColor = '#10b981';
         iconBg = 'rgba(16, 185, 129, 0.1)';
-        typeLabel = 'AI Drafting Companion';
+        typeLabel = 'AI Outline Generator';
       } else if (item.type === 'lit-review') {
         typeIcon = 'fa-solid fa-book-open-reader';
         iconColor = '#8b5cf6';
@@ -4592,7 +4592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = badge.getAttribute('data-type');
         if (type === 'all') badge.textContent = lang === 'id' ? 'Semua' : 'All';
         else if (type === 'match') badge.textContent = lang === 'id' ? 'Journal Matcher' : 'Journal Matcher';
-        else if (type === 'draft') badge.textContent = lang === 'id' ? 'Drafting Companion' : 'Drafting Companion';
+        else if (type === 'draft') badge.textContent = lang === 'id' ? 'Outline Generator' : 'Outline Generator';
         else if (type === 'lit-review') badge.textContent = lang === 'id' ? 'Literature Review' : 'Literature Review';
         else if (type === 'humanizer') badge.textContent = lang === 'id' ? 'Humanizer Engine' : 'Humanizer Engine';
       });
