@@ -1405,9 +1405,15 @@
     
     .ai-research-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 1.5rem;
       margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+      .ai-research-grid {
+        grid-template-columns: 1fr;
+      }
     }
     
     .ai-research-card {
@@ -2864,70 +2870,9 @@
             <p>Pilih salah satu asisten kecerdasan buatan (AI) di bawah ini untuk mempercepat riset dan penulisan ilmiah Anda.</p>
           </div>
           
-            <!-- Card 1: AI Match Score -->
-            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
-              <div class="ai-research-card-content">
-                <div class="ai-research-icon-wrapper">
-                  <i class="fa-solid fa-percent"></i>
-                </div>
-                <h4>Cek Peluang Diterima Jurnal</h4>
-                <p>Masukkan judul dan abstrak, dapatkan daftar jurnal Scopus & Sinta yang paling cocok lengkap dengan skor kecocokan, dalam hitungan detik.</p>
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.50rem; display: flex; align-items: center; gap: 0.35rem;">
-                  <i class="fa-solid fa-database" style="color: var(--brand-blue);"></i> Dianalisis dari 10.000+ jurnal terindeks
-                </div>
-                <div style="font-size: 0.72rem; background: rgba(7, 135, 220, 0.04); border: 1px dashed rgba(7, 135, 220, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #0369a1; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Menghitung skor indeks reputasi (SJR) & Quartile (Q1-Q4) secara instan
-                </div>
-                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / Tanpa Batas (PRO)
-                </div>
-              </div>
-              <button class="ai-research-btn" onclick="switchTab('match-score')" style="margin-top: 1rem;">
-                Cek Skor Sekarang <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-
-            <!-- Card 2: AI Drafting Companion -->
-            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
-              <div class="ai-research-card-content">
-                <div class="ai-research-icon-wrapper">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i>
-                </div>
-                <h4>AI Drafting Companion</h4>
-                <p>Ubah ide riset jadi draf terstruktur, lengkap dengan argumentasi, referensi, dan tata bahasa akademik siap submit.</p>
-                <div style="font-size: 0.72rem; background: rgba(139, 92, 246, 0.04); border: 1px dashed rgba(139, 92, 246, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #6d28d9; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-file-invoice"></i> Menyusun Bab 1 s.d. Bab 5 dengan referensi sitasi yang padat
-                </div>
-                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / 15x per bulan (PRO)
-                </div>
-              </div>
-              <button class="ai-research-btn" onclick="switchTab('drafting-companion')" style="margin-top: 1rem;">
-                Mulai Menulis <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-
-            <!-- Card 3: AI Literature Review -->
-            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
-              <div class="ai-research-card-content">
-                <div class="ai-research-icon-wrapper">
-                  <i class="fa-solid fa-book-open"></i>
-                </div>
-                <h4>AI Literature Review</h4>
-                <p>Susun tinjauan pustaka lengkap dengan sitasi otomatis dari jurnal terpercaya, biasanya butuh berhari-hari, sekarang dalam hitungan menit.</p>
-                <div style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.04); border: 1px dashed rgba(16, 185, 129, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #047857; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-magnifying-glass"></i> Menemukan referensi ilmiah kredibel dari Scopus / Google Scholar
-                </div>
-                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / 15x per bulan (PRO)
-                </div>
-              </div>
-              <button class="ai-research-btn" onclick="switchTab('lit-review')" style="margin-top: 1rem;">
-                Cari Sitasi <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-
-            <!-- Card 4: JurnalHub Humanizer Engine -->
+          <div class="ai-research-grid">
+            
+            <!-- Card 1: JurnalHub Humanizer Engine -->
             <div class="ai-research-card" style="position: relative; border: 2px solid #f59e0b; box-shadow: 0 8px 30px rgba(245, 158, 11, 0.15); display: flex; flex-direction: column; justify-content: space-between;">
               <!-- Badge Paling Populer -->
               <span style="position: absolute; top: -12px; right: 20px; background: linear-gradient(135deg, #f59e0b, #ff7417); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(245,158,11,0.4);"><i class="fa-solid fa-fire"></i> Paling Populer</span>
@@ -2951,27 +2896,70 @@
               </button>
             </div>
 
-          </div>
-
-          <!-- Social Proof Section -->
-          <div style="margin-top: 3.5rem; border-top: 1px solid rgba(8,34,64,0.06); padding-top: 2.5rem; text-align: center;">
-            <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1.5rem;">Dipercaya oleh Akademisi & Peneliti dari Kampus Terbaik</p>
-            <div style="display: flex; justify-content: center; align-items: center; gap: 3rem; flex-wrap: wrap; opacity: 0.65; font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; letter-spacing: 0.5px; color: var(--text-main);">
-              <span>UNIVERSITAS INDONESIA</span>
-              <span>INSTITUT TEKNOLOGI BANDUNG</span>
-              <span>UNIVERSITAS GADJAH MADA</span>
-              <span>UNIVERSITAS AIRLANGGA</span>
-              <span>ITS SURABAYA</span>
+            <!-- Card 2: AI Match Score -->
+            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="ai-research-card-content">
+                <div class="ai-research-icon-wrapper">
+                  <i class="fa-solid fa-percent"></i>
+                </div>
+                <h4>Cek Peluang Diterima Jurnal</h4>
+                <p>Masukkan judul dan abstrak, dapatkan daftar jurnal Scopus & Sinta yang paling cocok lengkap dengan skor kecocokan, dalam hitungan detik.</p>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.50rem; display: flex; align-items: center; gap: 0.35rem;">
+                  <i class="fa-solid fa-database" style="color: var(--brand-blue);"></i> Dianalisis dari 10.000+ jurnal terindeks
+                </div>
+                <div style="font-size: 0.72rem; background: rgba(7, 135, 220, 0.04); border: 1px dashed rgba(7, 135, 220, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #0369a1; display: flex; align-items: center; gap: 0.3rem;">
+                  <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Menghitung skor indeks reputasi (SJR) & Quartile (Q1-Q4) secara instan
+                </div>
+                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
+                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / Tanpa Batas (PRO)
+                </div>
+              </div>
+              <button class="ai-research-btn" onclick="switchTab('match-score')" style="margin-top: 1rem;">
+                Cek Skor Sekarang <i class="fa-solid fa-arrow-right"></i>
+              </button>
             </div>
-            <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 1.75rem; font-style: italic; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-              "Sangat membantu mencocokkan manuskrip dengan jurnal sasaran terindeks Scopus. JurnalHub memotong waktu pencarian dan review kami hingga lebih dari 70%!"
-              <br>
-              <span style="font-weight: 700; font-style: normal; font-size: 0.8rem; color: var(--text-main); margin-top: 0.4rem; display: block;">— Dr. Hendra, Peneliti Senior & Dosen Fakultas Teknik</span>
-            </p>
-          </div>
 
-        </div>
-      </div>
+            <!-- Card 3: AI Drafting Companion -->
+            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="ai-research-card-content">
+                <div class="ai-research-icon-wrapper">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <h4>AI Drafting Companion</h4>
+                <p>Ubah ide riset jadi draf terstruktur, lengkap dengan argumentasi, referensi, dan tata bahasa akademik siap submit.</p>
+                <div style="font-size: 0.72rem; background: rgba(139, 92, 246, 0.04); border: 1px dashed rgba(139, 92, 246, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #6d28d9; display: flex; align-items: center; gap: 0.3rem;">
+                  <i class="fa-solid fa-file-invoice"></i> Menyusun Bab 1 s.d. Bab 5 dengan referensi sitasi yang padat
+                </div>
+                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
+                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / 15x per bulan (PRO)
+                </div>
+              </div>
+              <button class="ai-research-btn" onclick="switchTab('drafting-companion')" style="margin-top: 1rem;">
+                Mulai Menulis <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- Card 4: AI Literature Review -->
+            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="ai-research-card-content">
+                <div class="ai-research-icon-wrapper">
+                  <i class="fa-solid fa-book-open"></i>
+                </div>
+                <h4>AI Literature Review</h4>
+                <p>Susun tinjauan pustaka lengkap dengan sitasi otomatis dari jurnal terpercaya, biasanya butuh berhari-hari, sekarang dalam hitungan menit.</p>
+                <div style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.04); border: 1px dashed rgba(16, 185, 129, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #047857; display: flex; align-items: center; gap: 0.3rem;">
+                  <i class="fa-solid fa-magnifying-glass"></i> Menemukan referensi ilmiah kredibel dari Scopus / Google Scholar
+                </div>
+                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
+                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / 15x per bulan (PRO)
+                </div>
+              </div>
+              <button class="ai-research-btn" onclick="switchTab('lit-review')" style="margin-top: 1rem;">
+                Cari Sitasi <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+          </div>
         </div>
       </div>
 
