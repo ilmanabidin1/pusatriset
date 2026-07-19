@@ -3453,18 +3453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (m.role === 'user') {
           return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
         }
-        let bodyHtml = '';
-        if (m.reasoning) {
-          bodyHtml += `
-            <details class="chat-thinking-block">
-              <summary class="chat-thinking-summary">
-                <i class="fa-solid fa-brain"></i> Pemikiran JurnalHub Intelligence (Selesai)
-              </summary>
-              <div class="chat-thinking-content">${escapeHtml(m.reasoning)}</div>
-            </details>
-          `;
-        }
-        bodyHtml += `<div class="chat-main-content">${renderMarkdownSafe(m.content)}</div>`;
+        let bodyHtml = `<div class="chat-main-content">${renderMarkdownSafe(m.content)}</div>`;
         return `
           <div class="research-chat-assistant-block">
             <div class="research-chat-bubble assistant">${bodyHtml}</div>
@@ -3593,16 +3582,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           let html = '';
-          if (thinkingText) {
-            html += `
-              <details class="chat-thinking-block">
-                <summary class="chat-thinking-summary">
-                  <i class="fa-solid fa-brain fa-spin-pulse"></i> Pemikiran JurnalHub Intelligence...
-                </summary>
-                <div class="chat-thinking-content">${escapeHtml(thinkingText)}</div>
-              </details>
-            `;
-          }
           if (contentText) {
             html += `<div class="chat-main-content">${renderMarkdownSafe(contentText)}</div>`;
           }
@@ -3620,11 +3599,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        const newMsg = { role: 'assistant', content: contentText };
-        if (thinkingText) {
-          newMsg.reasoning = thinkingText;
-        }
-        researchChatMessages.push(newMsg);
+        researchChatMessages.push({ role: 'assistant', content: contentText });
         // Re-render penuh supaya bubble sementara diganti struktur final (dengan tombol salin)
         renderResearchChatMessages();
         // Percakapan baru saja disimpan/diperbarui di server - refresh daftar riwayat
