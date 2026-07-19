@@ -1789,119 +1789,79 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
 
   const stealthApiKey = process.env.STEALTH_API_KEY || process.env.STEALTHGPT_API_KEY;
 
-  if (stealthApiKey && stealthApiKey.trim() !== '') {
+  if (!stealthApiKey || stealthApiKey.trim() === '') {
+    console.error('[Humanizer] STEALTH_API_KEY tidak diset di environment.');
+    return res.status(503).json({ ok: false, message: 'Layanan Humanizer sedang tidak tersedia. Silakan coba lagi nanti.' });
+  }
+
+  try {
+    console.log(`[Humanizer] Calling StealthGPT API for user ${req.session.userId || 'unknown'} (${wordCount} words)`);
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const tone = mode === 'academic' ? 'Academic' : 'Standard';
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+    let response;
     try {
-      console.log(`[Humanizer] Calling StealthGPT API for user ${req.session.userId || 'unknown'} (${wordCount} words)`);
-      const fetchFn = globalThis.fetch || require('node-fetch');
-      const tone = mode === 'academic' ? 'Academic' : 'Standard';
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-      let response;
-      try {
-        response = await fetchFn('https://www.stealthgpt.ai/api/stealthify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-token': stealthApiKey.trim()
-          },
-          body: JSON.stringify({
-            prompt: cleanText,
-            rephrase: true,
-            tone: tone,
-            mode: 'Medium'
-          }),
-          signal: controller.signal
-        });
-      } finally {
-        clearTimeout(timeoutId);
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Humanizer] StealthGPT API error status:', response.status, errorText);
-        throw new Error(`StealthGPT API returned status ${response.status}`);
-      }
-
-      const resData = await response.json();
-      const humanized = resData.result || cleanText;
-      const outputWordCount = humanized.split(/\s+/).filter(w => w.length > 0).length;
-      const actualCost = wordCount + outputWordCount;
-
-      // Update database usage with (input + output)
-      if (user) {
-        user.humanizerWordsUsedThisMonth = (user.humanizerWordsUsedThisMonth || 0) + actualCost;
-        saveUsers(users);
-      }
-
-      const score = resData.howLikelyToBeDetected !== undefined ? (100 - parseInt(resData.howLikelyToBeDetected)) : (94 + Math.floor(Math.random() * 5));
-      const originalityScore = isNaN(score) ? 95 : Math.max(80, Math.min(100, score));
-
-      addHistoryItem(req.session.userId, 'humanizer', { text: cleanText, mode }, { humanizedText: humanized, originalityScore, wordCount, actualCost });
-
-      return res.json({
-        ok: true,
-        humanizedText: humanized,
-        wordCount: wordCount,
-        actualCost: actualCost,
-        originalityScore: originalityScore
+      response = await fetchFn('https://www.stealthgpt.ai/api/stealthify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-token': stealthApiKey.trim()
+        },
+        body: JSON.stringify({
+          prompt: cleanText,
+          rephrase: true,
+          tone: tone,
+          mode: 'Medium'
+        }),
+        signal: controller.signal
       });
-
-    } catch (apiError) {
-      console.error('[Humanizer] Failed to connect to StealthGPT API, falling back to mock paraphrasing:', apiError.message);
+    } finally {
+      clearTimeout(timeoutId);
     }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Humanizer] StealthGPT API error status:', response.status, errorText);
+      throw new Error(`StealthGPT API returned status ${response.status}`);
+    }
+
+    const resData = await response.json();
+    const humanized = resData.result || cleanText;
+    const outputWordCount = humanized.split(/\s+/).filter(w => w.length > 0).length;
+    const actualCost = wordCount + outputWordCount;
+
+    // Update database usage with (input + output)
+    if (user) {
+      user.humanizerWordsUsedThisMonth = (user.humanizerWordsUsedThisMonth || 0) + actualCost;
+      saveUsers(users);
+    }
+
+    const score = resData.howLikelyToBeDetected !== undefined ? (100 - parseInt(resData.howLikelyToBeDetected)) : (94 + Math.floor(Math.random() * 5));
+    const originalityScore = isNaN(score) ? 95 : Math.max(80, Math.min(100, score));
+
+    addHistoryItem(req.session.userId, 'humanizer', { text: cleanText, mode }, { humanizedText: humanized, originalityScore, wordCount, actualCost });
+
+    return res.json({
+      ok: true,
+      humanizedText: humanized,
+      wordCount: wordCount,
+      actualCost: actualCost,
+      originalityScore: originalityScore
+    });
+
+  } catch (apiError) {
+    const isTimeout = apiError.name === 'AbortError';
+    console.error('[Humanizer] Gagal menghubungi StealthGPT API:', apiError.message);
+    return res.status(502).json({
+      ok: false,
+      message: isTimeout
+        ? 'Server Humanizer (StealthGPT) tidak merespons dalam waktu yang wajar. Silakan coba lagi.'
+        : 'Gagal memproses humanisasi teks. Layanan StealthGPT sedang bermasalah, silakan coba lagi nanti.'
+    });
   }
-
-  // Perform mock paraphrasing / humanizing (as fallback)
-  let humanized = cleanText;
-
-  // Simple rule-based substitutions to simulate academic paraphrasing
-  const rules = [
-    { regex: /\bTherefore\b/g, repl: 'Consequently' },
-    { regex: /\bfurthermore\b/gi, repl: 'moreover' },
-    { regex: /\bin order to\b/gi, repl: 'to' },
-    { regex: /\butilize\b/gi, repl: 'use' },
-    { regex: /\butilized\b/gi, repl: 'used' },
-    { regex: /\butilization\b/gi, repl: 'use' },
-    { regex: /\bIt is important to note that\b/gi, repl: 'Notably,' },
-    { regex: /\ba plethora of\b/gi, repl: 'many' },
-    { regex: /\bconducted a study\b/gi, repl: 'investigated' },
-    { regex: /\bconcluded that\b/gi, repl: 'found that' },
-    { regex: /\bdemonstrates that\b/gi, repl: 'shows that' },
-    { regex: /\bThis study aims to\b/gi, repl: 'This research focuses on' },
-    { regex: /\bsignificant effect\b/gi, repl: 'noticeable impact' }
-  ];
-
-  rules.forEach(rule => {
-    humanized = humanized.replace(rule.regex, rule.repl);
-  });
-
-  // If Academic mode, make a mock enhanced message prefix or touch up
-  if (mode === 'academic') {
-    humanized = humanized.replace(/\bwe found\b/gi, 'our findings indicate');
-    humanized = humanized.replace(/\bI think\b/gi, 'it is argued');
-  }
-
-  const outputWordCount = humanized.split(/\s+/).filter(w => w.length > 0).length;
-  const actualCost = wordCount + outputWordCount;
-
-  // Update database usage with (input + output)
-  if (user) {
-    user.humanizerWordsUsedThisMonth = (user.humanizerWordsUsedThisMonth || 0) + actualCost;
-    saveUsers(users);
-  }
-
-  const originalityScore = 94 + Math.floor(Math.random() * 5);
-  addHistoryItem(req.session.userId, 'humanizer', { text: cleanText, mode }, { humanizedText: humanized, originalityScore, wordCount, actualCost });
-
-  res.json({
-    ok: true,
-    humanizedText: humanized,
-    wordCount: wordCount,
-    actualCost: actualCost,
-    originalityScore: originalityScore
-  });
 });
 
 // --- ASISTEN RISET AI (DeepSeek) ---
