@@ -1794,20 +1794,29 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
       console.log(`[Humanizer] Calling StealthGPT API for user ${req.session.userId || 'unknown'} (${wordCount} words)`);
       const fetchFn = globalThis.fetch || require('node-fetch');
       const tone = mode === 'academic' ? 'Academic' : 'Standard';
-      
-      const response = await fetchFn('https://www.stealthgpt.ai/api/stealthify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-token': stealthApiKey.trim()
-        },
-        body: JSON.stringify({
-          prompt: cleanText,
-          rephrase: true,
-          tone: tone,
-          mode: 'Medium'
-        })
-      });
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      let response;
+      try {
+        response = await fetchFn('https://www.stealthgpt.ai/api/stealthify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-token': stealthApiKey.trim()
+          },
+          body: JSON.stringify({
+            prompt: cleanText,
+            rephrase: true,
+            tone: tone,
+            mode: 'Medium'
+          }),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
