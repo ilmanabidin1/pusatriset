@@ -1796,7 +1796,7 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
       const tone = mode === 'academic' ? 'Academic' : 'Standard';
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       let response;
       try {
