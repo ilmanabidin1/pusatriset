@@ -36,8 +36,9 @@
 
     body {
       font-family: var(--font-primary);
-      /* Full-bleed rich blue gradient background */
-      background: radial-gradient(circle at 80% 20%, #0e2b5c 0%, #051329 100%);
+      /* Full-bleed rich blue gradient background, subtle grid overlay a la Kelo */
+      background:
+        radial-gradient(circle at 80% 20%, #0e2b5c 0%, #051329 100%);
       color: #ffffff;
       min-height: 100vh;
       display: flex;
@@ -48,29 +49,43 @@
       position: relative;
     }
 
-    /* Subtle background glow effect */
-    body::before {
+    body::before,
+    body::after {
       content: '';
       position: absolute;
+      pointer-events: none;
+      z-index: 1;
+      border-radius: 50%;
+      filter: blur(10px);
+      animation: orbFloat 16s ease-in-out infinite;
+    }
+
+    /* Subtle background glow effect (animated) */
+    body::before {
       width: 40vw;
       height: 40vw;
       top: 10%;
       right: 5%;
-      background: radial-gradient(circle, rgba(7, 135, 220, 0.15) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 1;
+      background: radial-gradient(circle, rgba(7, 135, 220, 0.18) 0%, transparent 70%);
     }
 
     body::after {
-      content: '';
-      position: absolute;
       width: 50vw;
       height: 50vw;
       bottom: -10%;
       left: -10%;
-      background: radial-gradient(circle, rgba(255, 116, 23, 0.08) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 1;
+      background: radial-gradient(circle, rgba(255, 116, 23, 0.1) 0%, transparent 70%);
+      animation-delay: -8s;
+      animation-direction: reverse;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-3%, 4%) scale(1.08); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body::before, body::after { animation: none; }
     }
 
     /* Layout Split */
@@ -90,6 +105,115 @@
       display: flex;
       flex-direction: column;
       padding: 1rem 0;
+      position: relative;
+    }
+
+    /* Entrance animations (Kelo-style staggered reveal) */
+    .reveal-up {
+      opacity: 0;
+      transform: translateY(18px);
+      animation: revealUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes revealUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal-up { opacity: 1; transform: none; animation: none; }
+    }
+
+    /* Floating dashboard mockup preview (echoes Kelo's glass dashboard) */
+    .hero-mockup {
+      position: relative;
+      margin-top: 2.5rem;
+      max-width: 460px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 1.25rem 1.35rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      transition: var(--transition-smooth);
+      animation: mockupFloat 7s ease-in-out infinite;
+    }
+    .hero-mockup:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-4px);
+    }
+    @keyframes mockupFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-mockup { animation: none; }
+    }
+    .hero-mockup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .hero-mockup-header span {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .hero-mockup-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #4ade80;
+      background: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+    }
+    .hero-mockup-live i {
+      font-size: 0.5rem;
+      animation: pulseDot 1.6s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .hero-mockup-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .hero-mockup-row:last-child { border-bottom: none; }
+    .hero-mockup-row-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    .hero-mockup-row-sub {
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+    .hero-mockup-score {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+      padding: 0.25rem 0.55rem;
+      border-radius: 8px;
+      flex-shrink: 0;
     }
 
     .branding-logo {
@@ -116,6 +240,29 @@
       letter-spacing: 0.05em;
       margin-bottom: 1.5rem;
       align-self: flex-start;
+      transition: var(--transition-smooth);
+    }
+    .branding-badge:hover {
+      border-color: rgba(245, 158, 11, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .feature-pill {
+      transition: var(--transition-smooth);
+      border-radius: 10px;
+      padding: 0.35rem 0.5rem;
+      margin: 0 -0.5rem;
+    }
+    .feature-pill:hover {
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateX(3px);
+    }
+
+    .stat-item {
+      transition: var(--transition-smooth);
+    }
+    .stat-item:hover {
+      transform: translateY(-2px);
     }
 
     .branding-title {
@@ -437,6 +584,15 @@
         justify-content: center;
         gap: 2.5rem;
       }
+      .hero-mockup {
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero-mockup { display: none; }
     }
     footer a:hover {
       color: #ffffff !important;
@@ -449,40 +605,40 @@
     
     <!-- Left Column: Branding (matches 1b layout) -->
     <div class="auth-branding">
-      <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 3.5rem; flex-wrap: wrap;">
+      <div class="reveal-up" style="display: flex; align-items: center; gap: 2rem; margin-bottom: 3.5rem; flex-wrap: wrap; animation-delay: 0s;">
         <img src="assets/jurnalhub-logo-light.png" alt="JurnalHub" style="max-height: 64px; width: auto;">
         <div style="width: 1px; height: 42px; background: rgba(255, 255, 255, 0.25);"></div>
         <img src="assets/powered-by-claude-dark.png" alt="Powered by Claude" style="max-height: 56px; width: auto;">
       </div>
-      
-      <div class="branding-badge">
+
+      <div class="branding-badge reveal-up" style="animation-delay: 0.05s;">
         <i class="fa-solid fa-graduation-cap"></i> Portal Riset Terpadu
       </div>
-      
-      <h1 class="branding-title">
+
+      <h1 class="branding-title reveal-up" style="animation-delay: 0.1s;">
         Satu portal untuk semua kebutuhan <span>publikasi jurnal</span> Anda
       </h1>
-      
-      <p class="branding-description" style="margin-bottom: 2rem;">
+
+      <p class="branding-description reveal-up" style="margin-bottom: 2rem; animation-delay: 0.18s;">
         Cari, bandingkan, susun draf, dan loloskan draf Anda dari Turnitin menggunakan asisten pintar AI Journal Matcher, AI Drafting Companion, & JurnalHub Humanizer Engine.
       </p>
 
-      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 3rem; font-size: 0.95rem; color: rgba(255,255,255,0.85);">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <div class="reveal-up" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2.5rem; font-size: 0.95rem; color: rgba(255,255,255,0.85); animation-delay: 0.26s;">
+        <div class="feature-pill" style="display: flex; align-items: center; gap: 0.75rem;">
           <i class="fa-solid fa-circle-check" style="color: #fbbf24; font-size: 1.1rem;"></i>
           <span><strong>AI Journal Match Score</strong> - Rekomendasi jurnal Scopus & Sinta terakurat.</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="feature-pill" style="display: flex; align-items: center; gap: 0.75rem;">
           <i class="fa-solid fa-circle-check" style="color: #fbbf24; font-size: 1.1rem;"></i>
           <span><strong>AI Drafting Companion & Lit Review</strong> - Susun struktur dan kajian pustaka instan.</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="feature-pill" style="display: flex; align-items: center; gap: 0.75rem;">
           <i class="fa-solid fa-circle-check" style="color: #f59e0b; font-size: 1.1rem;"></i>
           <span><strong>JurnalHub Humanizer Engine</strong> - Loloskan tulisan AI dari Turnitin & GPTZero secara natural.</span>
         </div>
       </div>
 
-      <div class="branding-stats">
+      <div class="branding-stats reveal-up" style="margin-bottom: 2.5rem; animation-delay: 0.34s;">
         <div class="stat-item">
           <span class="stat-value">750+</span>
           <span class="stat-label">Jurnal terverifikasi</span>
@@ -492,11 +648,40 @@
           <span class="stat-label">Gratis untuk mulai</span>
         </div>
       </div>
+
+      <!-- Floating dashboard mockup preview -->
+      <div class="hero-mockup reveal-up" style="animation-delay: 0.42s;">
+        <div class="hero-mockup-header">
+          <span><i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 0.4rem; color: #fbbf24;"></i>AI Journal Match Score</span>
+          <span class="hero-mockup-live"><i class="fa-solid fa-circle"></i>Live</span>
+        </div>
+        <div class="hero-mockup-row">
+          <div>
+            <div class="hero-mockup-row-title">International Journal of Digital Law</div>
+            <div class="hero-mockup-row-sub">Scopus Q2 &middot; Bidang Hukum</div>
+          </div>
+          <div class="hero-mockup-score"><i class="fa-solid fa-arrow-trend-up"></i>96%</div>
+        </div>
+        <div class="hero-mockup-row">
+          <div>
+            <div class="hero-mockup-row-title">Jurnal Riset Ekonomi Digital</div>
+            <div class="hero-mockup-row-sub">Sinta 2 &middot; Bidang Ekonomi</div>
+          </div>
+          <div class="hero-mockup-score"><i class="fa-solid fa-arrow-trend-up"></i>91%</div>
+        </div>
+        <div class="hero-mockup-row">
+          <div>
+            <div class="hero-mockup-row-title">Asia Pacific Business Review</div>
+            <div class="hero-mockup-row-sub">Scopus Q1 &middot; Bidang Manajemen</div>
+          </div>
+          <div class="hero-mockup-score"><i class="fa-solid fa-arrow-trend-up"></i>88%</div>
+        </div>
+      </div>
     </div>
 
     <!-- Right Column: Glassmorphism Card (matches 1b layout) -->
     <div class="auth-card-wrapper">
-      <div class="auth-container">
+      <div class="auth-container reveal-up" style="animation-delay: 0.15s;">
         <!-- Google Sign-In Config -->
         <div id="g_id_onload"
              data-client_id="571306850750-ckq38nmai4felal861uu0hgj1b13bihf.apps.googleusercontent.com"
