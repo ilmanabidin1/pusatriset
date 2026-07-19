@@ -3256,14 +3256,16 @@
           <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
           <div class="match-box-wrapper" id="humanizerBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
-            <!-- Overlay Lock for Free User -->
-            <!-- Overlay Lock: Coming Soon (Locked for all users) -->
-            <div id="humanizerComingSoonLock" style="display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: rgba(11, 26, 48, 0.96); border-radius: var(--card-radius); flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; color: #ffffff; backdrop-filter: blur(4px);">
-              <i class="fa-solid fa-clock" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem; animation: pulse 2s infinite;"></i>
-              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; margin-bottom: 0.5rem;">Fitur Akan Segera Hadir</h3>
-              <p style="color: rgba(255,255,255,0.7); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.6; font-size: 0.95rem;">
-                JurnalHub Humanizer Engine sedang dalam tahap integrasi akhir dan optimalisasi model AI. Fitur ini akan segera dapat Anda akses dalam waktu dekat. Terima kasih atas kesabaran Anda!
+            <!-- Overlay Lock for Free User (Premium/Ultimate dibuka otomatis oleh app.js) -->
+            <div id="humanizerPremiumLock" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: rgba(11, 26, 48, 0.96); border-radius: var(--card-radius); flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; color: #ffffff; backdrop-filter: blur(4px);">
+              <i class="fa-solid fa-lock" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
+              <h3>Fitur Eksklusif PRO</h3>
+              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
+                JurnalHub Humanizer Engine khusus untuk akun Premium & Ultimate. Upgrade untuk mendapatkan akses penuh.
               </p>
+              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fa-solid fa-crown"></i> Upgrade PRO
+              </button>
             </div>
 
             <!-- Form Content -->

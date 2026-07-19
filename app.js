@@ -4336,8 +4336,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 5. Translate Matcher Tab
-      const matcherHeader = document.querySelector('#tabContentMatchScore h3');
-      const matcherDesc = document.querySelector('#tabContentMatchScore p');
+      // Catatan: scoped ke .match-header (bukan sekadar tab-wide "h3"/"p") karena
+      // overlay lock PRO di tiap tab ini juga punya h3/p sendiri yang muncul lebih
+      // dulu di urutan DOM - selector generik akan salah menimpa teks lock itu.
+      const matcherHeader = document.querySelector('#tabContentMatchScore .match-header h3');
+      const matcherDesc = document.querySelector('#tabContentMatchScore .match-header p');
       const runMatchBtn = document.getElementById('runMatchBtn');
       if (matcherHeader) matcherHeader.textContent = TRANSLATIONS[lang].matcher_title;
       if (matcherDesc) matcherDesc.textContent = TRANSLATIONS[lang].matcher_desc;
@@ -4348,8 +4351,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 6. Translate Drafting Tab
-      const draftingHeader = document.querySelector('#tabContentDraftingCompanion h3');
-      const draftingDesc = document.querySelector('#tabContentDraftingCompanion p');
+      const draftingHeader = document.querySelector('#tabContentDraftingCompanion .match-header h3');
+      const draftingDesc = document.querySelector('#tabContentDraftingCompanion .match-header p');
       const runDraftGenerator = document.getElementById('runDraftGenerator');
       if (draftingHeader) draftingHeader.textContent = TRANSLATIONS[lang].drafting_title;
       if (draftingDesc) draftingDesc.textContent = TRANSLATIONS[lang].drafting_desc;
@@ -4360,8 +4363,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 7. Translate Lit Review Tab
-      const litHeader = document.querySelector('#tabContentLitReview h3');
-      const litDesc = document.querySelector('#tabContentLitReview p');
+      const litHeader = document.querySelector('#tabContentLitReview .match-header h3');
+      const litDesc = document.querySelector('#tabContentLitReview .match-header p');
       const runLitReviewBtn = document.getElementById('runLitReviewBtn');
       if (litHeader) litHeader.textContent = TRANSLATIONS[lang].lit_title;
       if (litDesc) litDesc.textContent = TRANSLATIONS[lang].lit_desc;
@@ -4372,8 +4375,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 8. Translate Humanizer Tab
-      const humanizerHeader = document.querySelector('#tabContentHumanizer h3');
-      const humanizerDesc = document.querySelector('#tabContentHumanizer p');
+      const humanizerHeader = document.querySelector('#tabContentHumanizer .match-header h3');
+      const humanizerDesc = document.querySelector('#tabContentHumanizer .match-header p');
       const runHumanizerBtn = document.getElementById('runHumanizerBtn');
       const humanizerQuotaBadge = document.getElementById('humanizerQuotaBadge');
       if (humanizerHeader) humanizerHeader.textContent = TRANSLATIONS[lang].humanizer_title;
