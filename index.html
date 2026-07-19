@@ -3625,6 +3625,19 @@
                   <button type="submit" class="btn btn-primary" id="btnSaveProfile" style="padding: 0.7rem 1.75rem; font-size: 0.88rem;">Simpan Perubahan Profil</button>
                 </div>
               </form>
+
+              <!-- Aktivasi Kode Akses (upgrade manual ke Ultimate 30 hari) -->
+              <div style="margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light-hover);">
+                <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; color: var(--text-main); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fa-solid fa-key" style="color: #fbbf24;"></i> Aktivasi Kode Akses
+                </h4>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.9rem 0;">Punya kode akses dari pembayaran manual? Masukkan di sini untuk upgrade akun Anda ke Ultimate selama 30 hari.</p>
+                <div style="display: flex; gap: 0.6rem; max-width: 420px;">
+                  <input type="text" id="profileActivateCodeInput" placeholder="Masukkan kode akses" style="flex: 1; padding: 0.65rem 0.9rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; outline: none; text-transform: uppercase;">
+                  <button id="profileActivateCodeBtn" type="button" class="btn btn-primary" style="padding: 0.65rem 1.25rem; font-size: 0.85rem; white-space: nowrap;">Aktifkan</button>
+                </div>
+                <p id="profileActivateCodeMessage" style="font-size: 0.8rem; margin: 0.6rem 0 0 0; display: none; font-weight: 600;"></p>
+              </div>
             </div>
 
             <!-- Section 2: Preferensi Pencarian -->
@@ -4066,15 +4079,92 @@
         }
       });
 
-      // Activate Code Footer Link (directs to auth access tab)
-      if (modalActivateLink) {
+      // Helper bersama untuk kirim kode akses ke server dan tampilkan hasilnya di
+      // elemen pesan terkait. Dipakai oleh field di modal upgrade & di tab Pengaturan.
+      async function redeemAccessCode(code, btnEl, messageEl) {
+        if (!code) return;
+        const originalBtnHtml = btnEl.innerHTML;
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+          const response = await fetch('/api/redeem-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          });
+          const data = await response.json();
+
+          messageEl.style.display = 'block';
+          messageEl.textContent = data.message || (data.ok ? 'Berhasil.' : 'Terjadi kesalahan.');
+          messageEl.style.color = data.ok ? '#10b981' : '#ef4444';
+
+          if (data.ok) {
+            // Refresh seluruh status akun (badge tipe akun, kuota, dsb) tanpa reload halaman
+            if (window.checkAuthState) {
+              await window.checkAuthState();
+            } else {
+              setTimeout(() => window.location.reload(), 1200);
+            }
+          }
+        } catch (error) {
+          console.error('Gagal mengaktifkan kode akses:', error);
+          messageEl.style.display = 'block';
+          messageEl.textContent = 'Terjadi kesalahan koneksi. Coba lagi.';
+          messageEl.style.color = '#ef4444';
+        } finally {
+          btnEl.disabled = false;
+          btnEl.innerHTML = originalBtnHtml;
+        }
+      }
+
+      // Field aktivasi kode akses di dalam modal upgrade
+      const modalActivateCodeRow = document.getElementById('modalActivateCodeRow');
+      const modalActivateCodeInput = document.getElementById('modalActivateCodeInput');
+      const modalActivateCodeBtn = document.getElementById('modalActivateCodeBtn');
+      const modalActivateCodeMessage = document.getElementById('modalActivateCodeMessage');
+
+      if (modalActivateLink && modalActivateCodeRow) {
         modalActivateLink.addEventListener('click', (e) => {
           e.preventDefault();
-          closeModal();
-          // Log out and redirect to auth.html access code form
-          fetch('/api/logout', { method: 'POST' }).then(() => {
-            window.location.href = '/auth.html';
-          });
+          const isVisible = modalActivateCodeRow.style.display === 'flex';
+          modalActivateCodeRow.style.display = isVisible ? 'none' : 'flex';
+          if (!isVisible && modalActivateCodeInput) modalActivateCodeInput.focus();
+        });
+      }
+
+      if (modalActivateCodeBtn) {
+        modalActivateCodeBtn.addEventListener('click', () => {
+          const code = modalActivateCodeInput.value.trim();
+          redeemAccessCode(code, modalActivateCodeBtn, modalActivateCodeMessage);
+        });
+      }
+      if (modalActivateCodeInput) {
+        modalActivateCodeInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            modalActivateCodeBtn.click();
+          }
+        });
+      }
+
+      // Field aktivasi kode akses di tab Pengaturan > Profil
+      const profileActivateCodeInput = document.getElementById('profileActivateCodeInput');
+      const profileActivateCodeBtn = document.getElementById('profileActivateCodeBtn');
+      const profileActivateCodeMessage = document.getElementById('profileActivateCodeMessage');
+
+      if (profileActivateCodeBtn) {
+        profileActivateCodeBtn.addEventListener('click', () => {
+          const code = profileActivateCodeInput.value.trim();
+          redeemAccessCode(code, profileActivateCodeBtn, profileActivateCodeMessage);
+        });
+      }
+      if (profileActivateCodeInput) {
+        profileActivateCodeInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            profileActivateCodeBtn.click();
+          }
         });
       }
 
@@ -4255,6 +4345,13 @@
         <p class="modal-footer-text" style="margin-top: 1rem; padding-top: 1rem;">
           Sudah punya kode akses? <a href="#" id="modalActivateLink">Aktifkan di sini</a>
         </p>
+
+        <!-- Field aktivasi kode akses (muncul saat link di atas diklik) -->
+        <div id="modalActivateCodeRow" style="display: none; gap: 0.6rem; margin-top: 0.75rem; align-items: center;">
+          <input type="text" id="modalActivateCodeInput" placeholder="Masukkan kode akses" style="flex: 1; padding: 0.65rem 0.9rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; outline: none; text-transform: uppercase;">
+          <button id="modalActivateCodeBtn" type="button" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.1rem; font-size: 0.82rem; background: var(--brand-blue); color: #fff;">Aktifkan</button>
+        </div>
+        <p id="modalActivateCodeMessage" style="font-size: 0.8rem; text-align: center; margin: 0.5rem 0 0 0; display: none; font-weight: 600;"></p>
       </div>
     </div>
   </div>

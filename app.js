@@ -836,6 +836,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Auth check failed', error);
     }
   }
+  window.checkAuthState = checkAuthState;
 
   // --- SAPAAN PERSONAL DI BERANDA ---
   function updateGreeting(user) {

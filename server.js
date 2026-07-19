@@ -359,6 +359,131 @@ function addTransaction(userId, referenceId, desc, amount, status) {
   return newTx;
 }
 
+// --- Kode Akses Manual (upgrade Ultimate 30 hari sambil belum ada payment gateway live) ---
+const ACCESS_CODES_FILE = path.join(DATA_DIR, 'access-codes.json');
+const MANUAL_ACCESS_CODE_PLAN = 'ultimate_monthly';
+const MANUAL_ACCESS_CODE_DURATION_DAYS = 30;
+const MANUAL_ACCESS_CODE_PRICE = 149000; // samakan dengan harga Ultimate Bulanan resmi, untuk catatan transaksi
+
+function getAccessCodes() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(ACCESS_CODES_FILE)) fs.writeFileSync(ACCESS_CODES_FILE, '[]');
+    return JSON.parse(fs.readFileSync(ACCESS_CODES_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca access-codes.json:', error);
+    return [];
+  }
+}
+
+function saveAccessCodes(codes) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(ACCESS_CODES_FILE, JSON.stringify(codes, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan access-codes.json:', error);
+    return false;
+  }
+}
+
+function generateAccessCodeString() {
+  const random = crypto.randomBytes(5).toString('hex').toUpperCase(); // 10 karakter hex
+  return `JHUL-${random.slice(0, 5)}-${random.slice(5, 10)}`;
+}
+
+// Sekali jalan saat server start: kalau belum ada kode sama sekali, buat 30 kode baru
+// sekaligus (dicetak ke log Railway supaya bisa disalin manual). Tidak akan menimpa
+// kode yang sudah ada/terpakai di deploy berikutnya.
+function seedAccessCodesIfEmpty(count = 30) {
+  const existing = getAccessCodes();
+  if (existing.length > 0) return;
+
+  const codes = [];
+  for (let i = 0; i < count; i++) {
+    codes.push({
+      code: generateAccessCodeString(),
+      plan: MANUAL_ACCESS_CODE_PLAN,
+      durationDays: MANUAL_ACCESS_CODE_DURATION_DAYS,
+      used: false,
+      usedBy: null,
+      usedAt: null,
+      createdAt: new Date().toISOString()
+    });
+  }
+  saveAccessCodes(codes);
+
+  console.log('==================================================');
+  console.log(`[Access Code Seed] ${count} kode akses Ultimate ${MANUAL_ACCESS_CODE_DURATION_DAYS} hari berhasil dibuat:`);
+  codes.forEach(c => console.log('  ' + c.code));
+  console.log('==================================================');
+}
+
+app.post('/api/redeem-code', requireAccess, authLimiter, (req, res) => {
+  const submittedCode = String(req.body.code || '').trim().toUpperCase();
+  if (!submittedCode) {
+    return res.status(400).json({ ok: false, message: 'Kode akses wajib diisi.' });
+  }
+
+  const codes = getAccessCodes();
+  const codeIndex = codes.findIndex(c => c.code === submittedCode);
+  if (codeIndex === -1) {
+    return res.status(400).json({ ok: false, message: 'Kode akses tidak ditemukan.' });
+  }
+  if (codes[codeIndex].used) {
+    return res.status(400).json({ ok: false, message: 'Kode akses ini sudah pernah digunakan.' });
+  }
+
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === req.session.userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
+  }
+
+  const durationDays = codes[codeIndex].durationDays || MANUAL_ACCESS_CODE_DURATION_DAYS;
+  const expiredAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+
+  users[userIndex].type = 'ultimate';
+  users[userIndex].planId = codes[codeIndex].plan || MANUAL_ACCESS_CODE_PLAN;
+  users[userIndex].paymentExpiredAt = expiredAt;
+  const savedUsers = saveUsers(users);
+
+  codes[codeIndex].used = true;
+  codes[codeIndex].usedBy = req.session.userId;
+  codes[codeIndex].usedAt = new Date().toISOString();
+  const savedCodes = saveAccessCodes(codes);
+
+  if (!savedUsers || !savedCodes) {
+    return res.status(500).json({ ok: false, message: 'Gagal menyimpan aktivasi. Coba lagi.' });
+  }
+
+  req.session.userType = 'ultimate';
+  addTransaction(req.session.userId, submittedCode, 'Aktivasi Kode Akses Ultimate (Manual)', MANUAL_ACCESS_CODE_PRICE, 'success');
+
+  console.log(`[Access Code] Kode ${submittedCode} diaktifkan oleh user ${req.session.userId}, berlaku sampai ${expiredAt}`);
+
+  res.json({ ok: true, message: `Berhasil! Akun Anda sekarang Ultimate selama ${durationDays} hari.`, expiredAt });
+});
+
+// Lihat daftar kode akses (dipakai/belum) kapan saja - dilindungi ADMIN_SECRET env var,
+// bukan pakai sesi login biasa, supaya bisa dicek langsung lewat browser/curl.
+app.get('/api/admin/access-codes', (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) {
+    return res.status(503).json({ ok: false, message: 'ADMIN_SECRET belum dikonfigurasi di server.' });
+  }
+  if (req.query.secret !== adminSecret) {
+    return res.status(401).json({ ok: false, message: 'Tidak diizinkan.' });
+  }
+  const codes = getAccessCodes();
+  res.json({
+    ok: true,
+    total: codes.length,
+    unused: codes.filter(c => !c.used).length,
+    codes
+  });
+});
+
 function parseCookies(cookieHeader = '') {
   return cookieHeader.split(';').reduce((cookies, item) => {
     const [key, ...valueParts] = item.trim().split('=');
@@ -3066,6 +3191,13 @@ app.listen(PORT, async () => {
     }
   } catch (err) {
     console.error('[Database Seed] Gagal membuat akun demo:', err.message);
+  }
+
+  // Seed 30 kode akses manual (sekali saja - lihat seedAccessCodesIfEmpty)
+  try {
+    seedAccessCodesIfEmpty(30);
+  } catch (err) {
+    console.error('[Access Code Seed] Gagal membuat kode akses:', err.message);
   }
 
   // Deteksi IP Outbound Publik dari server (untuk registrasi iPaymu)
