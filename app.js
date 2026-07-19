@@ -943,20 +943,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const quotaText = document.getElementById('researchChatQuotaText');
     if (!lock) return;
 
-    const isPro = user.type === 'premium' || user.type === 'ultimate';
-    lock.style.display = isPro ? 'none' : 'flex';
+    // Semua tier sekarang punya akses - Free dijatah 20 pesan/bulan, Premium & Ultimate unlimited
+    lock.style.display = 'none';
 
     if (quotaText) {
-      if (user.type === 'ultimate') {
+      if (user.type === 'ultimate' || user.type === 'premium') {
         quotaText.textContent = window.currentLanguage === 'en' ? 'Unlimited' : 'Tanpa Batas';
-      } else if (user.type === 'premium') {
+      } else {
         const used = user.researchChatCountThisMonth || 0;
-        const limit = user.researchChatLimit || 100;
+        const limit = user.researchChatLimit || 20;
         quotaText.textContent = window.currentLanguage === 'en'
           ? `Quota: ${used}/${limit} This Month`
           : `Kuota: ${used}/${limit} Bulan Ini`;
-      } else {
-        quotaText.textContent = window.currentLanguage === 'en' ? 'Premium/Ultimate only' : 'Khusus Premium/Ultimate';
       }
     }
   }
@@ -1147,8 +1145,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // LIMITATION FOR FREE USERS
     let isLimited = false;
     if (currentUser.user && currentUser.user.type === 'free') {
-       chunk = activeJournals.slice(0, 1);
-       isLimited = activeJournals.length > 1;
+       chunk = activeJournals.slice(0, 3);
+       isLimited = activeJournals.length > 3;
     }
 
     chunk.forEach((journal, index) => {
@@ -1274,8 +1272,8 @@ document.addEventListener('DOMContentLoaded', () => {
        `;
        promoCard.innerHTML = `
          <i class="fa-solid fa-lock" style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 1rem;"></i>
-         <h3 style="margin-bottom: 0.5rem;">${isEn ? `${activeJournals.length - 1} More Journals Hidden` : `${activeJournals.length - 1} Jurnal Lainnya Disembunyikan`}</h3>
-         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">${isEn ? 'Free account can only view the top 1 recommendation. Upgrade to PRO to view all results.' : 'Akun Free hanya dapat melihat 1 rekomendasi teratas. Tingkatkan ke PRO untuk melihat semua hasil.'}</p>
+         <h3 style="margin-bottom: 0.5rem;">${isEn ? `${activeJournals.length - 3} More Journals Hidden` : `${activeJournals.length - 3} Jurnal Lainnya Disembunyikan`}</h3>
+         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">${isEn ? 'Free account can only view the top 3 recommendations. Upgrade to PRO to view all results.' : 'Akun Free hanya dapat melihat 3 rekomendasi teratas. Tingkatkan ke PRO untuk melihat semua hasil.'}</p>
          <button class="btn btn-primary btn-upgrade-trigger" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;">
            ${isEn ? 'Upgrade to PRO' : 'Upgrade PRO'}
          </button>

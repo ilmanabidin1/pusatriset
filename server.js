@@ -923,8 +923,8 @@ app.get('/api/me', (req, res) => {
     let isHumanizerLimitReached = false;
     let humanizerWordsRemaining = 0;
     let humanizerWordsLimit = 0;
-    // JurnalHub Intelligence - fitur khusus Premium (dijatah) & Ultimate (unlimited), Free tidak punya akses sama sekali
-    let isResearchChatLimitReached = true;
+    // JurnalHub Intelligence - Free dijatah 20 pesan/bulan, Premium & Ultimate unlimited
+    let isResearchChatLimitReached = false;
     let researchChatsRemaining = 0;
     let researchChatLimit = 0;
 
@@ -946,6 +946,11 @@ app.get('/api/me', (req, res) => {
       isHumanizerLimitReached = true;
       humanizerWordsRemaining = 0;
       humanizerWordsLimit = 0;
+
+      researchChatLimit = 20;
+      const chatUsedFree = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
+      researchChatsRemaining = Math.max(0, researchChatLimit - chatUsedFree);
+      isResearchChatLimitReached = researchChatsRemaining <= 0;
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -967,10 +972,9 @@ app.get('/api/me', (req, res) => {
       humanizerWordsRemaining = Math.max(0, humanizerWordsLimit - wordsUsed);
       isHumanizerLimitReached = humanizerWordsRemaining <= 0;
 
-      researchChatLimit = 100;
-      const chatUsed = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
-      researchChatsRemaining = Math.max(0, researchChatLimit - chatUsed);
-      isResearchChatLimitReached = researchChatsRemaining <= 0;
+      isResearchChatLimitReached = false;
+      researchChatsRemaining = 999;
+      researchChatLimit = 999;
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
@@ -1944,8 +1948,7 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
 });
 
 // --- ASISTEN RISET AI (DeepSeek) ---
-// Fitur khusus Premium (dijatah 100 pesan/bulan) & Ultimate (unlimited).
-// Free tier tidak punya akses sama sekali - lihat requireAccess + cek tipe di bawah.
+// Free tier: 20 pesan/bulan. Premium & Ultimate: unlimited.
 const RESEARCH_CHAT_SYSTEM_PROMPT = `Kamu adalah AI pendamping riset di JurnalHub bernama "Dr. Juju". Persona kamu: dosen pembimbing skripsi/tesis/disertasi yang killer, tegas, dan tidak suka basa-basi. Kamu galak tapi tujuannya satu: memaksa mahasiswa menghasilkan karya ilmiah yang benar-benar layak, bukan sekadar lolos. Jika ditanya "siapa/apa kamu", perkenalkan diri sebagai Dr. Juju dari JurnalHub Intelligence - jangan sebut nama model/vendor AI di baliknya.
 
 Karakter Dasar
@@ -2070,16 +2073,13 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
   const userType = req.session.userId === 'access_code_user' ? 'premium' : ((user && user.type) || 'free');
-  if (userType !== 'premium' && userType !== 'ultimate') {
-    return res.status(403).json({ ok: false, message: 'JurnalHub Intelligence khusus untuk akun Premium & Ultimate.' });
-  }
 
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  if (userType === 'premium' && user) {
+  if (userType === 'free' && user) {
     const chatUsed = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
-    if (chatUsed >= 100) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan JurnalHub Intelligence tercapai (100 pesan/bulan untuk akun Premium).' });
+    if (chatUsed >= 20) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan JurnalHub Intelligence tercapai (20 pesan/bulan untuk akun Free). Upgrade ke Premium/Ultimate untuk akses tanpa batas.' });
     }
   }
 
@@ -2222,7 +2222,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
       return;
     }
 
-    if (userType === 'premium' && user) {
+    if (userType === 'free' && user) {
       const latestUsers = getUsers();
       const userIndex = latestUsers.findIndex(u => u.id === req.session.userId);
       if (userIndex !== -1) {
