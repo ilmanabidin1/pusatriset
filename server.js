@@ -98,6 +98,8 @@ async function sendMailHelper(to, subject, html) {
 }
 
 const GOOGLE_CLIENT_ID = '571306850750-ckq38nmai4felal861uu0hgj1b13bihf.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://jurnalhub.id/api/auth/google/callback';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Tentukan port dari environment variable (Railway menyediakannya lewat PORT) atau port 3000 secara lokal
@@ -732,6 +734,39 @@ app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
 
 
 
+function loginOrCreateGoogleUser(email, googleId, name, picture) {
+  const users = getUsers();
+  let user = users.find(u => u.email === email);
+
+  if (!user) {
+    // Jika user belum ada, buat akun free baru secara otomatis
+    user = {
+      id: uuidv4(),
+      email: email,
+      password: '', // Login via Google, tidak ada password lokal
+      type: 'free',
+      name: name || '',
+      faculty: '',
+      university: '',
+      profilePic: picture || '',
+      savedJournals: [],
+      createdAt: new Date().toISOString()
+    };
+    users.push(user);
+  } else {
+    // Update Google ID & Profile Pic jika belum diset
+    if (!user.googleId) user.googleId = googleId;
+    if (!user.name && name) user.name = name;
+    if (!user.profilePic && picture) user.profilePic = picture;
+  }
+
+  const sessionToken = crypto.randomUUID();
+  user.currentSessionToken = sessionToken;
+  saveUsers(users);
+
+  return { user, sessionToken };
+}
+
 app.post('/api/auth/google', authLimiter, async (req, res) => {
   const { token } = req.body;
 
@@ -744,7 +779,7 @@ app.post('/api/auth/google', authLimiter, async (req, res) => {
       idToken: token,
       audience: GOOGLE_CLIENT_ID,
     });
-    
+
     const payload = ticket.getPayload();
     const email = payload.email;
     const googleId = payload.sub;
@@ -753,37 +788,7 @@ app.post('/api/auth/google', authLimiter, async (req, res) => {
       return res.status(400).json({ ok: false, message: 'Email tidak ditemukan dari akun Google.' });
     }
 
-    const users = getUsers();
-    let user = users.find(u => u.email === email);
-
-    if (!user) {
-      // Jika user belum ada, buat akun free baru secara otomatis
-      user = {
-        id: uuidv4(),
-        email: email,
-        password: '', // Login via Google, tidak ada password lokal
-        type: 'free',
-        name: payload.name || '',
-        faculty: '',
-        university: '',
-        profilePic: payload.picture || '',
-        savedJournals: [],
-        createdAt: new Date().toISOString()
-      };
-      users.push(user);
-    } else {
-      // Update Google ID & Profile Pic jika belum diset
-      if (!user.googleId) user.googleId = googleId;
-      if (!user.name && payload.name) user.name = payload.name;
-      if (!user.profilePic && payload.picture) user.profilePic = payload.picture;
-    }
-
-    saveUsers(users);
-
-    // Set Session
-    const sessionToken = crypto.randomUUID();
-    user.currentSessionToken = sessionToken;
-    saveUsers(users);
+    const { user, sessionToken } = loginOrCreateGoogleUser(email, googleId, payload.name, payload.picture);
 
     req.session.userId = user.id;
     req.session.userType = user.type || 'free';
@@ -794,6 +799,80 @@ app.post('/api/auth/google', authLimiter, async (req, res) => {
   } catch (error) {
     console.error('Google Auth error:', error);
     res.status(401).json({ ok: false, message: 'Autentikasi Google gagal.' });
+  }
+});
+
+// Server-side OAuth redirect flow (lebih stabil daripada popup GSI, tidak bergantung pada
+// third-party cookies yang makin sering diblokir browser modern).
+app.get('/api/auth/google', authLimiter, (req, res) => {
+  if (!GOOGLE_CLIENT_SECRET) {
+    return res.status(500).send('Google Sign-In belum dikonfigurasi di server (GOOGLE_CLIENT_SECRET belum diset).');
+  }
+
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: GOOGLE_REDIRECT_URI,
+    response_type: 'code',
+    scope: 'openid email profile',
+    prompt: 'select_account'
+  });
+
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+});
+
+app.get('/api/auth/google/callback', authLimiter, async (req, res) => {
+  const { code, error: googleError } = req.query;
+
+  if (googleError || !code) {
+    return res.redirect('/auth.html?googleError=1');
+  }
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const tokenResponse = await fetchFn('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: GOOGLE_REDIRECT_URI,
+        grant_type: 'authorization_code'
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      const errText = await tokenResponse.text();
+      console.error('[Google OAuth] Token exchange failed:', tokenResponse.status, errText);
+      return res.redirect('/auth.html?googleError=1');
+    }
+
+    const tokenData = await tokenResponse.json();
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: tokenData.id_token,
+      audience: GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const googleId = payload.sub;
+
+    if (!email) {
+      return res.redirect('/auth.html?googleError=1');
+    }
+
+    const { user, sessionToken } = loginOrCreateGoogleUser(email, googleId, payload.name, payload.picture);
+
+    req.session.userId = user.id;
+    req.session.userType = user.type || 'free';
+    req.session.email = user.email;
+    req.session.sessionToken = sessionToken;
+
+    req.session.save(() => res.redirect('/'));
+  } catch (error) {
+    console.error('[Google OAuth] Callback error:', error);
+    res.redirect('/auth.html?googleError=1');
   }
 });
 
