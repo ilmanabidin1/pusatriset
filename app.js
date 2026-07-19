@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // JurnalHub Intelligence
       research_chat_badge: "JurnalHub Intelligence",
       research_chat_title: "Diskusi dengan JurnalHub Intelligence",
-      research_chat_desc: "<strong>Ini bukan AI biasa yang selalu nurut loh</strong>, kenalin ini Dr. Juju yang tegas, kritis, dan ga basa basi dan terkadang sewot kalo nanya kita gabener (tergantung mood), cobain deh!",
+      research_chat_desc: "<strong>Bukan LLM biasa.</strong> JurnalHub Intelligence dikurasi khusus untuk selalu menjawab jujur, kritis, dan tidak asal mengiyakan (no yes-man) - layaknya profesor pembimbing sungguhan.",
       research_chat_empty: "Mulai diskusi dengan mengetik pertanyaan riset Anda di bawah ini.",
       research_chat_input_placeholder: "Tulis pertanyaan riset Anda...",
       research_chat_clear: "Mulai percakapan baru",
