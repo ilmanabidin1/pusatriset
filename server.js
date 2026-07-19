@@ -2497,7 +2497,7 @@ app.get('/api/transactions/:id/invoice', requireAccess, (req, res) => {
 app.use((req, res, next) => {
   // File statis yang diizinkan tanpa login (terutama untuk halaman auth dan informasi)
   const publicFiles = [
-    '/auth.html', '/styles.css', '/app.js', '/database.js',
+    '/auth.html', '/landing.html', '/styles.css', '/app.js', '/database.js',
     '/terms.html', '/refund.html', '/faq.html', '/contact.html',
     '/reset-password.html'
   ];
@@ -2507,8 +2507,9 @@ app.use((req, res, next) => {
     return;
   }
 
-  // Semua akses ke file root (seperti index.html) membutuhkan akses
-  if (req.path === '/' || req.path === '/index.html') {
+  // "/" sengaja TIDAK dipaksa requireAccess di sini - route khusus app.get('/')
+  // yang menentukan sendiri landing.html (belum login) atau index.html (sudah login).
+  if (req.path === '/index.html') {
     requireAccess(req, res, next);
     return;
   }
@@ -3133,6 +3134,17 @@ app.get('/payment-success', (req, res) => {
 
 app.get('/payment-cancel', (req, res) => {
   res.sendFile(path.join(__dirname, 'payment-cancel.html'));
+});
+
+// Halaman depan (marketing) untuk pengunjung yang belum login - yang sudah login
+// langsung masuk dashboard seperti biasa. Diletakkan sebelum express.static supaya
+// "/" tidak otomatis diserve sebagai index.html oleh static middleware.
+app.get('/', (req, res) => {
+  if (hasAccess(req)) {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  } else {
+    res.sendFile(path.join(__dirname, 'landing.html'));
+  }
 });
 
 app.use(express.static(path.join(__dirname, '.')));
