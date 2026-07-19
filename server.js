@@ -1023,12 +1023,7 @@ function countMatches(sourceWords, targetText) {
   return sourceWords.filter(word => normalizedTarget.includes(word)).length;
 }
 
-function calculateLocalMatchScore(journal, articleText, keywordText) {
-  const articleWords = getWords(articleText);
-  const keywordWords = getWords(keywordText);
-  const allWords = [...new Set([...articleWords, ...keywordWords])];
-  const normalizedArticleText = normalizeText(articleText);
-
+function calculateLocalMatchScore(journal, allWords, keywordWords, normalizedArticleText) {
   if (allWords.length === 0) return 0;
 
   const journalTitle = normalizeText(journal.title);
@@ -1053,12 +1048,16 @@ function calculateLocalMatchScore(journal, articleText, keywordText) {
 
 function getLocalCandidates(articleTitle, articleKeywords, articleAbstract, limit = 25) {
   const articleText = `${articleTitle} ${articleAbstract}`;
+  const articleWords = getWords(articleText);
+  const keywordWords = getWords(articleKeywords);
+  const allWords = [...new Set([...articleWords, ...keywordWords])];
+  const normalizedArticleText = normalizeText(articleText);
 
   return JOURNAL_DATABASE
     .map((journal, index) => ({
       journal,
       index,
-      score: calculateLocalMatchScore(journal, articleText, articleKeywords)
+      score: calculateLocalMatchScore(journal, allWords, keywordWords, normalizedArticleText)
     }))
     .filter(item => item.score > 0)
     .sort((a, b) => {
