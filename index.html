@@ -976,9 +976,134 @@
       background: #ffffff;
       border: 1px solid var(--border-light-hover);
       border-radius: 18px;
-      padding: 0.65rem 0.65rem 0.65rem 1.35rem;
+      padding: 0.65rem 0.65rem 0.65rem 0.65rem;
       box-shadow: 0 8px 24px rgba(8,34,64,0.08);
       transition: border-color 0.2s;
+    }
+
+    #researchChatPlusBtn {
+      width: 40px !important;
+      height: 40px !important;
+    }
+    #researchChatPlusBtn.active {
+      background: var(--brand-blue) !important;
+      color: #ffffff !important;
+      border-color: var(--brand-blue) !important;
+    }
+
+    .research-chat-plus-menu {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 0.6rem);
+      left: 0;
+      width: 320px;
+      max-width: 90vw;
+      background: #ffffff;
+      border: 1px solid var(--border-light-hover);
+      border-radius: 14px;
+      box-shadow: 0 14px 36px rgba(8,34,64,0.18);
+      padding: 0.6rem;
+      z-index: 40;
+    }
+    .research-chat-plus-menu.open {
+      display: block;
+      animation: fadeInUp 0.15s ease;
+    }
+    [data-theme="dark"] .research-chat-plus-menu {
+      background: var(--bg-card);
+    }
+
+    .research-chat-plus-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 0.6rem 0.7rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .research-chat-plus-menu-item:hover {
+      background: rgba(7,135,220,0.08);
+    }
+    .research-chat-plus-menu-item.btn-upgrade-trigger {
+      opacity: 0.7;
+    }
+    .research-chat-plus-menu-item i {
+      color: var(--brand-blue);
+      width: 16px;
+      text-align: center;
+    }
+
+    .research-chat-plus-menu-divider {
+      height: 1px;
+      background: var(--border-light);
+      margin: 0.4rem 0.3rem;
+    }
+
+    .research-chat-plus-menu-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.3rem 0.7rem 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .research-chat-plus-menu-header button {
+      border: none;
+      background: transparent;
+      color: var(--brand-blue);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .research-chat-plus-menu-header button:hover {
+      background: rgba(7,135,220,0.1);
+    }
+
+    .research-chat-prompt-shortcut-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .research-chat-prompt-shortcut-item {
+      display: block;
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 0.5rem 0.7rem;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .research-chat-prompt-shortcut-item:hover {
+      background: rgba(7,135,220,0.08);
+    }
+    .research-chat-prompt-shortcut-item .shortcut-category {
+      display: block;
+      font-size: 0.66rem;
+      font-weight: 800;
+      color: var(--brand-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.15rem;
     }
 
     .research-chat-composer:focus-within {
@@ -3450,10 +3575,6 @@
                   </button>
                 </div>
 
-                <!-- Attachment (Premium/Ultimate saja) -->
-                <button type="button" id="researchChatAttachBtn" class="composer-pill" title="Lampirkan dokumen (PDF/DOCX/TXT, maks 8.000 kata)">
-                  <i class="fa-solid fa-paperclip"></i> <span id="researchChatAttachBtnText">Lampirkan Dokumen</span>
-                </button>
                 <input type="file" id="researchChatFileInput" accept=".pdf,.docx,.txt" style="display: none;">
               </div>
 
@@ -3466,7 +3587,31 @@
                 </button>
               </div>
 
-              <div class="research-chat-composer">
+              <div class="research-chat-composer" style="position: relative;">
+                <button id="researchChatPlusBtn" type="button" title="Tambah" style="background: transparent; color: var(--text-muted); border: 1px solid var(--border-light-hover);">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+
+                <!-- Popup menu: unggah dokumen + shortcut Prompt Bank -->
+                <div id="researchChatPlusMenu" class="research-chat-plus-menu">
+                  <button type="button" id="researchChatAttachBtn" class="research-chat-plus-menu-item" title="Lampirkan dokumen (PDF/DOCX/TXT, maks 8.000 kata)">
+                    <i class="fa-solid fa-paperclip"></i>
+                    <span id="researchChatAttachBtnText">Lampirkan Dokumen</span>
+                  </button>
+
+                  <div class="research-chat-plus-menu-divider"></div>
+
+                  <div class="research-chat-plus-menu-header">
+                    <span id="researchChatPromptShortcutHeading">Shortcut Prompt Bank</span>
+                    <button type="button" id="researchChatPromptShuffleBtn" title="Acak prompt lain">
+                      <i class="fa-solid fa-shuffle"></i>
+                    </button>
+                  </div>
+                  <div id="researchChatPromptShortcutList" class="research-chat-prompt-shortcut-list">
+                    <!-- Diisi dinamis via JS -->
+                  </div>
+                </div>
+
                 <textarea id="researchChatInput" rows="1" placeholder="Tulis pertanyaan riset Anda..."></textarea>
                 <button id="researchChatSendBtn" type="button" title="Kirim">
                   <i class="fa-solid fa-paper-plane"></i>

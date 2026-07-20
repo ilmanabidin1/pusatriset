@@ -291,7 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
       research_chat_lock_title: "Fitur PRO Khusus Pelanggan",
       research_chat_lock_desc: "JurnalHub Intelligence hanya tersedia untuk akun Premium & Ultimate. Upgrade untuk mulai berdiskusi seputar riset Anda.",
       research_chat_upgrade_btn: "Upgrade PRO",
-      research_chat_attach_btn: "Lampirkan Dokumen"
+      research_chat_attach_btn: "Lampirkan Dokumen",
+      research_chat_prompt_shortcut_heading: "Shortcut Prompt Bank"
     },
     en: {
       beranda: "Home",
@@ -445,7 +446,8 @@ document.addEventListener('DOMContentLoaded', () => {
       research_chat_lock_title: "PRO Feature For Subscribers Only",
       research_chat_lock_desc: "JurnalHub Intelligence is only available for Premium & Ultimate accounts. Upgrade to start discussing your research.",
       research_chat_upgrade_btn: "Upgrade PRO",
-      research_chat_attach_btn: "Attach Document"
+      research_chat_attach_btn: "Attach Document",
+      research_chat_prompt_shortcut_heading: "Prompt Bank Shortcuts"
     }
   };
 
@@ -3841,6 +3843,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (researchChatAttachBtn && researchChatFileInput) {
       researchChatAttachBtn.addEventListener('click', () => {
         if (!isResearchChatProUser) return; // terkunci - klik ditangkap oleh listener global .btn-upgrade-trigger
+        closeResearchChatPlusMenu();
         researchChatFileInput.click();
       });
 
@@ -3879,6 +3882,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (researchChatAttachmentRemoveBtn) {
       researchChatAttachmentRemoveBtn.addEventListener('click', () => window.removeResearchChatAttachment());
+    }
+
+    // --- Tombol "+" (popup: lampirkan dokumen + shortcut Prompt Bank) ---
+    const researchChatPlusBtn = document.getElementById('researchChatPlusBtn');
+    const researchChatPlusMenu = document.getElementById('researchChatPlusMenu');
+    const researchChatPromptShortcutList = document.getElementById('researchChatPromptShortcutList');
+    const researchChatPromptShuffleBtn = document.getElementById('researchChatPromptShuffleBtn');
+    let researchChatShortcutPool = []; // flat list {category, text} dari seluruh Prompt Bank
+
+    function closeResearchChatPlusMenu() {
+      if (researchChatPlusMenu) researchChatPlusMenu.classList.remove('open');
+      if (researchChatPlusBtn) researchChatPlusBtn.classList.remove('active');
+    }
+
+    function pickRandomShortcuts() {
+      if (!researchChatPromptShortcutList || researchChatShortcutPool.length === 0) return;
+
+      // Ambil maksimal 5 prompt, tiap prompt dari kategori yang berbeda (biar variatif,
+      // bukan 5 prompt dari kategori yang sama).
+      const byCategory = new Map();
+      researchChatShortcutPool.forEach(item => {
+        if (!byCategory.has(item.category)) byCategory.set(item.category, []);
+        byCategory.get(item.category).push(item);
+      });
+      const categories = [...byCategory.keys()].sort(() => Math.random() - 0.5).slice(0, 5);
+      const picks = categories.map(cat => {
+        const items = byCategory.get(cat);
+        return items[Math.floor(Math.random() * items.length)];
+      });
+
+      researchChatPromptShortcutList.innerHTML = picks.map((p, idx) => `
+        <button type="button" class="research-chat-prompt-shortcut-item" data-shortcut-idx="${idx}">
+          <span class="shortcut-category">${escapeHtml(p.category.replace(/^\d+\s+/, ''))}</span>
+          ${escapeHtml(p.text.length > 90 ? p.text.slice(0, 90) + '...' : p.text)}
+        </button>
+      `).join('');
+
+      researchChatPromptShortcutList.querySelectorAll('.research-chat-prompt-shortcut-item').forEach((btn, idx) => {
+        btn.addEventListener('click', () => {
+          if (researchChatInput) {
+            researchChatInput.value = picks[idx].text;
+            researchChatInput.style.height = 'auto';
+            researchChatInput.style.height = researchChatInput.scrollHeight + 'px';
+            researchChatInput.focus();
+          }
+          closeResearchChatPlusMenu();
+        });
+      });
+    }
+
+    async function ensureShortcutPoolLoaded() {
+      if (researchChatShortcutPool.length > 0) return;
+      try {
+        const lang = window.currentLanguage === 'en' ? 'en' : 'id';
+        const res = await fetch(`/api/prompts?lang=${lang}`);
+        const data = await res.json();
+        if (!data.ok) return;
+        const allCategories = [...(data.scopus || []), ...(data.tesis_disertasi || [])];
+        researchChatShortcutPool = allCategories.flatMap(cat =>
+          (cat.prompts || []).map(p => ({ category: cat.category, text: p.text }))
+        );
+      } catch (err) {
+        console.error('[Research Chat] Gagal memuat shortcut Prompt Bank:', err);
+      }
+    }
+
+    if (researchChatPlusBtn && researchChatPlusMenu) {
+      researchChatPlusBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const isOpen = researchChatPlusMenu.classList.contains('open');
+        if (isOpen) {
+          closeResearchChatPlusMenu();
+          return;
+        }
+        researchChatPlusMenu.classList.add('open');
+        researchChatPlusBtn.classList.add('active');
+
+        if (researchChatPromptShortcutList) {
+          researchChatPromptShortcutList.innerHTML = `<p style="text-align:center; color: var(--text-muted); font-size: 0.78rem; padding: 0.5rem;"><i class="fa-solid fa-spinner fa-spin"></i></p>`;
+        }
+        await ensureShortcutPoolLoaded();
+        pickRandomShortcuts();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!researchChatPlusMenu.contains(e.target) && !researchChatPlusBtn.contains(e.target)) {
+          closeResearchChatPlusMenu();
+        }
+      });
+    }
+
+    if (researchChatPromptShuffleBtn) {
+      researchChatPromptShuffleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pickRandomShortcuts();
+      });
     }
 
     // Muat daftar riwayat percakapan begitu tab ini siap (kalau user Premium/Ultimate)
@@ -4755,6 +4854,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (researchChatUpgradeBtnTextEl) researchChatUpgradeBtnTextEl.textContent = TRANSLATIONS[lang].research_chat_upgrade_btn;
       const researchChatAttachBtnTextEl = document.getElementById('researchChatAttachBtnText');
       if (researchChatAttachBtnTextEl) researchChatAttachBtnTextEl.textContent = TRANSLATIONS[lang].research_chat_attach_btn;
+      const researchChatPromptShortcutHeadingEl = document.getElementById('researchChatPromptShortcutHeading');
+      if (researchChatPromptShortcutHeadingEl) researchChatPromptShortcutHeadingEl.textContent = TRANSLATIONS[lang].research_chat_prompt_shortcut_heading;
       if (currentUser?.user) {
         updateResearchChatAccess(currentUser.user);
       }
