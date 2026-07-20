@@ -290,7 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
       research_chat_disclaimer: "Asisten AI bisa saja keliru - selalu verifikasi informasi penting secara mandiri.",
       research_chat_lock_title: "Fitur PRO Khusus Pelanggan",
       research_chat_lock_desc: "JurnalHub Intelligence hanya tersedia untuk akun Premium & Ultimate. Upgrade untuk mulai berdiskusi seputar riset Anda.",
-      research_chat_upgrade_btn: "Upgrade PRO"
+      research_chat_upgrade_btn: "Upgrade PRO",
+      research_chat_attach_btn: "Lampirkan Dokumen"
     },
     en: {
       beranda: "Home",
@@ -443,7 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
       research_chat_disclaimer: "The AI assistant can make mistakes - always verify important information independently.",
       research_chat_lock_title: "PRO Feature For Subscribers Only",
       research_chat_lock_desc: "JurnalHub Intelligence is only available for Premium & Ultimate accounts. Upgrade to start discussing your research.",
-      research_chat_upgrade_btn: "Upgrade PRO"
+      research_chat_upgrade_btn: "Upgrade PRO",
+      research_chat_attach_btn: "Attach Document"
     }
   };
 
@@ -953,6 +955,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- ASISTEN RISET AI: akses & kuota ---
+  let isResearchChatProUser = false; // Premium/Ultimate - buka Model Pro, Deep Thinking, & lampiran dokumen
+
   function updateResearchChatAccess(user) {
     const lock = document.getElementById('researchChatPremiumLock');
     const quotaText = document.getElementById('researchChatQuotaText');
@@ -960,6 +964,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Semua tier sekarang punya akses - Free dijatah 20 pesan/bulan, Premium & Ultimate unlimited
     lock.style.display = 'none';
+
+    isResearchChatProUser = user.type === 'premium' || user.type === 'ultimate';
+
+    // Model Pro, Deep Thinking, dan Lampiran Dokumen dikunci untuk akun Free
+    const pillModelPro = document.getElementById('pillModelPro');
+    const pillModeThinking = document.getElementById('pillModeThinking');
+    const attachBtn = document.getElementById('researchChatAttachBtn');
+    [pillModelPro, pillModeThinking, attachBtn].forEach(el => {
+      if (!el) return;
+      el.classList.toggle('composer-pill-locked', !isResearchChatProUser);
+      el.classList.toggle('btn-upgrade-trigger', !isResearchChatProUser);
+      el.title = isResearchChatProUser ? '' : (window.currentLanguage === 'en' ? 'Premium/Ultimate only - click to upgrade' : 'Khusus Premium/Ultimate - klik untuk upgrade');
+    });
+
+    // Kalau user baru saja downgrade (mis. langganan habis) sementara pilihan lama
+    // masih Pro/Thinking, paksa balik ke Lite/Standar supaya tidak nyangkut di mode terkunci.
+    if (!isResearchChatProUser) {
+      const pillModelLite = document.getElementById('pillModelLite');
+      const pillModeBasic = document.getElementById('pillModeBasic');
+      if (pillModelPro && pillModelPro.classList.contains('active')) {
+        pillModelPro.classList.remove('active');
+        if (pillModelLite) pillModelLite.classList.add('active');
+        if (typeof selectedResearchModel !== 'undefined') selectedResearchModel = 'lite';
+      }
+      if (pillModeThinking && pillModeThinking.classList.contains('active')) {
+        pillModeThinking.classList.remove('active');
+        if (pillModeBasic) pillModeBasic.classList.add('active');
+        if (typeof selectedResearchMode !== 'undefined') selectedResearchMode = 'basic';
+      }
+      if (typeof window.removeResearchChatAttachment === 'function') {
+        window.removeResearchChatAttachment();
+      }
+    }
 
     if (quotaText) {
       if (user.type === 'ultimate' || user.type === 'premium') {
@@ -3540,12 +3577,29 @@ document.addEventListener('DOMContentLoaded', () => {
         currentResearchChatId = (crypto.randomUUID ? crypto.randomUUID() : `conv_${Date.now()}_${Math.random().toString(36).slice(2)}`);
       }
 
+      // Kalau ada dokumen terlampir, sisipkan isinya HANYA di payload request kali
+      // ini (bukan disimpan permanen di researchChatMessages) - supaya dokumen besar
+      // tidak ikut ke-resend berulang-ulang di setiap giliran chat berikutnya.
+      let outgoingMessages = researchChatMessages;
+      if (typeof researchChatAttachment !== 'undefined' && researchChatAttachment) {
+        const lastIdx = researchChatMessages.length - 1;
+        outgoingMessages = researchChatMessages.map((m, idx) => {
+          if (idx === lastIdx && m.role === 'user') {
+            return {
+              role: 'user',
+              content: `[Dokumen terlampir: ${researchChatAttachment.fileName}]\n\n${researchChatAttachment.text}\n\n---\n\nPertanyaan pengguna: ${m.content}`
+            };
+          }
+          return m;
+        });
+      }
+
       try {
         const response = await fetch('/api/research-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            messages: researchChatMessages, 
+          body: JSON.stringify({
+            messages: outgoingMessages,
             conversationId: currentResearchChatId,
             modelType: selectedResearchModel,
             thinkingType: selectedResearchMode
@@ -3625,6 +3679,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderResearchChatMessages();
         // Percakapan baru saja disimpan/diperbarui di server - refresh daftar riwayat
         renderResearchChatHistoryList();
+        // Lampiran dokumen cuma berlaku sekali pakai per pesan - bersihkan setelah terkirim
+        if (typeof window.removeResearchChatAttachment === 'function') {
+          window.removeResearchChatAttachment();
+        }
 
         // Refresh kuota tampilan setelah 1 pesan terpakai (khusus Premium)
         fetch('/api/me').then(r => r.json()).then(meData => {
@@ -3683,6 +3741,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pillModelPro.classList.remove('active');
       });
       pillModelPro.addEventListener('click', () => {
+        if (!isResearchChatProUser) return; // terkunci - klik ditangkap oleh listener global .btn-upgrade-trigger
         selectedResearchModel = 'pro';
         pillModelPro.classList.add('active');
         pillModelLite.classList.remove('active');
@@ -3696,10 +3755,68 @@ document.addEventListener('DOMContentLoaded', () => {
         pillModeThinking.classList.remove('active');
       });
       pillModeThinking.addEventListener('click', () => {
+        if (!isResearchChatProUser) return; // terkunci - klik ditangkap oleh listener global .btn-upgrade-trigger
         selectedResearchMode = 'thinking';
         pillModeThinking.classList.add('active');
         pillModeBasic.classList.remove('active');
       });
+    }
+
+    // --- Lampiran Dokumen (Premium/Ultimate saja) ---
+    let researchChatAttachment = null; // { fileName, wordCount, text }
+    const researchChatAttachBtn = document.getElementById('researchChatAttachBtn');
+    const researchChatFileInput = document.getElementById('researchChatFileInput');
+    const researchChatAttachmentChip = document.getElementById('researchChatAttachmentChip');
+    const researchChatAttachmentName = document.getElementById('researchChatAttachmentName');
+    const researchChatAttachmentRemoveBtn = document.getElementById('researchChatAttachmentRemoveBtn');
+
+    window.removeResearchChatAttachment = function() {
+      researchChatAttachment = null;
+      if (researchChatFileInput) researchChatFileInput.value = '';
+      if (researchChatAttachmentChip) researchChatAttachmentChip.style.display = 'none';
+    };
+
+    if (researchChatAttachBtn && researchChatFileInput) {
+      researchChatAttachBtn.addEventListener('click', () => {
+        if (!isResearchChatProUser) return; // terkunci - klik ditangkap oleh listener global .btn-upgrade-trigger
+        researchChatFileInput.click();
+      });
+
+      researchChatFileInput.addEventListener('change', async () => {
+        const file = researchChatFileInput.files && researchChatFileInput.files[0];
+        if (!file) return;
+
+        const originalHtml = researchChatAttachBtn.innerHTML;
+        researchChatAttachBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (window.currentLanguage === 'en' ? 'Uploading...' : 'Mengunggah...');
+        researchChatAttachBtn.disabled = true;
+
+        try {
+          const formData = new FormData();
+          formData.append('document', file);
+          const res = await fetch('/api/research-chat/upload', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            alert(data.message || (window.currentLanguage === 'en' ? 'Failed to upload document.' : 'Gagal mengunggah dokumen.'));
+            return;
+          }
+          researchChatAttachment = { fileName: data.fileName, wordCount: data.wordCount, text: data.text };
+          if (researchChatAttachmentChip && researchChatAttachmentName) {
+            researchChatAttachmentName.textContent = `${data.fileName} (${data.wordCount.toLocaleString('id-ID')} kata)`;
+            researchChatAttachmentChip.style.display = 'flex';
+          }
+        } catch (err) {
+          console.error('[Research Chat] Upload error:', err);
+          alert(window.currentLanguage === 'en' ? 'Failed to connect to server to upload document.' : 'Gagal menghubungi server untuk mengunggah dokumen.');
+        } finally {
+          researchChatAttachBtn.innerHTML = originalHtml;
+          researchChatAttachBtn.disabled = false;
+          researchChatFileInput.value = '';
+        }
+      });
+    }
+
+    if (researchChatAttachmentRemoveBtn) {
+      researchChatAttachmentRemoveBtn.addEventListener('click', () => window.removeResearchChatAttachment());
     }
 
     // Muat daftar riwayat percakapan begitu tab ini siap (kalau user Premium/Ultimate)
@@ -4574,6 +4691,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (researchChatLockDescEl) researchChatLockDescEl.textContent = TRANSLATIONS[lang].research_chat_lock_desc;
       const researchChatUpgradeBtnTextEl = document.getElementById('researchChatUpgradeBtnText');
       if (researchChatUpgradeBtnTextEl) researchChatUpgradeBtnTextEl.textContent = TRANSLATIONS[lang].research_chat_upgrade_btn;
+      const researchChatAttachBtnTextEl = document.getElementById('researchChatAttachBtnText');
+      if (researchChatAttachBtnTextEl) researchChatAttachBtnTextEl.textContent = TRANSLATIONS[lang].research_chat_attach_btn;
       if (currentUser?.user) {
         updateResearchChatAccess(currentUser.user);
       }

@@ -15,6 +15,9 @@ const { OAuth2Client } = require('google-auth-library');
 const JOURNAL_DATABASE = require('./database');
 const app = express();
 const nodemailer = require('nodemailer');
+const multer = require('multer');
+const mammoth = require('mammoth');
+const pdfParse = require('pdf-parse');
 
 // SMTP Configuration for Hostinger
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.hostinger.com';
@@ -2118,6 +2121,97 @@ async function searchWebForContext(query) {
   }
 }
 
+// --- LAMPIRAN DOKUMEN untuk JurnalHub Intelligence (Premium & Ultimate saja) ---
+// Batas 8.000 kata per dokumen supaya biaya token DeepSeek per unggahan terkendali
+// (lihat catatan di komentar RESEARCH_CHAT_SYSTEM_PROMPT soal cost histori percakapan).
+const DOCUMENT_MAX_WORDS = 8000;
+const documentUploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: 'Terlalu banyak unggahan dokumen. Silakan coba lagi dalam beberapa menit.' }
+});
+const documentUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB batas mentah file, di luar batas kata teks hasil ekstraksi
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'text/plain'
+    ];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Format file tidak didukung. Gunakan PDF, DOCX, atau TXT.'));
+    }
+  }
+});
+
+async function extractTextFromDocument(file) {
+  if (file.mimetype === 'application/pdf') {
+    const parsed = await pdfParse(file.buffer);
+    return parsed.text || '';
+  }
+  if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    const result = await mammoth.extractRawText({ buffer: file.buffer });
+    return result.value || '';
+  }
+  if (file.mimetype === 'text/plain') {
+    return file.buffer.toString('utf-8');
+  }
+  throw new Error('Format file tidak didukung.');
+}
+
+app.post('/api/research-chat/upload', requireAccess, documentUploadLimiter, (req, res) => {
+  documentUpload.single('document')(req, res, async (err) => {
+    if (err) {
+      const message = err.message && err.message.includes('tidak didukung')
+        ? err.message
+        : (err.code === 'LIMIT_FILE_SIZE' ? 'Ukuran file maksimal 15MB.' : 'Gagal mengunggah file.');
+      return res.status(400).json({ ok: false, message });
+    }
+
+    // Lampiran dokumen hanya untuk Premium & Ultimate.
+    const users = getUsers();
+    const user = users.find(u => u.id === req.session.userId);
+    const userType = req.session.userId === 'access_code_user' ? 'premium' : ((user && user.type) || 'free');
+    if (userType !== 'premium' && userType !== 'ultimate') {
+      return res.status(403).json({ ok: false, message: 'Fitur lampiran dokumen khusus akun Premium & Ultimate.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ ok: false, message: 'File wajib disertakan.' });
+    }
+
+    try {
+      const rawText = (await extractTextFromDocument(req.file)).trim();
+      if (!rawText) {
+        return res.status(400).json({ ok: false, message: 'Tidak ada teks yang bisa diekstrak dari dokumen ini.' });
+      }
+
+      const words = rawText.split(/\s+/).filter(Boolean);
+      if (words.length > DOCUMENT_MAX_WORDS) {
+        return res.status(400).json({
+          ok: false,
+          message: `Dokumen terlalu panjang (${words.length.toLocaleString('id-ID')} kata). Maksimal ${DOCUMENT_MAX_WORDS.toLocaleString('id-ID')} kata per unggahan.`
+        });
+      }
+
+      res.json({
+        ok: true,
+        fileName: req.file.originalname,
+        wordCount: words.length,
+        text: rawText
+      });
+    } catch (error) {
+      console.error('[Document Upload] Gagal ekstrak dokumen:', error.message);
+      res.status(500).json({ ok: false, message: 'Gagal memproses dokumen. Pastikan file tidak rusak/terkunci password.' });
+    }
+  });
+});
+
 app.post('/api/research-chat', requireAccess, async (req, res) => {
   const apiKey = getDeepSeekApiKey();
   if (!apiKey) {
@@ -2172,9 +2266,15 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'conversationId wajib diisi.' });
   }
 
-  // Tentukan model dan tipe thinking berdasarkan parameter request
-  const modelType = req.body.modelType || 'lite';
-  const thinkingType = req.body.thinkingType || 'basic';
+  // Tentukan model dan tipe thinking berdasarkan parameter request.
+  // Model Pro & Deep Thinking dikunci untuk akun Free (server-side, jangan cuma
+  // andalkan UI) - dipaksa turun ke lite/basic kalau tetap dikirim dari client.
+  let modelType = req.body.modelType || 'lite';
+  let thinkingType = req.body.thinkingType || 'basic';
+  if (userType === 'free') {
+    modelType = 'lite';
+    thinkingType = 'basic';
+  }
 
   let dsModel = 'deepseek-v4-flash';
   if (modelType === 'pro') {

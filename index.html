@@ -956,6 +956,18 @@
       color: #ffffff !important;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     }
+    .composer-pill-locked {
+      opacity: 0.6;
+      position: relative;
+    }
+    .composer-pill-locked::after {
+      content: '\f023'; /* fa-lock */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      font-size: 0.62rem;
+      color: #fbbf24;
+      margin-left: 0.2rem;
+    }
 
     .research-chat-composer {
       display: flex;
@@ -3432,6 +3444,21 @@
                     <i class="fa-solid fa-brain"></i> Deep Thinking
                   </button>
                 </div>
+
+                <!-- Attachment (Premium/Ultimate saja) -->
+                <button type="button" id="researchChatAttachBtn" class="composer-pill" title="Lampirkan dokumen (PDF/DOCX/TXT, maks 8.000 kata)">
+                  <i class="fa-solid fa-paperclip"></i> <span id="researchChatAttachBtnText">Lampirkan Dokumen</span>
+                </button>
+                <input type="file" id="researchChatFileInput" accept=".pdf,.docx,.txt" style="display: none;">
+              </div>
+
+              <!-- Chip dokumen terlampir -->
+              <div id="researchChatAttachmentChip" style="display: none; align-items: center; gap: 0.5rem; background: rgba(7,135,220,0.08); border: 1px solid rgba(7,135,220,0.2); border-radius: 8px; padding: 0.5rem 0.75rem; margin-bottom: 0.6rem; font-size: 0.82rem; color: var(--text-main);">
+                <i class="fa-solid fa-file-lines" style="color: var(--brand-blue);"></i>
+                <span id="researchChatAttachmentName" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                <button type="button" id="researchChatAttachmentRemoveBtn" style="border: none; background: none; color: var(--text-muted); cursor: pointer; padding: 0.2rem;" title="Hapus lampiran">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
               </div>
 
               <div class="research-chat-composer">
