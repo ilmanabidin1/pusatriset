@@ -266,6 +266,23 @@ function saveUsers(users) {
   }
 }
 
+// Reset semua counter kuota bulanan saat user upgrade tier (baik lewat pembayaran
+// asli maupun redeem kode akses) - supaya user langsung dapat kuota penuh sesuai
+// paket barunya, bukan melanjutkan sisa pemakaian dari tier sebelumnya.
+function resetMonthlyQuotasOnUpgrade(user) {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  user.lastMatchMonth = currentMonth;
+  user.matchCountThisMonth = 0;
+  user.lastDraftMonth = currentMonth;
+  user.draftCountThisMonth = 0;
+  user.lastLitReviewMonth = currentMonth;
+  user.litReviewCountThisMonth = 0;
+  user.lastHumanizerMonth = currentMonth;
+  user.humanizerWordsUsedThisMonth = 0;
+  user.lastResearchChatMonth = currentMonth;
+  user.researchChatCountThisMonth = 0;
+}
+
 const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
 
 function getHistory() {
@@ -452,6 +469,7 @@ app.post('/api/redeem-code', requireAccess, authLimiter, (req, res) => {
   users[userIndex].type = 'ultimate';
   users[userIndex].planId = codes[codeIndex].plan || MANUAL_ACCESS_CODE_PLAN;
   users[userIndex].paymentExpiredAt = expiredAt;
+  resetMonthlyQuotasOnUpgrade(users[userIndex]);
   const savedUsers = saveUsers(users);
 
   codes[codeIndex].used = true;
@@ -3248,6 +3266,7 @@ app.post('/api/payment/callback', async (req, res) => {
             users[userIndex].type = targetType;
             users[userIndex].planId = planId;
             users[userIndex].paymentExpiredAt = expiredAt;
+            resetMonthlyQuotasOnUpgrade(users[userIndex]);
             const saved = saveUsers(users);
             addTransaction(userId, referenceId, name, amount, 'success');
             if (!saved) {
@@ -3529,6 +3548,7 @@ app.post('/api/payment/faspay/callback', async (req, res) => {
           users[userIndex].type = targetType;
           users[userIndex].planId = planId;
           users[userIndex].paymentExpiredAt = expiredAt;
+          resetMonthlyQuotasOnUpgrade(users[userIndex]);
         }
 
         persisted = saveUsers(users);
