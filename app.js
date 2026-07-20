@@ -981,11 +981,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     isResearchChatProUser = user.type === 'premium' || user.type === 'ultimate';
 
-    // Model Pro, Deep Thinking, dan Lampiran Dokumen dikunci untuk akun Free
+    // Model Pro, Deep Thinking, Lampiran Dokumen, dan Shortcut Prompt Bank dikunci untuk akun Free
     const pillModelPro = document.getElementById('pillModelPro');
     const pillModeThinking = document.getElementById('pillModeThinking');
     const attachBtn = document.getElementById('researchChatAttachBtn');
-    [pillModelPro, pillModeThinking, attachBtn].forEach(el => {
+    const promptShuffleBtn = document.getElementById('researchChatPromptShuffleBtn');
+    [pillModelPro, pillModeThinking, attachBtn, promptShuffleBtn].forEach(el => {
       if (!el) return;
       el.classList.toggle('composer-pill-locked', !isResearchChatProUser);
       el.classList.toggle('btn-upgrade-trigger', !isResearchChatProUser);
@@ -3948,6 +3949,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    function renderLockedShortcuts() {
+      if (!researchChatPromptShortcutList) return;
+      const msg = window.currentLanguage === 'en' ? 'Premium/Ultimate only - click to upgrade' : 'Khusus Premium/Ultimate - klik untuk upgrade';
+      researchChatPromptShortcutList.innerHTML = `
+        <button type="button" class="research-chat-prompt-shortcut-item btn-upgrade-trigger" style="text-align:center; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+          <i class="fa-solid fa-lock" style="color:#fbbf24;"></i> ${msg}
+        </button>
+      `;
+    }
+
     if (researchChatPlusBtn && researchChatPlusMenu) {
       researchChatPlusBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -3958,6 +3969,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         researchChatPlusMenu.classList.add('open');
         researchChatPlusBtn.classList.add('active');
+
+        if (!isResearchChatProUser) {
+          renderLockedShortcuts();
+          return;
+        }
 
         if (researchChatPromptShortcutList) {
           researchChatPromptShortcutList.innerHTML = `<p style="text-align:center; color: var(--text-muted); font-size: 0.78rem; padding: 0.5rem;"><i class="fa-solid fa-spinner fa-spin"></i></p>`;
@@ -3976,6 +3992,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (researchChatPromptShuffleBtn) {
       researchChatPromptShuffleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (!isResearchChatProUser) return; // terkunci - klik ditangkap oleh listener global .btn-upgrade-trigger
         pickRandomShortcuts();
       });
     }
