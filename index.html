@@ -2829,7 +2829,7 @@
                 <h3>Temukan jurnal paling cocok untuk artikel Anda</h3>
                 <p>Tempel judul & abstrak, biarkan AI mencocokkan ke ribuan jurnal Scopus & Sinta.</p>
               </div>
-              <button class="banner-action-btn" onclick="switchTab('match-score')">
+              <button class="banner-action-btn" onclick="window.openMatchScoreInDatabaseTab()">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Mulai AI Match
               </button>
             </div>
@@ -3061,6 +3061,82 @@
           </div>
         </div>
 
+        <!-- Cek Peluang Diterima Jurnal via AI (menyatu di sini, bukan lagi sub-tab terpisah) -->
+        <button type="button" id="dbAiCheckToggleBtn" class="reset-filter-btn" style="margin-bottom: 2rem; background: var(--brand-blue); color: #ffffff; border: none; display: inline-flex;">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="dbAiCheckToggleText">Cek Peluang Diterima dengan AI</span>
+        </button>
+
+        <div id="dbAiCheckPanel" style="display: none; margin-bottom: 2rem;">
+          <div class="filter-box-card" id="matchBoxWrapper" style="position: relative;">
+
+            <!-- Overlay Lock for Free User -->
+            <div id="matchPremiumLock" style="display: none;">
+              <i class="fa-solid fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
+              <h3>Fitur PRO Khusus Pelanggan</h3>
+              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
+                Tingkatkan akun Anda ke PRO atau masukkan Kode Akses di halaman login untuk membuka AI Match Score.
+              </p>
+              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fa-solid fa-unlock-keyhole"></i> Upgrade Sekarang
+              </button>
+            </div>
+
+            <!-- Form Content -->
+            <div class="match-card-content">
+              <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                <div>
+                  <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score</span>
+                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Temukan rekomendasi jurnal paling cocok</h3>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                  <!-- Quota Disclaimer for Match Score -->
+                  <div id="matchQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 1/1 Bulan Ini</span>
+                  </div>
+                  <button id="clearMatch" class="reset-filter-btn" type="button" style="display: none;">
+                    <i class="fa-solid fa-xmark"></i> Bersihkan Match
+                  </button>
+                  <button type="button" id="dbAiCheckCloseBtn" class="reset-filter-btn" title="Tutup">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="match-form" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem;">
+                <div class="filter-dropdown-item" style="grid-column: span 1;">
+                  <label for="articleTitle">JUDUL ARTIKEL</label>
+                  <input type="text" id="articleTitle" placeholder="Contoh: Perlindungan hukum terhadap konsumen digital" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none;">
+                </div>
+                <div class="filter-dropdown-item" style="grid-column: span 1;">
+                  <label for="articleKeywords">KEYWORD / BIDANG</label>
+                  <input type="text" id="articleKeywords" placeholder="Contoh: hukum bisnis, perlindungan konsumen" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none;">
+                </div>
+                <div class="filter-dropdown-item" style="grid-column: span 2;">
+                  <label for="articleAbstract">ABSTRAK SINGKAT</label>
+                  <textarea id="articleAbstract" rows="6" placeholder="Tempel abstrak atau ringkasan artikel agar rekomendasi jurnal lebih akurat." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+                </div>
+              </div>
+              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem; flex-wrap: wrap;">
+                <button id="runMatch" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: var(--brand-blue); color: #ffffff;">
+                  <i class="fa-solid fa-chart-line"></i> Hitung Match Score
+                </button>
+                <a href="#" id="howItWorksBtn" style="font-size: 0.88rem; color: var(--brand-blue); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(7, 135, 220, 0.08); padding: 0.8rem 1.2rem; border-radius: 8px; transition: all 0.2s; border: 1px solid rgba(7,135,220,0.12);">
+                  <i class="fa-regular fa-circle-play"></i> Cara Kerja?
+                </a>
+                <p id="matchSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; flex-grow: 1;">
+                  Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.
+                </p>
+              </div>
+              <div class="match-results-grid" id="matchResultsContainer" style="display: none; margin-top: 2rem;"></div>
+
+              <!-- Powered by Claude Logo at the bottom of the card -->
+              <div style="margin-top: 2rem; border-top: 1px solid rgba(8,34,64,0.06); padding-top: 1.5rem; display: flex; justify-content: center; align-items: center;">
+                <img src="assets/powered-by-claude-light.png" alt="Powered by Claude" style="height: 38px; width: auto; opacity: 0.85;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <!-- Meta Results Header -->
         <div class="results-meta-header">
           <span class="results-count-text" id="resultsCount">Menampilkan 0 jurnal</span>
@@ -3116,29 +3192,6 @@
               </button>
             </div>
 
-            <!-- Card 2: AI Match Score -->
-            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
-              <div class="ai-research-card-content">
-                <div class="ai-research-icon-wrapper">
-                  <i class="fa-solid fa-percent"></i>
-                </div>
-                <h4>Cek Peluang Diterima Jurnal</h4>
-                <p>Masukkan judul dan abstrak, dapatkan daftar jurnal Scopus & Sinta yang paling cocok lengkap dengan skor kecocokan, dalam hitungan detik.</p>
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.50rem; display: flex; align-items: center; gap: 0.35rem;">
-                  <i class="fa-solid fa-database" style="color: var(--brand-blue);"></i> Dianalisis dari 10.000+ jurnal terindeks
-                </div>
-                <div style="font-size: 0.72rem; background: rgba(7, 135, 220, 0.04); border: 1px dashed rgba(7, 135, 220, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #0369a1; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Menghitung skor indeks reputasi (SJR) & Quartile (Q1-Q4) secara instan
-                </div>
-                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / Tanpa Batas (PRO)
-                </div>
-              </div>
-              <button class="ai-research-btn" onclick="switchTab('match-score')" style="margin-top: 1rem;">
-                Cek Skor Sekarang <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-
             <!-- Card 3: AI Drafting Companion -->
             <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
               <div class="ai-research-card-content">
@@ -3179,78 +3232,6 @@
               </button>
             </div>
 
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 2: MATCH SCORE (DEDICATED VIEW) -->
-      <div id="tabContentMatchScore" class="tab-content">
-        <div class="match-score-main-container">
-          <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
-          <div class="match-box-wrapper" id="matchBoxWrapper" style="position: relative;">
-            
-            <!-- Overlay Lock for Free User -->
-            <div id="matchPremiumLock" style="display: none;">
-              <i class="fa-solid fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
-              <h3>Fitur PRO Khusus Pelanggan</h3>
-              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
-                Tingkatkan akun Anda ke PRO atau masukkan Kode Akses di halaman login untuk membuka AI Match Score.
-              </p>
-              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
-                <i class="fa-solid fa-unlock-keyhole"></i> Upgrade Sekarang
-              </button>
-            </div>
-
-            <!-- Form Content -->
-            <div class="match-card-content">
-              <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-                <div>
-                  <span class="banner-badge" style="background: rgba(7, 135, 220, 0.1); border-color: rgba(7,135,220,0.2); color: var(--brand-blue);"><i class="fa-solid fa-wand-magic-sparkles"></i> Journal Match Score</span>
-                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Temukan rekomendasi jurnal paling cocok</h3>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                  <!-- Quota Disclaimer for Match Score -->
-                  <div id="matchQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 1/1 Bulan Ini</span>
-                  </div>
-                  <button id="clearMatch" class="reset-filter-btn" type="button" style="display: none;">
-                    <i class="fa-solid fa-xmark"></i> Bersihkan Match
-                  </button>
-                </div>
-              </div>
-              <div class="match-form" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem;">
-                <div class="filter-dropdown-item" style="grid-column: span 1;">
-                  <label for="articleTitle">JUDUL ARTIKEL</label>
-                  <input type="text" id="articleTitle" placeholder="Contoh: Perlindungan hukum terhadap konsumen digital" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none;">
-                </div>
-                <div class="filter-dropdown-item" style="grid-column: span 1;">
-                  <label for="articleKeywords">KEYWORD / BIDANG</label>
-                  <input type="text" id="articleKeywords" placeholder="Contoh: hukum bisnis, perlindungan konsumen" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none;">
-                </div>
-                <div class="filter-dropdown-item" style="grid-column: span 2;">
-                  <label for="articleAbstract">ABSTRAK SINGKAT</label>
-                  <textarea id="articleAbstract" rows="6" placeholder="Tempel abstrak atau ringkasan artikel agar rekomendasi jurnal lebih akurat." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
-                </div>
-              </div>
-              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem; flex-wrap: wrap;">
-                <button id="runMatch" class="upgrade-btn" style="width: auto; padding: 0.85rem 2rem; background: var(--brand-blue); color: #ffffff;">
-                  <i class="fa-solid fa-chart-line"></i> Hitung Match Score
-                </button>
-                <a href="#" id="howItWorksBtn" style="font-size: 0.88rem; color: var(--brand-blue); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(7, 135, 220, 0.08); padding: 0.8rem 1.2rem; border-radius: 8px; transition: all 0.2s; border: 1px solid rgba(7,135,220,0.12);">
-                  <i class="fa-regular fa-circle-play"></i> Cara Kerja?
-                </a>
-                <p id="matchSummary" class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; flex-grow: 1;">
-                  Isi minimal judul artikel atau keyword untuk melihat rekomendasi jurnal terbaik.
-                </p>
-              </div>
-              <div class="match-results-grid" id="matchResultsContainer" style="display: none; margin-top: 2rem;"></div>
-              
-              <!-- Powered by Claude Logo at the bottom of the card -->
-              <div style="margin-top: 2rem; border-top: 1px solid rgba(8,34,64,0.06); padding-top: 1.5rem; display: flex; justify-content: center; align-items: center;">
-                <img src="assets/powered-by-claude-light.png" alt="Powered by Claude" style="height: 38px; width: auto; opacity: 0.85;">
-              </div>
-            </div>
-            
           </div>
         </div>
       </div>
@@ -4008,7 +3989,7 @@
       }
 
       function switchTab(tabName) {
-        if (window.resetJustGeneratedFlags && !['match-score', 'drafting-companion', 'lit-review', 'humanizer'].includes(tabName)) {
+        if (window.resetJustGeneratedFlags && !['drafting-companion', 'lit-review', 'humanizer'].includes(tabName)) {
           window.resetJustGeneratedFlags();
         }
         // Close mobile menu if open
@@ -4028,7 +4009,7 @@
         sidebarLinks.forEach(link => {
           const currentTab = link.getAttribute('data-tab');
           if (currentTab === tabName || 
-             (currentTab === 'ai-research' && ['match-score', 'drafting-companion', 'lit-review', 'humanizer'].includes(tabName))) {
+             (currentTab === 'ai-research' && ['drafting-companion', 'lit-review', 'humanizer'].includes(tabName))) {
             link.classList.add('active');
           } else {
             link.classList.remove('active');
@@ -4047,7 +4028,7 @@
         }
         
         // Update Page Title
-        const activeTabForTitle = ['match-score', 'drafting-companion', 'lit-review', 'humanizer'].includes(tabName) ? 'ai-research' : tabName;
+        const activeTabForTitle = ['drafting-companion', 'lit-review', 'humanizer'].includes(tabName) ? 'ai-research' : tabName;
         const currentLink = document.querySelector(`.sidebar-link[data-tab="${activeTabForTitle}"]`);
         if (currentLink) {
           pageTitle.textContent = currentLink.querySelector('span').textContent;

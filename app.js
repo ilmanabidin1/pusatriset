@@ -210,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ai_research_open_btn: "Buka Fitur",
        ai_research_cards: [
          { title: "JurnalHub Humanizer Engine", desc: "Lolos deteksi Turnitin dan GPTZero hingga 98 persen, tanpa mengubah makna tulisanmu.", btn: "Humanisasi Teks" },
-         { title: "Cek Peluang Diterima Jurnal", desc: "Masukkan judul dan abstrak, dapatkan daftar jurnal Scopus & Sinta yang paling cocok lengkap dengan skor kecocokan, dalam hitungan detik.", btn: "Cek Skor Sekarang" },
          { title: "AI Outline Generator", desc: "Buat kerangka naskah (outline) jurnal terstruktur dari Bab 1 s.d Bab 5 secara sistematis untuk memandu penulisan karya ilmiah Anda.", btn: "Buat Outline" },
          { title: "AI Literature Review", desc: "Susun tinjauan pustaka lengkap dengan sitasi otomatis dari jurnal terpercaya, biasanya butuh berhari-hari, sekarang dalam hitungan menit.", btn: "Cari Sitasi" }
        ],
@@ -364,7 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ai_research_open_btn: "Open Feature",
       ai_research_cards: [
         { title: "JurnalHub Humanizer Engine", desc: "Rewrite AI-generated text so it passes AI detectors (like Turnitin & GPTZero) with very natural academic language.", btn: "Humanize Text" },
-        { title: "Check Journal Acceptance Probability", desc: "Enter title and abstract, get the most suitable Scopus & Sinta journals complete with matching scores, in seconds.", btn: "Check Score Now" },
         { title: "AI Outline Generator", desc: "Create a structured manuscript outline from Chapter 1 to Chapter 5 systematically to guide your scientific writing process.", btn: "Generate Outline" },
         { title: "AI Literature Review", desc: "Build a comprehensive literature review complete with automatic citations from trusted journals, usually takes days, now in minutes.", btn: "Search Citations" }
       ],
@@ -499,6 +497,22 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthState();
   };
 
+  // Match Score sekarang menyatu di tab Database Jurnal (bukan lagi sub-tab
+  // terpisah di bawah AI For Research) - helper ini pindah ke tab lalu buka
+  // panel Cek Peluang Diterima AI dan scroll ke sana.
+  window.openMatchScoreInDatabaseTab = () => {
+    if (window.switchTab) window.switchTab('database-jurnal');
+    setTimeout(() => {
+      const panel = document.getElementById('dbAiCheckPanel');
+      const toggleBtn = document.getElementById('dbAiCheckToggleBtn');
+      if (panel && panel.style.display === 'none') {
+        if (toggleBtn) toggleBtn.click();
+        else panel.style.display = 'block';
+      }
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
   // --- DARK MODE TOGGLE ---
   (function initDarkMode() {
     const html = document.documentElement;
@@ -527,6 +541,28 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(current === 'dark' ? 'light' : 'dark');
       });
     }
+  })();
+
+  // --- TOGGLE PANEL "CEK PELUANG DITERIMA DENGAN AI" (menyatu di tab Database Jurnal) ---
+  (function initDbAiCheckToggle() {
+    const toggleBtn = document.getElementById('dbAiCheckToggleBtn');
+    const panel = document.getElementById('dbAiCheckPanel');
+    const closeBtn = document.getElementById('dbAiCheckCloseBtn');
+    const toggleText = document.getElementById('dbAiCheckToggleText');
+    if (!toggleBtn || !panel) return;
+
+    function setOpen(open) {
+      panel.style.display = open ? 'block' : 'none';
+      if (toggleText) {
+        toggleText.textContent = open
+          ? (window.currentLanguage === 'en' ? 'Hide AI Check Panel' : 'Sembunyikan Panel AI')
+          : (window.currentLanguage === 'en' ? 'Check with AI' : 'Cek Peluang Diterima dengan AI');
+      }
+      if (open) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    toggleBtn.addEventListener('click', () => setOpen(panel.style.display === 'none'));
+    if (closeBtn) closeBtn.addEventListener('click', () => setOpen(false));
   })();
 
   // --- SIDEBAR COLLAPSE TOGGLE (ala Claude) ---
@@ -688,7 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
               bannerUpgradeBtn.className = 'banner-upgrade-btn'; 
               bannerUpgradeBtn.onclick = (e) => {
                 e.preventDefault();
-                if (window.switchTab) window.switchTab('match-score');
+                if (window.openMatchScoreInDatabaseTab) window.openMatchScoreInDatabaseTab();
               };
             }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
@@ -738,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
               bannerUpgradeBtn.className = 'banner-upgrade-btn'; 
               bannerUpgradeBtn.onclick = (e) => {
                 e.preventDefault();
-                if (window.switchTab) window.switchTab('match-score');
+                if (window.openMatchScoreInDatabaseTab) window.openMatchScoreInDatabaseTab();
               };
             }
 
@@ -4664,8 +4700,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Catatan: scoped ke .match-header (bukan sekadar tab-wide "h3"/"p") karena
       // overlay lock PRO di tiap tab ini juga punya h3/p sendiri yang muncul lebih
       // dulu di urutan DOM - selector generik akan salah menimpa teks lock itu.
-      const matcherHeader = document.querySelector('#tabContentMatchScore .match-header h3');
-      const matcherDesc = document.querySelector('#tabContentMatchScore .match-header p');
+      const matcherHeader = document.querySelector('#dbAiCheckPanel .match-header h3');
+      const matcherDesc = document.querySelector('#dbAiCheckPanel .match-header p');
       const runMatchBtn = document.getElementById('runMatchBtn');
       if (matcherHeader) matcherHeader.textContent = TRANSLATIONS[lang].matcher_title;
       if (matcherDesc) matcherDesc.textContent = TRANSLATIONS[lang].matcher_desc;
