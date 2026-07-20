@@ -66,7 +66,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const trimmed = lines[i].trim().replace(/^(&lt;br\s*\/?&gt;\s*)+/i, '');
 
       if (trimmed === '') {
-        flushList();
+        // Model sering menaruh baris kosong DI ANTARA item list (terutama list
+        // bernomor). Kalau langsung flush di sini, tiap item jadi <ol> terpisah
+        // yang masing-masing mulai lagi dari "1.". Makanya intip baris berikutnya
+        // (lewati baris kosong lain) - kalau itu masih item list bertipe sama,
+        // jangan flush, supaya tetap jadi satu <ol>/<ul> yang bernomor berurutan.
+        let j = i + 1;
+        while (j < lines.length && lines[j].trim() === '') j++;
+        const nextTrimmed = j < lines.length ? lines[j].trim() : '';
+        const nextIsSameList = listType === 'ol'
+          ? /^\d+\.\s+/.test(nextTrimmed)
+          : listType === 'ul'
+            ? /^[-*]\s+/.test(nextTrimmed)
+            : false;
+        if (!nextIsSameList) {
+          flushList();
+        }
         i++;
         continue;
       }
