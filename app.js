@@ -624,6 +624,8 @@ document.addEventListener('DOMContentLoaded', () => {
               profileType.style.color = '#fbbf24';
             }
             
+            updateExportDraftDocxLock(isUltimate);
+
             if (isUltimate) {
               if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'none';
               if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'none';
@@ -686,7 +688,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (profileType) profileType.textContent = 'Akun Free';
             if (sidebarUpgradeCard) sidebarUpgradeCard.style.display = 'block';
             if (headerUpgradeBtn) headerUpgradeBtn.style.display = 'flex';
-            
+
+            updateExportDraftDocxLock(false);
+
             // Akses tab Match Score dibuka untuk Free User agar bisa mencoba 1x sebulan
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
 
@@ -956,6 +960,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- ASISTEN RISET AI: akses & kuota ---
   let isResearchChatProUser = false; // Premium/Ultimate - buka Model Pro, Deep Thinking, & lampiran dokumen
+
+  // Ekspor panduan outline ke .docx - khusus akun Ultimate
+  function updateExportDraftDocxLock(isUltimate) {
+    const btn = document.getElementById('exportDraftDocxBtn');
+    if (!btn) return;
+    btn.classList.toggle('btn-upgrade-trigger', !isUltimate);
+    btn.style.opacity = isUltimate ? '1' : '0.6';
+  }
 
   function updateResearchChatAccess(user) {
     const lock = document.getElementById('researchChatPremiumLock');
@@ -2439,6 +2451,56 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    });
+  }
+
+  // Ekspor panduan outline jadi file .docx berformat rapi - khusus akun Ultimate
+  const exportDraftDocxBtn = document.getElementById('exportDraftDocxBtn');
+  if (exportDraftDocxBtn) {
+    exportDraftDocxBtn.addEventListener('click', async () => {
+      if (!currentGeneratedDraft) return;
+
+      const isUltimate = currentUser.user && currentUser.user.type === 'ultimate';
+      if (!isUltimate) {
+        const upgradeModal = document.getElementById('upgradeModal');
+        if (upgradeModal) upgradeModal.classList.add('active');
+        return;
+      }
+
+      const title = draftTitle.value.trim();
+      const abstract = draftAbstract.value.trim();
+
+      const originalHtml = exportDraftDocxBtn.innerHTML;
+      exportDraftDocxBtn.disabled = true;
+      exportDraftDocxBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membuat .docx...';
+
+      try {
+        const response = await fetch('/api/generate-template-draft/export-docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, abstract, draft: currentGeneratedDraft })
+        });
+
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          alert(data.message || 'Gagal membuat file .docx.');
+          return;
+        }
+
+        const blob = await response.blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Panduan_Draft_${title.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error('[Export Draft DOCX] Error:', err);
+        alert('Gagal menghubungi server untuk membuat file .docx.');
+      } finally {
+        exportDraftDocxBtn.disabled = false;
+        exportDraftDocxBtn.innerHTML = originalHtml;
+      }
     });
   }
 

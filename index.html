@@ -3111,9 +3111,14 @@
                   <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa-solid fa-clipboard-list" style="color: var(--brand-blue);"></i> Panduan Struktur Pembahasan Manuskrip
                   </h4>
-                  <button id="downloadDraftGuideBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;">
-                    <i class="fa-solid fa-file-arrow-down"></i> Unduh Panduan (.txt)
-                  </button>
+                  <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                    <button id="downloadDraftGuideBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;">
+                      <i class="fa-solid fa-file-arrow-down"></i> Unduh Panduan (.txt)
+                    </button>
+                    <button id="exportDraftDocxBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none;" title="Khusus akun Ultimate">
+                      <i class="fa-solid fa-file-word"></i> Ekspor .docx <span id="exportDraftDocxBadge" style="font-size: 0.68rem; opacity: 0.9;">(Ultimate)</span>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Segments Container -->

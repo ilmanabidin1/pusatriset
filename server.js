@@ -18,6 +18,7 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse');
+const { Document, Packer, Paragraph, HeadingLevel, TextRun } = require('docx');
 
 // SMTP Configuration for Hostinger
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.hostinger.com';
@@ -1701,6 +1702,67 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
   } catch (error) {
     console.error('[AI Draft Generator] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal memproses draf panduan dengan AI: ' + error.message });
+  }
+});
+
+// Ekspor panduan outline yang sudah di-generate jadi file .docx berformat rapi -
+// fitur khusus Ultimate.
+const DRAFT_DOCX_SEGMENTS = [
+  { key: 'introduction', label: '1. Pendahuluan / Latar Belakang' },
+  { key: 'literature_review', label: '2. Tinjauan Pustaka / Landasan Teori' },
+  { key: 'method', label: '3. Metode Penelitian' },
+  { key: 'results_discussion', label: '4. Hasil & Pembahasan' },
+  { key: 'conclusion', label: '5. Kesimpulan & Saran' }
+];
+
+app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, res) => {
+  const { title, abstract, draft } = req.body;
+  if (!title || !abstract || !draft || typeof draft !== 'object') {
+    return res.status(400).json({ ok: false, message: 'Judul, abstrak, dan draf outline wajib disertakan.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const userType = req.session.userId === 'access_code_user' ? 'premium' : ((user && user.type) || 'free');
+  if (userType !== 'ultimate') {
+    return res.status(403).json({ ok: false, message: 'Ekspor panduan ke .docx khusus akun Ultimate.' });
+  }
+
+  try {
+    const children = [
+      new Paragraph({ text: String(title).slice(0, 300), heading: HeadingLevel.TITLE }),
+      new Paragraph({ text: 'Abstrak', heading: HeadingLevel.HEADING_2, spacing: { before: 300 } }),
+      new Paragraph({ text: String(abstract).slice(0, 5000) }),
+      new Paragraph({ text: 'Panduan Struktur Pembahasan Manuskrip', heading: HeadingLevel.HEADING_1, spacing: { before: 500 } })
+    ];
+
+    DRAFT_DOCX_SEGMENTS.forEach(seg => {
+      children.push(new Paragraph({ text: seg.label, heading: HeadingLevel.HEADING_2, spacing: { before: 300 } }));
+      const points = Array.isArray(draft[seg.key]) ? draft[seg.key] : [];
+      if (points.length === 0) {
+        children.push(new Paragraph({ text: '(Tidak ada poin untuk segmen ini.)' }));
+      } else {
+        points.forEach(pt => {
+          children.push(new Paragraph({ text: String(pt).slice(0, 1000), bullet: { level: 0 } }));
+        });
+      }
+    });
+
+    children.push(new Paragraph({
+      spacing: { before: 500 },
+      children: [new TextRun({ text: 'Dibuat oleh JurnalHub AI Drafting Assistant', italics: true, size: 18, color: '888888' })]
+    }));
+
+    const doc = new Document({ sections: [{ children }] });
+    const buffer = await Packer.toBuffer(doc);
+
+    const safeFileName = String(title).slice(0, 60).replace(/[^a-zA-Z0-9]/g, '_') || 'Panduan_Draft';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="Panduan_Draft_${safeFileName}.docx"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('[Draft DOCX Export] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal membuat file .docx.' });
   }
 });
 
