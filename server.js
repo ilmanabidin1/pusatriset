@@ -2004,7 +2004,7 @@ Batasan (Tidak Boleh Dilanggar)
 - Tidak boleh mengklaim keputusan editorial jurnal tertentu secara pasti. Kamu memberi estimasi dan penilaian, bukan keputusan resmi editor.
 - Tidak boleh merendahkan berdasarkan asal institusi, kemampuan bahasa Inggris, atau hal di luar kualitas naskah.
 - Kalau pengguna menunjukkan tanda stres berat atau putus asa (bukan sekadar stres soal revisi jurnal), segera lepas persona killer. Jadi suportif, serius, dan arahkan ke bantuan yang tepat.
-- Kamu TIDAK bisa mengakses internet atau database jurnal secara real-time, jadi jangan mengklaim mengetahui status akreditasi/indeksasi jurnal terkini secara pasti - sarankan pengguna memverifikasi lewat fitur AI Match Score atau Database Jurnal di JurnalHub untuk data yang akurat.
+- Kamu TIDAK bisa mengakses database jurnal JurnalHub secara langsung, jadi jangan mengklaim mengetahui status akreditasi/indeksasi jurnal terkini secara pasti - sarankan pengguna memverifikasi lewat fitur AI Match Score atau Database Jurnal di JurnalHub untuk data yang akurat. Kalau kamu diberi "hasil pencarian web real-time" di pesan sistem, itu berarti kamu sedang punya akses internet terbatas untuk pertanyaan ini - manfaatkan datanya, sebutkan bahwa itu dari hasil pencarian, dan tetap kritis (jangan telan mentah-mentah tanpa verifikasi). Kalau tidak ada hasil pencarian yang diberikan, jangan mengarang seolah kamu tahu info terkini.
 
 Contoh Gaya Respons
 Naskah pengguna: "Abstrak saya sudah oke kan? Tinggal submit ya?"
@@ -2072,6 +2072,52 @@ app.delete('/api/research-chat/conversations/:id', requireAccess, (req, res) => 
   res.json({ ok: true });
 });
 
+// Web search real-time untuk JurnalHub Intelligence, khusus mode Pro + Deep Thinking
+// (lihat pengecekan modelType/thinkingType di bawah). Pakai Serper.dev (Google Search API).
+async function searchWebForContext(query) {
+  const serperApiKey = process.env.SERPER_API_KEY;
+  if (!serperApiKey || !query) return null;
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    let response;
+    try {
+      response = await fetchFn('https://google.serper.dev/search', {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': serperApiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ q: query, num: 5 }),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    if (!response.ok) {
+      console.error('[Web Search] Serper API error status:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const organic = Array.isArray(data.organic) ? data.organic.slice(0, 5) : [];
+    if (organic.length === 0) return null;
+
+    const resultsText = organic.map((r, i) =>
+      `${i + 1}. ${r.title || '-'}\n${r.snippet || '-'}\nSumber: ${r.link || '-'}`
+    ).join('\n\n');
+
+    return `Berikut hasil pencarian web real-time untuk pertanyaan pengguna (gunakan sebagai referensi tambahan, tetap sebutkan bahwa ini berdasarkan hasil pencarian, dan sertakan sumber link yang relevan jika dipakai dalam jawaban):\n\n${resultsText}`;
+  } catch (error) {
+    console.error('[Web Search] Gagal mengambil hasil pencarian:', error.message);
+    return null;
+  }
+}
+
 app.post('/api/research-chat', requireAccess, async (req, res) => {
   const apiKey = getDeepSeekApiKey();
   if (!apiKey) {
@@ -2137,6 +2183,16 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
   const thinkingEnabled = thinkingType === 'thinking';
 
+  // Web search real-time hanya untuk kombinasi Model Pro + Deep Thinking.
+  // Lite/Standard/Basic tidak memicu panggilan Serper sama sekali (hemat biaya).
+  let webSearchContext = null;
+  if (modelType === 'pro' && thinkingEnabled) {
+    const lastUserMessage = [...sanitizedMessages].reverse().find(m => m.role === 'user');
+    if (lastUserMessage) {
+      webSearchContext = await searchWebForContext(lastUserMessage.content.slice(0, 400));
+    }
+  }
+
   // DEEPSEEK_API_URL cuma untuk keperluan testing lokal (arahkan ke mock server) -
   // di production selalu pakai endpoint resmi DeepSeek.
   const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
@@ -2149,10 +2205,15 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
       throw new Error('Runtime Node ini tidak mendukung streaming fetch (butuh Node 18+).');
     }
 
+    const systemMessages = [{ role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT }];
+    if (webSearchContext) {
+      systemMessages.push({ role: 'system', content: webSearchContext });
+    }
+
     const bodyPayload = {
       model: dsModel,
       messages: [
-        { role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT },
+        ...systemMessages,
         ...sanitizedMessages
       ],
       max_tokens: 8000,
