@@ -2580,13 +2580,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LOGIKA PROMPT BANK ---
     let promptBankData = null;
+    let promptBankDataLang = null;
     let activePromptTab = 'scopus'; // 'scopus' atau 'tesis_disertasi'
     let activePromptStage = '';
 
-    window.initPromptBankTab = async function() {
-      if (!promptBankData) {
+    window.initPromptBankTab = async function(forceReload) {
+      const lang = window.currentLanguage === 'en' ? 'en' : 'id';
+      if (!promptBankData || promptBankDataLang !== lang || forceReload) {
+        if (promptBankDataLang && promptBankDataLang !== lang) {
+          // Kategori tersimpan berupa label string dalam bahasa lama - reset supaya
+          // tidak nyangkut ke label yang sudah tidak ada setelah ganti bahasa.
+          activePromptStage = '';
+        }
         try {
-          const res = await fetch('/api/prompts');
+          const res = await fetch(`/api/prompts?lang=${lang}`);
           if (!res.ok) throw new Error('Gagal memuat database prompt');
           const data = await res.json();
           if (data.ok) {
@@ -2594,6 +2601,7 @@ document.addEventListener('DOMContentLoaded', () => {
               scopus: data.scopus || [],
               tesis_disertasi: data.tesis_disertasi || []
             };
+            promptBankDataLang = lang;
           }
         } catch (err) {
           console.error(err);
@@ -4622,6 +4630,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const activeTabLink = document.querySelector('.sidebar-link.active');
       if (activeTabLink && activeTabLink.getAttribute('data-tab') === 'riwayat') {
         displayHistoryList();
+      }
+
+      // Re-fetch & re-render Prompt Bank in the new language if currently on that tab
+      if (activeTabLink && activeTabLink.getAttribute('data-tab') === 'prompt-bank' && window.initPromptBankTab) {
+        window.initPromptBankTab(true);
       }
 
       // Update current title element text

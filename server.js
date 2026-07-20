@@ -2286,15 +2286,120 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   }
 });
 
-// Endpoint untuk mengambil data Prompt Bank
-app.get('/api/prompts', requireAccess, (req, res) => {
+// Menerjemahkan sekumpulan teks pendek ke Bahasa Inggris lewat Claude/Gemini/Vertex
+// (provider apa pun yang sudah terkonfigurasi - dipakai juga oleh fitur AI Match Score).
+async function translateTextsToEnglish(texts) {
+  if (!Array.isArray(texts) || texts.length === 0) return texts;
+
+  const instruction = `Translate each string in this JSON array from Indonesian to natural academic English. Keep any bracketed placeholders like [bidang] or [topik] but translate their content style consistently (e.g. [bidang] -> [field], [topik] -> [topic], [judul] -> [title], [metode] -> [method]). If a string starts with a numeric prefix like "01 " or "12 ", keep that exact numeric prefix unchanged at the start and only translate the text after it. Respond with ONLY a JSON array of the same length and order, no extra text.\n\nInput:\n${JSON.stringify(texts)}`;
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+
+  if (process.env.GEMINI_API_KEY) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const response = await fetchFn(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: instruction }] }],
+        generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+      })
+    });
+    if (!response.ok) throw new Error(`Gemini translate error: ${response.status}`);
+    const resData = await response.json();
+    const text = resData?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+    const translated = JSON.parse(text);
+    if (!Array.isArray(translated) || translated.length !== texts.length) {
+      throw new Error('Gemini translate: panjang array hasil tidak sesuai.');
+    }
+    return translated;
+  }
+
+  if (process.env.ANTHROPIC_API_KEY) {
+    const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022';
+    const response = await fetchFn('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: claudeModel,
+        max_tokens: 4096,
+        system: 'You translate JSON arrays of Indonesian strings to natural academic English. Respond with ONLY a valid JSON array, same length and order, no markdown, no extra text.',
+        messages: [
+          { role: 'user', content: instruction },
+          { role: 'assistant', content: '[' }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`Claude translate error: ${response.status}`);
+    const resData = await response.json();
+    const rawText = resData?.content?.[0]?.text || ']';
+    const translated = JSON.parse('[' + rawText);
+    if (!Array.isArray(translated) || translated.length !== texts.length) {
+      throw new Error('Claude translate: panjang array hasil tidak sesuai.');
+    }
+    return translated;
+  }
+
+  throw new Error('Tidak ada API Key (GEMINI_API_KEY / ANTHROPIC_API_KEY) untuk menerjemahkan Prompt Bank.');
+}
+
+async function buildTranslatedPromptBank(sourceData) {
+  const translateCategory = async (cat) => {
+    const promptTexts = (cat.prompts || []).map(p => p.text);
+    const [translatedCategoryLabel, ...translatedPromptTexts] = await translateTextsToEnglish([cat.category, ...promptTexts]);
+    return {
+      category: translatedCategoryLabel,
+      prompts: (cat.prompts || []).map((p, i) => ({ id: p.id, text: translatedPromptTexts[i] }))
+    };
+  };
+
+  const [scopus, tesisDisertasi] = await Promise.all([
+    Promise.all((sourceData.scopus || []).map(translateCategory)),
+    Promise.all((sourceData.tesis_disertasi || []).map(translateCategory))
+  ]);
+
+  return { scopus, tesis_disertasi: tesisDisertasi };
+}
+
+let promptBankEnBuildPromise = null;
+
+// Endpoint untuk mengambil data Prompt Bank. ?lang=en menerjemahkan seluruh
+// database prompt ke Bahasa Inggris (hasil di-cache ke disk, jadi hanya
+// diterjemahkan sekali per deploy - request berikutnya langsung dari cache).
+app.get('/api/prompts', requireAccess, async (req, res) => {
   try {
     const promptsFilePath = path.join(__dirname, 'data-static', 'prompt_bank.json');
     if (!fs.existsSync(promptsFilePath)) {
       return res.status(404).json({ ok: false, message: 'Data Prompt Bank belum tersedia.' });
     }
     const data = JSON.parse(fs.readFileSync(promptsFilePath, 'utf-8'));
-    res.json({ ok: true, ...data });
+
+    if (req.query.lang !== 'en') {
+      return res.json({ ok: true, ...data });
+    }
+
+    const promptsEnFilePath = path.join(__dirname, 'data-static', 'prompt_bank_en.json');
+    if (fs.existsSync(promptsEnFilePath)) {
+      const cachedEn = JSON.parse(fs.readFileSync(promptsEnFilePath, 'utf-8'));
+      return res.json({ ok: true, ...cachedEn });
+    }
+
+    // Cegah beberapa request bersamaan memicu proses terjemahan berkali-kali sekaligus.
+    if (!promptBankEnBuildPromise) {
+      promptBankEnBuildPromise = buildTranslatedPromptBank(data)
+        .then(translated => {
+          fs.writeFileSync(promptsEnFilePath, JSON.stringify(translated, null, 2));
+          return translated;
+        })
+        .finally(() => { promptBankEnBuildPromise = null; });
+    }
+
+    const translated = await promptBankEnBuildPromise;
+    res.json({ ok: true, ...translated });
   } catch (error) {
     console.error('[API Prompts] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal mengambil data Prompt Bank.' });
