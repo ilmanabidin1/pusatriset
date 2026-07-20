@@ -529,6 +529,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
+  // --- SIDEBAR COLLAPSE TOGGLE (ala Claude) ---
+  (function initSidebarCollapse() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const toggleBtn = document.getElementById('sidebarCollapseToggle');
+    const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+    if (!sidebar || !toggleBtn) return;
+
+    function applyCollapsed(collapsed) {
+      sidebar.classList.toggle('collapsed', collapsed);
+      if (mainContent) mainContent.classList.toggle('sidebar-collapsed', collapsed);
+      if (icon) icon.className = collapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left';
+      toggleBtn.title = collapsed ? 'Buka sidebar' : 'Lipat sidebar';
+      localStorage.setItem('jurnalhub_sidebar_collapsed', collapsed ? '1' : '0');
+
+      // Saat dilipat, teks label sidebar disembunyikan (display:none) - kasih
+      // title attribute di tiap link supaya tetap ada tooltip nama menu saat hover ikon.
+      if (collapsed) {
+        sidebar.querySelectorAll('.sidebar-link').forEach(link => {
+          const span = link.querySelector('span:not(.pro-badge)');
+          if (span && !link.getAttribute('title')) {
+            link.setAttribute('title', span.textContent.trim());
+          }
+        });
+      }
+    }
+
+    applyCollapsed(localStorage.getItem('jurnalhub_sidebar_collapsed') === '1');
+
+    toggleBtn.addEventListener('click', () => {
+      applyCollapsed(!sidebar.classList.contains('collapsed'));
+    });
+  })();
+
   // --- 0. AUTHENTICATION & USER STATE ---
   async function checkAuthState() {
     try {
