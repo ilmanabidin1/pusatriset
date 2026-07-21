@@ -4296,6 +4296,14 @@
           btn.disabled = true;
           btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
 
+          // Buka tab kosong SEKARANG (masih dalam gesture klik, supaya tidak
+          // diblokir popup blocker), lalu isi URL-nya setelah dapat redirectUrl
+          // dari server. Faspay kadang memanggil window.close() sendiri setelah
+          // verifikasi status di halamannya - kalau dibuka di tab yang sama
+          // (window.location.href), itu bakal menutup tab JurnalHub. Dengan tab
+          // terpisah, yang tertutup cuma tab Faspay-nya, tab JurnalHub tetap ada.
+          const paymentWindow = window.open('', '_blank');
+
           try {
             const response = await fetch('/api/payment/create', {
               method: 'POST',
@@ -4307,13 +4315,22 @@
 
             const resData = await response.json();
             if (response.ok && resData.ok && resData.redirectUrl) {
-              window.location.href = resData.redirectUrl;
+              if (paymentWindow) {
+                paymentWindow.location.href = resData.redirectUrl;
+              } else {
+                // Popup diblokir browser - fallback ke redirect tab yang sama
+                window.location.href = resData.redirectUrl;
+              }
+              btn.disabled = false;
+              btn.innerHTML = originalText;
             } else {
+              if (paymentWindow) paymentWindow.close();
               alert(resData.message || 'Gagal memulai proses pembayaran. Silakan coba lagi.');
               btn.disabled = false;
               btn.innerHTML = originalText;
             }
           } catch (error) {
+            if (paymentWindow) paymentWindow.close();
             console.error('Payment initialization failed:', error);
             alert('Terjadi kesalahan koneksi saat memulai pembayaran: ' + error.message);
             btn.disabled = false;

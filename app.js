@@ -4111,6 +4111,11 @@ document.addEventListener('DOMContentLoaded', () => {
         selectBtn.disabled = true;
         selectBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
 
+        // Buka tab kosong SEKARANG (masih dalam gesture klik, supaya tidak
+        // diblokir popup blocker) - lihat penjelasan lengkap di index.html
+        // pada handler upgrade-btn-select (pola yang sama, alasan yang sama).
+        const paymentWindow = window.open('', '_blank');
+
         try {
           const response = await fetch('/api/payment/topup/create', {
             method: 'POST',
@@ -4121,16 +4126,23 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = await response.json();
 
           if (!response.ok) {
+            if (paymentWindow) paymentWindow.close();
             alert(data.message || 'Gagal membuat transaksi top-up.');
             return;
           }
 
           if (data.redirectUrl) {
-            window.location.href = data.redirectUrl;
+            if (paymentWindow) {
+              paymentWindow.location.href = data.redirectUrl;
+            } else {
+              window.location.href = data.redirectUrl;
+            }
           } else {
+            if (paymentWindow) paymentWindow.close();
             alert('Gagal mendapatkan tautan pembayaran.');
           }
         } catch (error) {
+          if (paymentWindow) paymentWindow.close();
           console.error('[Top-up Purchase] Error:', error);
           alert('Terjadi kesalahan koneksi saat memproses pembelian.');
         } finally {
