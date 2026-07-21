@@ -4282,7 +4282,49 @@
         }
       };
 
-      // Handle plan button selections (redirect to iPaymu)
+      // Polling status pembayaran - deteksi otomatis begitu akun ter-upgrade
+      // (webhook Faspay di backend sudah memproses), TANPA bergantung pada
+      // apakah halaman Faspay redirect balik ke return_url atau cuma menutup
+      // window-nya sendiri setelah user cek status (itu sepenuhnya di kendali
+      // Faspay, bukan kode kita - tidak bisa kita ubah tampilan/behaviornya).
+      function pollPaymentStatusUntilUpgraded(paymentWindow, typeBeforePayment) {
+        const maxAttempts = 60; // 60 x 3 detik = 3 menit, cukup untuk delay webhook
+        let attempts = 0;
+
+        const interval = setInterval(async () => {
+          attempts++;
+          try {
+            const res = await fetch('/api/me');
+            const data = await res.json();
+            if (data.loggedIn && data.user && data.user.type !== typeBeforePayment && data.user.type !== 'free') {
+              clearInterval(interval);
+              // Tutup window Faspay best-effort - kadang gagal (mis. window sudah
+              // dinavigasi cross-origin ke domain Faspay dan browser membatasi
+              // .close() dari script asal). Jangan sampai itu menggagalkan
+              // notifikasi sukses di bawah ini.
+              try {
+                if (paymentWindow && !paymentWindow.closed) paymentWindow.close();
+              } catch (closeErr) {
+                console.error('[Payment Poll] Gagal menutup payment window:', closeErr);
+              }
+              const label = data.user.type === 'ultimate' ? 'Ultimate' : 'Premium';
+              alert(`Pembayaran berhasil! Akun Anda sekarang ${label}. Selamat menikmati fitur tanpa batas.`);
+              const upgradeModal = document.getElementById('upgradeModal');
+              if (upgradeModal) upgradeModal.classList.remove('active');
+              if (window.checkAuthState) window.checkAuthState();
+              return;
+            }
+          } catch (err) {
+            console.error('[Payment Poll] Error:', err);
+          }
+
+          if (attempts >= maxAttempts) {
+            clearInterval(interval);
+          }
+        }, 3000);
+      }
+
+      // Handle plan button selections (redirect to Faspay)
       document.addEventListener('click', async (e) => {
         if (e.target && e.target.classList.contains('upgrade-btn-select')) {
           e.preventDefault();
@@ -4303,6 +4345,7 @@
           // (window.location.href), itu bakal menutup tab JurnalHub. Dengan tab
           // terpisah, yang tertutup cuma tab Faspay-nya, tab JurnalHub tetap ada.
           const paymentWindow = window.open('', '_blank');
+          const typeBeforePayment = (window.currentUser && window.currentUser.user && window.currentUser.user.type) || 'free';
 
           try {
             const response = await fetch('/api/payment/create', {
@@ -4317,6 +4360,7 @@
             if (response.ok && resData.ok && resData.redirectUrl) {
               if (paymentWindow) {
                 paymentWindow.location.href = resData.redirectUrl;
+                pollPaymentStatusUntilUpgraded(paymentWindow, typeBeforePayment);
               } else {
                 // Popup diblokir browser - fallback ke redirect tab yang sama
                 window.location.href = resData.redirectUrl;
