@@ -4220,11 +4220,11 @@
           const ultimatePriceText = document.getElementById('ultimatePriceText');
           const ultimatePriceDetail = document.getElementById('ultimatePriceDetail');
 
-          if (premiumPriceText) premiumPriceText.innerHTML = 'Rp800rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span>';
-          if (premiumPriceDetail) premiumPriceDetail.textContent = 'Setara Rp66rb/bulan';
-          
-          if (ultimatePriceText) ultimatePriceText.innerHTML = 'Rp1.5jt<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span>';
-          if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Setara Rp125rb/bulan';
+          if (premiumPriceText) premiumPriceText.innerHTML = 'Rp66rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
+          if (premiumPriceDetail) premiumPriceDetail.textContent = 'Ditagih Rp800rb/tahun';
+
+          if (ultimatePriceText) ultimatePriceText.innerHTML = 'Rp125rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
+          if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Ditagih Rp1.5jt/tahun';
 
           if (window.updateModalButtonStates) window.updateModalButtonStates();
         });
@@ -4511,14 +4511,6 @@
       </div>
 
       <div class="modal-body">
-        <!-- Notice: pembayaran otomatis masih development -->
-        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 1.25rem; display: flex; gap: 0.7rem; align-items: flex-start; text-align: left;">
-          <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; margin-top: 0.15rem; flex-shrink: 0;"></i>
-          <p style="font-size: 0.82rem; color: var(--text-main); margin: 0; line-height: 1.5;">
-            <strong>Pembayaran otomatis masih tahap pengembangan.</strong> Saat ini akses berbayar hanya bisa didapatkan melalui <a href="https://drilman.my.id/drilmanabidin/2kogk31wykww" target="_blank" style="color: var(--brand-blue); font-weight: 700; text-decoration: underline;">Lynk.id</a> - setelah pembayaran berhasil, Anda akan menerima kode akses untuk diaktifkan lewat menu "Sudah punya kode akses?" di bawah atau lewat halaman Pengaturan.
-          </p>
-        </div>
-
         <!-- Billing Switcher -->
         <div class="billing-switcher-wrapper" style="margin-bottom: 1.5rem;">
           <div class="billing-switcher" style="max-width: 320px; margin: 0 auto;">
@@ -4537,8 +4529,8 @@
                 <i class="fa-solid fa-star" style="color: var(--brand-blue);"></i> Premium
               </h4>
               <div style="margin: 0.75rem 0;">
-                <h2 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.65rem; color: var(--text-main); margin: 0;" id="premiumPriceText">Rp800rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span></h2>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;" id="premiumPriceDetail">Setara Rp66rb/bulan</p>
+                <h2 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.65rem; color: var(--text-main); margin: 0;" id="premiumPriceText">Rp66rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span></h2>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;" id="premiumPriceDetail">Ditagih Rp800rb/tahun</p>
               </div>
               <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); text-align: left;">
                 <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
@@ -4574,8 +4566,8 @@
                 <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Ultimate
               </h4>
               <div style="margin: 0.75rem 0;">
-                <h2 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.65rem; color: var(--text-main); margin: 0;" id="ultimatePriceText">Rp1.5jt<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/tahun</span></h2>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;" id="ultimatePriceDetail">Setara Rp125rb/bulan</p>
+                <h2 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.65rem; color: var(--text-main); margin: 0;" id="ultimatePriceText">Rp125rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span></h2>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;" id="ultimatePriceDetail">Ditagih Rp1.5jt/tahun</p>
               </div>
               <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); text-align: left;">
                 <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
