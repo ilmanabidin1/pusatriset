@@ -1748,6 +1748,54 @@
       transform: translateX(-4px);
     }
 
+    /* AI Writer top-bar switcher (Outline / Lit Review / Paraphraser & Humanizer) */
+    .ai-writer-switcher {
+      display: flex;
+      gap: 0.4rem;
+      background: rgba(8,34,64,0.04);
+      border: 1px solid rgba(8,34,64,0.07);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .ai-writer-pill {
+      flex: 1;
+      min-width: 130px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.6rem 0.9rem;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .ai-writer-pill:hover {
+      color: var(--text-main);
+      background: rgba(8,34,64,0.05);
+    }
+    .ai-writer-pill.active {
+      background: #ffffff;
+      color: var(--brand-blue);
+      box-shadow: 0 2px 8px rgba(8,34,64,0.08);
+    }
+    [data-theme="dark"] .ai-writer-switcher {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.08);
+    }
+    [data-theme="dark"] .ai-writer-pill.active {
+      background: #21262d;
+      color: #fff;
+    }
+
     /* Video Demo Modal styling */
     .video-modal-overlay {
       position: fixed;
@@ -2730,7 +2778,7 @@
         <i class="fa-solid fa-database"></i> <span>Database Jurnal</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="ai-research">
-        <i class="fa-solid fa-flask"></i> <span>AI For Research</span>
+        <i class="fa-solid fa-flask"></i> <span>AI Writer</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="research-chat">
         <i class="fa-solid fa-comments"></i> <span>JurnalHub Intelligence</span>
@@ -3155,87 +3203,14 @@
       </div>
 
       <!-- TAB: AI FOR RESEARCH (GRID MAIN VIEW) -->
-      <div id="tabContentAiResearch" class="tab-content">
-        <div class="ai-research-container">
-          <div class="ai-research-header">
-            <h3>AI For Research</h3>
-            <p>Pilih salah satu asisten kecerdasan buatan (AI) di bawah ini untuk mempercepat riset dan penulisan ilmiah Anda.</p>
-          </div>
-          
-          <div class="ai-research-grid">
-            
-            <!-- Card 1: JurnalHub Humanizer Engine -->
-            <div class="ai-research-card" style="position: relative; border: 2px solid #f59e0b; box-shadow: 0 8px 30px rgba(245, 158, 11, 0.15); display: flex; flex-direction: column; justify-content: space-between; overflow: visible;">
-              <!-- Badge Paling Populer -->
-              <span style="position: absolute; top: -12px; right: 20px; background: linear-gradient(135deg, #f59e0b, #ff7417); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(245,158,11,0.4);"><i class="fa-solid fa-fire"></i> Paling Populer</span>
-              
-              <div class="ai-research-card-content">
-                <div class="ai-research-icon-wrapper" style="background-color: rgba(245, 158, 11, 0.1); color: #f59e0b;">
-                  <i class="fa-solid fa-user-check"></i>
-                </div>
-                <h4>JurnalHub Humanizer Engine</h4>
-                <p>Lolos deteksi Turnitin dan GPTZero hingga 98 persen, tanpa mengubah makna tulisanmu.</p>
-                <div style="font-size: 0.72rem; background: rgba(245, 158, 11, 0.04); border: 1px dashed rgba(245, 158, 11, 0.18); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #a16207; display: flex; flex-direction: column; gap: 0.15rem;">
-                  <div><span style="font-weight: 700; color: #dc2626;">Sebelum:</span> Terdeteksi AI 100%</div>
-                  <div><span style="font-weight: 700; color: #16a34a;">Sesudah:</span> Lolos Deteksi AI & Turnitin 100%</div>
-                </div>
-                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-circle-info"></i> Eksklusif PRO (5.000 kata) / Ultimate (15.000 kata)
-                </div>
-              </div>
-              <button class="ai-research-btn" onclick="switchTab('humanizer')" style="background: linear-gradient(135deg, #f59e0b, #b45309); margin-top: 1rem;">
-                Humanisasi Teks <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-
-            <!-- Card 3: AI Drafting Companion -->
-            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
-              <div class="ai-research-card-content">
-                <div class="ai-research-icon-wrapper">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i>
-                </div>
-                <h4>AI Drafting Companion</h4>
-                <p>Ubah ide riset jadi draf terstruktur, lengkap dengan argumentasi, referensi, dan tata bahasa akademik siap submit.</p>
-                <div style="font-size: 0.72rem; background: rgba(139, 92, 246, 0.04); border: 1px dashed rgba(139, 92, 246, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #6d28d9; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-file-invoice"></i> Menyusun Bab 1 s.d. Bab 5 dengan referensi sitasi yang padat
-                </div>
-                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / 15x per bulan (PRO)
-                </div>
-              </div>
-              <button class="ai-research-btn" onclick="switchTab('drafting-companion')" style="margin-top: 1rem;">
-                Mulai Menulis <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-
-            <!-- Card 4: AI Literature Review -->
-            <div class="ai-research-card" style="display: flex; flex-direction: column; justify-content: space-between;">
-              <div class="ai-research-card-content">
-                <div class="ai-research-icon-wrapper">
-                  <i class="fa-solid fa-book-open"></i>
-                </div>
-                <h4>AI Literature Review</h4>
-                <p>Susun tinjauan pustaka lengkap dengan sitasi otomatis dari jurnal terpercaya, biasanya butuh berhari-hari, sekarang dalam hitungan menit.</p>
-                <div style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.04); border: 1px dashed rgba(16, 185, 129, 0.15); padding: 0.4rem; border-radius: 6px; margin-top: 0.6rem; color: #047857; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-magnifying-glass"></i> Menemukan referensi ilmiah kredibel dari Scopus / Google Scholar
-                </div>
-                <div style="font-size: 0.75rem; color: #ff7417; font-weight: 700; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
-                  <i class="fa-solid fa-circle-info"></i> 1x gratis per bulan (Free) / 15x per bulan (PRO)
-                </div>
-              </div>
-              <button class="ai-research-btn" onclick="switchTab('lit-review')" style="margin-top: 1rem;">
-                Cari Sitasi <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: AI DRAFTING COMPANION (DEDICATED VIEW) -->
+      <!-- TAB: AI WRITER › Outline Generator (Drafting Companion) -->
       <div id="tabContentDraftingCompanion" class="tab-content">
         <div class="match-score-main-container">
-          <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
+          <div class="ai-writer-switcher">
+            <button type="button" class="ai-writer-pill active" onclick="switchTab('drafting-companion')"><i class="fa-solid fa-wand-magic-sparkles"></i> Outline Generator</button>
+            <button type="button" class="ai-writer-pill" onclick="switchTab('lit-review')"><i class="fa-solid fa-book-open"></i> Literature Review</button>
+            <button type="button" class="ai-writer-pill" onclick="switchTab('humanizer')"><i class="fa-solid fa-user-check"></i> Paraphraser &amp; Humanizer</button>
+          </div>
           <div class="match-box-wrapper" id="draftBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
             <!-- Overlay Lock for Free User (Quota-based) -->
@@ -3321,7 +3296,11 @@
       <!-- TAB: AI LITERATURE REVIEW & CITATION FINDER (DEDICATED VIEW) -->
       <div id="tabContentLitReview" class="tab-content">
         <div class="match-score-main-container">
-          <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
+          <div class="ai-writer-switcher">
+            <button type="button" class="ai-writer-pill" onclick="switchTab('drafting-companion')"><i class="fa-solid fa-wand-magic-sparkles"></i> Outline Generator</button>
+            <button type="button" class="ai-writer-pill active" onclick="switchTab('lit-review')"><i class="fa-solid fa-book-open"></i> Literature Review</button>
+            <button type="button" class="ai-writer-pill" onclick="switchTab('humanizer')"><i class="fa-solid fa-user-check"></i> Paraphraser &amp; Humanizer</button>
+          </div>
           <div class="match-box-wrapper" id="litReviewBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
             <!-- Overlay Lock for Free User (Quota-based) -->
@@ -3455,7 +3434,11 @@
       <!-- TAB: HUMANIZER (JURNALHUB HUMANIZER ENGINE) -->
       <div id="tabContentHumanizer" class="tab-content">
         <div class="match-score-main-container">
-          <button class="back-to-research-btn" onclick="switchTab('ai-research')"><i class="fa-solid fa-arrow-left"></i> Kembali ke AI For Research</button>
+          <div class="ai-writer-switcher">
+            <button type="button" class="ai-writer-pill" onclick="switchTab('drafting-companion')"><i class="fa-solid fa-wand-magic-sparkles"></i> Outline Generator</button>
+            <button type="button" class="ai-writer-pill" onclick="switchTab('lit-review')"><i class="fa-solid fa-book-open"></i> Literature Review</button>
+            <button type="button" class="ai-writer-pill active" onclick="switchTab('humanizer')"><i class="fa-solid fa-user-check"></i> Paraphraser &amp; Humanizer</button>
+          </div>
           <div class="match-box-wrapper" id="humanizerBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
             <!-- Overlay Lock for Free User (Premium/Ultimate dibuka otomatis oleh app.js) -->
@@ -3475,7 +3458,7 @@
               <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
                   <span class="banner-badge" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245,158,11,0.2); color: #f59e0b;"><i class="fa-solid fa-user-check"></i> JurnalHub Humanizer Engine</span>
-                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">AI Humanizer & Paraphraser</h3>
+                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">Paraphraser & Humanizer</h3>
                   <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">Paragrafkan ulang tulisan AI Anda agar memiliki gaya bahasa akademis yang natural dan lolos dari Turnitin AI detector.</p>
                 </div>
                 <!-- Quota Badge -->
@@ -3985,6 +3968,10 @@
       }
 
       function switchTab(tabName) {
+        // "AI Writer" (data-tab ai-research) tidak lagi punya halaman hub sendiri -
+        // langsung arahkan ke tool pertama (Outline Generator). Highlight sidebar &
+        // judul halaman tetap mengacu ke 'ai-research' lewat logika di bawah.
+        if (tabName === 'ai-research') tabName = 'drafting-companion';
         if (window.resetJustGeneratedFlags && !['drafting-companion', 'lit-review', 'humanizer'].includes(tabName)) {
           window.resetJustGeneratedFlags();
         }
@@ -4056,10 +4043,6 @@
         link.addEventListener('click', (e) => {
           e.preventDefault();
           const tabName = link.getAttribute('data-tab');
-          if (tabName === 'lit-review') {
-            alert("Fitur AI Literature Review & Citation Finder segera hadir (Coming Soon)!");
-            return;
-          }
           switchTab(tabName);
         });
       });

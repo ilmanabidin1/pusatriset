@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     id: {
       beranda: "Beranda",
       "database-jurnal": "Database Jurnal",
-      "ai-research": "Asisten AI",
+      "ai-research": "AI Writer",
       "research-chat": "JurnalHub Intelligence",
       templates: "Template Jurnal",
       "prompt-bank": "Prompt Bank",
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lit_btn_run: "Cari Referensi & Review",
       lit_btn_running: "Mencari & Meninjau Pustaka...",
       // Humanizer
-      humanizer_title: "AI Humanizer & Paraphraser",
+      humanizer_title: "Paraphraser & Humanizer",
       humanizer_desc: "Paragrafkan ulang tulisan AI Anda agar memiliki gaya bahasa akademis yang natural dan lolos dari Turnitin AI detector.",
       humanizer_btn_run: "Mulai Humanisasi Teks",
       humanizer_btn_running: "Memproses Humanisasi...",
@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
     en: {
       beranda: "Home",
       "database-jurnal": "Journal Database",
-      "ai-research": "AI Assistant",
+      "ai-research": "AI Writer",
       "research-chat": "JurnalHub Intelligence",
       templates: "Journal Templates",
       "prompt-bank": "Prompt Bank",
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lit_btn_run: "Search References & Review",
       lit_btn_running: "Searching & Generating Review...",
       // Humanizer
-      humanizer_title: "AI Humanizer & Paraphraser",
+      humanizer_title: "Paraphraser & Humanizer",
       humanizer_desc: "Paraphrase your AI text to have a natural academic writing style that passes Turnitin AI detectors.",
       humanizer_btn_run: "Start Paraphrasing Text",
       humanizer_btn_running: "Paraphrasing Text...",
