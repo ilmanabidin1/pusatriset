@@ -3293,8 +3293,8 @@ const FASPAY_MERCHANT_ID = process.env.FASPAY_MERCHANT_ID;
 const FASPAY_USER_ID = process.env.FASPAY_USER_ID;
 const FASPAY_PASSWORD = process.env.FASPAY_PASSWORD;
 const FASPAY_SANDBOX = String(process.env.FASPAY_SANDBOX).trim().toLowerCase() === 'true';
-// Endpoint production belum didokumentasikan resmi oleh Faspay saat kode ini ditulis -
-// override via FASPAY_XPRESS_URL kalau tim Faspay konfirmasi URL production yang berbeda.
+// URL production dikonfirmasi resmi oleh tim Faspay (integration form, 2026-07-21):
+// https://xpress.faspay.co.id/v4/post - override via FASPAY_XPRESS_URL kalau berubah.
 const FASPAY_XPRESS_URL = process.env.FASPAY_XPRESS_URL || (FASPAY_SANDBOX
   ? 'https://xpress-sandbox.faspay.co.id/v4/post'
   : 'https://xpress.faspay.co.id/v4/post');
