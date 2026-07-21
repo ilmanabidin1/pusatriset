@@ -253,6 +253,18 @@ function getUsers() {
   }
 }
 
+// Hitung tanggal expired baru saat user bayar/redeem kode - kalau masa aktif
+// SEBELUMNYA masih berlaku (belum lewat), durasi baru ditambahkan ke sisa waktu
+// itu, bukan menimpa dari sekarang. Supaya user yang perpanjang/upgrade lebih
+// awal (sebelum masa aktifnya habis) tidak kehilangan sisa hari yang sudah
+// mereka bayar.
+function computeStackedExpiry(existingExpiredAt, durationDays) {
+  const now = Date.now();
+  const existingMs = existingExpiredAt ? new Date(existingExpiredAt).getTime() : NaN;
+  const base = (!isNaN(existingMs) && existingMs > now) ? existingMs : now;
+  return new Date(base + durationDays * 24 * 60 * 60 * 1000).toISOString();
+}
+
 function saveUsers(users) {
   try {
     if (!fs.existsSync(DATA_DIR)) {
@@ -464,7 +476,7 @@ app.post('/api/redeem-code', requireAccess, authLimiter, (req, res) => {
   }
 
   const durationDays = codes[codeIndex].durationDays || MANUAL_ACCESS_CODE_DURATION_DAYS;
-  const expiredAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+  const expiredAt = computeStackedExpiry(users[userIndex].paymentExpiredAt, durationDays);
 
   users[userIndex].type = 'ultimate';
   users[userIndex].planId = codes[codeIndex].plan || MANUAL_ACCESS_CODE_PLAN;
@@ -3268,7 +3280,7 @@ app.post('/api/payment/faspay/callback', async (req, res) => {
           const targetType = planId.startsWith('ultimate') ? 'ultimate' : 'premium';
           const isYearly = planId.endsWith('yearly');
           const durationDays = isYearly ? 365 : 30;
-          const expiredAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+          const expiredAt = computeStackedExpiry(users[userIndex].paymentExpiredAt, durationDays);
           users[userIndex].type = targetType;
           users[userIndex].planId = planId;
           users[userIndex].paymentExpiredAt = expiredAt;
