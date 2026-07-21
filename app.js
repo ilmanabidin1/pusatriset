@@ -2351,12 +2351,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- LOGIKA AI DRAFTING ASSISTANT ---
   const runDraftGenerator = document.getElementById('runDraftGenerator');
+  const draftDocType = document.getElementById('draftDocType');
   const draftTitle = document.getElementById('draftTitle');
   const draftAbstract = document.getElementById('draftAbstract');
   const draftSummary = document.getElementById('draftSummary');
   const draftResultsPanel = document.getElementById('draftResultsPanel');
   const draftSegmentsContainer = document.getElementById('draftSegmentsContainer');
   let currentGeneratedDraft = null;
+  let currentDraftSegments = null; // metadata {key, label} dari server, sesuai docType yang dipilih
+  let currentDraftDocType = 'jurnal';
 
   if (runDraftGenerator) {
     runDraftGenerator.addEventListener('click', async () => {
@@ -2369,6 +2372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      const docType = draftDocType ? draftDocType.value : 'jurnal';
       const title = draftTitle.value.trim();
       const abstract = draftAbstract.value.trim();
 
@@ -2388,7 +2392,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/generate-template-draft', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, abstract })
+          body: JSON.stringify({ title, abstract, docType })
         });
 
         if (!response.ok) throw new Error('Gagal memproses draf panduan.');
@@ -2396,7 +2400,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (resData.ok && resData.draft) {
           currentGeneratedDraft = resData.draft;
-          renderDraftGuide(resData.draft);
+          currentDraftSegments = resData.segments || null;
+          currentDraftDocType = resData.docType || docType;
+          renderDraftGuide(resData.draft, currentDraftSegments);
           draftSummary.textContent = 'Draf outline panduan pembahasan berhasil dibuat!';
           draftSummary.style.color = '#10b981';
           draftResultsPanel.style.display = 'block';
@@ -2436,17 +2442,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function renderDraftGuide(draft) {
+  // Fallback default (jurnal IMRaD) kalau server belum mengembalikan metadata segments
+  // (mis. respons lama sebelum fitur multi-jenis-dokumen ditambahkan).
+  const DEFAULT_DRAFT_SEGMENTS = [
+    { key: 'introduction', label: '1. Pendahuluan / Latar Belakang (Introduction / Background)' },
+    { key: 'literature_review', label: '2. Tinjauan Pustaka / Landasan Teori (Literature Review)' },
+    { key: 'method', label: '3. Metode Penelitian (Methodology)' },
+    { key: 'results_discussion', label: '4. Hasil & Pembahasan (Results & Discussion)' },
+    { key: 'conclusion', label: '5. Kesimpulan & Saran (Conclusion & Future Work)' }
+  ];
+  const DRAFT_SEGMENT_STYLES = [
+    { icon: 'fa-book-open', color: '#60a5fa' },
+    { icon: 'fa-book', color: '#34d399' },
+    { icon: 'fa-flask', color: '#fbbf24' },
+    { icon: 'fa-chart-pie', color: '#a78bfa' },
+    { icon: 'fa-circle-check', color: '#f87171' }
+  ];
+
+  function renderDraftGuide(draft, segmentsMeta) {
     if (!draftSegmentsContainer) return;
     draftSegmentsContainer.innerHTML = '';
 
-    const segments = [
-      { key: 'introduction', label: '1. Pendahuluan / Latar Belakang (Introduction / Background)', icon: 'fa-book-open', color: '#60a5fa' },
-      { key: 'literature_review', label: '2. Tinjauan Pustaka / Landasan Teori (Literature Review)', icon: 'fa-book', color: '#34d399' },
-      { key: 'method', label: '3. Metode Penelitian (Methodology)', icon: 'fa-flask', color: '#fbbf24' },
-      { key: 'results_discussion', label: '4. Hasil & Pembahasan (Results & Discussion)', icon: 'fa-chart-pie', color: '#a78bfa' },
-      { key: 'conclusion', label: '5. Kesimpulan & Saran (Conclusion & Future Work)', icon: 'fa-circle-check', color: '#f87171' }
-    ];
+    const segments = (segmentsMeta && segmentsMeta.length ? segmentsMeta : DEFAULT_DRAFT_SEGMENTS).map((seg, idx) => ({
+      ...seg,
+      ...DRAFT_SEGMENT_STYLES[idx % DRAFT_SEGMENT_STYLES.length]
+    }));
 
     segments.forEach(seg => {
       const points = draft[seg.key] || [];
@@ -2498,16 +2518,10 @@ document.addEventListener('DOMContentLoaded', () => {
       textContent += `Abstrak:\n${abstract}\n\n`;
       textContent += `--------------------------------------------------\nOUTLINE STRUKTUR PEMBAHASAN PER BAB\n--------------------------------------------------\n\n`;
 
-      const segments = [
-        { key: 'introduction', label: '1. PENDAHULUAN / LATAR BELAKANG' },
-        { key: 'literature_review', label: '2. TINJAUAN PUSTAKA / LANDASAN TEORI' },
-        { key: 'method', label: '3. METODE PENELITIAN' },
-        { key: 'results_discussion', label: '4. HASIL & PEMBAHASAN' },
-        { key: 'conclusion', label: '5. KESIMPULAN & SARAN' }
-      ];
+      const segments = currentDraftSegments && currentDraftSegments.length ? currentDraftSegments : DEFAULT_DRAFT_SEGMENTS;
 
       segments.forEach(seg => {
-        textContent += `${seg.label}:\n`;
+        textContent += `${seg.label.toUpperCase()}:\n`;
         const points = currentGeneratedDraft[seg.key] || [];
         points.forEach((pt, idx) => {
           textContent += `   [${idx + 1}] ${pt}\n`;
@@ -2551,7 +2565,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/generate-template-draft/export-docx', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, abstract, draft: currentGeneratedDraft })
+          body: JSON.stringify({ title, abstract, draft: currentGeneratedDraft, docType: currentDraftDocType })
         });
 
         if (!response.ok) {

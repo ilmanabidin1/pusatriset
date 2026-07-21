@@ -1610,8 +1610,47 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   }
 });
 
+// Struktur bab per jenis dokumen untuk AI Outline Generator. "description" dipakai
+// untuk instruksi ke AI (rincian fungsi tiap bab), "label" dipakai untuk tampilan
+// UI/ekspor. Kalau nanti mau tambah jenis dokumen baru (mis. laporan penelitian),
+// cukup tambah entri baru di sini - endpoint & frontend sudah generic.
+const DOCUMENT_TYPE_CONFIGS = {
+  jurnal: {
+    label: 'Jurnal Ilmiah (IMRaD)',
+    segments: [
+      { key: 'introduction', label: '1. Pendahuluan / Latar Belakang', description: 'Latar belakang urgensi topik, permasalahan utama, tujuan penelitian, dan kontribusi yang diharapkan.' },
+      { key: 'literature_review', label: '2. Tinjauan Pustaka', description: 'Kajian teori-teori dasar, perbandingan penelitian terdahulu, dan gap analysis yang menjustifikasi kebaruan penelitian.' },
+      { key: 'method', label: '3. Metode Penelitian', description: 'Desain penelitian (kualitatif/kuantitatif), prosedur pengumpulan data, populasi/sampel, dan teknik analisis data.' },
+      { key: 'results_discussion', label: '4. Hasil & Pembahasan', description: 'Paparan temuan utama, interpretasi hasil dikaitkan dengan hipotesis/tujuan, dan diskusi kritis dibandingkan teori/penelitian terdahulu.' },
+      { key: 'conclusion', label: '5. Kesimpulan & Saran', description: 'Kesimpulan yang menjawab rumusan masalah, implikasi teoretis/praktis, keterbatasan riset, dan rekomendasi studi lanjutan.' }
+    ]
+  },
+  tesis: {
+    label: 'Tesis',
+    segments: [
+      { key: 'bab1_pendahuluan', label: 'BAB I Pendahuluan', description: 'Latar belakang masalah, rumusan masalah, tujuan penelitian, kegunaan penelitian - kadang ditambah kerangka pemikiran dan metode penelitian singkat (khusus tesis hukum sering masuk di sini juga).' },
+      { key: 'bab2_tinjauan_pustaka', label: 'BAB II Tinjauan Pustaka / Kerangka Teori', description: 'Kajian teori, penelitian terdahulu, dan kerangka konseptual yang mendasari penelitian.' },
+      { key: 'bab3_metode', label: 'BAB III Metode Penelitian', description: 'Jenis penelitian, pendekatan yang digunakan, sumber data, dan teknik analisis.' },
+      { key: 'bab4_hasil_pembahasan', label: 'BAB IV Hasil dan Pembahasan', description: 'Bab paling berat - berisi temuan sekaligus analisis mendalam terhadap data penelitian.' },
+      { key: 'bab5_penutup', label: 'BAB V Penutup', description: 'Kesimpulan dan saran berdasarkan hasil penelitian.' }
+    ]
+  },
+  disertasi: {
+    label: 'Disertasi',
+    segments: [
+      { key: 'bab1_pendahuluan', label: 'BAB I Pendahuluan', description: 'Latar belakang masalah, rumusan masalah, tujuan penelitian, dan kegunaan penelitian secara mendalam.' },
+      { key: 'bab2_tinjauan_pustaka', label: 'BAB II Tinjauan Pustaka / Landasan Teori', description: 'Kajian teori mendalam, penelitian terdahulu, dan kerangka konseptual.' },
+      { key: 'bab3_metode', label: 'BAB III Metode Penelitian', description: 'Jenis penelitian, pendekatan yang digunakan, sumber data, dan teknik analisis.' },
+      { key: 'bab4_hasil_pembahasan', label: 'BAB IV Hasil Penelitian dan Pembahasan beserta Novelty', description: 'Temuan penelitian, analisis mendalam, dan penegasan unsur kebaruan (novelty) yang membedakan penelitian ini dari penelitian sebelumnya.' },
+      { key: 'bab5_penutup', label: 'BAB V Penutup', description: 'Kesimpulan dan saran berdasarkan hasil penelitian.' }
+    ]
+  }
+};
+
 app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
   const { title, abstract } = req.body;
+  const docType = DOCUMENT_TYPE_CONFIGS[req.body.docType] ? req.body.docType : 'jurnal';
+  const docConfig = DOCUMENT_TYPE_CONFIGS[docType];
   if (!title || !abstract) {
     return res.status(400).json({ ok: false, message: 'Judul artikel dan abstrak wajib diisi.' });
   }
@@ -1642,39 +1681,24 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
-    const localDraft = {
-      introduction: [
-        `Bahasan urgensi topik penelitian berdasarkan judul: "${title}"`,
-        "Deskripsi permasalahan utama yang diangkat di lapangan saat ini.",
-        "Tujuan penulisan artikel ilmiah dan kontribusi yang diharapkan."
-      ],
-      literature_review: [
-        "Tinjauan teori-teori dasar yang berkaitan dengan variabel utama.",
-        "Analisis perbandingan penelitian terdahulu yang relevan.",
-        "Gap analysis yang menjustifikasi kebaruan penelitian ini."
-      ],
-      method: [
-        "Penjelasan desain penelitian yang digunakan (kualitatif/kuantitatif).",
-        "Prosedur pengumpulan data, populasi, dan sampel.",
-        "Teknik analisis data yang diterapkan secara bertahap."
-      ],
-      results_discussion: [
-        "Paparan temuan utama dari data lapangan secara berurutan.",
-        "Interpretasi hasil analisis dikaitkan dengan hipotesis/tujuan.",
-        "Diskusi kritis membandingkan temuan dengan teori yang ada."
-      ],
-      conclusion: [
-        "Kesimpulan akhir menjawab rumusan masalah secara ringkas.",
-        "Implikasi teoretis maupun praktis dari hasil penelitian.",
-        "Keterbatasan riset dan saran rekomendasi studi masa depan."
-      ]
-    };
+    // Fallback lokal generic - dibangun dari description tiap segmen di config,
+    // supaya tetap masuk akal untuk jenis dokumen apa pun (bukan cuma jurnal).
+    const localDraft = {};
+    docConfig.segments.forEach(seg => {
+      localDraft[seg.key] = [
+        `Fokus bahasan bagian ini: ${seg.description}`,
+        `Kaitkan langsung dengan judul penelitian: "${title}"`,
+        "Rujuk poin-poin dari abstrak yang relevan dengan bagian ini."
+      ];
+    });
 
-    addHistoryItem(req.session.userId, 'draft', { title, abstract }, { draft: localDraft });
+    addHistoryItem(req.session.userId, 'draft', { title, abstract, docType }, { draft: localDraft, docType });
 
     return res.json({
       ok: true,
       source: 'local',
+      docType,
+      segments: docConfig.segments.map(s => ({ key: s.key, label: s.label })),
       draft: localDraft
     });
   }
@@ -1682,7 +1706,10 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
   try {
     const fetchFn = globalThis.fetch || require('node-fetch');
     const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022';
-    
+
+    const segmentDescriptions = docConfig.segments.map(s => `- "${s.key}" (${s.label}): ${s.description}`).join('\n');
+    const jsonExample = docConfig.segments.map(s => `"${s.key}": ["point 1", "point 2"]`).join(', ');
+
     const response = await fetchFn('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -1693,11 +1720,11 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
       body: JSON.stringify({
         model: claudeModel,
         max_tokens: 1500,
-        system: "You are an expert scientific writing advisor. Based on the paper title and abstract provided, generate a highly structured outline of what the author must write in each segment of their manuscript. For each segment, provide 3-4 specific, concrete, and highly customized points tailored directly to their research topic (do NOT output generic writing tips). Output ONLY a valid JSON object. Do not wrap in markdown block. JSON format: {\"introduction\": [\"point 1\", \"point 2\"], \"literature_review\": [\"point 1\"], \"method\": [\"point 1\"], \"results_discussion\": [\"point 1\"], \"conclusion\": [\"point 1\"]}",
+        system: `You are an expert academic writing advisor for Indonesian ${docConfig.label}. Based on the title and abstract provided, generate a highly structured outline of what the author must write in each segment of their manuscript. Here are the segments and what each one must cover:\n${segmentDescriptions}\n\nFor each segment, provide 3-4 specific, concrete, and highly customized points tailored directly to their research topic (do NOT output generic writing tips). Output ONLY a valid JSON object with exactly these keys: {${jsonExample}}. Do not wrap in markdown block.`,
         messages: [
           {
             role: 'user',
-            content: `Analisis judul dan abstrak berikut, lalu buat panduan outline pembahasan untuk masing-masing segmen jurnal.\n\nJudul: ${title}\nAbstrak: ${abstract}\n\nBalas dengan JSON object persis seperti spesifikasi (tanpa penjelasan teks):`
+            content: `Analisis judul dan abstrak berikut, lalu buat panduan outline pembahasan untuk masing-masing bagian ${docConfig.label}.\n\nJudul: ${title}\nAbstrak: ${abstract}\n\nBalas dengan JSON object persis seperti spesifikasi (tanpa penjelasan teks):`
           },
           {
             role: 'assistant',
@@ -1726,9 +1753,15 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
-    addHistoryItem(req.session.userId, 'draft', { title, abstract }, { draft: parsed });
+    addHistoryItem(req.session.userId, 'draft', { title, abstract, docType }, { draft: parsed, docType });
 
-    res.json({ ok: true, source: 'claude', draft: parsed });
+    res.json({
+      ok: true,
+      source: 'claude',
+      docType,
+      segments: docConfig.segments.map(s => ({ key: s.key, label: s.label })),
+      draft: parsed
+    });
   } catch (error) {
     console.error('[AI Draft Generator] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal memproses draf panduan dengan AI: ' + error.message });
@@ -1736,17 +1769,11 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
 });
 
 // Ekspor panduan outline yang sudah di-generate jadi file .docx berformat rapi -
-// fitur khusus Ultimate.
-const DRAFT_DOCX_SEGMENTS = [
-  { key: 'introduction', label: '1. Pendahuluan / Latar Belakang' },
-  { key: 'literature_review', label: '2. Tinjauan Pustaka / Landasan Teori' },
-  { key: 'method', label: '3. Metode Penelitian' },
-  { key: 'results_discussion', label: '4. Hasil & Pembahasan' },
-  { key: 'conclusion', label: '5. Kesimpulan & Saran' }
-];
-
+// fitur khusus Ultimate. Struktur bab mengikuti DOCUMENT_TYPE_CONFIGS di atas.
 app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, res) => {
   const { title, abstract, draft } = req.body;
+  const docType = DOCUMENT_TYPE_CONFIGS[req.body.docType] ? req.body.docType : 'jurnal';
+  const docConfig = DOCUMENT_TYPE_CONFIGS[docType];
   if (!title || !abstract || !draft || typeof draft !== 'object') {
     return res.status(400).json({ ok: false, message: 'Judul, abstrak, dan draf outline wajib disertakan.' });
   }
@@ -1763,10 +1790,10 @@ app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, 
       new Paragraph({ text: String(title).slice(0, 300), heading: HeadingLevel.TITLE }),
       new Paragraph({ text: 'Abstrak', heading: HeadingLevel.HEADING_2, spacing: { before: 300 } }),
       new Paragraph({ text: String(abstract).slice(0, 5000) }),
-      new Paragraph({ text: 'Panduan Struktur Pembahasan Manuskrip', heading: HeadingLevel.HEADING_1, spacing: { before: 500 } })
+      new Paragraph({ text: `Panduan Struktur Pembahasan ${docConfig.label}`, heading: HeadingLevel.HEADING_1, spacing: { before: 500 } })
     ];
 
-    DRAFT_DOCX_SEGMENTS.forEach(seg => {
+    docConfig.segments.forEach(seg => {
       children.push(new Paragraph({ text: seg.label, heading: HeadingLevel.HEADING_2, spacing: { before: 300 } }));
       const points = Array.isArray(draft[seg.key]) ? draft[seg.key] : [];
       if (points.length === 0) {
