@@ -2140,6 +2140,74 @@ function getDeepSeekApiKey() {
   return process.env.DEEPSEEK_API_KEY;
 }
 
+// --- AI Disclosure Statement Generator ---
+// Hero feature pembeda: setiap fitur AI di JurnalHub bisa generate pernyataan
+// disclosure penggunaan AI untuk submission jurnal/buku, mengikuti norma
+// transparansi yang diminta publisher besar (Taylor & Francis, Sage, dll).
+// Sengaja TIDAK dibatasi kuota/tier - ini fitur etika/kepercayaan, bukan fitur
+// produktivitas utama, jadi harus benar-benar bebas dipakai siapa saja.
+const AI_DISCLOSURE_SYSTEM_PROMPT = `You are an academic writing assistant that generates concise, formal AI-usage disclosure statements for manuscript or book submissions to academic publishers. These statements must follow the transparency norms required by major academic publishers (e.g. Taylor & Francis, Sage), which typically require: the full name of the tool used, how it was used, and the reason for use.
+
+Write ONE short paragraph (3-5 sentences) in formal academic English that:
+1. States the full name of the tool used.
+2. Explains specifically how it was used and the reason for use, based on the context given.
+3. Includes a brief statement that the author(s) reviewed and verified the AI-assisted output and take full responsibility for the final content of the work.
+
+Do not include any preamble, headers, quotation marks, or explanation before/after - output ONLY the disclosure statement paragraph itself, ready to be pasted directly into a manuscript.`;
+
+app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
+  const toolName = String(req.body.toolName || '').trim().slice(0, 200);
+  const usageContext = String(req.body.usageContext || '').trim().slice(0, 1000);
+
+  if (!toolName || !usageContext) {
+    return res.status(400).json({ ok: false, message: 'Nama tool dan konteks penggunaan wajib disertakan.' });
+  }
+
+  const apiKey = getDeepSeekApiKey();
+  if (!apiKey) {
+    return res.status(500).json({ ok: false, message: 'AI Disclosure Generator belum dikonfigurasi di server.' });
+  }
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+    const response = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 400,
+        stream: false,
+        messages: [
+          { role: 'system', content: AI_DISCLOSURE_SYSTEM_PROMPT },
+          { role: 'user', content: `Tool used: ${toolName}\nHow it was used: ${usageContext}\n\nGenerate the AI disclosure statement:` }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`DeepSeek API Error Status: ${response.status} - ${errText}`);
+    }
+
+    const resData = await response.json();
+    const statement = resData?.choices?.[0]?.message?.content?.trim();
+
+    if (!statement) {
+      throw new Error('Respons AI kosong.');
+    }
+
+    res.json({ ok: true, statement });
+  } catch (error) {
+    console.error('[AI Disclosure Generator] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal membuat AI Disclosure Statement: ' + error.message });
+  }
+});
+
 // --- Penyimpanan riwayat percakapan JurnalHub Intelligence ---
 const RESEARCH_CHAT_CONVERSATIONS_FILE = path.join(DATA_DIR, 'research-chat-conversations.json');
 

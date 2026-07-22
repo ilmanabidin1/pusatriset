@@ -16,6 +16,121 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;');
   }
 
+  // Setup generik tombol "Generate AI Disclosure Statement" - dipakai di semua
+  // fitur AI (Match Score, Outline, Lit Review, Humanizer). Sengaja tidak
+  // dibatasi kuota/tier di backend, jadi tidak ada pengecekan lock di sini juga.
+  function setupAiDisclosureButton({ btnId, resultWrapperId, textareaId, copyBtnId, toolName, getUsageContext }) {
+    const btn = document.getElementById(btnId);
+    const resultWrapper = document.getElementById(resultWrapperId);
+    const textarea = document.getElementById(textareaId);
+    const copyBtn = document.getElementById(copyBtnId);
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+      const usageContext = getUsageContext();
+      if (!usageContext) {
+        alert('Data belum lengkap untuk membuat AI Disclosure Statement.');
+        return;
+      }
+
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membuat pernyataan...';
+
+      try {
+        const res = await fetch('/api/generate-ai-disclosure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ toolName, usageContext })
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          alert(data.message || 'Gagal membuat AI Disclosure Statement.');
+          return;
+        }
+
+        if (textarea) textarea.value = data.statement;
+        if (resultWrapper) {
+          resultWrapper.style.display = 'block';
+          resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      } catch (err) {
+        console.error('[AI Disclosure]', err);
+        alert('Gagal menghubungi server untuk membuat AI Disclosure Statement.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
+
+    if (copyBtn && textarea) {
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(textarea.value).then(() => {
+          const orig = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+          setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+        });
+      });
+    }
+  }
+
+  // Pasang tombol AI Disclosure Statement di keempat fitur AI form-based.
+  // Pakai document.getElementById langsung di getUsageContext (bukan closure ke
+  // variable input yang dideklarasikan di tempat lain) supaya tidak bergantung
+  // urutan deklarasi.
+  setupAiDisclosureButton({
+    btnId: 'matchDisclosureBtn',
+    resultWrapperId: 'matchDisclosureResult',
+    textareaId: 'matchDisclosureText',
+    copyBtnId: 'matchDisclosureCopyBtn',
+    toolName: 'JurnalHub AI Match Score',
+    getUsageContext: () => {
+      const title = document.getElementById('articleTitle')?.value.trim();
+      if (!title) return null;
+      return `to identify and recommend suitable Scopus/Sinta target journals for a manuscript titled "${title}" based on its title, keywords, and abstract`;
+    }
+  });
+
+  setupAiDisclosureButton({
+    btnId: 'draftDisclosureBtn',
+    resultWrapperId: 'draftDisclosureResult',
+    textareaId: 'draftDisclosureText',
+    copyBtnId: 'draftDisclosureCopyBtn',
+    toolName: 'JurnalHub AI Drafting Companion (Outline Generator)',
+    getUsageContext: () => {
+      const title = document.getElementById('draftTitle')?.value.trim();
+      if (!title) return null;
+      return `to generate a structured chapter-by-chapter outline for a manuscript titled "${title}" prior to full drafting`;
+    }
+  });
+
+  setupAiDisclosureButton({
+    btnId: 'litReviewDisclosureBtn',
+    resultWrapperId: 'litReviewDisclosureResult',
+    textareaId: 'litReviewDisclosureText',
+    copyBtnId: 'litReviewDisclosureCopyBtn',
+    toolName: 'JurnalHub AI Literature Review & Citation Finder',
+    getUsageContext: () => {
+      const title = document.getElementById('litReviewTitle')?.value.trim();
+      if (!title) return null;
+      return `to identify relevant academic literature and draft a preliminary literature review for research on "${title}"`;
+    }
+  });
+
+  setupAiDisclosureButton({
+    btnId: 'humanizerDisclosureBtn',
+    resultWrapperId: 'humanizerDisclosureResult',
+    textareaId: 'humanizerDisclosureText',
+    copyBtnId: 'humanizerDisclosureCopyBtn',
+    toolName: 'JurnalHub Paraphraser & Humanizer Engine',
+    getUsageContext: () => {
+      const inputText = document.getElementById('humanizerInputText')?.value.trim();
+      if (!inputText) return null;
+      return 'to paraphrase and refine AI-assisted text into natural academic language while preserving its original meaning and technical terminology';
+    }
+  });
+
   // Render subset Markdown (heading, bold, italic, kode inline, list, hr) jadi HTML
   // dengan aman: escape dulu SEMUA teks, baru transformasi pola markdown di atas
   // teks yang sudah di-escape - jadi HTML mentah dari input tetap tidak bisa lolos.
@@ -1455,6 +1570,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderMatchCards(journals) {
     matchResultsContainer.innerHTML = '';
+    const matchDisclosureWrapper = document.getElementById('matchDisclosureWrapper');
 
     if (journals.length === 0) {
       matchResultsContainer.innerHTML = `
@@ -1465,6 +1581,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
       matchResultsContainer.style.display = 'grid';
+      if (matchDisclosureWrapper) matchDisclosureWrapper.style.display = 'none';
       return;
     }
 
@@ -1569,6 +1686,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     matchResultsContainer.style.display = 'grid';
+    if (matchDisclosureWrapper) matchDisclosureWrapper.style.display = 'block';
   }
 
   const stopWords = new Set([
@@ -3668,6 +3786,9 @@ document.addEventListener('DOMContentLoaded', () => {
               <button class="research-chat-copy-btn" type="button" data-msg-index="${idx}" title="Salin jawaban">
                 <i class="fa-regular fa-copy"></i> <span>Salin</span>
               </button>
+              <button class="research-chat-disclosure-btn" type="button" data-msg-index="${idx}" title="Generate AI Disclosure Statement">
+                <i class="fa-solid fa-file-shield"></i> <span>Disclosure</span>
+              </button>
             </div>
           </div>
         `;
@@ -3693,6 +3814,78 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.className = originalIconClass;
             label.textContent = originalLabel;
           }, 1500);
+        }).catch(() => {
+          alert('Gagal menyalin teks.');
+        });
+      });
+
+      researchChatMessagesEl.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.research-chat-disclosure-btn');
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute('data-msg-index'), 10);
+        const message = researchChatMessages[idx];
+        if (!message) return;
+
+        const modal = document.getElementById('aiDisclosureModal');
+        const textarea = document.getElementById('aiDisclosureModalText');
+        if (!modal || !textarea) return;
+
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Membuat...</span>';
+
+        try {
+          const res = await fetch('/api/generate-ai-disclosure', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              toolName: 'JurnalHub Intelligence (Prof Juju)',
+              usageContext: 'to receive critical academic feedback and guidance on the manuscript\'s novelty, methodology, and overall quality during the research and writing process'
+            })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            alert(data.message || 'Gagal membuat AI Disclosure Statement.');
+            return;
+          }
+          textarea.value = data.statement;
+          modal.classList.add('active');
+        } catch (err) {
+          console.error('[AI Disclosure Chat]', err);
+          alert('Gagal menghubungi server untuk membuat AI Disclosure Statement.');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
+      });
+    }
+
+    // Modal AI Disclosure Statement (dipakai oleh tombol Disclosure di chat)
+    const aiDisclosureModal = document.getElementById('aiDisclosureModal');
+    const closeAiDisclosureModalBtn = document.getElementById('closeAiDisclosureModalBtn');
+    const aiDisclosureModalCopyBtn = document.getElementById('aiDisclosureModalCopyBtn');
+
+    if (closeAiDisclosureModalBtn && aiDisclosureModal) {
+      closeAiDisclosureModalBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        aiDisclosureModal.classList.remove('active');
+      });
+    }
+    if (aiDisclosureModal) {
+      aiDisclosureModal.addEventListener('click', (e) => {
+        if (e.target === aiDisclosureModal) {
+          aiDisclosureModal.classList.remove('active');
+        }
+      });
+    }
+    if (aiDisclosureModalCopyBtn) {
+      aiDisclosureModalCopyBtn.addEventListener('click', () => {
+        const textarea = document.getElementById('aiDisclosureModalText');
+        if (!textarea) return;
+        navigator.clipboard.writeText(textarea.value).then(() => {
+          const originalHtml = aiDisclosureModalCopyBtn.innerHTML;
+          aiDisclosureModalCopyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+          setTimeout(() => { aiDisclosureModalCopyBtn.innerHTML = originalHtml; }, 1500);
         }).catch(() => {
           alert('Gagal menyalin teks.');
         });
