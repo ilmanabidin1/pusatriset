@@ -1875,18 +1875,25 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   try {
     const fetchFn = globalThis.fetch || require('node-fetch');
     const prompt = `
-Anda adalah pakar penulisan jurnal ilmiah internasional.
-Lakukan pencarian web untuk mencari paper ilmiah/jurnal terbaru yang relevan dengan topik/judul berikut:
+Anda adalah pakar penulisan jurnal ilmiah internasional dan peneliti senior yang berpengalaman menyusun tinjauan pustaka untuk publikasi Scopus/Sinta.
+Lakukan pencarian web SECARA MENDALAM dan EKSTENSIF untuk mencari paper ilmiah/jurnal yang relevan dengan topik/judul berikut. Jangan berhenti pada beberapa sumber saja - telusuri berbagai sudut pandang, teori, dan studi terdahulu terkait topik ini.
 Judul: ${title}
 Keyword/Bidang: ${keywords || '-'}
 Abstrak: ${abstract || '-'}
 
-Buatlah Tinjauan Pustaka (Literature Review) yang komprehensif dalam Bahasa Indonesia (berisi ringkasan teori, perbandingan studi terdahulu, dan gap analysis penelitian ini).
-Harap sertakan daftar kutipan/referensi ilmiah asli dari web dengan URL aktif ke paper tersebut.
+Buatlah Tinjauan Pustaka (Literature Review) yang SANGAT KOMPREHENSIF dan MENDALAM dalam Bahasa Indonesia, setara dengan draf BAB II tesis/disertasi (bukan ringkasan singkat). Wajib mencakup:
+1. Kajian Teori - jabarkan seluruh teori/konsep utama yang relevan secara mendalam, bukan hanya sebutkan nama teorinya.
+2. Studi Terdahulu / Penelitian Relevan - bandingkan dan kontraskan temuan dari BANYAK studi sebelumnya (minimal 20-30 studi berbeda dibahas di dalam teks, bukan hanya di daftar sitasi), kelompokkan berdasarkan tema/pendekatan.
+3. Kerangka Konseptual - sertakan representasi kerangka pemikiran/kerangka konseptual penelitian dalam bentuk tabel HTML (<table>) yang memetakan variabel/konsep utama, hubungan antar variabel, dan sumber teorinya. Ini WAJIB ada sebagai "bagan" tinjauan pustaka.
+4. Gap Analysis - identifikasi celah penelitian secara spesifik dan tegas berdasarkan apa yang sudah/belum diteliti oleh studi-studi di atas.
+
+Panjang isi "review" harus signifikan (idealnya 1500-2500 kata), terstruktur dengan heading (h4/h5), paragraf, dan tabel kerangka konseptual di atas.
+
+Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak MINIMAL 30 hingga 50 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut. Semakin banyak dan beragam sumbernya semakin baik, selama tetap relevan dengan topik.
 
 Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown seperti \`\`\`json):
 {
-  "review": "Isi teks Tinjauan Pustaka Anda dalam format HTML/Markdown (gunakan tag paragraph p, list li, strong, dll) yang rapi dan profesional",
+  "review": "Isi teks Tinjauan Pustaka Anda dalam format HTML (gunakan tag h4/h5, p, ul/li, strong, table/tr/td, dll) yang rapi, panjang, dan profesional, termasuk tabel kerangka konseptual",
   "citations": [
     {
       "title": "Judul Paper Ilmiah yang ditemukan",
@@ -1907,11 +1914,12 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'sonar',
+        model: 'sonar-pro',
+        max_tokens: 8000,
         messages: [
           {
             role: 'system',
-            content: 'Anda adalah AI akademis yang mengembalikan respon dalam format JSON sesuai instruksi.'
+            content: 'Anda adalah AI akademis yang melakukan riset literatur mendalam dan mengembalikan respon dalam format JSON sesuai instruksi. Anda tidak pernah memberikan jawaban singkat/dangkal - selalu komprehensif dan berbasis banyak sumber nyata dari hasil pencarian web.'
           },
           {
             role: 'user',
