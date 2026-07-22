@@ -96,6 +96,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }, tickMs);
   }
 
+  // Indikator progres berjalan untuk proses AI yang makan waktu (mis. Lit Review
+  // Pro) - supaya user tahu prosesnya masih berjalan (bukan macet), bukan cuma
+  // spinner diam. Pesan berganti tiap beberapa detik + penghitung waktu berjalan.
+  function startProcessingStatus(btn, messages, intervalMs) {
+    const delay = intervalMs || 3000;
+    const startTime = Date.now();
+    let idx = 0;
+    const update = () => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${messages[idx % messages.length]} (${elapsed}s)`;
+      idx++;
+    };
+    update();
+    const timer = setInterval(update, delay);
+    return () => clearInterval(timer);
+  }
+
   // Setup generik tombol "Generate AI Disclosure Statement" - dipakai di semua
   // fitur AI (Match Score, Outline, Lit Review, Humanizer). Sengaja tidak
   // dibatasi kuota/tier di backend, jadi tidak ada pengecekan lock di sini juga.
@@ -942,9 +959,8 @@ document.addEventListener('DOMContentLoaded', () => {
               litReviewQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
             }
 
-            // Kunci toggle mode "Pro" Lit Review hanya untuk akun Ultimate + tampilkan sisa kuota
+            // Kunci toggle mode "Pro" Lit Review hanya untuk akun Ultimate (unlimited, tanpa kuota bulanan)
             const litModeProBtnState = document.getElementById('litModeProBtn');
-            const litModeProQuotaLabel = document.getElementById('litModeProQuotaLabel');
             if (litModeProBtnState) {
               litModeProBtnState.classList.toggle('locked', !isUltimate);
               if (!isUltimate && litModeProBtnState.classList.contains('active')) {
@@ -952,14 +968,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const litModeStandardBtnState = document.getElementById('litModeStandardBtn');
                 if (litModeStandardBtnState) litModeStandardBtnState.classList.add('active');
                 if (typeof litReviewMode !== 'undefined') litReviewMode = 'standard';
-              }
-              if (litModeProQuotaLabel) {
-                if (isUltimate && currentUser.user.proLitReviewsRemaining !== undefined && currentUser.user.proLitReviewsRemaining !== null) {
-                  litModeProQuotaLabel.style.display = 'inline-block';
-                  litModeProQuotaLabel.textContent = `Sisa Pro: ${currentUser.user.proLitReviewsRemaining}/10 bulan ini`;
-                } else {
-                  litModeProQuotaLabel.style.display = 'none';
-                }
               }
             }
 
@@ -1050,7 +1058,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Free user tidak pernah akses mode Pro - pastikan toggle terkunci & kembali ke Standar
             const litModeProBtnFreeState = document.getElementById('litModeProBtn');
-            const litModeProQuotaLabelFree = document.getElementById('litModeProQuotaLabel');
             if (litModeProBtnFreeState) {
               litModeProBtnFreeState.classList.add('locked');
               if (litModeProBtnFreeState.classList.contains('active')) {
@@ -1060,7 +1067,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof litReviewMode !== 'undefined') litReviewMode = 'standard';
               }
             }
-            if (litModeProQuotaLabelFree) litModeProQuotaLabelFree.style.display = 'none';
 
             if (litReviewQuotaDisclaimer) {
               litReviewQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.litReviewsRemaining !== undefined ? currentUser.user.litReviewsRemaining : 1}/1 Bulan Ini</span>`;
@@ -3478,13 +3484,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const originalBtnHtml = runLitReviewBtn.innerHTML;
         runLitReviewBtn.disabled = true;
-        runLitReviewBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses Kajian AI...';
 
         const resultsPanel = document.getElementById('litReviewResultsPanel');
         const textContainer = document.getElementById('litReviewTextContainer');
         const citationsContainer = document.getElementById('litReviewCitationsContainer');
 
         if (resultsPanel) resultsPanel.style.display = 'none';
+
+        const stopStatus = startProcessingStatus(runLitReviewBtn, [
+          'Mencari referensi ilmiah di web...',
+          'Menganalisis studi terdahulu...',
+          'Menyusun kerangka konseptual...',
+          'Merangkum gap analysis & peluang novelty...',
+          'Menyelesaikan draf tinjauan pustaka...'
+        ]);
 
         try {
           const response = await fetch('/api/lit-review', {
@@ -3548,6 +3561,7 @@ document.addEventListener('DOMContentLoaded', () => {
           console.error('[Lit Review UI] Error:', error);
           alert('Gagal menghubungi server untuk memproses literature review.');
         } finally {
+          stopStatus();
           runLitReviewBtn.disabled = false;
           runLitReviewBtn.innerHTML = originalBtnHtml;
         }

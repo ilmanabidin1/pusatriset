@@ -1038,14 +1038,6 @@ app.get('/api/me', (req, res) => {
       }
     }
 
-    // Lit Review mode "Pro" (sonar-pro, lebih mahal) dijatah 10x/bulan khusus Ultimate,
-    // supaya biaya API tetap terprediksi walau mode Standar-nya sendiri unlimited.
-    let proLitReviewsRemaining = 0;
-    if (isUltimate && user) {
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      const usedPro = (user.lastLitReviewProMonth === currentMonth) ? (user.litReviewProCountThisMonth || 0) : 0;
-      proLitReviewsRemaining = Math.max(0, PRO_LIT_REVIEW_MONTHLY_LIMIT - usedPro);
-    }
 
     res.json({
       loggedIn: true,
@@ -1070,7 +1062,6 @@ app.get('/api/me', (req, res) => {
         matchCountThisMonth: user ? (user.matchCountThisMonth || 0) : 0,
         draftCountThisMonth: user ? (user.draftCountThisMonth || 0) : 0,
         litReviewCountThisMonth: user ? (user.litReviewCountThisMonth || 0) : 0,
-        proLitReviewsRemaining: proLitReviewsRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
@@ -1885,8 +1876,6 @@ app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, 
   }
 });
 
-const PRO_LIT_REVIEW_MONTHLY_LIMIT = 10;
-
 app.post('/api/lit-review', requireAccess, async (req, res) => {
   const { title, keywords, abstract } = req.body;
   const requestedMode = req.body.mode === 'pro' ? 'pro' : 'standard';
@@ -1909,13 +1898,9 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
     }
   }
 
-  // Mode "Pro" khusus Ultimate dijatah terpisah (lebih mahal dari mode Standar yang unlimited)
-  if (user && user.type === 'ultimate' && requestedMode === 'pro') {
-    const usedPro = (user.lastLitReviewProMonth === currentMonth) ? (user.litReviewProCountThisMonth || 0) : 0;
-    if (usedPro >= PRO_LIT_REVIEW_MONTHLY_LIMIT) {
-      return res.status(403).json({ ok: false, message: `Kuota mode Pro bulanan tercapai (${PRO_LIT_REVIEW_MONTHLY_LIMIT}x/bulan). Gunakan mode Standar, atau coba lagi bulan depan.` });
-    }
-  }
+  // Mode "Pro" khusus Ultimate - sejak model diganti ke "sonar" (bukan sonar-pro),
+  // biaya per generate turun drastis (~Rp 160), jadi kuota bulanan khusus Pro
+  // dihapus (unlimited seperti mode Standar), tetap exclusive untuk tier Ultimate.
 
   const perplexityKey = process.env.PERPLEXITY_API_KEY;
   
@@ -2054,19 +2039,9 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
       saveUsers(users);
     }
 
-    // Catat pemakaian kuota mode Pro (khusus Ultimate)
-    if (user && isDeepTier) {
-      if (user.lastLitReviewProMonth !== currentMonth) {
-        user.lastLitReviewProMonth = currentMonth;
-        user.litReviewProCountThisMonth = 0;
-      }
-      user.litReviewProCountThisMonth += 1;
-      saveUsers(users);
-    }
-
     addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review: parsed.review, citations: parsed.citations || [] });
 
-    res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [], mode: requestedMode, truncated: wasTruncated, proLitReviewsRemaining: user && user.type === 'ultimate' ? Math.max(0, PRO_LIT_REVIEW_MONTHLY_LIMIT - (user.litReviewProCountThisMonth || 0)) : null });
+    res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [], mode: requestedMode, truncated: wasTruncated });
   } catch (error) {
     console.error('[Perplexity Lit Review] Error:', error);
     res.status(500).json({ ok: false, message: 'Gagal mencari referensi & membuat literature review: ' + error.message });
