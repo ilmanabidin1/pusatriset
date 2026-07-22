@@ -16,6 +16,86 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;');
   }
 
+  // Efek "reveal perkata" supaya hasil AI yang datang sekaligus (bukan streaming asli
+  // dari API, karena outputnya JSON terstruktur / API pihak ketiga tanpa streaming)
+  // tetap terasa cepat & hidup seperti balasan JurnalHub Intelligence. Durasi total
+  // dibuat konsisten (~1.4 detik) berapa pun panjang teksnya, dengan mempercepat
+  // jumlah kata per tick untuk teks yang lebih panjang.
+  function computeUnitsPerTick(totalUnits, tickMs, targetDurationMs) {
+    const ticks = Math.max(1, Math.round(targetDurationMs / tickMs));
+    return Math.max(1, Math.ceil(totalUnits / ticks));
+  }
+
+  // Reveal HTML yang sudah dirender (mendukung tabel, list, dsb) dengan cara
+  // membungkus tiap kata jadi <span opacity:0> lalu menampilkannya bertahap.
+  // Layout final sudah terbentuk penuh sejak awal (tidak ada shifting), hanya
+  // opacity kata yang beranimasi, jadi aman untuk struktur HTML apa pun.
+  function revealWordsInElement(root, options) {
+    if (!root) return;
+    const tickMs = (options && options.tickMs) || 25;
+    const targetDurationMs = (options && options.targetDurationMs) || 1400;
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    const textNodes = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue && node.nodeValue.trim().length > 0) textNodes.push(node);
+    }
+
+    const spans = [];
+    textNodes.forEach(tn => {
+      const parts = tn.nodeValue.split(/(\s+)/);
+      const frag = document.createDocumentFragment();
+      parts.forEach(part => {
+        if (part === '') return;
+        if (/^\s+$/.test(part)) {
+          frag.appendChild(document.createTextNode(part));
+        } else {
+          const span = document.createElement('span');
+          span.textContent = part;
+          span.style.opacity = '0';
+          span.style.transition = 'opacity 0.15s ease';
+          frag.appendChild(span);
+          spans.push(span);
+        }
+      });
+      tn.parentNode.replaceChild(frag, tn);
+    });
+
+    if (spans.length === 0) return;
+    const wordsPerTick = computeUnitsPerTick(spans.length, tickMs, targetDurationMs);
+    let i = 0;
+    const timer = setInterval(() => {
+      for (let k = 0; k < wordsPerTick && i < spans.length; k++, i++) {
+        spans[i].style.opacity = '1';
+      }
+      if (i >= spans.length) clearInterval(timer);
+    }, tickMs);
+  }
+
+  // Varian untuk <textarea> (mis. Humanizer) - tidak bisa berisi HTML, jadi
+  // kontennya dibangun bertahap kata demi kata langsung ke .value.
+  function revealTextIntoTextarea(textareaEl, fullText, options) {
+    if (!textareaEl) return;
+    const tickMs = (options && options.tickMs) || 25;
+    const targetDurationMs = (options && options.targetDurationMs) || 1400;
+
+    const tokens = String(fullText ?? '').split(/(\s+)/).filter(t => t !== '');
+    textareaEl.value = '';
+    if (tokens.length === 0) return;
+
+    const tokensPerTick = computeUnitsPerTick(tokens.length, tickMs, targetDurationMs);
+    let i = 0;
+    const timer = setInterval(() => {
+      let chunk = '';
+      for (let k = 0; k < tokensPerTick && i < tokens.length; k++, i++) {
+        chunk += tokens[i];
+      }
+      textareaEl.value += chunk;
+      if (i >= tokens.length) clearInterval(timer);
+    }, tickMs);
+  }
+
   // Setup generik tombol "Generate AI Disclosure Statement" - dipakai di semua
   // fitur AI (Match Score, Outline, Lit Review, Humanizer). Sengaja tidak
   // dibatasi kuota/tier di backend, jadi tidak ada pengecekan lock di sini juga.
@@ -2655,6 +2735,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       draftSegmentsContainer.appendChild(item);
     });
+
+    revealWordsInElement(draftSegmentsContainer);
   }
 
   // Handle Download File Panduan TXT
@@ -3452,6 +3534,9 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsPanel.scrollIntoView({ behavior: 'smooth' });
           }
 
+          revealWordsInElement(textContainer);
+          revealWordsInElement(citationsContainer);
+
           // Sinkronisasi status limit terbaru
           justGeneratedLitReview = true;
           await checkAuthState();
@@ -3676,7 +3761,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           if (humanizerOutputText) {
-            humanizerOutputText.value = data.humanizedText;
+            revealTextIntoTextarea(humanizerOutputText, data.humanizedText);
           }
 
           if (humanizerScoreLabel) {
