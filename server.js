@@ -1955,19 +1955,20 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
 
     const depthModel = isDeepTier ? 'sonar-pro' : 'sonar';
     // max_tokens harus cukup lega dibanding target isi di prompt di bawah, supaya
-    // respons tidak kepotong di tengah string JSON (pernah terjadi saat budget
-    // terlalu ketat: 4500 token vs target 3000 kata + tabel + 15-20 sitasi).
+    // respons tidak kepotong di tengah string JSON. Dibanding versi sebelumnya,
+    // porsi token dialihkan dari panjang teks review ke jumlah sitasi (sitasi
+    // dinilai lebih penting oleh user), tanpa menaikkan total token/biaya.
     const depthMaxTokens = isDeepTier ? 7000 : 2500;
     const depthInstructions = isDeepTier
-      ? `Buatlah Tinjauan Pustaka (Literature Review) yang SANGAT KOMPREHENSIF dan MENDALAM dalam Bahasa Indonesia, setara dengan draf BAB II tesis/disertasi (bukan ringkasan singkat). Wajib mencakup:
-1. Kajian Teori - jabarkan seluruh teori/konsep utama yang relevan secara mendalam, bukan hanya sebutkan nama teorinya.
-2. Studi Terdahulu / Penelitian Relevan - bandingkan dan kontraskan temuan dari BANYAK studi sebelumnya (minimal 12-15 studi berbeda dibahas di dalam teks, bukan hanya di daftar sitasi), kelompokkan berdasarkan tema/pendekatan.
+      ? `Buatlah Tinjauan Pustaka (Literature Review) yang KOMPREHENSIF dalam Bahasa Indonesia, dengan PRIORITAS UTAMA pada kelengkapan dan keragaman sitasi ilmiah (bukan pada panjang teks). Wajib mencakup:
+1. Kajian Teori - jabarkan teori/konsep utama yang relevan secara ringkas namun tepat sasaran.
+2. Studi Terdahulu / Penelitian Relevan - bandingkan temuan dari studi-studi sebelumnya, kelompokkan berdasarkan tema/pendekatan, rujuk sitasi yang relevan pada tiap poin.
 3. Kerangka Konseptual - sertakan representasi kerangka pemikiran/kerangka konseptual penelitian dalam bentuk tabel HTML (<table>) yang memetakan variabel/konsep utama, hubungan antar variabel, dan sumber teorinya. Ini WAJIB ada sebagai "bagan" tinjauan pustaka.
 4. Gap Analysis - identifikasi celah penelitian secara spesifik dan tegas berdasarkan apa yang sudah/belum diteliti oleh studi-studi di atas.
 
-Panjang isi "review" harus signifikan, targetkan sekitar 2000-2500 kata (JANGAN melebihi 2500 kata - field "review" harus selesai/tertutup dengan rapi, jangan terpotong di tengah kalimat), terstruktur dengan heading (h4/h5), paragraf, dan tabel kerangka konseptual di atas.
+Panjang isi "review" targetkan sekitar 1200-1500 kata saja (JANGAN melebihi 1500 kata - field "review" harus selesai/tertutup dengan rapi, jangan terpotong di tengah kalimat). Jangan perpanjang teks demi kata, gunakan bahasa padat dan efisien.
 
-Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 12 hingga 15 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut. Pastikan array "citations" ditutup dengan benar (JSON valid, tidak terpotong).`
+PRIORITAS UTAMA: cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 25 hingga 30 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut - ini lebih penting daripada panjang teks review. Pastikan array "citations" ditutup dengan benar (JSON valid, tidak terpotong).`
       : `Buatlah Tinjauan Pustaka (Literature Review) yang solid dan terstruktur dalam Bahasa Indonesia (ringkasan teori, perbandingan singkat studi terdahulu, dan gap analysis penelitian ini).
 
 Panjang isi "review" sekitar 500-800 kata, terstruktur dengan heading (h4/h5) dan paragraf yang rapi.
