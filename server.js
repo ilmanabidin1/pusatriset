@@ -2296,8 +2296,11 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
       },
       body: JSON.stringify({
         model: 'deepseek-v4-flash',
-        max_tokens: 600,
+        max_tokens: 2000,
         stream: false,
+        thinking: {
+          type: 'disabled'
+        },
         extra_body: {
           thinking: {
             type: 'disabled'
@@ -2316,10 +2319,19 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
     }
 
     const resData = await response.json();
-    const statement = resData?.choices?.[0]?.message?.content?.trim();
+    const choice = resData?.choices?.[0];
+    let statement = choice?.message?.content?.trim();
+
+    // Fallback: kalau field "content" kosong (mis. token habis di tengah proses
+    // reasoning sebelum sempat menulis jawaban final), coba pakai reasoning_content
+    // sebagai pengganti daripada gagal total.
+    if (!statement && choice?.message?.reasoning_content) {
+      statement = String(choice.message.reasoning_content).trim();
+    }
 
     if (!statement) {
-      throw new Error('Respons AI kosong.');
+      console.error('[AI Disclosure Generator] Respons kosong, raw response:', JSON.stringify(resData).slice(0, 1500));
+      throw new Error(`Respons AI kosong (finish_reason: ${choice?.finish_reason || 'unknown'}).`);
     }
 
     res.json({ ok: true, statement });
