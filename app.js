@@ -862,6 +862,27 @@ document.addEventListener('DOMContentLoaded', () => {
               litReviewQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
             }
 
+            // Kunci toggle mode "Pro" Lit Review hanya untuk akun Ultimate + tampilkan sisa kuota
+            const litModeProBtnState = document.getElementById('litModeProBtn');
+            const litModeProQuotaLabel = document.getElementById('litModeProQuotaLabel');
+            if (litModeProBtnState) {
+              litModeProBtnState.classList.toggle('locked', !isUltimate);
+              if (!isUltimate && litModeProBtnState.classList.contains('active')) {
+                litModeProBtnState.classList.remove('active');
+                const litModeStandardBtnState = document.getElementById('litModeStandardBtn');
+                if (litModeStandardBtnState) litModeStandardBtnState.classList.add('active');
+                if (typeof litReviewMode !== 'undefined') litReviewMode = 'standard';
+              }
+              if (litModeProQuotaLabel) {
+                if (isUltimate && currentUser.user.proLitReviewsRemaining !== undefined && currentUser.user.proLitReviewsRemaining !== null) {
+                  litModeProQuotaLabel.style.display = 'inline-block';
+                  litModeProQuotaLabel.textContent = `Sisa Pro: ${currentUser.user.proLitReviewsRemaining}/10 bulan ini`;
+                } else {
+                  litModeProQuotaLabel.style.display = 'none';
+                }
+              }
+            }
+
             // Reset humanizer locks & disclaimer for premium/ultimate
             const humanizerPremiumLock = document.getElementById('humanizerPremiumLock');
             if (humanizerPremiumLock) humanizerPremiumLock.style.display = 'none';
@@ -947,18 +968,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const litReviewQuotaDisclaimer = document.getElementById('litReviewQuotaDisclaimer');
             const runLitReviewBtn = document.getElementById('runLitReviewBtn');
 
-            // Kunci toggle mode "Pro" hanya untuk akun Ultimate
-            const litModeProBtnState = document.getElementById('litModeProBtn');
-            if (litModeProBtnState) {
-              const userIsUltimate = currentUser.user.type === 'ultimate';
-              litModeProBtnState.classList.toggle('locked', !userIsUltimate);
-              if (!userIsUltimate && litModeProBtnState.classList.contains('active')) {
-                litModeProBtnState.classList.remove('active');
+            // Free user tidak pernah akses mode Pro - pastikan toggle terkunci & kembali ke Standar
+            const litModeProBtnFreeState = document.getElementById('litModeProBtn');
+            const litModeProQuotaLabelFree = document.getElementById('litModeProQuotaLabel');
+            if (litModeProBtnFreeState) {
+              litModeProBtnFreeState.classList.add('locked');
+              if (litModeProBtnFreeState.classList.contains('active')) {
+                litModeProBtnFreeState.classList.remove('active');
                 const litModeStandardBtnState = document.getElementById('litModeStandardBtn');
                 if (litModeStandardBtnState) litModeStandardBtnState.classList.add('active');
                 if (typeof litReviewMode !== 'undefined') litReviewMode = 'standard';
               }
             }
+            if (litModeProQuotaLabelFree) litModeProQuotaLabelFree.style.display = 'none';
 
             if (litReviewQuotaDisclaimer) {
               litReviewQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.litReviewsRemaining !== undefined ? currentUser.user.litReviewsRemaining : 1}/1 Bulan Ini</span>`;

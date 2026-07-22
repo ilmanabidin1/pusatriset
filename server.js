@@ -1038,6 +1038,15 @@ app.get('/api/me', (req, res) => {
       }
     }
 
+    // Lit Review mode "Pro" (sonar-pro, lebih mahal) dijatah 10x/bulan khusus Ultimate,
+    // supaya biaya API tetap terprediksi walau mode Standar-nya sendiri unlimited.
+    let proLitReviewsRemaining = 0;
+    if (isUltimate && user) {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const usedPro = (user.lastLitReviewProMonth === currentMonth) ? (user.litReviewProCountThisMonth || 0) : 0;
+      proLitReviewsRemaining = Math.max(0, PRO_LIT_REVIEW_MONTHLY_LIMIT - usedPro);
+    }
+
     res.json({
       loggedIn: true,
       user: {
@@ -1061,6 +1070,7 @@ app.get('/api/me', (req, res) => {
         matchCountThisMonth: user ? (user.matchCountThisMonth || 0) : 0,
         draftCountThisMonth: user ? (user.draftCountThisMonth || 0) : 0,
         litReviewCountThisMonth: user ? (user.litReviewCountThisMonth || 0) : 0,
+        proLitReviewsRemaining: proLitReviewsRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
@@ -1823,6 +1833,8 @@ app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, 
   }
 });
 
+const PRO_LIT_REVIEW_MONTHLY_LIMIT = 10;
+
 app.post('/api/lit-review', requireAccess, async (req, res) => {
   const { title, keywords, abstract } = req.body;
   const requestedMode = req.body.mode === 'pro' ? 'pro' : 'standard';
@@ -1842,6 +1854,14 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   } else if (user && user.type === 'premium') {
     if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 15) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x Literature Review per bulan.' });
+    }
+  }
+
+  // Mode "Pro" khusus Ultimate dijatah terpisah (lebih mahal dari mode Standar yang unlimited)
+  if (user && user.type === 'ultimate' && requestedMode === 'pro') {
+    const usedPro = (user.lastLitReviewProMonth === currentMonth) ? (user.litReviewProCountThisMonth || 0) : 0;
+    if (usedPro >= PRO_LIT_REVIEW_MONTHLY_LIMIT) {
+      return res.status(403).json({ ok: false, message: `Kuota mode Pro bulanan tercapai (${PRO_LIT_REVIEW_MONTHLY_LIMIT}x/bulan). Gunakan mode Standar, atau coba lagi bulan depan.` });
     }
   }
 
@@ -1882,17 +1902,17 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
     const isDeepTier = tier === 'ultimate' && requestedMode === 'pro';
 
     const depthModel = isDeepTier ? 'sonar-pro' : 'sonar';
-    const depthMaxTokens = isDeepTier ? 9000 : 2500;
+    const depthMaxTokens = isDeepTier ? 4500 : 2500;
     const depthInstructions = isDeepTier
       ? `Buatlah Tinjauan Pustaka (Literature Review) yang SANGAT KOMPREHENSIF dan MENDALAM dalam Bahasa Indonesia, setara dengan draf BAB II tesis/disertasi (bukan ringkasan singkat). Wajib mencakup:
 1. Kajian Teori - jabarkan seluruh teori/konsep utama yang relevan secara mendalam, bukan hanya sebutkan nama teorinya.
-2. Studi Terdahulu / Penelitian Relevan - bandingkan dan kontraskan temuan dari BANYAK studi sebelumnya (minimal 20-30 studi berbeda dibahas di dalam teks, bukan hanya di daftar sitasi), kelompokkan berdasarkan tema/pendekatan.
+2. Studi Terdahulu / Penelitian Relevan - bandingkan dan kontraskan temuan dari BANYAK studi sebelumnya (minimal 15-20 studi berbeda dibahas di dalam teks, bukan hanya di daftar sitasi), kelompokkan berdasarkan tema/pendekatan.
 3. Kerangka Konseptual - sertakan representasi kerangka pemikiran/kerangka konseptual penelitian dalam bentuk tabel HTML (<table>) yang memetakan variabel/konsep utama, hubungan antar variabel, dan sumber teorinya. Ini WAJIB ada sebagai "bagan" tinjauan pustaka.
 4. Gap Analysis - identifikasi celah penelitian secara spesifik dan tegas berdasarkan apa yang sudah/belum diteliti oleh studi-studi di atas.
 
-Panjang isi "review" harus MAKSIMAL dan SELENGKAP mungkin, targetkan hingga sekitar 6000 kata (jangan berhenti di ringkasan singkat, kembangkan tiap bagian secara mendalam sampai mendekati batas tersebut), terstruktur dengan heading (h4/h5), paragraf, dan tabel kerangka konseptual di atas.
+Panjang isi "review" harus signifikan, targetkan hingga sekitar 3000 kata, terstruktur dengan heading (h4/h5), paragraf, dan tabel kerangka konseptual di atas.
 
-Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 20 hingga 30 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut.`
+Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 15 hingga 20 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut.`
       : `Buatlah Tinjauan Pustaka (Literature Review) yang solid dan terstruktur dalam Bahasa Indonesia (ringkasan teori, perbandingan singkat studi terdahulu, dan gap analysis penelitian ini).
 
 Panjang isi "review" sekitar 500-800 kata, terstruktur dengan heading (h4/h5) dan paragraf yang rapi.
@@ -1965,9 +1985,19 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
       saveUsers(users);
     }
 
+    // Catat pemakaian kuota mode Pro (khusus Ultimate)
+    if (user && isDeepTier) {
+      if (user.lastLitReviewProMonth !== currentMonth) {
+        user.lastLitReviewProMonth = currentMonth;
+        user.litReviewProCountThisMonth = 0;
+      }
+      user.litReviewProCountThisMonth += 1;
+      saveUsers(users);
+    }
+
     addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review: parsed.review, citations: parsed.citations || [] });
 
-    res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [] });
+    res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [], mode: requestedMode, proLitReviewsRemaining: user && user.type === 'ultimate' ? Math.max(0, PRO_LIT_REVIEW_MONTHLY_LIMIT - (user.litReviewProCountThisMonth || 0)) : null });
   } catch (error) {
     console.error('[Perplexity Lit Review] Error:', error);
     res.status(500).json({ ok: false, message: 'Gagal mencari referensi & membuat literature review: ' + error.message });
