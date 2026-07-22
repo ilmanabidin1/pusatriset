@@ -1953,22 +1953,25 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
     const tier = user ? (user.type || 'free') : 'free';
     const isDeepTier = tier === 'ultimate' && requestedMode === 'pro';
 
-    const depthModel = isDeepTier ? 'sonar-pro' : 'sonar';
-    // max_tokens harus cukup lega dibanding target isi di prompt di bawah, supaya
-    // respons tidak kepotong di tengah string JSON. Dibanding versi sebelumnya,
-    // porsi token dialihkan dari panjang teks review ke jumlah sitasi (sitasi
-    // dinilai lebih penting oleh user), tanpa menaikkan total token/biaya.
-    const depthMaxTokens = isDeepTier ? 7000 : 2500;
+    // Mode Pro tetap pakai model "sonar" yang sama seperti Standar (bukan sonar-pro) -
+    // base model ini tetap melakukan pencarian web real-time & menghasilkan sitasi asli,
+    // hanya bedanya kedalaman reasoning/konteks. sonar-pro terbukti cenderung lebih
+    // verbose/tidak konsisten mengikuti batas panjang, jadi lebih rawan kepotong di
+    // tengah JSON meski target kata sudah diturunkan berkali-kali. Model lebih murah
+    // ini sekaligus menekan biaya jauh lebih besar dibanding versi-versi sebelumnya.
+    const depthModel = 'sonar';
+    const depthMaxTokens = isDeepTier ? 4000 : 2500;
     const depthInstructions = isDeepTier
-      ? `Buatlah Tinjauan Pustaka (Literature Review) yang KOMPREHENSIF dalam Bahasa Indonesia, dengan PRIORITAS UTAMA pada kelengkapan dan keragaman sitasi ilmiah (bukan pada panjang teks). Wajib mencakup:
-1. Kajian Teori - jabarkan teori/konsep utama yang relevan secara ringkas namun tepat sasaran.
-2. Studi Terdahulu / Penelitian Relevan - bandingkan temuan dari studi-studi sebelumnya, kelompokkan berdasarkan tema/pendekatan, rujuk sitasi yang relevan pada tiap poin.
+      ? `Buatlah Tinjauan Pustaka (Literature Review) yang padat dan efisien dalam Bahasa Indonesia. Wajib mencakup:
+1. Kajian Teori - jabarkan teori/konsep utama yang relevan secara ringkas.
+2. Studi Terdahulu / Penelitian Relevan - bandingkan temuan dari studi-studi sebelumnya secara singkat, rujuk sitasi yang relevan pada tiap poin.
 3. Kerangka Konseptual - sertakan representasi kerangka pemikiran/kerangka konseptual penelitian dalam bentuk tabel HTML (<table>) yang memetakan variabel/konsep utama, hubungan antar variabel, dan sumber teorinya. Ini WAJIB ada sebagai "bagan" tinjauan pustaka.
-4. Gap Analysis - identifikasi celah penelitian secara spesifik dan tegas berdasarkan apa yang sudah/belum diteliti oleh studi-studi di atas.
+4. Gap Analysis - identifikasi celah penelitian secara spesifik berdasarkan apa yang sudah/belum diteliti oleh studi-studi di atas.
+5. Peluang Novelty - jelaskan secara eksplisit apa peluang kebaruan (novelty) yang bisa diambil peneliti berdasarkan gap yang ditemukan.
 
-Panjang isi "review" targetkan sekitar 1200-1500 kata saja (JANGAN melebihi 1500 kata - field "review" harus selesai/tertutup dengan rapi, jangan terpotong di tengah kalimat). Jangan perpanjang teks demi kata, gunakan bahasa padat dan efisien.
+Panjang isi "review" MAKSIMAL 1000 kata (jangan melebihi ini - field "review" harus selesai/tertutup dengan rapi, jangan terpotong di tengah kalimat). Gunakan bahasa padat, jangan perpanjang teks demi kata.
 
-PRIORITAS UTAMA: cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 25 hingga 30 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut - ini lebih penting daripada panjang teks review. Pastikan array "citations" ditutup dengan benar (JSON valid, tidak terpotong).`
+Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 15 hingga 20 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut. Pastikan array "citations" ditutup dengan benar (JSON valid, tidak terpotong).`
       : `Buatlah Tinjauan Pustaka (Literature Review) yang solid dan terstruktur dalam Bahasa Indonesia (ringkasan teori, perbandingan singkat studi terdahulu, dan gap analysis penelitian ini).
 
 Panjang isi "review" sekitar 500-800 kata, terstruktur dengan heading (h4/h5) dan paragraf yang rapi.
