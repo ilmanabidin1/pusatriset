@@ -1352,6 +1352,58 @@ function normalizeAiRecommendations(aiItems, candidates) {
     .slice(0, 3);
 }
 
+// Best-effort recovery kalau respons AI kepotong sebelum JSON-nya lengkap
+// (mis. output menyentuh batas max_tokens di tengah generate). Daripada user
+// dapat error 500 total padahal API sudah terlanjur dipanggil (dan dibayar),
+// coba selamatkan teks "review" yang sudah sempat dihasilkan + sitasi yang
+// objeknya sudah lengkap.
+function salvageTruncatedLitReviewJson(raw) {
+  try {
+    const reviewMatch = raw.match(/"review"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    let review = null;
+    if (reviewMatch) {
+      try { review = JSON.parse('"' + reviewMatch[1] + '"'); } catch (e) { review = null; }
+    }
+    if (!review) {
+      const startIdx = raw.indexOf('"review"');
+      if (startIdx === -1) return null;
+      const colonIdx = raw.indexOf(':', startIdx);
+      const quoteIdx = colonIdx !== -1 ? raw.indexOf('"', colonIdx + 1) : -1;
+      if (quoteIdx === -1) return null;
+      let rest = raw.slice(quoteIdx + 1);
+      const cutPoints = ['</table>', '</ul>', '</p>', '. '];
+      let bestCut = -1;
+      cutPoints.forEach(cp => {
+        const idx = rest.lastIndexOf(cp);
+        if (idx > -1) bestCut = Math.max(bestCut, idx + cp.length);
+      });
+      if (bestCut > 0) rest = rest.slice(0, bestCut);
+      review = rest.replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
+    }
+    if (!review) return null;
+
+    const citations = [];
+    const citRegex = /\{\s*"title"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"authors"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"journal"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"year"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"url"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"reason"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}/g;
+    let m;
+    while ((m = citRegex.exec(raw)) !== null) {
+      try {
+        citations.push({
+          title: JSON.parse('"' + m[1] + '"'),
+          authors: JSON.parse('"' + m[2] + '"'),
+          journal: JSON.parse('"' + m[3] + '"'),
+          year: JSON.parse('"' + m[4] + '"'),
+          url: JSON.parse('"' + m[5] + '"'),
+          reason: JSON.parse('"' + m[6] + '"')
+        });
+      } catch (e) { /* skip malformed entry */ }
+    }
+
+    return { review, citations };
+  } catch (e) {
+    return null;
+  }
+}
+
 function cleanAndParseAIResponse(text, isObject = false) {
   let cleaned = String(text || '').trim();
   
@@ -1902,17 +1954,20 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
     const isDeepTier = tier === 'ultimate' && requestedMode === 'pro';
 
     const depthModel = isDeepTier ? 'sonar-pro' : 'sonar';
-    const depthMaxTokens = isDeepTier ? 4500 : 2500;
+    // max_tokens harus cukup lega dibanding target isi di prompt di bawah, supaya
+    // respons tidak kepotong di tengah string JSON (pernah terjadi saat budget
+    // terlalu ketat: 4500 token vs target 3000 kata + tabel + 15-20 sitasi).
+    const depthMaxTokens = isDeepTier ? 7000 : 2500;
     const depthInstructions = isDeepTier
       ? `Buatlah Tinjauan Pustaka (Literature Review) yang SANGAT KOMPREHENSIF dan MENDALAM dalam Bahasa Indonesia, setara dengan draf BAB II tesis/disertasi (bukan ringkasan singkat). Wajib mencakup:
 1. Kajian Teori - jabarkan seluruh teori/konsep utama yang relevan secara mendalam, bukan hanya sebutkan nama teorinya.
-2. Studi Terdahulu / Penelitian Relevan - bandingkan dan kontraskan temuan dari BANYAK studi sebelumnya (minimal 15-20 studi berbeda dibahas di dalam teks, bukan hanya di daftar sitasi), kelompokkan berdasarkan tema/pendekatan.
+2. Studi Terdahulu / Penelitian Relevan - bandingkan dan kontraskan temuan dari BANYAK studi sebelumnya (minimal 12-15 studi berbeda dibahas di dalam teks, bukan hanya di daftar sitasi), kelompokkan berdasarkan tema/pendekatan.
 3. Kerangka Konseptual - sertakan representasi kerangka pemikiran/kerangka konseptual penelitian dalam bentuk tabel HTML (<table>) yang memetakan variabel/konsep utama, hubungan antar variabel, dan sumber teorinya. Ini WAJIB ada sebagai "bagan" tinjauan pustaka.
 4. Gap Analysis - identifikasi celah penelitian secara spesifik dan tegas berdasarkan apa yang sudah/belum diteliti oleh studi-studi di atas.
 
-Panjang isi "review" harus signifikan, targetkan hingga sekitar 3000 kata, terstruktur dengan heading (h4/h5), paragraf, dan tabel kerangka konseptual di atas.
+Panjang isi "review" harus signifikan, targetkan sekitar 2000-2500 kata (JANGAN melebihi 2500 kata - field "review" harus selesai/tertutup dengan rapi, jangan terpotong di tengah kalimat), terstruktur dengan heading (h4/h5), paragraf, dan tabel kerangka konseptual di atas.
 
-Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 15 hingga 20 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut.`
+Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 12 hingga 15 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut. Pastikan array "citations" ditutup dengan benar (JSON valid, tidak terpotong).`
       : `Buatlah Tinjauan Pustaka (Literature Review) yang solid dan terstruktur dalam Bahasa Indonesia (ringkasan teori, perbandingan singkat studi terdahulu, dan gap analysis penelitian ini).
 
 Panjang isi "review" sekitar 500-800 kata, terstruktur dengan heading (h4/h5) dan paragraf yang rapi.
@@ -1973,7 +2028,17 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
 
     const resData = await response.json();
     const content = resData?.choices?.[0]?.message?.content;
-    const parsed = cleanAndParseAIResponse(content, true);
+    let parsed;
+    let wasTruncated = false;
+    try {
+      parsed = cleanAndParseAIResponse(content, true);
+    } catch (parseError) {
+      const salvaged = salvageTruncatedLitReviewJson(String(content || ''));
+      if (!salvaged) throw parseError;
+      parsed = salvaged;
+      wasTruncated = true;
+      console.warn('[Perplexity Lit Review] Respons kepotong, memakai hasil salvage sebagian.');
+    }
 
     // Update usage for Free & Premium users
     if (user && (user.type === 'free' || user.type === 'premium')) {
@@ -1997,7 +2062,7 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
 
     addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review: parsed.review, citations: parsed.citations || [] });
 
-    res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [], mode: requestedMode, proLitReviewsRemaining: user && user.type === 'ultimate' ? Math.max(0, PRO_LIT_REVIEW_MONTHLY_LIMIT - (user.litReviewProCountThisMonth || 0)) : null });
+    res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [], mode: requestedMode, truncated: wasTruncated, proLitReviewsRemaining: user && user.type === 'ultimate' ? Math.max(0, PRO_LIT_REVIEW_MONTHLY_LIMIT - (user.litReviewProCountThisMonth || 0)) : null });
   } catch (error) {
     console.error('[Perplexity Lit Review] Error:', error);
     res.status(500).json({ ok: false, message: 'Gagal mencari referensi & membuat literature review: ' + error.message });

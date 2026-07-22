@@ -3503,7 +3503,10 @@ document.addEventListener('DOMContentLoaded', () => {
           // Update UI
           currentCitations = data.citations || [];
           if (textContainer) {
-            textContainer.innerHTML = data.review || '<p>Tidak ada draf yang dihasilkan.</p>';
+            const truncatedNote = data.truncated
+              ? '<p style="background:#fef3c7; border:1px solid rgba(217,119,6,0.3); color:#92400e; padding:0.75rem 1rem; border-radius:8px; font-size:0.82rem; margin-bottom:1rem;"><i class="fa-solid fa-triangle-exclamation"></i> Respons AI terpotong sebelum selesai (output terlalu panjang). Bagian di bawah adalah hasil yang sempat didapat - coba generate ulang jika perlu hasil yang lebih lengkap.</p>'
+              : '';
+            textContainer.innerHTML = truncatedNote + (data.review || '<p>Tidak ada draf yang dihasilkan.</p>');
           }
 
           if (citationsContainer) {
