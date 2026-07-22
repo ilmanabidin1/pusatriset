@@ -1805,6 +1805,60 @@
       color: #fff;
     }
 
+    /* Lit Review Standar/Pro toggle */
+    .lit-mode-toggle {
+      display: flex;
+      gap: 0.3rem;
+      background: rgba(8,34,64,0.04);
+      border: 1px solid rgba(8,34,64,0.08);
+      border-radius: 10px;
+      padding: 3px;
+    }
+    .lit-mode-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .lit-mode-btn:hover {
+      color: var(--text-main);
+    }
+    .lit-mode-btn.active {
+      background: #ffffff;
+      color: var(--brand-blue);
+      box-shadow: 0 2px 6px rgba(8,34,64,0.08);
+    }
+    .lit-mode-btn.locked {
+      opacity: 0.55;
+    }
+    [data-theme="dark"] .lit-mode-toggle {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.08);
+    }
+    [data-theme="dark"] .lit-mode-btn.active {
+      background: #21262d;
+      color: #fff;
+    }
+    [data-theme="dark"] .lit-mode-info-wrapper button {
+      background: rgba(255,255,255,0.06) !important;
+      border-color: rgba(255,255,255,0.12) !important;
+      color: rgba(255,255,255,0.7) !important;
+    }
+    [data-theme="dark"] #litModeInfoPopover {
+      background: #21262d !important;
+      border-color: rgba(255,255,255,0.1) !important;
+      color: #e6edf3 !important;
+    }
+
     /* Video Demo Modal styling */
     .video-modal-overlay {
       position: fixed;
@@ -3364,6 +3418,23 @@
                 <!-- Quota Disclaimer -->
                 <div id="litReviewQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
                   <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 1/1 Bulan Ini</span>
+                </div>
+              </div>
+
+              <!-- Mode Toggle: Standar / Pro -->
+              <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <div class="lit-mode-toggle" id="litModeToggle">
+                  <button type="button" class="lit-mode-btn active" data-mode="standard" id="litModeStandardBtn">Standar</button>
+                  <button type="button" class="lit-mode-btn" data-mode="pro" id="litModeProBtn">Pro <i class="fa-solid fa-crown" style="font-size: 0.68rem; color: #f59e0b;"></i></button>
+                </div>
+                <div class="lit-mode-info-wrapper" style="position: relative;">
+                  <button type="button" id="litModeInfoBtn" aria-label="Info mode" style="width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(8,34,64,0.12); background: #f8fafc; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+                    <i class="fa-solid fa-circle-info"></i>
+                  </button>
+                  <div id="litModeInfoPopover" style="display: none; position: absolute; top: 130%; left: 0; z-index: 20; width: 300px; background: #ffffff; border: 1px solid rgba(8,34,64,0.1); border-radius: 10px; box-shadow: 0 10px 30px rgba(8,34,64,0.15); padding: 1rem; font-size: 0.8rem; line-height: 1.5; color: var(--text-main);">
+                    <p style="margin: 0 0 0.75rem 0;"><strong>Standar:</strong> 8-12 referensi ilmiah, hasil tinjauan pustaka ± 500-800 kata.</p>
+                    <p style="margin: 0;"><strong>Pro</strong> <span style="color: #f59e0b;">(khusus akun Ultimate)</span>: hasil hingga ± 1.200-1.800 kata, dilengkapi tabel kerangka konseptual, dan 20-30 sitasi ilmiah.</p>
+                  </div>
                 </div>
               </div>
 

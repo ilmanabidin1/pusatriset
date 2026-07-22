@@ -1825,6 +1825,7 @@ app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, 
 
 app.post('/api/lit-review', requireAccess, async (req, res) => {
   const { title, keywords, abstract } = req.body;
+  const requestedMode = req.body.mode === 'pro' ? 'pro' : 'standard';
   if (!title) {
     return res.status(400).json({ ok: false, message: 'Judul atau topik penelitian wajib diisi.' });
   }
@@ -1875,10 +1876,10 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   try {
     const fetchFn = globalThis.fetch || require('node-fetch');
 
-    // Kedalaman hasil dibedakan per tier supaya biaya API (sonar-pro lebih mahal
-    // dari sonar) hanya ditanggung untuk user Ultimate yang membayar paling mahal.
+    // Mode "Pro" (sonar-pro, lebih dalam & mahal) hanya boleh dipakai akun Ultimate.
+    // Validasi ulang di server - jangan percaya body request mentah-mentah dari client.
     const tier = user ? (user.type || 'free') : 'free';
-    const isDeepTier = tier === 'ultimate';
+    const isDeepTier = tier === 'ultimate' && requestedMode === 'pro';
 
     const depthModel = isDeepTier ? 'sonar-pro' : 'sonar';
     const depthMaxTokens = isDeepTier ? 6000 : 2500;

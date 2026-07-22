@@ -946,7 +946,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const litReviewPremiumLock = document.getElementById('litReviewPremiumLock');
             const litReviewQuotaDisclaimer = document.getElementById('litReviewQuotaDisclaimer');
             const runLitReviewBtn = document.getElementById('runLitReviewBtn');
-            
+
+            // Kunci toggle mode "Pro" hanya untuk akun Ultimate
+            const litModeProBtnState = document.getElementById('litModeProBtn');
+            if (litModeProBtnState) {
+              const userIsUltimate = currentUser.user.type === 'ultimate';
+              litModeProBtnState.classList.toggle('locked', !userIsUltimate);
+              if (!userIsUltimate && litModeProBtnState.classList.contains('active')) {
+                litModeProBtnState.classList.remove('active');
+                const litModeStandardBtnState = document.getElementById('litModeStandardBtn');
+                if (litModeStandardBtnState) litModeStandardBtnState.classList.add('active');
+                if (typeof litReviewMode !== 'undefined') litReviewMode = 'standard';
+              }
+            }
+
             if (litReviewQuotaDisclaimer) {
               litReviewQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.litReviewsRemaining !== undefined ? currentUser.user.litReviewsRemaining : 1}/1 Bulan Ini</span>`;
             }
@@ -3295,6 +3308,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LOGIKA AI LITERATURE REVIEW & CITATION FINDER ---
+    // Lit Review Standar/Pro mode toggle
+    let litReviewMode = 'standard';
+    const litModeStandardBtn = document.getElementById('litModeStandardBtn');
+    const litModeProBtn = document.getElementById('litModeProBtn');
+    const litModeInfoBtn = document.getElementById('litModeInfoBtn');
+    const litModeInfoPopover = document.getElementById('litModeInfoPopover');
+
+    function isUltimateUser() {
+      return !!(currentUser && currentUser.user && currentUser.user.type === 'ultimate');
+    }
+
+    function setLitReviewMode(mode) {
+      if (mode === 'pro' && !isUltimateUser()) {
+        const upgradeModal = document.getElementById('upgradeModal');
+        if (upgradeModal) upgradeModal.classList.add('active');
+        return;
+      }
+      litReviewMode = mode;
+      if (litModeStandardBtn) litModeStandardBtn.classList.toggle('active', mode === 'standard');
+      if (litModeProBtn) litModeProBtn.classList.toggle('active', mode === 'pro');
+    }
+
+    if (litModeStandardBtn) litModeStandardBtn.addEventListener('click', () => setLitReviewMode('standard'));
+    if (litModeProBtn) {
+      litModeProBtn.classList.toggle('locked', !isUltimateUser());
+      litModeProBtn.addEventListener('click', () => setLitReviewMode('pro'));
+    }
+    if (litModeInfoBtn && litModeInfoPopover) {
+      litModeInfoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        litModeInfoPopover.style.display = litModeInfoPopover.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', (e) => {
+        if (!litModeInfoPopover.contains(e.target) && e.target !== litModeInfoBtn) {
+          litModeInfoPopover.style.display = 'none';
+        }
+      });
+    }
+
     const runLitReviewBtn = document.getElementById('runLitReviewBtn');
     if (runLitReviewBtn) {
       runLitReviewBtn.addEventListener('click', async (e) => {
@@ -3334,7 +3386,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const response = await fetch('/api/lit-review', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, keywords, abstract })
+            body: JSON.stringify({ title, keywords, abstract, mode: litReviewMode })
           });
 
           const data = await response.json();
