@@ -1882,15 +1882,15 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
     const isDeepTier = tier === 'ultimate' && requestedMode === 'pro';
 
     const depthModel = isDeepTier ? 'sonar-pro' : 'sonar';
-    const depthMaxTokens = isDeepTier ? 6000 : 2500;
+    const depthMaxTokens = isDeepTier ? 9000 : 2500;
     const depthInstructions = isDeepTier
       ? `Buatlah Tinjauan Pustaka (Literature Review) yang SANGAT KOMPREHENSIF dan MENDALAM dalam Bahasa Indonesia, setara dengan draf BAB II tesis/disertasi (bukan ringkasan singkat). Wajib mencakup:
 1. Kajian Teori - jabarkan seluruh teori/konsep utama yang relevan secara mendalam, bukan hanya sebutkan nama teorinya.
-2. Studi Terdahulu / Penelitian Relevan - bandingkan dan kontraskan temuan dari BANYAK studi sebelumnya (minimal 15-20 studi berbeda dibahas di dalam teks, bukan hanya di daftar sitasi), kelompokkan berdasarkan tema/pendekatan.
+2. Studi Terdahulu / Penelitian Relevan - bandingkan dan kontraskan temuan dari BANYAK studi sebelumnya (minimal 20-30 studi berbeda dibahas di dalam teks, bukan hanya di daftar sitasi), kelompokkan berdasarkan tema/pendekatan.
 3. Kerangka Konseptual - sertakan representasi kerangka pemikiran/kerangka konseptual penelitian dalam bentuk tabel HTML (<table>) yang memetakan variabel/konsep utama, hubungan antar variabel, dan sumber teorinya. Ini WAJIB ada sebagai "bagan" tinjauan pustaka.
 4. Gap Analysis - identifikasi celah penelitian secara spesifik dan tegas berdasarkan apa yang sudah/belum diteliti oleh studi-studi di atas.
 
-Panjang isi "review" harus signifikan (idealnya 1200-1800 kata), terstruktur dengan heading (h4/h5), paragraf, dan tabel kerangka konseptual di atas.
+Panjang isi "review" harus MAKSIMAL dan SELENGKAP mungkin, targetkan hingga sekitar 6000 kata (jangan berhenti di ringkasan singkat, kembangkan tiap bagian secara mendalam sampai mendekati batas tersebut), terstruktur dengan heading (h4/h5), paragraf, dan tabel kerangka konseptual di atas.
 
 Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 20 hingga 30 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut.`
       : `Buatlah Tinjauan Pustaka (Literature Review) yang solid dan terstruktur dalam Bahasa Indonesia (ringkasan teori, perbandingan singkat studi terdahulu, dan gap analysis penelitian ini).
