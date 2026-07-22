@@ -2254,9 +2254,21 @@ Write ONE short paragraph (3-5 sentences) in formal academic English that:
 
 Do not include any preamble, headers, quotation marks, or explanation before/after - output ONLY the disclosure statement paragraph itself, ready to be pasted directly into a manuscript.`;
 
+const AI_DISCLOSURE_SYSTEM_PROMPT_WITH_SEARCH_STRING = `You are an academic writing assistant that generates concise, formal AI-usage disclosure statements for manuscript or book submissions to academic publishers. These statements must follow the transparency norms required by major academic publishers (e.g. Taylor & Francis, Sage), which typically require: the full name of the tool used, how it was used, and the reason for use.
+
+Produce output in exactly this structure (plain text, no markdown headers, no preamble):
+1. ONE short paragraph (3-5 sentences) in formal academic English that states the full name of the tool used, explains how it was used and the reason for use based on the context given, and includes a brief statement that the author(s) reviewed and verified the AI-assisted output and take full responsibility for the final content of the work.
+2. A blank line, then exactly this line: "The primary search was executed using the following Core Search String:"
+3. On the next line, a single boolean search string built from the research title/keywords given, grouped by concept with OR between synonyms/related terms within each concept group (in quotes) and AND between different concept groups, following this exact style:
+("term1" OR "synonym1" OR "related term1") AND ("term2" OR "synonym2") AND ("term3" OR "synonym3" OR "related term3")
+Derive the concept groups and synonyms/related terms yourself from the research title/keywords provided - do not invent unrelated topics, stay grounded in what was given.
+
+Output ONLY the disclosure paragraph followed by the two lines above - nothing else before or after.`;
+
 app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
   const toolName = String(req.body.toolName || '').trim().slice(0, 200);
   const usageContext = String(req.body.usageContext || '').trim().slice(0, 1000);
+  const searchTerms = String(req.body.searchTerms || '').trim().slice(0, 500);
 
   if (!toolName || !usageContext) {
     return res.status(400).json({ ok: false, message: 'Nama tool dan konteks penggunaan wajib disertakan.' });
@@ -2271,6 +2283,11 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
     const fetchFn = globalThis.fetch || require('node-fetch');
     const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
 
+    const includeSearchString = searchTerms.length > 0;
+    const userContent = includeSearchString
+      ? `Tool used: ${toolName}\nHow it was used: ${usageContext}\nResearch title/keywords to derive the Core Search String from: ${searchTerms}\n\nGenerate the AI disclosure statement followed by the Core Search String:`
+      : `Tool used: ${toolName}\nHow it was used: ${usageContext}\n\nGenerate the AI disclosure statement:`;
+
     const response = await fetchFn(deepSeekUrl, {
       method: 'POST',
       headers: {
@@ -2279,11 +2296,11 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
       },
       body: JSON.stringify({
         model: 'deepseek-v4-flash',
-        max_tokens: 400,
+        max_tokens: 500,
         stream: false,
         messages: [
-          { role: 'system', content: AI_DISCLOSURE_SYSTEM_PROMPT },
-          { role: 'user', content: `Tool used: ${toolName}\nHow it was used: ${usageContext}\n\nGenerate the AI disclosure statement:` }
+          { role: 'system', content: includeSearchString ? AI_DISCLOSURE_SYSTEM_PROMPT_WITH_SEARCH_STRING : AI_DISCLOSURE_SYSTEM_PROMPT },
+          { role: 'user', content: userContent }
         ]
       })
     });

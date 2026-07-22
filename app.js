@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Setup generik tombol "Generate AI Disclosure Statement" - dipakai di semua
   // fitur AI (Match Score, Outline, Lit Review, Humanizer). Sengaja tidak
   // dibatasi kuota/tier di backend, jadi tidak ada pengecekan lock di sini juga.
-  function setupAiDisclosureButton({ btnId, resultWrapperId, textareaId, copyBtnId, toolName, getUsageContext }) {
+  function setupAiDisclosureButton({ btnId, resultWrapperId, textareaId, copyBtnId, toolName, getUsageContext, getSearchTerms }) {
     const btn = document.getElementById(btnId);
     const resultWrapper = document.getElementById(resultWrapperId);
     const textarea = document.getElementById(textareaId);
@@ -129,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Data belum lengkap untuk membuat AI Disclosure Statement.');
         return;
       }
+      const searchTerms = getSearchTerms ? (getSearchTerms() || '') : '';
 
       const originalHtml = btn.innerHTML;
       btn.disabled = true;
@@ -138,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/generate-ai-disclosure', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ toolName, usageContext })
+          body: JSON.stringify({ toolName, usageContext, searchTerms })
         });
         const data = await res.json();
 
@@ -212,6 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const title = document.getElementById('litReviewTitle')?.value.trim();
       if (!title) return null;
       return `to identify relevant academic literature and draft a preliminary literature review for research on "${title}"`;
+    },
+    getSearchTerms: () => {
+      const title = document.getElementById('litReviewTitle')?.value.trim() || '';
+      const keywords = document.getElementById('litReviewKeywords')?.value.trim() || '';
+      return [title, keywords].filter(Boolean).join(', ');
     }
   });
 
