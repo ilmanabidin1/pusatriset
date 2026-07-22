@@ -2296,8 +2296,13 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
       },
       body: JSON.stringify({
         model: 'deepseek-v4-flash',
-        max_tokens: 500,
+        max_tokens: 600,
         stream: false,
+        extra_body: {
+          thinking: {
+            type: 'disabled'
+          }
+        },
         messages: [
           { role: 'system', content: includeSearchString ? AI_DISCLOSURE_SYSTEM_PROMPT_WITH_SEARCH_STRING : AI_DISCLOSURE_SYSTEM_PROMPT },
           { role: 'user', content: userContent }
