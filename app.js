@@ -4505,15 +4505,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const outlineBtn = document.getElementById('researchChatToolOutlineBtn');
       const litReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
       const deepLitReviewBtn = document.getElementById('researchChatToolDeepLitReviewBtn');
+      const outlineDocTypeSelect = document.getElementById('researchChatOutlineDocType');
       if (outlineBtn) outlineBtn.classList.toggle('active', tool === 'outline');
       if (litReviewBtn) litReviewBtn.classList.toggle('active', tool === 'lit-review');
       if (deepLitReviewBtn) deepLitReviewBtn.classList.toggle('active', tool === 'deep-lit-review');
+      if (outlineDocTypeSelect) outlineDocTypeSelect.style.display = tool === 'outline' ? 'inline-block' : 'none';
 
       if (tool && chip) {
         chip.style.display = 'flex';
         if (tool === 'outline') {
           if (chipIcon) chipIcon.className = 'fa-solid fa-wand-magic-sparkles';
-          if (chipText) chipText.textContent = 'Mode: Outline Generator - jelaskan topik Anda lalu kirim';
+          if (chipText) chipText.textContent = 'Mode: Outline Generator - pilih jenis dokumen, jelaskan topik, lalu kirim';
           if (researchChatInput) researchChatInput.placeholder = 'Jelaskan topik/rencana penelitian Anda...';
         } else if (tool === 'deep-lit-review') {
           if (chipIcon) chipIcon.className = 'fa-solid fa-layer-group';
@@ -4536,6 +4538,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // berikutnya (dan otomatis tersimpan ke riwayat begitu user kirim chat normal
     // berikutnya, karena server menyimpan seluruh array messages yang dikirim).
     async function sendQuickToolMessage(tool, text) {
+      // Ambil jenis dokumen yang dipilih SEBELUM setActiveQuickTool(null) menyembunyikan
+      // dropdown-nya - selectnya cuma tampil saat mode outline aktif.
+      const outlineDocTypeSelect = document.getElementById('researchChatOutlineDocType');
+      const selectedDocType = outlineDocTypeSelect ? outlineDocTypeSelect.value : 'jurnal';
+
       researchChatMessages.push({ role: 'user', content: text });
       researchChatInput.value = '';
       researchChatInput.style.height = 'auto';
@@ -4559,12 +4566,13 @@ document.addEventListener('DOMContentLoaded', () => {
           const res = await fetch('/api/generate-template-draft', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: text.slice(0, 120), abstract: text, docType: 'jurnal' })
+            body: JSON.stringify({ title: text.slice(0, 120), abstract: text, docType: selectedDocType })
           });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal membuat outline.');
           const segments = data.segments || [];
-          resultMarkdown = `### Outline Generator\n\n` + segments.map(seg => {
+          const docTypeLabel = { jurnal: 'Jurnal Ilmiah (IMRaD)', tesis: 'Tesis', disertasi: 'Disertasi' }[selectedDocType] || 'Jurnal Ilmiah (IMRaD)';
+          resultMarkdown = `### Outline Generator - ${docTypeLabel}\n\n` + segments.map(seg => {
             const points = (data.draft && data.draft[seg.key]) || [];
             return `#### ${seg.label}\n` + points.map(p => `- ${p}`).join('\n');
           }).join('\n\n');
