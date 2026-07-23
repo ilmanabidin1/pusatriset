@@ -1847,6 +1847,7 @@ async function searchOpenAlexWorks(query, perPage) {
   const params = new URLSearchParams({
     search: query,
     per_page: String(perPage),
+    filter: 'has_abstract:true',
     select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access'
   });
   const apiKey = process.env.OPENALEX_API_KEY;
@@ -1985,16 +1986,28 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
 
   try {
     const fetchFn = globalThis.fetch || require('node-fetch');
-    const searchQuery = [title, keywords].filter(Boolean).join(' ').slice(0, 300);
     const targetCount = isDeepTier ? 18 : 10;
 
-    // 1. Retrieval - cari paper asli dari OpenAlex (gratis, DOI/URL terverifikasi)
-    let papers = await searchOpenAlexWorks(searchQuery, targetCount + 5);
+    // 1. Retrieval - cari paper asli dari OpenAlex (gratis, DOI/URL terverifikasi).
+    // Query judul+keyword dulu (paling spesifik); kalau kosong, pelan-pelan diperluas
+    // (judul saja, lalu keyword saja) sebelum benar-benar menyerah - query gabungan yang
+    // terlalu spesifik/panjang kadang tidak match apa pun di full-text search OpenAlex.
+    const queryAttempts = [
+      [title, keywords].filter(Boolean).join(' '),
+      title,
+      keywords
+    ].filter(Boolean).filter((q, i, arr) => arr.indexOf(q) === i).map(q => q.slice(0, 300));
+
+    let papers = [];
+    for (const attemptQuery of queryAttempts) {
+      papers = await searchOpenAlexWorks(attemptQuery, targetCount + 10);
+      if (papers.length > 0) break;
+    }
     papers.sort((a, b) => b.citedByCount - a.citedByCount);
     papers = papers.slice(0, targetCount);
 
     if (papers.length === 0) {
-      throw new Error('Tidak ditemukan paper ilmiah yang relevan di OpenAlex untuk topik ini. Coba perluas kata kunci.');
+      throw new Error('Tidak ditemukan paper ilmiah dengan abstrak yang relevan di OpenAlex untuk topik ini. Coba gunakan judul/kata kunci yang lebih umum.');
     }
 
     // 2. Enrichment - khusus mode Pro, ambil tldr + influential citation count dari Semantic Scholar
