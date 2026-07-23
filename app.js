@@ -3957,6 +3957,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentResearchChatId = null;
     let selectedResearchModel = 'lite';
     let selectedResearchMode = 'basic';
+    let activeQuickTool = null; // null | 'outline' | 'lit-review'
     const researchChatMessagesEl = document.getElementById('researchChatMessages');
     const researchChatEmptyState = document.getElementById('researchChatEmptyState');
     const researchChatInput = document.getElementById('researchChatInput');
@@ -4194,10 +4195,140 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Konversi HTML hasil Lit Review (tag h4/p/table/li dst) jadi markdown ringkas
+    // yang dipahami renderMarkdownSafe() (yang mem-escape HTML mentah demi keamanan,
+    // jadi tag asli tidak bisa dikirim langsung ke situ).
+    function convertResultHtmlToMarkdown(html) {
+      let text = String(html || '');
+      text = text.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (m, inner) => {
+        const rows = [...inner.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map(r =>
+          [...r[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(c => c[1].replace(/<[^>]+>/g, '').trim())
+        );
+        if (rows.length === 0) return '';
+        const [header, ...body] = rows;
+        const lines = [
+          '| ' + header.join(' | ') + ' |',
+          '| ' + header.map(() => '---').join(' | ') + ' |',
+          ...body.map(r => '| ' + r.join(' | ') + ' |')
+        ];
+        return '\n' + lines.join('\n') + '\n';
+      });
+      return text
+        .replace(/<h[1-6][^>]*>/gi, '\n### ')
+        .replace(/<\/h[1-6]>/gi, '\n')
+        .replace(/<li[^>]*>/gi, '\n- ')
+        .replace(/<\/li>/gi, '')
+        .replace(/<\/(p|div)>/gi, '\n\n')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<strong>/gi, '**').replace(/<\/strong>/gi, '**')
+        .replace(/<[^>]+>/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    function setActiveQuickTool(tool) {
+      activeQuickTool = tool;
+      const chip = document.getElementById('researchChatToolChip');
+      const chipText = document.getElementById('researchChatToolChipText');
+      const chipIcon = document.getElementById('researchChatToolChipIcon');
+      const outlineBtn = document.getElementById('researchChatToolOutlineBtn');
+      const litReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
+      if (outlineBtn) outlineBtn.classList.toggle('active', tool === 'outline');
+      if (litReviewBtn) litReviewBtn.classList.toggle('active', tool === 'lit-review');
+
+      if (tool && chip) {
+        chip.style.display = 'flex';
+        if (tool === 'outline') {
+          if (chipIcon) chipIcon.className = 'fa-solid fa-wand-magic-sparkles';
+          if (chipText) chipText.textContent = 'Mode: Outline Generator - jelaskan topik Anda lalu kirim';
+          if (researchChatInput) researchChatInput.placeholder = 'Jelaskan topik/rencana penelitian Anda...';
+        } else {
+          if (chipIcon) chipIcon.className = 'fa-solid fa-book-open';
+          if (chipText) chipText.textContent = 'Mode: Lit Review - jelaskan topik Anda lalu kirim';
+          if (researchChatInput) researchChatInput.placeholder = 'Jelaskan topik penelitian yang ingin dicari referensinya...';
+        }
+      } else if (chip) {
+        chip.style.display = 'none';
+        if (researchChatInput) researchChatInput.placeholder = 'Tulis pertanyaan riset Anda...';
+      }
+    }
+
+    // Outline Generator & Lit Review dipanggil langsung dari chat (bukan lewat
+    // /api/research-chat) - hasilnya dirender sebagai bubble asisten biasa dan ikut
+    // masuk ke researchChatMessages, jadi tetap jadi konteks untuk follow-up prompt
+    // berikutnya (dan otomatis tersimpan ke riwayat begitu user kirim chat normal
+    // berikutnya, karena server menyimpan seluruh array messages yang dikirim).
+    async function sendQuickToolMessage(tool, text) {
+      researchChatMessages.push({ role: 'user', content: text });
+      researchChatInput.value = '';
+      researchChatInput.style.height = 'auto';
+      renderResearchChatMessages();
+      setActiveQuickTool(null);
+
+      const loadingBubble = document.createElement('div');
+      loadingBubble.className = 'research-chat-bubble loading';
+      loadingBubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      researchChatMessagesEl.appendChild(loadingBubble);
+      researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+
+      researchChatSendBtn.disabled = true;
+      const originalBtnHtml = researchChatSendBtn.innerHTML;
+      researchChatSendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+      try {
+        let resultMarkdown;
+        if (tool === 'outline') {
+          const res = await fetch('/api/generate-template-draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: text.slice(0, 120), abstract: text, docType: 'jurnal' })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal membuat outline.');
+          const segments = data.segments || [];
+          resultMarkdown = `### Outline Generator\n\n` + segments.map(seg => {
+            const points = (data.draft && data.draft[seg.key]) || [];
+            return `#### ${seg.label}\n` + points.map(p => `- ${p}`).join('\n');
+          }).join('\n\n');
+        } else {
+          const res = await fetch('/api/lit-review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: text.slice(0, 150), keywords: '', abstract: text, mode: 'standard' })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal membuat literature review.');
+          const citations = (data.citations || []).map((c, i) => `${i + 1}. **${c.title}** - ${c.authors} (${c.year}). ${c.url}`).join('\n');
+          resultMarkdown = `### Literature Review\n\n${convertResultHtmlToMarkdown(data.review)}` + (citations ? `\n\n#### Referensi\n${citations}` : '');
+        }
+
+        loadingBubble.remove();
+        researchChatMessages.push({ role: 'assistant', content: resultMarkdown });
+        renderResearchChatMessages();
+        justGeneratedDraft = true;
+        justGeneratedLitReview = true;
+        await checkAuthState();
+      } catch (error) {
+        console.error('[Research Chat Quick Tool]', error);
+        loadingBubble.remove();
+        researchChatMessages.pop();
+        renderResearchChatMessages();
+        alert(error.message || 'Gagal memproses permintaan.');
+        researchChatInput.value = text;
+      } finally {
+        researchChatSendBtn.disabled = false;
+        researchChatSendBtn.innerHTML = originalBtnHtml;
+      }
+    }
+
     async function sendResearchChatMessage() {
       if (!researchChatInput) return;
       const text = researchChatInput.value.trim();
       if (!text || researchChatSendBtn.disabled) return;
+
+      if (activeQuickTool) {
+        return sendQuickToolMessage(activeQuickTool, text);
+      }
 
       researchChatMessages.push({ role: 'user', content: text });
       researchChatInput.value = '';
@@ -4350,6 +4481,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (researchChatSendBtn) {
       researchChatSendBtn.addEventListener('click', sendResearchChatMessage);
+    }
+
+    const researchChatToolOutlineBtn = document.getElementById('researchChatToolOutlineBtn');
+    const researchChatToolLitReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
+    const researchChatToolChipRemoveBtn = document.getElementById('researchChatToolChipRemoveBtn');
+    if (researchChatToolOutlineBtn) {
+      researchChatToolOutlineBtn.addEventListener('click', () => {
+        setActiveQuickTool(activeQuickTool === 'outline' ? null : 'outline');
+        if (researchChatInput) researchChatInput.focus();
+      });
+    }
+    if (researchChatToolLitReviewBtn) {
+      researchChatToolLitReviewBtn.addEventListener('click', () => {
+        setActiveQuickTool(activeQuickTool === 'lit-review' ? null : 'lit-review');
+        if (researchChatInput) researchChatInput.focus();
+      });
+    }
+    if (researchChatToolChipRemoveBtn) {
+      researchChatToolChipRemoveBtn.addEventListener('click', () => setActiveQuickTool(null));
     }
     if (researchChatInput) {
       researchChatInput.addEventListener('keydown', (e) => {
