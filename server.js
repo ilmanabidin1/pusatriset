@@ -1917,16 +1917,18 @@ function reconstructAbstractFromInvertedIndex(invertedIndex) {
   return positions.filter(Boolean).join(' ');
 }
 
-async function searchOpenAlexWorks(query, perPage) {
+async function searchOpenAlexWorks(query, perPage, extraFilter) {
   const fetchFn = globalThis.fetch || require('node-fetch');
   // "?" dan "*" dianggap wildcard oleh OpenAlex full-text search dan bikin request
   // 400 kalau dipakai di luar mode search.exact - buang dulu supaya pertanyaan user
-  // yang natural (mis. berakhiran "?") tidak bikin pencarian gagal total.
+  // yang natural (mis. berakhiran "?") tidak bikin pencarian gagal total. Query di
+  // sini SUDAH mendukung sintaks boolean (AND/OR/NOT, tanda kutip untuk frasa persis)
+  // secara native lewat parameter "search" OpenAlex - tidak perlu parser tambahan.
   const cleanQuery = String(query || '').replace(/[?*]/g, ' ').replace(/\s+/g, ' ').trim();
   const params = new URLSearchParams({
     search: cleanQuery,
     per_page: String(perPage),
-    filter: 'has_abstract:true',
+    filter: `has_abstract:true${extraFilter || ''}`,
     select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access'
   });
   const apiKey = process.env.OPENALEX_API_KEY;
@@ -1965,6 +1967,30 @@ async function searchOpenAlexWorks(query, perPage) {
     })
     .filter(Boolean);
 }
+
+const REALTIME_WORK_TYPES = ['article', 'review', 'book-chapter', 'dissertation', 'preprint', 'report'];
+
+// "Realtime Database" - miniatur pencarian live OpenAlex di tab Database Jurnal
+// (search bar + filter tipe dokumen). Query sudah bisa pakai sintaks boolean
+// (AND/OR/NOT, kutip untuk frasa persis) karena parameter "search" OpenAlex
+// mendukungnya secara native - tidak perlu parser tambahan di sini. Dibatasi
+// maksimal 50 hasil sesuai permintaan (bukan replika penuh openalex.org).
+app.get('/api/works/search-live', requireAccess, async (req, res) => {
+  const query = String(req.query.q || '').trim().slice(0, 300);
+  if (!query || query.length < 3) {
+    return res.status(400).json({ ok: false, message: 'Kata kunci pencarian minimal 3 karakter.' });
+  }
+  const workType = String(req.query.type || '').trim();
+  const extraFilter = REALTIME_WORK_TYPES.includes(workType) ? `,type:${workType}` : '';
+
+  try {
+    const works = await searchOpenAlexWorks(query, 50, extraFilter);
+    res.json({ ok: true, works });
+  } catch (error) {
+    console.error('[Works Search Live] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mencari data real-time dari OpenAlex: ' + error.message });
+  }
+});
 
 // --- Database Jurnal enrichment: cari jurnal via OpenAlex Sources API ---
 // Dipakai untuk (1) memperluas kandidat AI Match Score di luar 756 jurnal statis

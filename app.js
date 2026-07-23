@@ -2215,6 +2215,152 @@ document.addEventListener('DOMContentLoaded', () => {
     filterJournals();
   });
 
+  // --- Sub-tab Database Jurnal: Database Utama / Realtime Database / No APC Database ---
+  // "Database Utama" dan "No APC Database" sama-sama menampilkan grid 756 database
+  // lokal (dbSubtabMainWrap) - bedanya cuma checkbox "Hanya Gratis" langsung dicentang
+  // otomatis untuk No APC, jadi tidak perlu duplikasi seluruh pipeline render/filter.
+  // "Realtime Database" adalah tampilan terpisah (pencarian live ke OpenAlex).
+  const dbSubtabMainBtn = document.getElementById('dbSubtabMainBtn');
+  const dbSubtabRealtimeBtn = document.getElementById('dbSubtabRealtimeBtn');
+  const dbSubtabNoApcBtn = document.getElementById('dbSubtabNoApcBtn');
+  const dbSubtabMainWrap = document.getElementById('dbSubtabMainWrap');
+  const dbSubtabRealtimeWrap = document.getElementById('dbSubtabRealtimeWrap');
+  const checkFreeOnlyEl = document.getElementById('checkFreeOnly');
+
+  function setActiveDbSubtab(tab) {
+    [dbSubtabMainBtn, dbSubtabRealtimeBtn, dbSubtabNoApcBtn].forEach(btn => {
+      if (btn) btn.classList.toggle('active', btn.getAttribute('data-dbtab') === tab);
+    });
+    if (dbSubtabMainWrap) dbSubtabMainWrap.style.display = tab === 'realtime' ? 'none' : 'block';
+    if (dbSubtabRealtimeWrap) dbSubtabRealtimeWrap.style.display = tab === 'realtime' ? 'block' : 'none';
+
+    if (tab === 'noapc' && checkFreeOnlyEl && !checkFreeOnlyEl.checked) {
+      checkFreeOnlyEl.checked = true;
+      filterJournals();
+    } else if (tab === 'main' && checkFreeOnlyEl && checkFreeOnlyEl.checked) {
+      checkFreeOnlyEl.checked = false;
+      filterJournals();
+    }
+  }
+
+  if (dbSubtabMainBtn) dbSubtabMainBtn.addEventListener('click', () => setActiveDbSubtab('main'));
+  if (dbSubtabNoApcBtn) dbSubtabNoApcBtn.addEventListener('click', () => setActiveDbSubtab('noapc'));
+  if (dbSubtabRealtimeBtn) dbSubtabRealtimeBtn.addEventListener('click', () => setActiveDbSubtab('realtime'));
+
+  // --- Realtime Database: miniatur pencarian live OpenAlex ---
+  const realtimeSearchInput = document.getElementById('realtimeSearchInput');
+  const realtimeClearSearch = document.getElementById('realtimeClearSearch');
+  const realtimeFilterType = document.getElementById('realtimeFilterType');
+  const realtimeBooleanToggle = document.getElementById('realtimeBooleanToggle');
+  const realtimeSearchBtn = document.getElementById('realtimeSearchBtn');
+  const realtimeResultsContainer = document.getElementById('realtimeResultsContainer');
+  const realtimeResultsCount = document.getElementById('realtimeResultsCount');
+
+  if (realtimeSearchInput && realtimeClearSearch) {
+    realtimeSearchInput.addEventListener('input', () => {
+      realtimeClearSearch.style.display = realtimeSearchInput.value.length > 0 ? 'block' : 'none';
+    });
+    realtimeClearSearch.addEventListener('click', () => {
+      realtimeSearchInput.value = '';
+      realtimeClearSearch.style.display = 'none';
+      realtimeSearchInput.focus();
+    });
+    realtimeSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        runRealtimeSearch();
+      }
+    });
+  }
+
+  async function runRealtimeSearch() {
+    if (!realtimeSearchInput || !realtimeResultsContainer) return;
+    const query = realtimeSearchInput.value.trim();
+    if (!query || query.length < 3) {
+      alert('Ketik kata kunci (minimal 3 karakter) terlebih dahulu.');
+      realtimeSearchInput.focus();
+      return;
+    }
+
+    const originalHtml = realtimeSearchBtn.innerHTML;
+    realtimeSearchBtn.disabled = true;
+    realtimeSearchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
+    realtimeResultsContainer.innerHTML = '';
+    if (realtimeResultsCount) realtimeResultsCount.textContent = 'Mencari...';
+
+    try {
+      const params = new URLSearchParams({ q: query });
+      const typeVal = realtimeFilterType ? realtimeFilterType.value : '';
+      if (typeVal) params.set('type', typeVal);
+
+      const res = await fetch(`/api/works/search-live?${params.toString()}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        if (realtimeResultsCount) realtimeResultsCount.textContent = data.message || 'Gagal mencari data dari OpenAlex.';
+        return;
+      }
+
+      const works = data.works || [];
+      if (works.length === 0) {
+        if (realtimeResultsCount) realtimeResultsCount.textContent = 'Tidak ditemukan hasil untuk kata kunci ini.';
+        return;
+      }
+
+      if (realtimeResultsCount) realtimeResultsCount.textContent = `Menampilkan ${works.length} dari maks. 50 hasil`;
+
+      works.forEach((work, index) => {
+        const card = document.createElement('div');
+        card.className = 'journal-card openalex-card';
+        card.style.animationDelay = `${index * 0.02}s`;
+        const abstractSnippet = work.abstract
+          ? (work.abstract.length > 180 ? work.abstract.slice(0, 180) + '…' : work.abstract)
+          : '';
+        card.innerHTML = `
+          <div>
+            <div class="card-header">
+              <div class="card-badge-group">
+                <span class="card-type-tag type-openalex" title="Sumber: OpenAlex (data real-time)">
+                  <i class="fa-solid fa-globe"></i> OpenAlex
+                </span>
+                ${work.isOpenAccess ? '<span class="card-type-tag" style="background: rgba(16,185,129,0.1); color:#10b981; border-color: rgba(16,185,129,0.2);">Open Access</span>' : ''}
+              </div>
+              <span class="rank-badge" style="background: rgba(139,92,246,0.1); color: #7c3aed; border: 1px solid rgba(139,92,246,0.2);">${work.citedByCount}x dikutip</span>
+            </div>
+            <div class="card-body">
+              <h3 class="journal-title" title="${escapeHtml(work.title)}">${escapeHtml(work.title)}</h3>
+              <span class="journal-publisher"><i class="fa-regular fa-building"></i> ${escapeHtml(work.journal)} · ${escapeHtml(work.year)}</span>
+              <p class="journal-desc">${escapeHtml(work.authors)}</p>
+              ${abstractSnippet ? `<p class="journal-desc" style="margin-top: 0.4rem; font-style: italic;">"${escapeHtml(abstractSnippet)}"</p>` : ''}
+            </div>
+          </div>
+          <div class="card-footer-wrapper">
+            <div class="card-footer" style="margin-top: 1.25rem;">
+              <a href="${work.url}" target="_blank" class="journal-link">Buka Sumber <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+          </div>
+        `;
+        realtimeResultsContainer.appendChild(card);
+      });
+    } catch (err) {
+      console.error('[Realtime Database Search]', err);
+      if (realtimeResultsCount) realtimeResultsCount.textContent = 'Gagal menghubungi server untuk mencari data.';
+    } finally {
+      realtimeSearchBtn.disabled = false;
+      realtimeSearchBtn.innerHTML = originalHtml;
+    }
+  }
+
+  if (realtimeSearchBtn) realtimeSearchBtn.addEventListener('click', runRealtimeSearch);
+  if (realtimeBooleanToggle) {
+    realtimeBooleanToggle.addEventListener('change', () => {
+      if (!realtimeSearchInput) return;
+      realtimeSearchInput.placeholder = realtimeBooleanToggle.checked
+        ? 'Contoh: "machine learning" AND (education OR pedagogy) NOT survey'
+        : 'Cari 480 juta+ karya ilmiah dari OpenAlex... (bisa pakai AND / OR / NOT)';
+    });
+  }
+
   // Deteksi Perubahan Filter Dropdown & Checkbox
   filterType.addEventListener('change', () => {
     adjustRankOptions(filterType.value);

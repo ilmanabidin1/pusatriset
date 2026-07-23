@@ -2311,6 +2311,45 @@
       color: var(--text-main);
     }
 
+    /* Toggle switch kecil - dipakai untuk Mode Boolean di Realtime Database */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: rgba(8,34,64,0.15);
+      border-radius: 22px;
+      transition: 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: var(--brand-blue);
+    }
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(18px);
+    }
+
     .reset-filter-btn {
       background: none;
       border: none;
@@ -3264,6 +3303,23 @@
       <!-- TAB: DATABASE JURNAL (Pencarian & Filter) -->
       <div id="tabContentDatabaseJurnal" class="tab-content">
 
+        <!-- Topbar sub-tab: Database Utama (756 kurasi lokal) / Realtime Database
+             (live search OpenAlex, mirip mode boolean search di openalex.org) /
+             No APC Database (shortcut filter jurnal gratis dari database lokal). -->
+        <div class="ai-writer-switcher" id="dbSubtabSwitcher" style="margin-bottom: 1.5rem;">
+          <button type="button" class="ai-writer-pill active" id="dbSubtabMainBtn" data-dbtab="main">
+            <i class="fa-solid fa-database"></i> Database Utama
+          </button>
+          <button type="button" class="ai-writer-pill" id="dbSubtabRealtimeBtn" data-dbtab="realtime">
+            <i class="fa-solid fa-globe"></i> Realtime Database
+          </button>
+          <button type="button" class="ai-writer-pill" id="dbSubtabNoApcBtn" data-dbtab="noapc">
+            <i class="fa-solid fa-wallet"></i> No APC Database
+          </button>
+        </div>
+
+        <div id="dbSubtabMainWrap">
+
         <!-- Statistics Row Container (Dynamic from database.js) -->
         <div class="stats-row-container">
           <div class="stat-card">
@@ -3464,6 +3520,57 @@
           <button id="loadMoreBtn" class="load-more-btn">
             <i class="fa-solid fa-spinner fa-spin" style="display: none;"></i> Muat Lebih Banyak
           </button>
+        </div>
+
+        </div>
+        <!-- /dbSubtabMainWrap -->
+
+        <!-- Realtime Database - miniatur pencarian live OpenAlex (bukan 756 database
+             kurasi lokal), mirip search bar besar di openalex.org: search bar + toggle
+             mode Boolean + filter tipe dokumen. Maksimal 50 hasil, tanpa fitur
+             kompleks OpenAlex lainnya (tanpa entity switcher, tanpa xpac, dst). -->
+        <div id="dbSubtabRealtimeWrap" style="display: none;">
+          <div class="filter-box-card">
+            <div class="header-search-bar" style="margin-bottom: 1rem; max-width: 100%;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="search" id="realtimeSearchInput" placeholder="Cari 480 juta+ karya ilmiah dari OpenAlex... (bisa pakai AND / OR / NOT)">
+              <button id="realtimeClearSearch" style="position: absolute; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; display: none;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="filter-dropdowns" style="grid-template-columns: repeat(2, 1fr);">
+              <div class="filter-dropdown-item">
+                <label>TIPE DOKUMEN</label>
+                <select id="realtimeFilterType">
+                  <option value="">Semua Tipe</option>
+                  <option value="article">Artikel</option>
+                  <option value="review">Review</option>
+                  <option value="book-chapter">Book Chapter</option>
+                  <option value="dissertation">Disertasi/Tesis</option>
+                  <option value="preprint">Preprint</option>
+                  <option value="report">Report</option>
+                </select>
+              </div>
+              <div class="filter-dropdown-item">
+                <label>MODE PENCARIAN</label>
+                <div class="custom-toggle-switch-wrapper" style="display: flex; align-items: center; gap: 0.6rem; height: 100%; padding-top: 0.35rem;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="realtimeBooleanToggle">
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span id="realtimeBooleanToggleLabel" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Mode Boolean (AND/OR/NOT)</span>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+              <button type="button" id="realtimeSearchBtn" class="reset-filter-btn" style="background: var(--brand-blue); color: #ffffff; border: none;">
+                <i class="fa-solid fa-magnifying-glass"></i> Cari
+              </button>
+            </div>
+          </div>
+
+          <div class="results-meta-header">
+            <span class="results-count-text" id="realtimeResultsCount">Ketik kata kunci lalu klik Cari untuk menampilkan hasil (maks. 50).</span>
+          </div>
+          <div class="results-grid" id="realtimeResultsContainer"></div>
         </div>
 
       </div>
