@@ -1382,10 +1382,12 @@
       margin-top: 0.4rem;
       display: flex;
       gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
     .research-chat-copy-btn,
-    .research-chat-disclosure-btn {
+    .research-chat-disclosure-btn,
+    .research-chat-export-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
@@ -1410,6 +1412,12 @@
       background: #faf5ff;
       color: #7c3aed;
       border-color: rgba(139, 92, 246, 0.35);
+    }
+
+    .research-chat-export-btn:hover {
+      background: #fff7ed;
+      color: #d97706;
+      border-color: rgba(217, 119, 6, 0.35);
     }
 
     /* Elemen hasil render Markdown di dalam bubble asisten */

@@ -4091,9 +4091,10 @@ document.addEventListener('DOMContentLoaded', () => {
           return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
         }
         let bodyHtml = `<div class="chat-main-content">${renderMarkdownSafe(m.content)}</div>`;
+        const hasCitations = Array.isArray(m.citations) && m.citations.length > 0;
         return `
           <div class="research-chat-assistant-block">
-            <div class="research-chat-bubble assistant">${bodyHtml}</div>
+            <div class="research-chat-bubble assistant" id="researchChatMsgBody${idx}">${bodyHtml}</div>
             <div class="research-chat-msg-actions">
               <button class="research-chat-copy-btn" type="button" data-msg-index="${idx}" title="Salin jawaban">
                 <i class="fa-regular fa-copy"></i> <span>Salin</span>
@@ -4101,6 +4102,20 @@ document.addEventListener('DOMContentLoaded', () => {
               <button class="research-chat-disclosure-btn" type="button" data-msg-index="${idx}" title="Generate AI Disclosure Statement">
                 <i class="fa-solid fa-file-shield"></i> <span>Disclosure</span>
               </button>
+              ${hasCitations ? `
+              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="pdf" title="Unduh PDF">
+                <i class="fa-solid fa-file-pdf"></i> <span>PDF</span>
+              </button>
+              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="docx" title="Unduh Word (.doc)">
+                <i class="fa-solid fa-file-word"></i> <span>DOCX</span>
+              </button>
+              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="ris" title="Unduh referensi .ris">
+                <i class="fa-solid fa-book"></i> <span>.ris</span>
+              </button>
+              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="bib" title="Unduh referensi .bib">
+                <i class="fa-solid fa-book"></i> <span>.bib</span>
+              </button>
+              ` : ''}
             </div>
           </div>
         `;
@@ -4168,6 +4183,103 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
           btn.disabled = false;
           btn.innerHTML = originalHtml;
+        }
+      });
+    }
+
+    if (researchChatMessagesEl) {
+      researchChatMessagesEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.research-chat-export-btn');
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute('data-msg-index'), 10);
+        const message = researchChatMessages[idx];
+        if (!message) return;
+        const exportType = btn.getAttribute('data-export');
+        const citations = message.citations || [];
+        const titleText = message.litReviewTitle || 'Tinjauan Pustaka';
+        const cleanTitle = titleText.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'Tinjauan_Pustaka';
+
+        if (exportType === 'pdf') {
+          const bodyEl = document.getElementById(`researchChatMsgBody${idx}`);
+          if (!bodyEl) return;
+          html2pdf().set({
+            margin: 1,
+            filename: `Tinjauan_Pustaka_${cleanTitle}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+          }).from(bodyEl).save();
+          return;
+        }
+
+        if (exportType === 'docx') {
+          const bodyEl = document.getElementById(`researchChatMsgBody${idx}`);
+          if (!bodyEl) return;
+          const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                         "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                         "xmlns='http://www.w3.org/TR/REC-html40'>" +
+                         "<head><title>Tinjauan Pustaka</title><style>body { font-family: Arial, sans-serif; line-height: 1.6; } h1, h2, h3 { color: #0b1a30; }</style></head><body>" +
+                         "<h2>" + titleText + "</h2>";
+          const footer = "</body></html>";
+          const blob = new Blob(['﻿' + header + bodyEl.innerHTML + footer], { type: 'application/msword;charset=utf-8' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `Tinjauan_Pustaka_${cleanTitle}.doc`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        }
+
+        if (exportType === 'ris') {
+          if (citations.length === 0) { alert('Belum ada referensi untuk diekspor.'); return; }
+          let risContent = '';
+          citations.forEach(cit => {
+            risContent += 'TY  - JOUR\r\n';
+            risContent += `TI  - ${cit.title || 'Untitled'}\r\n`;
+            if (cit.authors) {
+              String(cit.authors).split(/,|&|dan/i).forEach(auth => {
+                if (auth.trim()) risContent += `AU  - ${auth.trim()}\r\n`;
+              });
+            }
+            if (cit.journal) risContent += `JO  - ${cit.journal}\r\n`;
+            if (cit.year) risContent += `PY  - ${cit.year}\r\n`;
+            if (cit.url) risContent += `UR  - ${cit.url}\r\n`;
+            risContent += 'ER  - \r\n\r\n';
+          });
+          const blob = new Blob([risContent], { type: 'text/plain;charset=utf-8' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'Referensi_Kutipan.ris';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        }
+
+        if (exportType === 'bib') {
+          if (citations.length === 0) { alert('Belum ada referensi untuk diekspor.'); return; }
+          let bibContent = '';
+          citations.forEach((cit, i) => {
+            const firstAuthor = cit.authors ? String(cit.authors).split(/,| /)[0].toLowerCase().replace(/[^a-z]/g, '') : 'author';
+            const year = cit.year || '2026';
+            const titleWord = cit.title ? String(cit.title).split(' ')[0].toLowerCase().replace(/[^a-z]/g, '') : 'article';
+            const citeKey = `${firstAuthor}${year}${titleWord}${i + 1}`;
+            bibContent += `@article{${citeKey},\r\n`;
+            bibContent += `  title = {${cit.title || 'Untitled'}},\r\n`;
+            if (cit.authors) bibContent += `  author = {${cit.authors}},\r\n`;
+            if (cit.journal) bibContent += `  journal = {${cit.journal}},\r\n`;
+            if (cit.year) bibContent += `  year = {${cit.year}},\r\n`;
+            if (cit.url) bibContent += `  url = {${cit.url}},\r\n`;
+            bibContent += '}\r\n\r\n';
+          });
+          const blob = new Blob([bibContent], { type: 'text/plain;charset=utf-8' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'Referensi_Kutipan.bib';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         }
       });
     }
@@ -4292,6 +4404,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         let resultMarkdown;
+        let litReviewCitations = null;
         if (tool === 'outline') {
           const res = await fetch('/api/generate-template-draft', {
             method: 'POST',
@@ -4314,12 +4427,19 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal membuat literature review.');
-          const citations = (data.citations || []).map((c, i) => `${i + 1}. **${c.title}** - ${c.authors} (${c.year}). ${c.url}`).join('\n');
+          const citationsList = data.citations || [];
+          const citations = citationsList.map((c, i) => `${i + 1}. **${c.title}** - ${c.authors} (${c.year}). ${c.url}`).join('\n');
           resultMarkdown = `### ${isDeep ? 'Deep Lit Review' : 'Literature Review'}\n\n${convertResultHtmlToMarkdown(data.review)}` + (citations ? `\n\n#### Referensi\n${citations}` : '');
+          litReviewCitations = citationsList;
         }
 
         loadingBubble.remove();
-        researchChatMessages.push({ role: 'assistant', content: resultMarkdown });
+        const assistantMsg = { role: 'assistant', content: resultMarkdown };
+        if (tool !== 'outline' && litReviewCitations && litReviewCitations.length > 0) {
+          assistantMsg.citations = litReviewCitations;
+          assistantMsg.litReviewTitle = text.slice(0, 60);
+        }
+        researchChatMessages.push(assistantMsg);
         renderResearchChatMessages();
         justGeneratedDraft = true;
         justGeneratedLitReview = true;
