@@ -971,11 +971,11 @@ app.get('/api/me', (req, res) => {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = (user.lastMatchMonth === currentMonth) && (user.matchCountThisMonth >= 1);
       
-      isDraftLimitReached = (user.lastDraftMonth === currentMonth) && (user.draftCountThisMonth >= 1);
-      draftsRemaining = isDraftLimitReached ? 0 : 1;
+      isDraftLimitReached = (user.lastDraftMonth === currentMonth) && (user.draftCountThisMonth >= 3);
+      draftsRemaining = Math.max(0, 3 - (user.lastDraftMonth === currentMonth ? user.draftCountThisMonth : 0));
 
-      isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 1);
-      litReviewsRemaining = isLitReviewLimitReached ? 0 : 1;
+      isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 3);
+      litReviewsRemaining = Math.max(0, 3 - (user.lastLitReviewMonth === currentMonth ? user.litReviewCountThisMonth : 0));
 
       isHumanizerLimitReached = true;
       humanizerWordsRemaining = 0;
@@ -1748,8 +1748,8 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   if (user && (user.type || 'free') === 'free') {
-    if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 1) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x drafting per bulan.' });
+    if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 3) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 3x drafting per bulan.' });
     }
   } else if (user && user.type === 'premium') {
     if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 15) {
@@ -2098,8 +2098,8 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
 
   // Check quota for Free and Premium users
   if (user && (user.type || 'free') === 'free') {
-    if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 1) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x Literature Review per bulan.' });
+    if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 3) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 3x Literature Review per bulan.' });
     }
   } else if (user && user.type === 'premium') {
     if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 15) {

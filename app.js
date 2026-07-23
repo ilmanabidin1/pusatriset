@@ -1305,14 +1305,14 @@ document.addEventListener('DOMContentLoaded', () => {
       el.title = isResearchChatProUser ? '' : (window.currentLanguage === 'en' ? 'Premium/Ultimate only - click to upgrade' : 'Khusus Premium/Ultimate - klik untuk upgrade');
     });
 
-    // Quick-tool Outline Generator & Lit Review di chat juga terkunci untuk Free
-    const toolOutlineBtn = document.getElementById('researchChatToolOutlineBtn');
-    const toolLitReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
-    [toolOutlineBtn, toolLitReviewBtn].forEach(el => {
-      if (!el) return;
-      el.classList.toggle('locked', !isResearchChatProUser);
-      el.title = isResearchChatProUser ? '' : (window.currentLanguage === 'en' ? 'Premium/Ultimate only - click to upgrade' : 'Khusus Premium/Ultimate - klik untuk upgrade');
-    });
+    // Deep Lit Review (quick-tool chat) eksklusif Ultimate - Outline Generator &
+    // Lit Review standar terbuka untuk semua tier (Free dijatah kuota di server).
+    const toolDeepLitReviewBtn = document.getElementById('researchChatToolDeepLitReviewBtn');
+    const isUltimateUserForChat = !!(user && user.type === 'ultimate');
+    if (toolDeepLitReviewBtn) {
+      toolDeepLitReviewBtn.classList.toggle('locked', !isUltimateUserForChat);
+      toolDeepLitReviewBtn.title = isUltimateUserForChat ? '' : (window.currentLanguage === 'en' ? 'Ultimate only - click to upgrade' : 'Khusus Ultimate - klik untuk upgrade');
+    }
 
     // Kalau user baru saja downgrade (mis. langganan habis) sementara pilihan lama
     // masih Pro/Thinking, paksa balik ke Lite/Standar supaya tidak nyangkut di mode terkunci.
@@ -4242,8 +4242,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const chipIcon = document.getElementById('researchChatToolChipIcon');
       const outlineBtn = document.getElementById('researchChatToolOutlineBtn');
       const litReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
+      const deepLitReviewBtn = document.getElementById('researchChatToolDeepLitReviewBtn');
       if (outlineBtn) outlineBtn.classList.toggle('active', tool === 'outline');
       if (litReviewBtn) litReviewBtn.classList.toggle('active', tool === 'lit-review');
+      if (deepLitReviewBtn) deepLitReviewBtn.classList.toggle('active', tool === 'deep-lit-review');
 
       if (tool && chip) {
         chip.style.display = 'flex';
@@ -4251,6 +4253,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (chipIcon) chipIcon.className = 'fa-solid fa-wand-magic-sparkles';
           if (chipText) chipText.textContent = 'Mode: Outline Generator - jelaskan topik Anda lalu kirim';
           if (researchChatInput) researchChatInput.placeholder = 'Jelaskan topik/rencana penelitian Anda...';
+        } else if (tool === 'deep-lit-review') {
+          if (chipIcon) chipIcon.className = 'fa-solid fa-layer-group';
+          if (chipText) chipText.textContent = 'Mode: Deep Lit Review - jelaskan topik Anda lalu kirim';
+          if (researchChatInput) researchChatInput.placeholder = 'Jelaskan topik penelitian yang ingin dicari referensinya (mendalam)...';
         } else {
           if (chipIcon) chipIcon.className = 'fa-solid fa-book-open';
           if (chipText) chipText.textContent = 'Mode: Lit Review - jelaskan topik Anda lalu kirim';
@@ -4300,15 +4306,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return `#### ${seg.label}\n` + points.map(p => `- ${p}`).join('\n');
           }).join('\n\n');
         } else {
+          const isDeep = tool === 'deep-lit-review';
           const res = await fetch('/api/lit-review', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: text.slice(0, 150), keywords: '', abstract: text, mode: 'standard' })
+            body: JSON.stringify({ title: text.slice(0, 150), keywords: '', abstract: text, mode: isDeep ? 'pro' : 'standard' })
           });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal membuat literature review.');
           const citations = (data.citations || []).map((c, i) => `${i + 1}. **${c.title}** - ${c.authors} (${c.year}). ${c.url}`).join('\n');
-          resultMarkdown = `### Literature Review\n\n${convertResultHtmlToMarkdown(data.review)}` + (citations ? `\n\n#### Referensi\n${citations}` : '');
+          resultMarkdown = `### ${isDeep ? 'Deep Lit Review' : 'Literature Review'}\n\n${convertResultHtmlToMarkdown(data.review)}` + (citations ? `\n\n#### Referensi\n${citations}` : '');
         }
 
         loadingBubble.remove();
@@ -4494,29 +4501,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const researchChatToolOutlineBtn = document.getElementById('researchChatToolOutlineBtn');
     const researchChatToolLitReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
+    const researchChatToolDeepLitReviewBtn = document.getElementById('researchChatToolDeepLitReviewBtn');
     const researchChatToolChipRemoveBtn = document.getElementById('researchChatToolChipRemoveBtn');
-    function isQuickToolLockedForUser() {
-      return !!(currentUser && currentUser.user && currentUser.user.type === 'free');
+    // Outline Generator & Lit Review (standar) terbuka untuk semua tier (Free dijatah
+    // 3x/bulan lewat kuota server) - hanya Deep Lit Review yang eksklusif Ultimate.
+    function isDeepLitReviewLockedForUser() {
+      return !(currentUser && currentUser.user && currentUser.user.type === 'ultimate');
     }
     if (researchChatToolOutlineBtn) {
       researchChatToolOutlineBtn.addEventListener('click', () => {
-        if (isQuickToolLockedForUser()) {
-          const upgradeModal = document.getElementById('upgradeModal');
-          if (upgradeModal) upgradeModal.classList.add('active');
-          return;
-        }
         setActiveQuickTool(activeQuickTool === 'outline' ? null : 'outline');
         if (researchChatInput) researchChatInput.focus();
       });
     }
     if (researchChatToolLitReviewBtn) {
       researchChatToolLitReviewBtn.addEventListener('click', () => {
-        if (isQuickToolLockedForUser()) {
+        setActiveQuickTool(activeQuickTool === 'lit-review' ? null : 'lit-review');
+        if (researchChatInput) researchChatInput.focus();
+      });
+    }
+    if (researchChatToolDeepLitReviewBtn) {
+      researchChatToolDeepLitReviewBtn.addEventListener('click', () => {
+        if (isDeepLitReviewLockedForUser()) {
           const upgradeModal = document.getElementById('upgradeModal');
           if (upgradeModal) upgradeModal.classList.add('active');
           return;
         }
-        setActiveQuickTool(activeQuickTool === 'lit-review' ? null : 'lit-review');
+        setActiveQuickTool(activeQuickTool === 'deep-lit-review' ? null : 'deep-lit-review');
         if (researchChatInput) researchChatInput.focus();
       });
     }
