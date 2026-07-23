@@ -2645,6 +2645,25 @@ async function searchWebForContext(query) {
   }
 }
 
+// Backup/grounding jawaban Prof Juju dengan paper ilmiah asli dari OpenAlex (sama
+// seperti Lit Review) - supaya klaim/sitasi yang disebut di chat bisa dipercaya
+// dan diverifikasi, bukan sekadar "pengetahuan umum" model yang rawan halusinasi.
+async function searchAcademicContext(query) {
+  if (!query) return null;
+  try {
+    const papers = await searchOpenAlexWorks(query, 6);
+    if (!papers || papers.length === 0) return null;
+    const top = [...papers].sort((a, b) => b.citedByCount - a.citedByCount).slice(0, 5);
+    const text = top.map((p, i) =>
+      `${i + 1}. (${p.authors}, ${p.year}) "${p.title}" - dikutip ${p.citedByCount}x. Link: ${p.url}`
+    ).join('\n');
+    return `Berikut paper ilmiah ASLI dari OpenAlex yang relevan dengan pertanyaan pengguna. Gunakan untuk mem-backup/memperkuat jawabanmu dengan sitasi format (Penulis, Tahun), sertakan link sumbernya kalau dipakai dalam jawaban. JANGAN mengarang paper atau sitasi lain di luar daftar ini - kalau tidak ada paper yang cocok/relevan dari daftar ini, jangan paksa mengutip, cukup jawab berdasarkan penalaranmu sendiri dan katakan terus terang tidak ada rujukan spesifik yang ditemukan:\n\n${text}`;
+  } catch (error) {
+    console.warn('[Academic Search] Gagal ambil konteks OpenAlex (diabaikan):', error.message);
+    return null;
+  }
+}
+
 // --- LAMPIRAN DOKUMEN untuk JurnalHub Intelligence (Premium & Ultimate saja) ---
 // Batas 8.000 kata per dokumen supaya biaya token DeepSeek per unggahan terkendali
 // (lihat catatan di komentar RESEARCH_CHAT_SYSTEM_PROMPT soal cost histori percakapan).
@@ -2807,13 +2826,19 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
   const thinkingEnabled = thinkingType === 'thinking';
 
-  // Web search real-time hanya untuk kombinasi Model Pro + Deep Thinking.
-  // Lite/Standard/Basic tidak memicu panggilan Serper sama sekali (hemat biaya).
+  // Web search + academic search (OpenAlex) real-time hanya untuk kombinasi Model
+  // Pro + Deep Thinking. Lite/Standard/Basic tidak memicu panggilan API eksternal
+  // sama sekali (hemat biaya). Keduanya dijalankan paralel, best-effort masing-masing.
   let webSearchContext = null;
+  let academicContext = null;
   if (modelType === 'pro' && thinkingEnabled) {
     const lastUserMessage = [...sanitizedMessages].reverse().find(m => m.role === 'user');
     if (lastUserMessage) {
-      webSearchContext = await searchWebForContext(lastUserMessage.content.slice(0, 400));
+      const query = lastUserMessage.content.slice(0, 400);
+      [webSearchContext, academicContext] = await Promise.all([
+        searchWebForContext(query),
+        searchAcademicContext(query)
+      ]);
     }
   }
 
@@ -2832,6 +2857,9 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     const systemMessages = [{ role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT }];
     if (webSearchContext) {
       systemMessages.push({ role: 'system', content: webSearchContext });
+    }
+    if (academicContext) {
+      systemMessages.push({ role: 'system', content: academicContext });
     }
 
     const bodyPayload = {
