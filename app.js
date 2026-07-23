@@ -261,7 +261,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/&lt;br\s*\/?&gt;/gi, '<br>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
-        .replace(/`([^`]+)`/g, '<code class="chat-md-code">$1</code>');
+        .replace(/`([^`]+)`/g, '<code class="chat-md-code">$1</code>')
+        // URL/DOI mentah (mis. di daftar Referensi Lit Review) jadi link yang bisa
+        // diklik - str sudah di-escape lebih dulu (escapeHtml tidak menyentuh "/"),
+        // jadi aman langsung dipakai sebagai href.
+        .replace(/(https?:\/\/[^\s<]+)/g, (m) => {
+          const clean = m.replace(/[.,;:!?)\]]+$/, '');
+          const trailing = m.slice(clean.length);
+          return `<a href="${clean}" target="_blank" rel="noopener" class="chat-md-link">${clean}</a>${trailing}`;
+        });
     }
 
     // Baris tabel GFM: "| sel | sel |" - pisah per kolom, buang sel kosong di
@@ -1343,6 +1351,24 @@ document.addEventListener('DOMContentLoaded', () => {
         quotaText.textContent = window.currentLanguage === 'en'
           ? `Quota: ${used}/${limit} This Month`
           : `Kuota: ${used}/${limit} Bulan Ini`;
+      }
+    }
+
+    // Kuota Outline Generator & Lit Review khusus akun Free (3x/bulan masing-masing) -
+    // dulu cuma tampil di panel form lama yang sekarang tidak lagi bisa diakses dari
+    // sidebar, jadi user Free tidak tahu sisa kuotanya sama sekali. Tampilkan lagi
+    // di bawah tombol quick-tool chat.
+    const toolQuotaEl = document.getElementById('researchChatToolQuotaText');
+    if (toolQuotaEl) {
+      if (!isResearchChatProUser) {
+        const draftsLeft = user.draftsRemaining !== undefined ? user.draftsRemaining : 3;
+        const litReviewsLeft = user.litReviewsRemaining !== undefined ? user.litReviewsRemaining : 3;
+        toolQuotaEl.textContent = window.currentLanguage === 'en'
+          ? `Free quota: Outline Generator ${draftsLeft}/3 · Lit Review ${litReviewsLeft}/3 this month`
+          : `Kuota Free: Outline Generator ${draftsLeft}/3 · Lit Review ${litReviewsLeft}/3 bulan ini`;
+        toolQuotaEl.style.display = 'block';
+      } else {
+        toolQuotaEl.style.display = 'none';
       }
     }
   }
@@ -4394,7 +4420,7 @@ document.addEventListener('DOMContentLoaded', () => {
       litCitePopoverHideTimer = setTimeout(() => {
         if (litCitePopoverEl) litCitePopoverEl.style.display = 'none';
         litCitePopoverHideTimer = null;
-      }, 250);
+      }, 500);
     }
 
     function showLitCitePopover(markerEl, citation) {
@@ -4429,10 +4455,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // Coba taruh di atas marker dulu; kalau ruangnya kurang, taruh di bawah.
       const popHeightEstimate = pop.offsetHeight || 160;
       const spaceAbove = rect.top;
+      // Jarak ke marker dibikin kecil (bukan 10px) supaya makin sedikit "zona mati"
+      // yang harus dilewati mouse sebelum sampai ke kartu - dikombinasikan dengan
+      // grace period di scheduleLitCitePopoverHide().
       if (spaceAbove > popHeightEstimate + 16) {
-        pop.style.top = (rect.top + window.scrollY - popHeightEstimate - 10) + 'px';
+        pop.style.top = (rect.top + window.scrollY - popHeightEstimate - 4) + 'px';
       } else {
-        pop.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+        pop.style.top = (rect.bottom + window.scrollY + 4) + 'px';
       }
     }
 

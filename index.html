@@ -1542,6 +1542,12 @@
       border-top: 1px solid var(--border-light-hover);
       margin: 0.85rem 0;
     }
+    .chat-md-link {
+      color: var(--brand-blue);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      word-break: break-all;
+    }
     .chat-md-table-wrapper {
       overflow-x: auto;
       margin: 0 0 0.75rem 0;
@@ -4000,6 +4006,9 @@
                   <i class="fa-solid fa-layer-group"></i> Deep Lit Review
                 </button>
               </div>
+              <!-- Kuota Outline Generator & Lit Review - khusus tampil untuk akun Free
+                   (Premium/Ultimate unlimited, tidak perlu ditampilkan). -->
+              <div id="researchChatToolQuotaText" style="display: none; text-align: center; margin-top: 0.4rem; font-size: 0.72rem; color: var(--text-muted);"></div>
 
               <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-align: center; margin-top: 0.6rem;" id="researchChatDisclaimer">Asisten AI bisa saja keliru - selalu verifikasi informasi penting secara mandiri.</span>
             </div>
