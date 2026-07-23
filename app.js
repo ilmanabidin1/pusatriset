@@ -2710,11 +2710,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const docType = draftDocType ? draftDocType.value : 'jurnal';
-      const title = draftTitle.value.trim();
       const abstract = draftAbstract.value.trim();
+      // Form disederhanakan jadi satu kolom bebas - judul diturunkan otomatis dari
+      // deskripsi topik (ditulis balik ke field draftTitle yang disembunyikan supaya
+      // semua kode lain yang membaca draftTitle.value - ekspor .docx/.txt, dsb - tetap
+      // konsisten tanpa perlu diubah).
+      draftTitle.value = abstract.slice(0, 120);
+      const title = draftTitle.value;
 
       if (!title || !abstract) {
-        draftSummary.textContent = 'Harap isi judul manuskrip dan abstrak terlebih dahulu.';
+        draftSummary.textContent = 'Harap jelaskan topik/rencana penelitian Anda terlebih dahulu.';
         draftSummary.style.color = '#ef4444';
         return;
       }
@@ -3571,14 +3576,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const keywordsInput = document.getElementById('litReviewKeywords');
         const abstractInput = document.getElementById('litReviewAbstract');
 
-        const title = titleInput ? titleInput.value.trim() : '';
-        const keywords = keywordsInput ? keywordsInput.value.trim() : '';
         const abstract = abstractInput ? abstractInput.value.trim() : '';
-
-        if (!title) {
-          alert('Mohon masukkan judul atau topik penelitian terlebih dahulu.');
+        if (!abstract) {
+          alert('Mohon jelaskan topik penelitian yang ingin dicari referensinya terlebih dahulu.');
           return;
         }
+        // Form disederhanakan jadi satu kolom bebas - judul diturunkan otomatis dari
+        // deskripsi topik (ditulis balik ke field litReviewTitle yang disembunyikan
+        // supaya kode lain yang membaca litReviewTitle.value tetap konsisten).
+        if (titleInput) titleInput.value = abstract.slice(0, 150);
+        const title = titleInput ? titleInput.value : abstract.slice(0, 150);
+        const keywords = keywordsInput ? keywordsInput.value.trim() : '';
 
         const originalBtnHtml = runLitReviewBtn.innerHTML;
         runLitReviewBtn.disabled = true;
