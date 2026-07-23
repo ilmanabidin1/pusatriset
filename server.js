@@ -1393,7 +1393,7 @@ async function getDeepSeekJournalRecommendations(articleTitle, articleKeywords, 
   const fetchFn = globalThis.fetch || require('node-fetch');
   const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
 
-  const systemPrompt = `You are a journal recommendation API for JurnalHub. You MUST respond with ONLY valid JSON (no markdown, no text outside JSON). Return an object with exactly two fields: "review" (a 2-3 sentence analysis of the article in Indonesian) and "recommendations" (an array of exactly 3 journal matches chosen from the candidate list given by the user). Each recommendation must be {"id": <candidate id, copy exactly as given, keep as string or number matching the input>, "matchScore": <integer 70-98>, "reason": "<short reason in Indonesian>"}.`;
+  const systemPrompt = `You are a journal recommendation API for JurnalHub. You MUST respond with ONLY valid JSON (no markdown, no text outside JSON). Return an object with exactly two fields: "review" (max 2 short sentences analyzing the article, in Indonesian) and "recommendations" (an array of exactly 3 journal matches chosen from the candidate list given by the user). Each recommendation must be {"id": <candidate id, copy exactly as given, keep as string or number matching the input>, "matchScore": <integer 70-98>, "reason": "<short reason in Indonesian, max 15 words>"}. Keep every string value SHORT and NEVER use double-quote characters inside string values (use plain text or single quotes instead) - this is critical because embedded double quotes break JSON parsing.`;
 
   const userContent = `Analisis artikel ini dan pilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}\n\nBalas dengan JSON object persis: {"review": "<2-3 kalimat analisis artikel dalam Bahasa Indonesia>", "recommendations": [{"id": <id>, "matchScore": <70-98>, "reason": "<alasan singkat>"}]}`;
 
@@ -1405,7 +1405,7 @@ async function getDeepSeekJournalRecommendations(articleTitle, articleKeywords, 
     },
     body: JSON.stringify({
       model: 'deepseek-v4-flash',
-      max_tokens: 1500,
+      max_tokens: 2000,
       stream: false,
       thinking: { type: 'disabled' },
       extra_body: { thinking: { type: 'disabled' } },
@@ -1432,7 +1432,13 @@ async function getDeepSeekJournalRecommendations(articleTitle, articleKeywords, 
     throw new Error('Respons AI kosong.');
   }
 
-  const parsed = cleanAndParseAIResponse(content, true);
+  let parsed;
+  try {
+    parsed = cleanAndParseAIResponse(content, true);
+  } catch (parseError) {
+    console.error('[Match Score DeepSeek] Gagal parse JSON, raw content:', content.slice(0, 1500));
+    throw parseError;
+  }
   return { review: parsed.review || null, items: parsed.recommendations || [] };
 }
 
@@ -1570,24 +1576,6 @@ ${JSON.stringify(candidates)}
 
   throw lastError || new Error('Tidak ada API Key (ANTHROPIC_API_KEY / GEMINI_API_KEY) atau Kredensial Vertex AI yang terkonfigurasi.');
 }
-
-// Pencarian jurnal "live" dari OpenAlex untuk melengkapi 756 database lokal di
-// halaman Database Jurnal - ditampilkan terpisah di frontend (bukan menggantikan
-// database lokal yang sudah dikurasi Scopus/Sinta/No-APC).
-app.get('/api/journals/search-live', requireAccess, async (req, res) => {
-  const query = String(req.query.q || '').trim().slice(0, 200);
-  if (!query || query.length < 3) {
-    return res.status(400).json({ ok: false, message: 'Kata kunci pencarian minimal 3 karakter.' });
-  }
-
-  try {
-    const journals = await searchOpenAlexSources(query, 12);
-    res.json({ ok: true, journals });
-  } catch (error) {
-    console.error('[Journals Search Live] Error:', error.message);
-    res.status(500).json({ ok: false, message: 'Gagal mencari jurnal live dari OpenAlex: ' + error.message });
-  }
-});
 
 app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   const articleTitle = String(req.body.title || '').trim();
