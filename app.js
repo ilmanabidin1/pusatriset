@@ -4045,6 +4045,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (item) {
           const id = item.getAttribute('data-conv-id');
           if (id !== currentResearchChatId) loadResearchChatConversation(id);
+          // Riwayat sekarang persisten di sidebar utama - pastikan pindah ke tab chat.
+          if (window.switchTab) window.switchTab('research-chat');
         }
       });
     }
@@ -4349,6 +4351,9 @@ document.addEventListener('DOMContentLoaded', () => {
         currentResearchChatId = null;
         renderResearchChatMessages();
         renderResearchChatHistoryList();
+        // Tombol ini sekarang persisten di sidebar utama (bisa diklik dari tab manapun),
+        // bukan cuma di dalam tab JurnalHub Intelligence - jadi pastikan pindah ke sana.
+        if (window.switchTab) window.switchTab('research-chat');
       });
     }
 
@@ -5522,8 +5527,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.initPromptBankTab(true);
       }
 
-      // Update current title element text
-      const activeTab = document.querySelector('.sidebar-link.active')?.getAttribute('data-tab') || 'beranda';
+      // Update current title element text. "research-chat" (JurnalHub Intelligence)
+      // sekarang jadi dashboard default & tidak lagi punya sidebar-link aktif untuk
+      // dideteksi, jadi itu jadi fallback-nya (bukan 'beranda' yang sudah tidak dipakai).
+      const activeTab = document.querySelector('.sidebar-link.active')?.getAttribute('data-tab') || 'research-chat';
       const pageTitleEl = document.getElementById('pageTitle');
       if (pageTitleEl && TRANSLATIONS[lang][activeTab]) {
         pageTitleEl.textContent = TRANSLATIONS[lang][activeTab];

@@ -389,6 +389,14 @@
       .sidebar.collapsed .sidebar-nav {
         margin-top: 2.75rem;
       }
+      .sidebar.collapsed .research-chat-new-btn span,
+      .sidebar.collapsed .sidebar-divider,
+      .sidebar.collapsed .sidebar-chat-history {
+        display: none !important;
+      }
+      .sidebar.collapsed .research-chat-new-btn {
+        padding: 0.75rem;
+      }
     }
 
     .sidebar-logo {
@@ -2833,18 +2841,16 @@
       </button>
     </div>
     
-    <nav class="sidebar-nav">
-      <a href="#" class="sidebar-link active" data-tab="beranda">
-        <i class="fa-solid fa-house"></i> <span>Beranda</span>
-      </a>
+    <button id="researchChatClearBtn" type="button" class="research-chat-new-btn" style="margin: 0 1rem 0.75rem; width: calc(100% - 2rem);">
+      <i class="fa-solid fa-plus"></i> <span id="researchChatClearText">Percakapan Baru</span>
+    </button>
+
+    <nav class="sidebar-nav" style="flex-grow: 0;">
       <a href="#" class="sidebar-link" data-tab="database-jurnal">
         <i class="fa-solid fa-database"></i> <span>Database Jurnal</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="ai-research">
         <i class="fa-solid fa-flask"></i> <span>AI Writer</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="research-chat">
-        <i class="fa-solid fa-comments"></i> <span>JurnalHub Intelligence</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="templates">
         <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
@@ -2853,7 +2859,16 @@
         <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
       </a>
     </nav>
-    
+
+    <div class="sidebar-divider" style="height: 1px; background: var(--border-light-hover); margin: 0.75rem 1rem;"></div>
+
+    <div class="sidebar-chat-history" style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: 0 1rem;">
+      <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); padding: 0.25rem 0.25rem 0.5rem;">Riwayat Percakapan</span>
+      <div id="researchChatHistoryList" class="research-chat-history-list">
+        <p id="researchChatHistoryEmpty" class="research-chat-history-empty">Belum ada riwayat percakapan.</p>
+      </div>
+    </div>
+
     <!-- Sidebar Upgrade Card -->
     <div class="sidebar-upgrade-card btn-upgrade-trigger" id="sidebarUpgradeCard">
       <i class="fa-solid fa-crown upgrade-crown-icon"></i>
@@ -2894,7 +2909,7 @@
   <main class="main-content">
     <header class="dashboard-header">
       <div class="header-left">
-        <h2 id="pageTitle">Beranda</h2>
+        <h2 id="pageTitle">JurnalHub Intelligence</h2>
       </div>
       <div class="header-center">
       </div>
@@ -2917,7 +2932,7 @@
     <div class="dashboard-body">
       
       <!-- TAB 1: BERANDA (MAIN VIEW) -->
-      <div id="tabContentBeranda" class="tab-content active">
+      <div id="tabContentBeranda" class="tab-content">
 
         <!-- Sapaan Personal -->
         <div class="beranda-greeting">
@@ -3703,7 +3718,7 @@
       </div>
 
       <!-- TAB: ASISTEN RISET AI (DeepSeek Chat) - layout full-height ala ChatGPT/Claude -->
-      <div id="tabContentResearchChat" class="tab-content">
+      <div id="tabContentResearchChat" class="tab-content active">
         <div class="research-chat-shell" id="researchChatBoxWrapper">
 
           <!-- Overlay Lock for Free User (fitur ini sama sekali tidak tersedia untuk Free) -->
@@ -3808,16 +3823,6 @@
               <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-align: center; margin-top: 0.6rem;" id="researchChatDisclaimer">Asisten AI bisa saja keliru - selalu verifikasi informasi penting secara mandiri.</span>
             </div>
 
-          </div>
-
-          <!-- Sidebar riwayat percakapan -->
-          <div class="research-chat-history-sidebar">
-            <button id="researchChatClearBtn" type="button" class="research-chat-new-btn">
-              <i class="fa-solid fa-plus"></i> <span id="researchChatClearText">Percakapan Baru</span>
-            </button>
-            <div id="researchChatHistoryList" class="research-chat-history-list">
-              <p id="researchChatHistoryEmpty" class="research-chat-history-empty">Belum ada riwayat percakapan.</p>
-            </div>
           </div>
 
         </div>
@@ -4159,11 +4164,17 @@
           activeContent.classList.add('active');
         }
         
-        // Update Page Title
-        const activeTabForTitle = ['drafting-companion', 'lit-review', 'humanizer'].includes(tabName) ? 'ai-research' : tabName;
-        const currentLink = document.querySelector(`.sidebar-link[data-tab="${activeTabForTitle}"]`);
-        if (currentLink) {
-          pageTitle.textContent = currentLink.querySelector('span').textContent;
+        // Update Page Title. "research-chat" & "beranda" tidak lagi punya link di
+        // sidebar utama (JurnalHub Intelligence sekarang jadi dashboard/home default),
+        // jadi judulnya di-set manual.
+        if (tabName === 'research-chat' || tabName === 'beranda') {
+          pageTitle.textContent = 'JurnalHub Intelligence';
+        } else {
+          const activeTabForTitle = ['drafting-companion', 'lit-review', 'humanizer'].includes(tabName) ? 'ai-research' : tabName;
+          const currentLink = document.querySelector(`.sidebar-link[data-tab="${activeTabForTitle}"]`);
+          if (currentLink) {
+            pageTitle.textContent = currentLink.querySelector('span').textContent;
+          }
         }
 
         // Call renderBookmarksTab if saved tab is selected
