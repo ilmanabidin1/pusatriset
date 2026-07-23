@@ -386,9 +386,6 @@
         left: 50%;
         transform: translateX(-50%);
       }
-      .sidebar.collapsed .sidebar-nav {
-        margin-top: 2.75rem;
-      }
       .sidebar.collapsed .research-chat-new-btn span,
       .sidebar.collapsed .sidebar-divider,
       .sidebar.collapsed .sidebar-chat-history {
@@ -396,6 +393,10 @@
       }
       .sidebar.collapsed .research-chat-new-btn {
         padding: 0.75rem;
+        /* Elemen ini punya inline style="margin: 0 1rem 0.75rem..." dari HTML -
+           override pakai shorthand "margin" juga (bukan cuma margin-top) supaya
+           konsisten menang atas shorthand inline tsb. */
+        margin: 2.75rem 1rem 0.75rem !important;
       }
     }
 
@@ -1057,6 +1058,18 @@
       background: #21262d;
       border-color: rgba(255,255,255,0.08);
       color: #e6edf3;
+    }
+    .research-chat-quick-tool-btn.locked {
+      opacity: 0.6;
+      position: relative;
+    }
+    .research-chat-quick-tool-btn.locked::after {
+      content: '\f023'; /* fa-lock */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      font-size: 0.62rem;
+      color: #fbbf24;
+      margin-left: 0.2rem;
     }
 
     .composer-pill {
@@ -2884,7 +2897,9 @@
   <!-- Left Sidebar (matches layout in dashboard screenshot) -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <img src="assets/jurnalhub-logo-light.png" alt="JurnalHub">
+      <a href="#" id="sidebarLogoHomeLink" title="Kembali ke dashboard" style="display: flex; align-items: center;">
+        <img src="assets/jurnalhub-logo-light.png" alt="JurnalHub">
+      </a>
       <button type="button" id="sidebarCollapseToggle" class="sidebar-collapse-toggle" title="Lipat sidebar">
         <i class="fa-solid fa-angles-left"></i>
       </button>
@@ -2899,7 +2914,7 @@
         <i class="fa-solid fa-database"></i> <span>Database Jurnal</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="ai-research">
-        <i class="fa-solid fa-flask"></i> <span>AI Writer</span>
+        <i class="fa-solid fa-user-check"></i> <span>Paraphraser &amp; Humanizer</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="templates">
         <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
@@ -3636,11 +3651,6 @@
       <!-- TAB: HUMANIZER (JURNALHUB HUMANIZER ENGINE) -->
       <div id="tabContentHumanizer" class="tab-content">
         <div class="match-score-main-container">
-          <div class="ai-writer-switcher">
-            <button type="button" class="ai-writer-pill" onclick="switchTab('drafting-companion')"><i class="fa-solid fa-wand-magic-sparkles"></i> Outline Generator</button>
-            <button type="button" class="ai-writer-pill" onclick="switchTab('lit-review')"><i class="fa-solid fa-book-open"></i> Literature Review</button>
-            <button type="button" class="ai-writer-pill active" onclick="switchTab('humanizer')"><i class="fa-solid fa-user-check"></i> Paraphraser &amp; Humanizer</button>
-          </div>
           <div class="match-box-wrapper" id="humanizerBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
             
             <!-- Overlay Lock for Free User (Premium/Ultimate dibuka otomatis oleh app.js) -->
@@ -4186,10 +4196,11 @@
       }
 
       function switchTab(tabName) {
-        // "AI Writer" (data-tab ai-research) tidak lagi punya halaman hub sendiri -
-        // langsung arahkan ke tool pertama (Outline Generator). Highlight sidebar &
-        // judul halaman tetap mengacu ke 'ai-research' lewat logika di bawah.
-        if (tabName === 'ai-research') tabName = 'drafting-companion';
+        // "Paraphraser & Humanizer" (data-tab ai-research) sekarang cuma berisi
+        // Humanizer - Outline Generator & Lit Review dipindah jadi quick-tool di
+        // dalam JurnalHub Intelligence. Highlight sidebar & judul halaman tetap
+        // mengacu ke 'ai-research' lewat logika di bawah.
+        if (tabName === 'ai-research') tabName = 'humanizer';
         if (window.resetJustGeneratedFlags && !['drafting-companion', 'lit-review', 'humanizer'].includes(tabName)) {
           window.resetJustGeneratedFlags();
         }

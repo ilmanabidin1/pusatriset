@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
     id: {
       beranda: "Beranda",
       "database-jurnal": "Database Jurnal",
-      "ai-research": "AI Writer",
+      "ai-research": "Paraphraser & Humanizer",
       "research-chat": "JurnalHub Intelligence",
       templates: "Template Jurnal",
       "prompt-bank": "Prompt Bank",
@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     en: {
       beranda: "Home",
       "database-jurnal": "Journal Database",
-      "ai-research": "AI Writer",
+      "ai-research": "Paraphraser & Humanizer",
       "research-chat": "JurnalHub Intelligence",
       templates: "Journal Templates",
       "prompt-bank": "Prompt Bank",
@@ -1302,6 +1302,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!el) return;
       el.classList.toggle('composer-pill-locked', !isResearchChatProUser);
       el.classList.toggle('btn-upgrade-trigger', !isResearchChatProUser);
+      el.title = isResearchChatProUser ? '' : (window.currentLanguage === 'en' ? 'Premium/Ultimate only - click to upgrade' : 'Khusus Premium/Ultimate - klik untuk upgrade');
+    });
+
+    // Quick-tool Outline Generator & Lit Review di chat juga terkunci untuk Free
+    const toolOutlineBtn = document.getElementById('researchChatToolOutlineBtn');
+    const toolLitReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
+    [toolOutlineBtn, toolLitReviewBtn].forEach(el => {
+      if (!el) return;
+      el.classList.toggle('locked', !isResearchChatProUser);
       el.title = isResearchChatProUser ? '' : (window.currentLanguage === 'en' ? 'Premium/Ultimate only - click to upgrade' : 'Khusus Premium/Ultimate - klik untuk upgrade');
     });
 
@@ -4486,20 +4495,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const researchChatToolOutlineBtn = document.getElementById('researchChatToolOutlineBtn');
     const researchChatToolLitReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
     const researchChatToolChipRemoveBtn = document.getElementById('researchChatToolChipRemoveBtn');
+    function isQuickToolLockedForUser() {
+      return !!(currentUser && currentUser.user && currentUser.user.type === 'free');
+    }
     if (researchChatToolOutlineBtn) {
       researchChatToolOutlineBtn.addEventListener('click', () => {
+        if (isQuickToolLockedForUser()) {
+          const upgradeModal = document.getElementById('upgradeModal');
+          if (upgradeModal) upgradeModal.classList.add('active');
+          return;
+        }
         setActiveQuickTool(activeQuickTool === 'outline' ? null : 'outline');
         if (researchChatInput) researchChatInput.focus();
       });
     }
     if (researchChatToolLitReviewBtn) {
       researchChatToolLitReviewBtn.addEventListener('click', () => {
+        if (isQuickToolLockedForUser()) {
+          const upgradeModal = document.getElementById('upgradeModal');
+          if (upgradeModal) upgradeModal.classList.add('active');
+          return;
+        }
         setActiveQuickTool(activeQuickTool === 'lit-review' ? null : 'lit-review');
         if (researchChatInput) researchChatInput.focus();
       });
     }
     if (researchChatToolChipRemoveBtn) {
       researchChatToolChipRemoveBtn.addEventListener('click', () => setActiveQuickTool(null));
+    }
+
+    const sidebarLogoHomeLink = document.getElementById('sidebarLogoHomeLink');
+    if (sidebarLogoHomeLink) {
+      sidebarLogoHomeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.switchTab) window.switchTab('research-chat');
+      });
     }
     if (researchChatInput) {
       researchChatInput.addEventListener('keydown', (e) => {
