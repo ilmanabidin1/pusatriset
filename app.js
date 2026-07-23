@@ -4439,7 +4439,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="lit-cite-popover-authors">${escapeHtml(citation.authors || '')}</div>
         <div class="lit-cite-popover-journal">${escapeHtml(citation.journal || '-')}</div>
-        ${citation.url ? `<a href="${citation.url}" target="_blank" rel="noopener" class="lit-cite-popover-link">Buka sumber <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+        <div class="lit-cite-popover-actions">
+          ${citation.url ? `<a href="${citation.url}" target="_blank" rel="noopener" class="lit-cite-popover-link">Buka sumber <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+          ${citation.pdfUrl ? `<a href="${citation.pdfUrl}" target="_blank" rel="noopener" class="lit-cite-popover-pdf" title="Unduh PDF (Open Access)"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : ''}
+        </div>
       `;
       pop.style.display = 'block';
 

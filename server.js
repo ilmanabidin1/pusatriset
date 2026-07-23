@@ -2056,7 +2056,7 @@ async function enrichWithSemanticScholar(papers) {
   try {
     const fetchFn = globalThis.fetch || require('node-fetch');
     const ids = papersWithDoi.map(p => `DOI:${p.doi}`);
-    const response = await fetchFn('https://api.semanticscholar.org/graph/v1/paper/batch?fields=tldr,influentialCitationCount', {
+    const response = await fetchFn('https://api.semanticscholar.org/graph/v1/paper/batch?fields=tldr,influentialCitationCount,openAccessPdf', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2080,7 +2080,8 @@ async function enrichWithSemanticScholar(papers) {
       return {
         ...p,
         tldr: match.tldr?.text || null,
-        influentialCitationCount: match.influentialCitationCount ?? null
+        influentialCitationCount: match.influentialCitationCount ?? null,
+        pdfUrl: match.openAccessPdf?.url || null
       };
     });
   } catch (err) {
@@ -2167,10 +2168,11 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
       throw new Error('Tidak ditemukan paper ilmiah dengan abstrak yang relevan di OpenAlex untuk topik ini. Coba gunakan judul/kata kunci yang lebih umum.');
     }
 
-    // 2. Enrichment - khusus mode Pro, ambil tldr + influential citation count dari Semantic Scholar
-    if (isDeepTier) {
-      papers = await enrichWithSemanticScholar(papers);
-    }
+    // 2. Enrichment - ambil tldr, influential citation count, dan link PDF Open Access
+    // dari Semantic Scholar. Berlaku untuk semua mode (bukan cuma Pro/Deep) - satu kali
+    // batch request per generate (bukan per-paper), best-effort & gagal diam-diam kalau
+    // rate limit, jadi aman dipakai di mode standar juga.
+    papers = await enrichWithSemanticScholar(papers);
 
     // 3. Sintesis - DeepSeek menulis narasi HANYA berdasarkan paper yang sudah ditemukan (grounded, no fabrication)
     const paperListText = papers.map((p, i) => {
@@ -2235,6 +2237,7 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
       doi: p.doi || null,
       citedByCount: p.citedByCount,
       isOpenAccess: p.isOpenAccess,
+      pdfUrl: p.pdfUrl || null,
       abstract: p.abstract ? p.abstract.slice(0, 280) : '',
       reason: p.tldr
         ? p.tldr
