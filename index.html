@@ -955,6 +955,28 @@
       opacity: 1;
     }
 
+    /* Riwayat percakapan sekarang tampil di sidebar utama yang gelap - style di
+       atas didesain untuk panel putih, jadi overwrite warnanya di sini. */
+    .sidebar-chat-history .research-chat-history-item-title {
+      color: rgba(255, 255, 255, 0.75);
+    }
+    .sidebar-chat-history .research-chat-history-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .sidebar-chat-history .research-chat-history-item.active {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .sidebar-chat-history .research-chat-history-item.active .research-chat-history-item-title {
+      color: #ffffff;
+    }
+    .sidebar-chat-history .research-chat-history-item-delete {
+      color: rgba(255, 255, 255, 0.4);
+    }
+    .sidebar-chat-history .research-chat-history-empty {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
     .research-chat-history-item-delete:hover {
       color: #ef4444;
     }
@@ -3732,12 +3754,10 @@
           <!-- Kolom utama percakapan -->
           <div class="research-chat-main chat-empty">
 
-            <!-- Kuota - dipindah jadi badge kecil & tidak mencolok (dulu di top bar
-                 yang sekarang dihapus supaya tampilan lebih bersih ala ChatGPT). -->
-            <div style="display: flex; justify-content: flex-end; flex-shrink: 0; padding-bottom: 0.4rem;">
-              <div id="researchChatQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
-                <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kuota: 0/0 Bulan Ini</span>
-              </div>
+            <!-- Kuota - floating di pojok kanan atas shell (di bawah toggle dark
+                 mode di header), tidak lagi ikut alur normal top bar. -->
+            <div id="researchChatQuotaDisclaimer" style="position: absolute; top: 0; right: 0; z-index: 5; background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
+              <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kuota: 0/0 Bulan Ini</span>
             </div>
 
             <!-- Chat Messages (mengisi seluruh sisa tinggi layar) -->

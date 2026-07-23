@@ -1131,7 +1131,6 @@ document.addEventListener('DOMContentLoaded', () => {
           renderBillingHistory();
           renderBerandaRecentActivity();
           updateResearchChatAccess(currentUser.user);
-          if (typeof updateResearchChatGreeting === 'function') updateResearchChatGreeting();
         }
 
         // Logout handler
@@ -2943,6 +2942,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 5. INITIALIZATION ---
   async function init() {
     await checkAuthState();
+    updateResearchChatGreeting();
 
     // Load default preferences from localStorage if exists
     const defaultSubject = localStorage.getItem('defaultSubject') || 'all';
