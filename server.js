@@ -2180,7 +2180,7 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
       ? `Wajib mencakup: (1) Kajian Teori ringkas, (2) Studi Terdahulu - bandingkan temuan antar paper di atas dengan merujuk nama penulis & tahun, (3) tabel HTML (<table>) kerangka konseptual yang memetakan variabel/konsep utama & hubungannya, (4) Gap Analysis spesifik berdasarkan apa yang sudah/belum diteliti paper-paper di atas, (5) Peluang Novelty - kebaruan apa yang bisa diambil peneliti berdasarkan gap tersebut. Target panjang MAKSIMAL 1000 kata, bahasa padat.`
       : `Cakup ringkasan teori, perbandingan singkat studi terdahulu (rujuk penulis & tahun), dan gap analysis. Target panjang 500-800 kata.`;
 
-    const systemPrompt = `Anda adalah pakar penulisan jurnal ilmiah internasional. Tulis Tinjauan Pustaka (Literature Review) dalam Bahasa Indonesia HANYA berdasarkan daftar paper ilmiah asli yang diberikan user - JANGAN mengarang paper/data lain di luar yang diberikan. Rujuk paper dengan format (Penulis, Tahun) di dalam teks. Output HARUS berupa HTML mentah saja (pakai tag h4/h5, p, ul/li, strong, table/tr/td), TANPA pembungkus markdown, TANPA JSON, TANPA preamble/penjelasan - langsung isi tinjauan pustakanya.`;
+    const systemPrompt = `Anda adalah pakar penulisan jurnal ilmiah internasional. Tulis Tinjauan Pustaka (Literature Review) dalam Bahasa Indonesia HANYA berdasarkan daftar paper ilmiah asli yang diberikan user - JANGAN mengarang paper/data lain di luar yang diberikan. Rujuk paper HANYA dengan format angka bernomor dalam kurung siku, contoh [3], sesuai nomor urut paper pada daftar yang diberikan - taruh tepat setelah klausa/kalimat yang didukung paper tersebut. JANGAN memakai format (Penulis, Tahun). Satu kalimat boleh merujuk lebih dari satu paper, contoh [2][5]. Output HARUS berupa HTML mentah saja (pakai tag h4/h5, p, ul/li, strong, table/tr/td), TANPA pembungkus markdown, TANPA JSON, TANPA preamble/penjelasan - langsung isi tinjauan pustakanya.`;
 
     const userPrompt = `Judul penelitian: ${title}\nKeyword/Bidang: ${keywords || '-'}\nAbstrak: ${abstract || '-'}\n\nDaftar paper ilmiah hasil pencarian (gunakan ini sebagai satu-satunya sumber):\n${paperListText}\n\n${depthInstructions}\n\nTulis tinjauan pustakanya sekarang (HTML mentah saja):`;
 
@@ -2228,6 +2228,10 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
       journal: p.journal,
       year: p.year,
       url: p.url,
+      doi: p.doi || null,
+      citedByCount: p.citedByCount,
+      isOpenAccess: p.isOpenAccess,
+      abstract: p.abstract ? p.abstract.slice(0, 280) : '',
       reason: p.tldr
         ? p.tldr
         : `Dikutip ${p.citedByCount}x, relevan dengan topik penelitian berdasarkan abstrak.${p.isOpenAccess ? ' (Open Access)' : ''}`

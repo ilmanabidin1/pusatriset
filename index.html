@@ -1420,6 +1420,80 @@
       border-color: rgba(217, 119, 6, 0.35);
     }
 
+    .lit-cite-marker {
+      display: inline-block;
+      color: var(--brand-blue);
+      font-weight: 700;
+      font-size: 0.82em;
+      cursor: pointer;
+      padding: 0 0.1rem;
+      border-radius: 3px;
+      transition: background 0.15s;
+    }
+    .lit-cite-marker:hover,
+    .lit-cite-marker:focus {
+      background: rgba(7, 135, 220, 0.12);
+      outline: none;
+    }
+
+    .lit-cite-popover {
+      display: none;
+      position: absolute;
+      z-index: 1000;
+      background: #0b1a30;
+      color: #ffffff;
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      box-shadow: 0 14px 34px rgba(8, 34, 64, 0.35);
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+    .lit-cite-popover-title {
+      font-weight: 800;
+      font-size: 0.86rem;
+      margin-bottom: 0.4rem;
+      color: #ffffff;
+    }
+    .lit-cite-popover-abstract {
+      color: rgba(255, 255, 255, 0.75);
+      font-style: italic;
+      margin-bottom: 0.5rem;
+    }
+    .lit-cite-popover-meta {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.72rem;
+      margin-bottom: 0.2rem;
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+    .lit-cite-popover-oa {
+      color: #34d399;
+    }
+    .lit-cite-popover-authors {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.74rem;
+      margin-bottom: 0.1rem;
+    }
+    .lit-cite-popover-journal {
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 0.72rem;
+      font-style: italic;
+      margin-bottom: 0.5rem;
+    }
+    .lit-cite-popover-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.76rem;
+    }
+    .lit-cite-popover-link:hover {
+      text-decoration: underline;
+    }
+
     /* Elemen hasil render Markdown di dalam bubble asisten */
     .chat-md-p {
       margin: 0 0 0.65rem 0;

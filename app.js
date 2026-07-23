@@ -4092,6 +4092,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         let bodyHtml = `<div class="chat-main-content">${renderMarkdownSafe(m.content)}</div>`;
         const hasCitations = Array.isArray(m.citations) && m.citations.length > 0;
+        if (hasCitations) {
+          bodyHtml = wrapCitationMarkers(bodyHtml, m.citations);
+        }
         return `
           <div class="research-chat-assistant-block">
             <div class="research-chat-bubble assistant" id="researchChatMsgBody${idx}">${bodyHtml}</div>
@@ -4345,6 +4348,102 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/<[^>]+>/g, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
+    }
+
+    // Ubah marker sitasi "[n]" (dituliskan model sesuai nomor urut paper di
+    // daftar yang diberikan, lihat systemPrompt Lit Review di server) jadi span
+    // yang bisa di-hover, supaya user bisa lihat kartu preview paper & klik ke
+    // sumber aslinya tanpa harus scroll ke daftar Referensi di bawah.
+    function wrapCitationMarkers(html, citations) {
+      if (!citations || citations.length === 0) return html;
+      return html.replace(/\[(\d{1,2})\]/g, (match, numStr) => {
+        const idx = parseInt(numStr, 10) - 1;
+        if (idx < 0 || idx >= citations.length) return match;
+        return `<span class="lit-cite-marker" data-cite-idx="${idx}" tabindex="0">${match}</span>`;
+      });
+    }
+
+    // Kartu preview sitasi (satu elemen dipakai ulang untuk semua marker) - muncul
+    // saat hover/focus ke marker [n], mirip Consensus/Elicit.
+    let litCitePopoverEl = null;
+    function ensureLitCitePopover() {
+      if (litCitePopoverEl) return litCitePopoverEl;
+      litCitePopoverEl = document.createElement('div');
+      litCitePopoverEl.id = 'litCitePopover';
+      litCitePopoverEl.className = 'lit-cite-popover';
+      document.body.appendChild(litCitePopoverEl);
+      return litCitePopoverEl;
+    }
+
+    function showLitCitePopover(markerEl, citation) {
+      const pop = ensureLitCitePopover();
+      const abstractText = citation.abstract
+        ? (citation.abstract.length > 200 ? citation.abstract.slice(0, 200) + '…' : citation.abstract)
+        : '';
+      pop.innerHTML = `
+        <div class="lit-cite-popover-title">${escapeHtml(citation.title || 'Tanpa judul')}</div>
+        ${abstractText ? `<div class="lit-cite-popover-abstract">"${escapeHtml(abstractText)}"</div>` : ''}
+        <div class="lit-cite-popover-meta">
+          <span>${escapeHtml(citation.year || '-')}</span>
+          ${typeof citation.citedByCount === 'number' ? `<span>· ${citation.citedByCount} sitasi</span>` : ''}
+          ${citation.isOpenAccess ? `<span class="lit-cite-popover-oa">· Open Access</span>` : ''}
+        </div>
+        <div class="lit-cite-popover-authors">${escapeHtml(citation.authors || '')}</div>
+        <div class="lit-cite-popover-journal">${escapeHtml(citation.journal || '-')}</div>
+        ${citation.url ? `<a href="${citation.url}" target="_blank" rel="noopener" class="lit-cite-popover-link">Buka sumber <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+      `;
+      pop.style.display = 'block';
+
+      const rect = markerEl.getBoundingClientRect();
+      const popWidth = 300;
+      let left = rect.left + window.scrollX;
+      if (left + popWidth > window.innerWidth - 12) {
+        left = window.innerWidth - popWidth - 12 + window.scrollX;
+      }
+      pop.style.width = popWidth + 'px';
+      pop.style.left = Math.max(12, left) + 'px';
+
+      // Coba taruh di atas marker dulu; kalau ruangnya kurang, taruh di bawah.
+      const popHeightEstimate = pop.offsetHeight || 160;
+      const spaceAbove = rect.top;
+      if (spaceAbove > popHeightEstimate + 16) {
+        pop.style.top = (rect.top + window.scrollY - popHeightEstimate - 10) + 'px';
+      } else {
+        pop.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+      }
+    }
+
+    function hideLitCitePopover() {
+      if (litCitePopoverEl) litCitePopoverEl.style.display = 'none';
+    }
+
+    if (researchChatMessagesEl) {
+      researchChatMessagesEl.addEventListener('mouseover', (e) => {
+        const marker = e.target.closest('.lit-cite-marker');
+        if (!marker) return;
+        const block = marker.closest('.research-chat-assistant-block');
+        const msgIndex = block ? parseInt(block.querySelector('[data-msg-index]')?.getAttribute('data-msg-index'), 10) : NaN;
+        const message = researchChatMessages[msgIndex];
+        const idx = parseInt(marker.getAttribute('data-cite-idx'), 10);
+        if (!message || !message.citations || !message.citations[idx]) return;
+        showLitCitePopover(marker, message.citations[idx]);
+      });
+      researchChatMessagesEl.addEventListener('focusin', (e) => {
+        const marker = e.target.closest('.lit-cite-marker');
+        if (!marker) return;
+        marker.dispatchEvent(new Event('mouseover', { bubbles: true }));
+      });
+      researchChatMessagesEl.addEventListener('mouseout', (e) => {
+        const marker = e.target.closest('.lit-cite-marker');
+        if (!marker) return;
+        if (e.relatedTarget && litCitePopoverEl && litCitePopoverEl.contains(e.relatedTarget)) return;
+        hideLitCitePopover();
+      });
+      researchChatMessagesEl.addEventListener('focusout', (e) => {
+        const marker = e.target.closest('.lit-cite-marker');
+        if (!marker) return;
+        hideLitCitePopover();
+      });
     }
 
     function setActiveQuickTool(tool) {
