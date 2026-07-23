@@ -4366,16 +4366,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // Kartu preview sitasi (satu elemen dipakai ulang untuk semua marker) - muncul
     // saat hover/focus ke marker [n], mirip Consensus/Elicit.
     let litCitePopoverEl = null;
+    let litCitePopoverHideTimer = null;
     function ensureLitCitePopover() {
       if (litCitePopoverEl) return litCitePopoverEl;
       litCitePopoverEl = document.createElement('div');
       litCitePopoverEl.id = 'litCitePopover';
       litCitePopoverEl.className = 'lit-cite-popover';
       document.body.appendChild(litCitePopoverEl);
+      // Ada jarak (gap) antara marker [n] dan kartu popover di atas/bawahnya -
+      // begitu mouse lewat jarak itu, event mouseout marker langsung nutup popover
+      // sebelum sempat masuk ke kartunya. Kartu sendiri juga perlu jadi "zona aman":
+      // batalkan timer tutup saat mouse ada di dalam kartu, jadwalkan lagi saat keluar.
+      litCitePopoverEl.addEventListener('mouseenter', cancelLitCitePopoverHide);
+      litCitePopoverEl.addEventListener('mouseleave', scheduleLitCitePopoverHide);
       return litCitePopoverEl;
     }
 
+    function cancelLitCitePopoverHide() {
+      if (litCitePopoverHideTimer) {
+        clearTimeout(litCitePopoverHideTimer);
+        litCitePopoverHideTimer = null;
+      }
+    }
+
+    function scheduleLitCitePopoverHide() {
+      cancelLitCitePopoverHide();
+      litCitePopoverHideTimer = setTimeout(() => {
+        if (litCitePopoverEl) litCitePopoverEl.style.display = 'none';
+        litCitePopoverHideTimer = null;
+      }, 250);
+    }
+
     function showLitCitePopover(markerEl, citation) {
+      cancelLitCitePopoverHide();
       const pop = ensureLitCitePopover();
       const abstractText = citation.abstract
         ? (citation.abstract.length > 200 ? citation.abstract.slice(0, 200) + '…' : citation.abstract)
@@ -4413,10 +4436,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    function hideLitCitePopover() {
-      if (litCitePopoverEl) litCitePopoverEl.style.display = 'none';
-    }
-
     if (researchChatMessagesEl) {
       researchChatMessagesEl.addEventListener('mouseover', (e) => {
         const marker = e.target.closest('.lit-cite-marker');
@@ -4437,12 +4456,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const marker = e.target.closest('.lit-cite-marker');
         if (!marker) return;
         if (e.relatedTarget && litCitePopoverEl && litCitePopoverEl.contains(e.relatedTarget)) return;
-        hideLitCitePopover();
+        scheduleLitCitePopoverHide();
       });
       researchChatMessagesEl.addEventListener('focusout', (e) => {
         const marker = e.target.closest('.lit-cite-marker');
         if (!marker) return;
-        hideLitCitePopover();
+        scheduleLitCitePopoverHide();
       });
     }
 
