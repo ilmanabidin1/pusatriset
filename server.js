@@ -2791,20 +2791,22 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
   const thinkingEnabled = thinkingType === 'thinking';
 
-  // Web search + academic search (OpenAlex) real-time hanya untuk kombinasi Model
-  // Pro + Deep Thinking. Lite/Standard/Basic tidak memicu panggilan API eksternal
-  // sama sekali (hemat biaya). Keduanya dijalankan paralel, best-effort masing-masing.
+  // Web search (Serper, berbayar) tetap dibatasi kombinasi Model Pro + Deep Thinking
+  // demi kontrol biaya. Academic search (OpenAlex, gratis) sekarang berlaku untuk
+  // SEMUA tier & mode, supaya jawaban JurnalHub Intelligence selalu bisa di-backup
+  // sitasi nyata, bukan cuma di mode paling mahal.
   let webSearchContext = null;
   let academicContext = null;
-  if (modelType === 'pro' && thinkingEnabled) {
-    const lastUserMessage = [...sanitizedMessages].reverse().find(m => m.role === 'user');
-    if (lastUserMessage) {
-      const query = lastUserMessage.content.slice(0, 400);
-      [webSearchContext, academicContext] = await Promise.all([
-        searchWebForContext(query),
-        searchAcademicContext(query)
-      ]);
+  const lastUserMessage = [...sanitizedMessages].reverse().find(m => m.role === 'user');
+  if (lastUserMessage) {
+    const query = lastUserMessage.content.slice(0, 400);
+    const tasks = [searchAcademicContext(query)];
+    if (modelType === 'pro' && thinkingEnabled) {
+      tasks.push(searchWebForContext(query));
     }
+    const results = await Promise.all(tasks);
+    academicContext = results[0];
+    if (tasks.length > 1) webSearchContext = results[1];
   }
 
   // DEEPSEEK_API_URL cuma untuk keperluan testing lokal (arahkan ke mock server) -
