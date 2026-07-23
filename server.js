@@ -1343,58 +1343,6 @@ function normalizeAiRecommendations(aiItems, candidates) {
     .slice(0, 3);
 }
 
-// Best-effort recovery kalau respons AI kepotong sebelum JSON-nya lengkap
-// (mis. output menyentuh batas max_tokens di tengah generate). Daripada user
-// dapat error 500 total padahal API sudah terlanjur dipanggil (dan dibayar),
-// coba selamatkan teks "review" yang sudah sempat dihasilkan + sitasi yang
-// objeknya sudah lengkap.
-function salvageTruncatedLitReviewJson(raw) {
-  try {
-    const reviewMatch = raw.match(/"review"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-    let review = null;
-    if (reviewMatch) {
-      try { review = JSON.parse('"' + reviewMatch[1] + '"'); } catch (e) { review = null; }
-    }
-    if (!review) {
-      const startIdx = raw.indexOf('"review"');
-      if (startIdx === -1) return null;
-      const colonIdx = raw.indexOf(':', startIdx);
-      const quoteIdx = colonIdx !== -1 ? raw.indexOf('"', colonIdx + 1) : -1;
-      if (quoteIdx === -1) return null;
-      let rest = raw.slice(quoteIdx + 1);
-      const cutPoints = ['</table>', '</ul>', '</p>', '. '];
-      let bestCut = -1;
-      cutPoints.forEach(cp => {
-        const idx = rest.lastIndexOf(cp);
-        if (idx > -1) bestCut = Math.max(bestCut, idx + cp.length);
-      });
-      if (bestCut > 0) rest = rest.slice(0, bestCut);
-      review = rest.replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
-    }
-    if (!review) return null;
-
-    const citations = [];
-    const citRegex = /\{\s*"title"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"authors"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"journal"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"year"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"url"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"reason"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}/g;
-    let m;
-    while ((m = citRegex.exec(raw)) !== null) {
-      try {
-        citations.push({
-          title: JSON.parse('"' + m[1] + '"'),
-          authors: JSON.parse('"' + m[2] + '"'),
-          journal: JSON.parse('"' + m[3] + '"'),
-          year: JSON.parse('"' + m[4] + '"'),
-          url: JSON.parse('"' + m[5] + '"'),
-          reason: JSON.parse('"' + m[6] + '"')
-        });
-      } catch (e) { /* skip malformed entry */ }
-    }
-
-    return { review, citations };
-  } catch (e) {
-    return null;
-  }
-}
-
 function cleanAndParseAIResponse(text, isObject = false) {
   let cleaned = String(text || '').trim();
   
@@ -1876,6 +1824,113 @@ app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, 
   }
 });
 
+// --- AI Literature Review: OpenAlex (retrieval) + Semantic Scholar (enrichment) + DeepSeek (sintesis) ---
+// Ganti dari Perplexity: sitasi sekarang dibangun langsung dari data database akademik
+// terstruktur (DOI/URL asli, terverifikasi) bukan diminta LLM untuk "mengarang" JSON,
+// sehingga tidak ada lagi risiko JSON kepotong/parsing gagal, dan biaya jauh lebih murah
+// (OpenAlex & Semantic Scholar gratis, DeepSeek cuma dipakai untuk menulis narasinya).
+
+// Rekonstruksi abstrak dari abstract_inverted_index milik OpenAlex (format: {kata: [posisi,...]})
+function reconstructAbstractFromInvertedIndex(invertedIndex) {
+  if (!invertedIndex || typeof invertedIndex !== 'object') return '';
+  const positions = [];
+  for (const word of Object.keys(invertedIndex)) {
+    for (const pos of invertedIndex[word]) {
+      positions[pos] = word;
+    }
+  }
+  return positions.filter(Boolean).join(' ');
+}
+
+async function searchOpenAlexWorks(query, perPage) {
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const params = new URLSearchParams({
+    search: query,
+    per_page: String(perPage),
+    select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access'
+  });
+  const apiKey = process.env.OPENALEX_API_KEY;
+  if (apiKey) params.set('api_key', apiKey);
+  const mailto = process.env.OPENALEX_MAILTO;
+  if (mailto) params.set('mailto', mailto);
+
+  const response = await fetchFn(`https://api.openalex.org/works?${params.toString()}`);
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenAlex API Error: ${response.status} - ${errText}`);
+  }
+  const data = await response.json();
+  const results = Array.isArray(data.results) ? data.results : [];
+
+  return results
+    .map(w => {
+      const abstract = reconstructAbstractFromInvertedIndex(w.abstract_inverted_index);
+      if (!abstract) return null; // buang paper tanpa abstrak - tidak berguna untuk sintesis
+      const authorNames = (w.authorships || []).map(a => a.author?.display_name).filter(Boolean);
+      const authors = authorNames.length > 3
+        ? `${authorNames.slice(0, 3).join(', ')}, et al.`
+        : authorNames.join(', ') || 'Tidak diketahui';
+      const doi = w.doi ? String(w.doi).replace('https://doi.org/', '') : null;
+      return {
+        title: w.title || 'Tanpa judul',
+        authors,
+        journal: w.primary_location?.source?.display_name || '-',
+        year: w.publication_year ? String(w.publication_year) : '-',
+        doi,
+        url: w.doi || w.primary_location?.landing_page_url || '#',
+        citedByCount: w.cited_by_count || 0,
+        isOpenAccess: !!w.open_access?.is_oa,
+        abstract: abstract.slice(0, 800)
+      };
+    })
+    .filter(Boolean);
+}
+
+// Enrichment best-effort - kalau gagal (rate limit dsb) tidak menggagalkan seluruh request,
+// cuma citation-nya tidak punya tldr/influentialCitationCount tambahan.
+async function enrichWithSemanticScholar(papers) {
+  const apiKey = process.env.SEMANTIC_SCHOLAR_API_KEY;
+  if (!apiKey) return papers;
+
+  const papersWithDoi = papers.filter(p => p.doi);
+  if (papersWithDoi.length === 0) return papers;
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const ids = papersWithDoi.map(p => `DOI:${p.doi}`);
+    const response = await fetchFn('https://api.semanticscholar.org/graph/v1/paper/batch?fields=tldr,influentialCitationCount', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey
+      },
+      body: JSON.stringify({ ids })
+    });
+
+    if (!response.ok) {
+      console.warn('[Semantic Scholar] Enrichment gagal, status', response.status);
+      return papers;
+    }
+
+    const results = await response.json();
+    const byDoi = {};
+    papersWithDoi.forEach((p, i) => { byDoi[p.doi] = results[i]; });
+
+    return papers.map(p => {
+      const match = p.doi ? byDoi[p.doi] : null;
+      if (!match) return p;
+      return {
+        ...p,
+        tldr: match.tldr?.text || null,
+        influentialCitationCount: match.influentialCitationCount ?? null
+      };
+    });
+  } catch (err) {
+    console.warn('[Semantic Scholar] Enrichment error (diabaikan, lanjut tanpa enrichment):', err.message);
+    return papers;
+  }
+}
+
 app.post('/api/lit-review', requireAccess, async (req, res) => {
   const { title, keywords, abstract } = req.body;
   const requestedMode = req.body.mode === 'pro' ? 'pro' : 'standard';
@@ -1898,14 +1953,12 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
     }
   }
 
-  // Mode "Pro" khusus Ultimate - sejak model diganti ke "sonar" (bukan sonar-pro),
-  // biaya per generate turun drastis (~Rp 160), jadi kuota bulanan khusus Pro
-  // dihapus (unlimited seperti mode Standar), tetap exclusive untuk tier Ultimate.
+  const tier = user ? (user.type || 'free') : 'free';
+  const isDeepTier = tier === 'ultimate' && requestedMode === 'pro';
 
-  const perplexityKey = process.env.PERPLEXITY_API_KEY;
-  
-  if (!perplexityKey) {
-    // Fallback lokal jika Perplexity API Key belum dikonfigurasi
+  const deepSeekKey = getDeepSeekApiKey();
+  if (!deepSeekKey) {
+    // Fallback lokal jika DeepSeek API Key belum dikonfigurasi
     if (user && (user.type === 'free' || user.type === 'premium')) {
       if (user.lastLitReviewMonth !== currentMonth) {
         user.lastLitReviewMonth = currentMonth;
@@ -1915,7 +1968,7 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
-    const localReview = `<h3>Tinjauan Pustaka: ${title}</h3><p>Fitur AI Literature Review berjalan di server namun <code>PERPLEXITY_API_KEY</code> belum terpasang di Railway.</p><p>Berikut adalah simulasi draf Tinjauan Pustaka untuk topik Anda:</p><ul><li><strong>Kajian Teori:</strong> Menganalisis landasan teoritis utama yang mendasari permasalahan penelitian Anda.</li><li><strong>Studi Terdahulu:</strong> Meneliti bagaimana para peneliti lain telah mendekati masalah serupa dan hasil penelitian mereka.</li><li><strong>Celah Penelitian (Research Gap):</strong> Mengidentifikasi apa yang belum diteliti dan bagaimana penelitian Anda akan mengisi celah tersebut.</li></ul>`;
+    const localReview = `<h3>Tinjauan Pustaka: ${title}</h3><p>Fitur AI Literature Review berjalan di server namun <code>DEEPSEEK_API_KEY</code> belum terpasang di Railway.</p><p>Berikut adalah simulasi draf Tinjauan Pustaka untuk topik Anda:</p><ul><li><strong>Kajian Teori:</strong> Menganalisis landasan teoritis utama yang mendasari permasalahan penelitian Anda.</li><li><strong>Studi Terdahulu:</strong> Meneliti bagaimana para peneliti lain telah mendekati masalah serupa dan hasil penelitian mereka.</li><li><strong>Celah Penelitian (Research Gap):</strong> Mengidentifikasi apa yang belum diteliti dan bagaimana penelitian Anda akan mengisi celah tersebut.</li></ul>`;
     const localCitations = [
       { title: "Panduan Penulisan Jurnal Ilmiah Scopus & Sinta", authors: "Abidin, M. I.", journal: "Pusat Riset Indonesia", year: "2026", url: "https://github.com/ilmanabidin1/pusatriset", reason: "Referensi dasar yang membahas tentang penyusunan draf tinjauan pustaka dan kesesuaian jurnal ilmiah." }
     ];
@@ -1932,102 +1985,87 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
 
   try {
     const fetchFn = globalThis.fetch || require('node-fetch');
+    const searchQuery = [title, keywords].filter(Boolean).join(' ').slice(0, 300);
+    const targetCount = isDeepTier ? 18 : 10;
 
-    // Mode "Pro" (sonar-pro, lebih dalam & mahal) hanya boleh dipakai akun Ultimate.
-    // Validasi ulang di server - jangan percaya body request mentah-mentah dari client.
-    const tier = user ? (user.type || 'free') : 'free';
-    const isDeepTier = tier === 'ultimate' && requestedMode === 'pro';
+    // 1. Retrieval - cari paper asli dari OpenAlex (gratis, DOI/URL terverifikasi)
+    let papers = await searchOpenAlexWorks(searchQuery, targetCount + 5);
+    papers.sort((a, b) => b.citedByCount - a.citedByCount);
+    papers = papers.slice(0, targetCount);
 
-    // Mode Pro tetap pakai model "sonar" yang sama seperti Standar (bukan sonar-pro) -
-    // base model ini tetap melakukan pencarian web real-time & menghasilkan sitasi asli,
-    // hanya bedanya kedalaman reasoning/konteks. sonar-pro terbukti cenderung lebih
-    // verbose/tidak konsisten mengikuti batas panjang, jadi lebih rawan kepotong di
-    // tengah JSON meski target kata sudah diturunkan berkali-kali. Model lebih murah
-    // ini sekaligus menekan biaya jauh lebih besar dibanding versi-versi sebelumnya.
-    const depthModel = 'sonar';
-    const depthMaxTokens = isDeepTier ? 4000 : 2500;
-    const depthInstructions = isDeepTier
-      ? `Buatlah Tinjauan Pustaka (Literature Review) yang padat dan efisien dalam Bahasa Indonesia. Wajib mencakup:
-1. Kajian Teori - jabarkan teori/konsep utama yang relevan secara ringkas.
-2. Studi Terdahulu / Penelitian Relevan - bandingkan temuan dari studi-studi sebelumnya secara singkat, rujuk sitasi yang relevan pada tiap poin.
-3. Kerangka Konseptual - sertakan representasi kerangka pemikiran/kerangka konseptual penelitian dalam bentuk tabel HTML (<table>) yang memetakan variabel/konsep utama, hubungan antar variabel, dan sumber teorinya. Ini WAJIB ada sebagai "bagan" tinjauan pustaka.
-4. Gap Analysis - identifikasi celah penelitian secara spesifik berdasarkan apa yang sudah/belum diteliti oleh studi-studi di atas.
-5. Peluang Novelty - jelaskan secara eksplisit apa peluang kebaruan (novelty) yang bisa diambil peneliti berdasarkan gap yang ditemukan.
-
-Panjang isi "review" MAKSIMAL 1000 kata (jangan melebihi ini - field "review" harus selesai/tertutup dengan rapi, jangan terpotong di tengah kalimat). Gunakan bahasa padat, jangan perpanjang teks demi kata.
-
-Cari dan sertakan referensi ilmiah ASLI dan REAL dari hasil pencarian web (bukan karangan) sebanyak 15 hingga 20 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut. Pastikan array "citations" ditutup dengan benar (JSON valid, tidak terpotong).`
-      : `Buatlah Tinjauan Pustaka (Literature Review) yang solid dan terstruktur dalam Bahasa Indonesia (ringkasan teori, perbandingan singkat studi terdahulu, dan gap analysis penelitian ini).
-
-Panjang isi "review" sekitar 500-800 kata, terstruktur dengan heading (h4/h5) dan paragraf yang rapi.
-
-Cari dan sertakan referensi ilmiah ASLI dari hasil pencarian web (bukan karangan) sebanyak 8 hingga 12 paper/jurnal berbeda yang relevan, masing-masing dengan URL aktif ke paper tersebut.`;
-
-    const prompt = `
-Anda adalah pakar penulisan jurnal ilmiah internasional dan peneliti senior yang berpengalaman menyusun tinjauan pustaka untuk publikasi Scopus/Sinta.
-Lakukan pencarian web untuk mencari paper ilmiah/jurnal yang relevan dengan topik/judul berikut.
-Judul: ${title}
-Keyword/Bidang: ${keywords || '-'}
-Abstrak: ${abstract || '-'}
-
-${depthInstructions}
-
-Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown seperti \`\`\`json):
-{
-  "review": "Isi teks Tinjauan Pustaka Anda dalam format HTML (gunakan tag h4/h5, p, ul/li, strong, table/tr/td, dll) yang rapi dan profesional",
-  "citations": [
-    {
-      "title": "Judul Paper Ilmiah yang ditemukan",
-      "authors": "Nama Penulis (contoh: Doe et al.)",
-      "journal": "Nama Jurnal/Penerbit",
-      "year": "Tahun Terbit",
-      "url": "URL aktif ke paper/jurnal ilmiah asli",
-      "reason": "Alasan mengapa paper ini sangat relevan dengan topik pengguna"
+    if (papers.length === 0) {
+      throw new Error('Tidak ditemukan paper ilmiah yang relevan di OpenAlex untuk topik ini. Coba perluas kata kunci.');
     }
-  ]
-}
-`;
 
-    const response = await fetchFn('https://api.perplexity.ai/chat/completions', {
+    // 2. Enrichment - khusus mode Pro, ambil tldr + influential citation count dari Semantic Scholar
+    if (isDeepTier) {
+      papers = await enrichWithSemanticScholar(papers);
+    }
+
+    // 3. Sintesis - DeepSeek menulis narasi HANYA berdasarkan paper yang sudah ditemukan (grounded, no fabrication)
+    const paperListText = papers.map((p, i) => {
+      const lines = [`${i + 1}. [${p.authors}, ${p.year}] "${p.title}" - ${p.journal} (dikutip ${p.citedByCount}x)`];
+      if (p.tldr) lines.push(`   Ringkasan: ${p.tldr}`);
+      lines.push(`   Abstrak: ${p.abstract}`);
+      return lines.join('\n');
+    }).join('\n\n');
+
+    const depthInstructions = isDeepTier
+      ? `Wajib mencakup: (1) Kajian Teori ringkas, (2) Studi Terdahulu - bandingkan temuan antar paper di atas dengan merujuk nama penulis & tahun, (3) tabel HTML (<table>) kerangka konseptual yang memetakan variabel/konsep utama & hubungannya, (4) Gap Analysis spesifik berdasarkan apa yang sudah/belum diteliti paper-paper di atas, (5) Peluang Novelty - kebaruan apa yang bisa diambil peneliti berdasarkan gap tersebut. Target panjang MAKSIMAL 1000 kata, bahasa padat.`
+      : `Cakup ringkasan teori, perbandingan singkat studi terdahulu (rujuk penulis & tahun), dan gap analysis. Target panjang 500-800 kata.`;
+
+    const systemPrompt = `Anda adalah pakar penulisan jurnal ilmiah internasional. Tulis Tinjauan Pustaka (Literature Review) dalam Bahasa Indonesia HANYA berdasarkan daftar paper ilmiah asli yang diberikan user - JANGAN mengarang paper/data lain di luar yang diberikan. Rujuk paper dengan format (Penulis, Tahun) di dalam teks. Output HARUS berupa HTML mentah saja (pakai tag h4/h5, p, ul/li, strong, table/tr/td), TANPA pembungkus markdown, TANPA JSON, TANPA preamble/penjelasan - langsung isi tinjauan pustakanya.`;
+
+    const userPrompt = `Judul penelitian: ${title}\nKeyword/Bidang: ${keywords || '-'}\nAbstrak: ${abstract || '-'}\n\nDaftar paper ilmiah hasil pencarian (gunakan ini sebagai satu-satunya sumber):\n${paperListText}\n\n${depthInstructions}\n\nTulis tinjauan pustakanya sekarang (HTML mentah saja):`;
+
+    const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+    const dsResponse = await fetchFn(deepSeekUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${perplexityKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
       },
       body: JSON.stringify({
-        model: depthModel,
-        max_tokens: depthMaxTokens,
+        model: 'deepseek-v4-flash',
+        max_tokens: 3000,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
         messages: [
-          {
-            role: 'system',
-            content: 'Anda adalah AI akademis yang melakukan riset literatur dan mengembalikan respon dalam format JSON sesuai instruksi, berbasis sumber nyata dari hasil pencarian web.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ]
       })
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Perplexity API Error: ${response.status} - ${errText}`);
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
     }
 
-    const resData = await response.json();
-    const content = resData?.choices?.[0]?.message?.content;
-    let parsed;
-    let wasTruncated = false;
-    try {
-      parsed = cleanAndParseAIResponse(content, true);
-    } catch (parseError) {
-      const salvaged = salvageTruncatedLitReviewJson(String(content || ''));
-      if (!salvaged) throw parseError;
-      parsed = salvaged;
-      wasTruncated = true;
-      console.warn('[Perplexity Lit Review] Respons kepotong, memakai hasil salvage sebagian.');
+    const dsData = await dsResponse.json();
+    const choice = dsData?.choices?.[0];
+    let review = choice?.message?.content?.trim();
+    if (!review && choice?.message?.reasoning_content) {
+      review = String(choice.message.reasoning_content).trim();
     }
+    if (!review) {
+      console.error('[Lit Review DeepSeek] Respons kosong, raw response:', JSON.stringify(dsData).slice(0, 1500));
+      throw new Error('Respons AI kosong saat menulis tinjauan pustaka.');
+    }
+
+    // Citations dibangun langsung dari data OpenAlex/Semantic Scholar (bukan dari LLM) -
+    // jadi selalu valid & tidak mungkin "kepotong" seperti pendekatan lama.
+    const citations = papers.map(p => ({
+      title: p.title,
+      authors: p.authors,
+      journal: p.journal,
+      year: p.year,
+      url: p.url,
+      reason: p.tldr
+        ? p.tldr
+        : `Dikutip ${p.citedByCount}x, relevan dengan topik penelitian berdasarkan abstrak.${p.isOpenAccess ? ' (Open Access)' : ''}`
+    }));
 
     // Update usage for Free & Premium users
     if (user && (user.type === 'free' || user.type === 'premium')) {
@@ -2039,11 +2077,11 @@ Balas HANYA dengan format JSON valid sebagai berikut (tanpa pembungkus markdown 
       saveUsers(users);
     }
 
-    addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review: parsed.review, citations: parsed.citations || [] });
+    addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review, citations });
 
-    res.json({ ok: true, source: 'perplexity', review: parsed.review, citations: parsed.citations || [], mode: requestedMode, truncated: wasTruncated });
+    res.json({ ok: true, source: 'openalex', review, citations, mode: requestedMode });
   } catch (error) {
-    console.error('[Perplexity Lit Review] Error:', error);
+    console.error('[Lit Review] Error:', error);
     res.status(500).json({ ok: false, message: 'Gagal mencari referensi & membuat literature review: ' + error.message });
   }
 });
