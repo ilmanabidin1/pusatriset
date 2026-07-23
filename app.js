@@ -2171,13 +2171,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     filterJournals();
 
-    // Tampilkan ajakan cari live OpenAlex begitu keyword cukup panjang; sembunyikan
-    // hasil pencarian sebelumnya karena sudah tidak relevan dengan keyword baru.
-    const liveJournalSection = document.getElementById('liveJournalSection');
+    // Kosongkan hasil live OpenAlex sebelumnya karena sudah tidak relevan dengan
+    // keyword baru - section-nya sendiri selalu terlihat (tidak disembunyikan).
     const liveJournalResultsContainer = document.getElementById('liveJournalResultsContainer');
-    if (liveJournalSection) {
-      liveJournalSection.style.display = searchInput.value.trim().length >= 3 ? 'block' : 'none';
-    }
     if (liveJournalResultsContainer) liveJournalResultsContainer.innerHTML = '';
   });
 
@@ -2188,7 +2184,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLiveJournalsBtn.addEventListener('click', async () => {
       const query = searchInput.value.trim();
       const liveJournalResultsContainer = document.getElementById('liveJournalResultsContainer');
-      if (!query || query.length < 3 || !liveJournalResultsContainer) return;
+      if (!liveJournalResultsContainer) return;
+      if (!query || query.length < 3) {
+        alert('Ketik kata kunci (minimal 3 karakter) di kolom pencarian di atas terlebih dahulu.');
+        searchInput.focus();
+        return;
+      }
 
       const originalHtml = loadLiveJournalsBtn.innerHTML;
       loadLiveJournalsBtn.disabled = true;
@@ -2261,9 +2262,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearSearchBtn.style.display = 'none';
     searchInput.focus();
     filterJournals();
-    const liveJournalSection = document.getElementById('liveJournalSection');
     const liveJournalResultsContainer = document.getElementById('liveJournalResultsContainer');
-    if (liveJournalSection) liveJournalSection.style.display = 'none';
     if (liveJournalResultsContainer) liveJournalResultsContainer.innerHTML = '';
   });
 
