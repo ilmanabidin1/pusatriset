@@ -1381,6 +1381,61 @@ function cleanAndParseAIResponse(text, isObject = false) {
   }
 }
 
+// AI Match Score sekarang pakai DeepSeek (konsisten dengan Lit Review & Disclosure
+// Generator) alih-alih Claude/Gemini. getGeminiRecommendations() di bawah tetap
+// dipertahankan sebagai fallback kalau DEEPSEEK_API_KEY belum diset tapi Claude/Gemini ada.
+async function getDeepSeekJournalRecommendations(articleTitle, articleKeywords, articleAbstract, candidates) {
+  const apiKey = getDeepSeekApiKey();
+  if (!apiKey) {
+    throw new Error('DEEPSEEK_API_KEY belum dikonfigurasi di server.');
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+  const systemPrompt = `You are a journal recommendation API for JurnalHub. You MUST respond with ONLY valid JSON (no markdown, no text outside JSON). Return an object with exactly two fields: "review" (a 2-3 sentence analysis of the article in Indonesian) and "recommendations" (an array of exactly 3 journal matches chosen from the candidate list given by the user). Each recommendation must be {"id": <candidate id, copy exactly as given, keep as string or number matching the input>, "matchScore": <integer 70-98>, "reason": "<short reason in Indonesian>"}.`;
+
+  const userContent = `Analisis artikel ini dan pilih tepat 3 jurnal paling cocok dari daftar kandidat berdasarkan judul, keyword/bidang, abstrak, scope jurnal, rank, dan biaya.\n\nArtikel:\nJudul: ${articleTitle || '-'}\nKeyword/Bidang: ${articleKeywords || '-'}\nAbstrak: ${articleAbstract || '-'}\n\nKandidat jurnal:\n${JSON.stringify(candidates)}\n\nBalas dengan JSON object persis: {"review": "<2-3 kalimat analisis artikel dalam Bahasa Indonesia>", "recommendations": [{"id": <id>, "matchScore": <70-98>, "reason": "<alasan singkat>"}]}`;
+
+  const response = await fetchFn(deepSeekUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'deepseek-v4-flash',
+      max_tokens: 1500,
+      stream: false,
+      thinking: { type: 'disabled' },
+      extra_body: { thinking: { type: 'disabled' } },
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`DeepSeek API Error Status: ${response.status} - ${errText}`);
+  }
+
+  const resData = await response.json();
+  const choice = resData?.choices?.[0];
+  let content = choice?.message?.content?.trim();
+  if (!content && choice?.message?.reasoning_content) {
+    content = String(choice.message.reasoning_content).trim();
+  }
+  if (!content) {
+    console.error('[Match Score DeepSeek] Respons kosong, raw:', JSON.stringify(resData).slice(0, 1000));
+    throw new Error('Respons AI kosong.');
+  }
+
+  const parsed = cleanAndParseAIResponse(content, true);
+  return { review: parsed.review || null, items: parsed.recommendations || [] };
+}
+
 async function getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates) {
   const prompt = `
 Anda adalah asisten rekomendasi jurnal ilmiah untuk JurnalHub.
@@ -1516,6 +1571,24 @@ ${JSON.stringify(candidates)}
   throw lastError || new Error('Tidak ada API Key (ANTHROPIC_API_KEY / GEMINI_API_KEY) atau Kredensial Vertex AI yang terkonfigurasi.');
 }
 
+// Pencarian jurnal "live" dari OpenAlex untuk melengkapi 756 database lokal di
+// halaman Database Jurnal - ditampilkan terpisah di frontend (bukan menggantikan
+// database lokal yang sudah dikurasi Scopus/Sinta/No-APC).
+app.get('/api/journals/search-live', requireAccess, async (req, res) => {
+  const query = String(req.query.q || '').trim().slice(0, 200);
+  if (!query || query.length < 3) {
+    return res.status(400).json({ ok: false, message: 'Kata kunci pencarian minimal 3 karakter.' });
+  }
+
+  try {
+    const journals = await searchOpenAlexSources(query, 12);
+    res.json({ ok: true, journals });
+  } catch (error) {
+    console.error('[Journals Search Live] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mencari jurnal live dari OpenAlex: ' + error.message });
+  }
+});
+
 app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   const articleTitle = String(req.body.title || '').trim();
   const articleKeywords = String(req.body.keywords || '').trim();
@@ -1536,44 +1609,65 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     }
   }
 
-  const candidates = getLocalCandidates(articleTitle, articleKeywords, articleAbstract);
+  const localCandidates = getLocalCandidates(articleTitle, articleKeywords, articleAbstract);
+
+  // Perluas kandidat di luar 756 database lokal dengan jurnal live dari OpenAlex
+  // (best-effort - kalau gagal/API key belum ada, tetap lanjut cuma pakai lokal).
+  let openAlexCandidates = [];
+  try {
+    const searchQuery = [articleTitle, articleKeywords].filter(Boolean).join(' ').slice(0, 300);
+    if (searchQuery) {
+      openAlexCandidates = await searchOpenAlexSources(searchQuery, 12);
+    }
+  } catch (err) {
+    console.warn('[Match Score] Gagal ambil kandidat OpenAlex (diabaikan, lanjut pakai lokal):', err.message);
+  }
+
+  const candidates = [...localCandidates, ...openAlexCandidates];
 
   if (candidates.length === 0) {
     res.json({ ok: true, source: 'local', recommendations: [] });
     return;
   }
 
+  const localFallbackRecommendations = () => normalizeAiRecommendations(
+    localCandidates.slice(0, 3).map((candidate, index) => ({
+      id: candidate.id,
+      matchScore: Math.min(96, Math.max(72, candidate.localScore + 28 - (index * 4))),
+      reason: 'Rekomendasi dihitung dari kecocokan keyword, bidang keilmuan, dan deskripsi jurnal.'
+    })),
+    candidates
+  );
+
+  const hasDeepSeekKey = !!getDeepSeekApiKey();
   const hasClaudeKey = !!process.env.ANTHROPIC_API_KEY;
   const hasApiKey = !!process.env.GEMINI_API_KEY;
   const hasVertex = !!(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 
-  if (!hasClaudeKey && !hasApiKey && !hasVertex) {
-    const recommendations = normalizeAiRecommendations(
-      candidates.slice(0, 3).map((candidate, index) => ({
-        id: candidate.id,
-        matchScore: Math.min(96, Math.max(72, candidate.localScore + 28 - (index * 4))),
-        reason: 'Rekomendasi dihitung dari kecocokan keyword, bidang keilmuan, dan deskripsi jurnal.'
-      })),
-      candidates
-    );
+  if (!hasDeepSeekKey && !hasClaudeKey && !hasApiKey && !hasVertex) {
+    const recommendations = localFallbackRecommendations();
 
     addHistoryItem(req.session.userId, 'match', { title: articleTitle, keywords: articleKeywords, abstract: articleAbstract }, { recommendations, review: null });
 
     res.json({
       ok: true,
       source: 'local',
-      warning: 'Kredensial Claude (ANTHROPIC_API_KEY), Gemini (GEMINI_API_KEY), atau Vertex AI belum dikonfigurasi. Menggunakan kalkulasi kecocokan lokal.',
+      warning: 'Kredensial DeepSeek (DEEPSEEK_API_KEY), Claude, atau Gemini belum dikonfigurasi. Menggunakan kalkulasi kecocokan lokal.',
       recommendations: recommendations
     });
     return;
   }
 
   try {
-    const aiResult = await getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates);
+    // DeepSeek jadi provider utama (konsisten dengan fitur AI lain di JurnalHub);
+    // Claude/Gemini tetap jadi fallback kalau DeepSeek belum diset tapi salah satunya ada.
+    const aiResult = hasDeepSeekKey
+      ? await getDeepSeekJournalRecommendations(articleTitle, articleKeywords, articleAbstract, candidates)
+      : await getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates);
     const aiItems = Array.isArray(aiResult) ? aiResult : (aiResult.items || aiResult);
     const review = aiResult?.review || null;
     const recommendations = normalizeAiRecommendations(aiItems, candidates);
-    const sourceName = hasClaudeKey ? 'claude' : 'gemini';
+    const sourceName = hasDeepSeekKey ? 'deepseek' : (hasClaudeKey ? 'claude' : 'gemini');
 
     // Increment usage for Free users
     if (user && (user.type || 'free') === 'free') {
@@ -1590,15 +1684,8 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     res.json({ ok: true, source: sourceName, review, recommendations });
   } catch (error) {
     console.error(error);
-    const activeProvider = hasClaudeKey ? 'Claude' : 'Gemini';
-    const recommendations = normalizeAiRecommendations(
-      candidates.slice(0, 3).map((candidate, index) => ({
-        id: candidate.id,
-        matchScore: Math.min(96, Math.max(72, candidate.localScore + 28 - (index * 4))),
-        reason: 'Rekomendasi fallback dihitung dari kecocokan keyword, bidang keilmuan, dan deskripsi jurnal.'
-      })),
-      candidates
-    );
+    const activeProvider = hasDeepSeekKey ? 'DeepSeek' : (hasClaudeKey ? 'Claude' : 'Gemini');
+    const recommendations = localFallbackRecommendations();
 
     addHistoryItem(req.session.userId, 'match', { title: articleTitle, keywords: articleKeywords, abstract: articleAbstract }, { recommendations, review: null });
 
@@ -1885,6 +1972,72 @@ async function searchOpenAlexWorks(query, perPage) {
       };
     })
     .filter(Boolean);
+}
+
+// --- Database Jurnal enrichment: cari jurnal via OpenAlex Sources API ---
+// Dipakai untuk (1) memperluas kandidat AI Match Score di luar 756 jurnal statis
+// lokal, dan (2) hasil pencarian "live" di halaman Database Jurnal. Dinormalisasi
+// ke skema field yang SAMA dengan database.js supaya bisa dipakai render/AI yang
+// sudah ada, tapi type diberi label "OpenAlex" (bukan "Scopus"/"Sinta") karena
+// kita tidak bisa mengklaim status akreditasi Scopus/Sinta dari data ini - itu
+// tetap eksklusif milik 756 jurnal database lokal yang sudah dikurasi.
+let openAlexSourcesCache = new Map(); // query(lowercase) -> { data, expiresAt }
+const OPENALEX_SOURCES_CACHE_TTL_MS = 10 * 60 * 1000; // 10 menit
+
+async function searchOpenAlexSources(query, perPage) {
+  const cacheKey = `${query.toLowerCase()}::${perPage}`;
+  const cached = openAlexSourcesCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data;
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const params = new URLSearchParams({
+    search: query,
+    per_page: String(perPage),
+    filter: 'type:journal',
+    select: 'id,display_name,host_organization_name,homepage_url,issn_l,works_count,summary_stats,is_oa,is_in_doaj,apc_usd,topics'
+  });
+  const apiKey = process.env.OPENALEX_API_KEY;
+  if (apiKey) params.set('api_key', apiKey);
+  const mailto = process.env.OPENALEX_MAILTO;
+  if (mailto) params.set('mailto', mailto);
+
+  const response = await fetchFn(`https://api.openalex.org/sources?${params.toString()}`);
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenAlex Sources API Error: ${response.status} - ${errText}`);
+  }
+  const data = await response.json();
+  const results = Array.isArray(data.results) ? data.results : [];
+
+  const normalized = results.map(s => {
+    const hIndex = s.summary_stats?.h_index ?? 0;
+    const topicNames = (s.topics || []).slice(0, 3).map(t => t.display_name).filter(Boolean);
+    const isFree = !s.apc_usd;
+    const apcText = isFree ? 'Gratis (No APC)' : `$${s.apc_usd} USD`;
+
+    return {
+      id: `oa-${String(s.id || '').replace('https://openalex.org/', '')}`,
+      title: s.display_name || 'Tanpa nama',
+      publisher: s.host_organization_name || '-',
+      type: 'OpenAlex',
+      rank: `H-Index ${hIndex}`,
+      subject: topicNames.join(', ') || '-',
+      keilmuan: topicNames.join(', ') || '-',
+      apc: apcText,
+      isFree,
+      isFastTrack: false,
+      description: `${s.works_count ? s.works_count.toLocaleString('id-ID') + ' artikel terindeks' : 'Data OpenAlex'}${s.is_in_doaj ? ', terdaftar di DOAJ' : ''}${s.is_oa ? ', Open Access' : ''}.`,
+      url: s.homepage_url || `https://openalex.org/${String(s.id || '').replace('https://openalex.org/', '')}`,
+      source: 'openalex',
+      hIndex,
+      worksCount: s.works_count || 0
+    };
+  });
+
+  openAlexSourcesCache.set(cacheKey, { data: normalized, expiresAt: Date.now() + OPENALEX_SOURCES_CACHE_TTL_MS });
+  return normalized;
 }
 
 // Enrichment best-effort - kalau gagal (rate limit dsb) tidak menggagalkan seluruh request,

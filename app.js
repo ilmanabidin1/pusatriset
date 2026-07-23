@@ -1714,30 +1714,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     journals.forEach((journal, index) => {
       const card = document.createElement('div');
-      card.className = `journal-card match-result-card ${journal.type.toLowerCase()}-card`;
+      const isOpenAlex = journal.source === 'openalex';
+      card.className = `journal-card match-result-card ${isOpenAlex ? 'openalex' : journal.type.toLowerCase()}-card`;
       card.style.animationDelay = `${index * 0.04}s`;
 
-      const typeBadgeClass = journal.type === 'Scopus' ? 'type-scopus' : 'type-sinta';
-      const rankBadgeClass = `rank-${journal.rank.toLowerCase()}`;
+      const typeBadgeClass = isOpenAlex ? 'type-openalex' : (journal.type === 'Scopus' ? 'type-scopus' : 'type-sinta');
+      const typeIcon = isOpenAlex ? 'fa-solid fa-globe' : (journal.type === 'Scopus' ? 'fa-solid fa-globe' : 'fa-solid fa-medal');
+      const rankBadgeClass = `rank-${journal.rank.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
       const apcClass = journal.isFree ? 'free' : 'paid';
       const matchReason = journal.matchReason ? `<p class="match-reason">${journal.matchReason}</p>` : '';
-      const isBookmarked = (currentUser.user && currentUser.user.savedJournals && currentUser.user.savedJournals.includes(journal.id));
+      // Bookmark hanya untuk jurnal database lokal (ID numerik) - kandidat live
+      // OpenAlex pakai ID string ("oa-...") yang tidak didukung sistem bookmark saat ini.
+      const isBookmarked = !isOpenAlex && (currentUser.user && currentUser.user.savedJournals && currentUser.user.savedJournals.includes(journal.id));
+      const bookmarkBtnHtml = isOpenAlex ? '' : `
+              <button class="bookmark-btn ${isBookmarked ? 'active' : ''}" data-id="${journal.id}" title="${isBookmarked ? 'Hapus dari Tersimpan' : 'Simpan Jurnal'}">
+                <i class="${isBookmarked ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
+              </button>`;
 
       card.innerHTML = `
         <div>
           <div class="card-header">
             <div class="card-badge-group">
               ${getMatchScoreBadge(journal.matchScore)}
-              <span class="card-type-tag ${typeBadgeClass}">
-                <i class="${journal.type === 'Scopus' ? 'fa-solid fa-globe' : 'fa-solid fa-medal'}"></i>
+              <span class="card-type-tag ${typeBadgeClass}" ${isOpenAlex ? 'title="Sumber: OpenAlex (belum diverifikasi status Scopus/Sinta)"' : ''}>
+                <i class="${typeIcon}"></i>
                 ${journal.type}
               </span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span class="rank-badge ${rankBadgeClass}">${journal.rank}</span>
-              <button class="bookmark-btn ${isBookmarked ? 'active' : ''}" data-id="${journal.id}" title="${isBookmarked ? 'Hapus dari Tersimpan' : 'Simpan Jurnal'}">
-                <i class="${isBookmarked ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
-              </button>
+              ${bookmarkBtnHtml}
             </div>
           </div>
           <div class="card-body">
@@ -2164,7 +2170,90 @@ document.addEventListener('DOMContentLoaded', () => {
       clearSearchBtn.style.display = 'none';
     }
     filterJournals();
+
+    // Tampilkan ajakan cari live OpenAlex begitu keyword cukup panjang; sembunyikan
+    // hasil pencarian sebelumnya karena sudah tidak relevan dengan keyword baru.
+    const liveJournalSection = document.getElementById('liveJournalSection');
+    const liveJournalResultsContainer = document.getElementById('liveJournalResultsContainer');
+    if (liveJournalSection) {
+      liveJournalSection.style.display = searchInput.value.trim().length >= 3 ? 'block' : 'none';
+    }
+    if (liveJournalResultsContainer) liveJournalResultsContainer.innerHTML = '';
   });
+
+  // Pencarian jurnal "live" dari OpenAlex - melengkapi 756 database lokal, dipicu
+  // manual (bukan auto per-keystroke) supaya tidak boros panggilan API.
+  const loadLiveJournalsBtn = document.getElementById('loadLiveJournalsBtn');
+  if (loadLiveJournalsBtn) {
+    loadLiveJournalsBtn.addEventListener('click', async () => {
+      const query = searchInput.value.trim();
+      const liveJournalResultsContainer = document.getElementById('liveJournalResultsContainer');
+      if (!query || query.length < 3 || !liveJournalResultsContainer) return;
+
+      const originalHtml = loadLiveJournalsBtn.innerHTML;
+      loadLiveJournalsBtn.disabled = true;
+      loadLiveJournalsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
+      liveJournalResultsContainer.innerHTML = '';
+
+      try {
+        const res = await fetch(`/api/journals/search-live?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          liveJournalResultsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem;">${data.message || 'Gagal mencari jurnal live dari OpenAlex.'}</p>`;
+          return;
+        }
+        if (!data.journals || data.journals.length === 0) {
+          liveJournalResultsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem;">Tidak ada hasil tambahan dari OpenAlex untuk kata kunci ini.</p>`;
+          return;
+        }
+        data.journals.forEach((journal, index) => {
+          const card = document.createElement('div');
+          card.className = 'journal-card openalex-card';
+          card.style.animationDelay = `${index * 0.04}s`;
+          const apcClass = journal.isFree ? 'free' : 'paid';
+          card.innerHTML = `
+            <div>
+              <div class="card-header">
+                <div class="card-badge-group">
+                  <span class="card-type-tag type-openalex" title="Sumber: OpenAlex (belum diverifikasi status Scopus/Sinta)">
+                    <i class="fa-solid fa-globe"></i> OpenAlex
+                  </span>
+                </div>
+                <span class="rank-badge" style="background: rgba(139,92,246,0.1); color: #7c3aed; border: 1px solid rgba(139,92,246,0.2);">${journal.rank}</span>
+              </div>
+              <div class="card-body">
+                <h3 class="journal-title" title="${escapeHtml(journal.title)}">${escapeHtml(journal.title)}</h3>
+                <span class="journal-publisher"><i class="fa-regular fa-building"></i> ${escapeHtml(journal.publisher)}</span>
+                <p class="journal-desc">${escapeHtml(journal.description)}</p>
+              </div>
+            </div>
+            <div class="card-footer-wrapper">
+              <div class="card-meta-details">
+                <div class="meta-detail-row">
+                  <span class="meta-label">Bidang:</span>
+                  <span class="meta-value">${escapeHtml(journal.subject)}</span>
+                </div>
+                <div class="meta-detail-row">
+                  <span class="meta-label">Biaya APC:</span>
+                  <span class="meta-value meta-apc ${apcClass}">${escapeHtml(journal.apc)}</span>
+                </div>
+              </div>
+              <div class="card-footer" style="margin-top: 1.25rem;">
+                <a href="${journal.url}" target="_blank" class="journal-link">Kunjungi Jurnal <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+              </div>
+            </div>
+          `;
+          liveJournalResultsContainer.appendChild(card);
+        });
+      } catch (err) {
+        console.error('[Live Journal Search]', err);
+        liveJournalResultsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem;">Gagal menghubungi server untuk mencari jurnal live.</p>`;
+      } finally {
+        loadLiveJournalsBtn.disabled = false;
+        loadLiveJournalsBtn.innerHTML = originalHtml;
+      }
+    });
+  }
 
   // Bersihkan kolom pencarian
   clearSearchBtn.addEventListener('click', () => {
@@ -2172,6 +2261,10 @@ document.addEventListener('DOMContentLoaded', () => {
     clearSearchBtn.style.display = 'none';
     searchInput.focus();
     filterJournals();
+    const liveJournalSection = document.getElementById('liveJournalSection');
+    const liveJournalResultsContainer = document.getElementById('liveJournalResultsContainer');
+    if (liveJournalSection) liveJournalSection.style.display = 'none';
+    if (liveJournalResultsContainer) liveJournalResultsContainer.innerHTML = '';
   });
 
   // Deteksi Perubahan Filter Dropdown & Checkbox

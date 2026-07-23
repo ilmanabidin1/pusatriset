@@ -3274,6 +3274,21 @@
           </button>
         </div>
 
+        <!-- Hasil Live dari OpenAlex - melengkapi database lokal, bukan menggantikan.
+             Belum diverifikasi status Scopus/Sinta, jadi ditampilkan terpisah & jelas ditandai. -->
+        <div id="liveJournalSection" style="display: none; margin-top: 2.5rem; border-top: 1px dashed rgba(8,34,64,0.1); padding-top: 2rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+            <div>
+              <span class="banner-badge" style="background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.2); color: #8b5cf6;"><i class="fa-solid fa-globe"></i> Hasil Live dari OpenAlex</span>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.5rem; max-width: 640px;">Jurnal tambahan di luar 756 database JurnalHub yang dikurasi, diambil real-time dari OpenAlex. Status akreditasi Scopus/Sinta belum diverifikasi untuk hasil ini.</p>
+            </div>
+            <button type="button" id="loadLiveJournalsBtn" class="reset-filter-btn" style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.25); color: #7c3aed; white-space: nowrap;">
+              <i class="fa-solid fa-magnifying-glass"></i> Cari di OpenAlex
+            </button>
+          </div>
+          <div class="results-grid" id="liveJournalResultsContainer"></div>
+        </div>
+
       </div>
 
       <!-- TAB: AI FOR RESEARCH (GRID MAIN VIEW) -->
