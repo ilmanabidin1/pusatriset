@@ -3457,8 +3457,43 @@ app.use('/templates', requireAccess, (req, res, next) => {
 
 // --- PAYMENT: Faspay Xpress (satu-satunya penyedia pembayaran - iPaymu sudah dilepas) ---
 
+// Kode promo cuma boleh dipakai untuk paket bulanan - kalau valid, harga & deskripsi
+// item yang dikirim ke Faspay (jadi yang benar-benar ditagih) sudah didiskon di sini,
+// bukan cuma tampilan di frontend.
+function applyPromoToItemDef(plan, planId, promoCode) {
+  if (!promoCode) return { itemDef: plan, error: null };
+  const promo = getPromoDiscount(promoCode);
+  if (!promo) {
+    return { itemDef: null, error: 'Kode promo tidak valid atau sudah tidak berlaku.' };
+  }
+  if (!planId.endsWith('_monthly')) {
+    return { itemDef: null, error: 'Kode promo hanya berlaku untuk paket bulanan.' };
+  }
+  const discountedPrice = Math.round(plan.price * (1 - promo.discountPercent / 100));
+  return {
+    itemDef: {
+      ...plan,
+      price: discountedPrice,
+      desc: `${plan.desc} Promo ${String(promoCode).trim().toUpperCase()} potongan ${promo.discountPercent} persen`
+    },
+    error: null
+  };
+}
+
+app.post('/api/promo/validate', requireAccess, (req, res) => {
+  const { code, planId } = req.body;
+  const promo = getPromoDiscount(code);
+  if (!promo) {
+    return res.status(400).json({ ok: false, message: 'Kode promo tidak valid atau sudah tidak berlaku.' });
+  }
+  if (planId && !String(planId).endsWith('_monthly')) {
+    return res.status(400).json({ ok: false, message: 'Kode promo hanya berlaku untuk paket bulanan.' });
+  }
+  res.json({ ok: true, discountPercent: promo.discountPercent });
+});
+
 app.post('/api/payment/create', requireAccess, async (req, res) => {
-  const { planId } = req.body;
+  const { planId, promoCode } = req.body;
   if (!planId) {
     return res.status(400).json({ ok: false, message: 'Plan ID wajib dipilih.' });
   }
@@ -3467,7 +3502,13 @@ app.post('/api/payment/create', requireAccess, async (req, res) => {
   if (!plan) {
     return res.status(400).json({ ok: false, message: 'Plan ID tidak valid.' });
   }
-  return createFaspayTransaction(req, res, { kind: 'subscription', itemId: planId, itemDef: plan, userId: req.session.userId });
+
+  const { itemDef, error } = applyPromoToItemDef(plan, planId, promoCode);
+  if (error) {
+    return res.status(400).json({ ok: false, message: error });
+  }
+
+  return createFaspayTransaction(req, res, { kind: 'subscription', itemId: planId, itemDef, userId: req.session.userId });
 });
 
 app.post('/api/payment/topup/create', requireAccess, async (req, res) => {
@@ -3557,6 +3598,19 @@ const FASPAY_PLAN_PRICES = {
   ultimate_monthly: { price: 149000, name: 'Ultimate Bulanan', desc: 'Langganan JurnalHub Ultimate Bulanan' },
   ultimate_yearly: { price: 1500000, name: 'Ultimate Tahunan', desc: 'Langganan JurnalHub Ultimate Tahunan' }
 };
+
+// Kode promo diskon - berlaku HANYA untuk paket bulanan (_monthly), tidak untuk
+// tahunan (yang sudah punya diskon "Hemat s.d 16%" sendiri). Key selalu dicocokkan
+// uppercase supaya input user tidak case-sensitive.
+const PROMO_CODES = {
+  JHTHREADS: { discountPercent: 20 },
+  JHTIKTOK: { discountPercent: 20 }
+};
+
+function getPromoDiscount(code) {
+  if (!code) return null;
+  return PROMO_CODES[String(code).trim().toUpperCase()] || null;
+}
 
 const FASPAY_TOPUP_PACKAGES = {
   starter: { price: 39000, name: 'Humanizer Starter Pack', desc: 'Topup Kuota Kata Humanizer 5000 Kata', words: 5000 },
@@ -3649,12 +3703,16 @@ async function createFaspayTransaction(req, res, { kind, itemId, itemDef, userId
 }
 
 app.post('/api/payment/faspay/create', requireAccess, async (req, res) => {
-  const { planId } = req.body;
+  const { planId, promoCode } = req.body;
   const plan = planId && FASPAY_PLAN_PRICES[planId];
   if (!plan) {
     return res.status(400).json({ ok: false, message: 'Plan ID tidak valid.' });
   }
-  await createFaspayTransaction(req, res, { kind: 'subscription', itemId: planId, itemDef: plan, userId: req.session.userId });
+  const { itemDef, error } = applyPromoToItemDef(plan, planId, promoCode);
+  if (error) {
+    return res.status(400).json({ ok: false, message: error });
+  }
+  await createFaspayTransaction(req, res, { kind: 'subscription', itemId: planId, itemDef, userId: req.session.userId });
 });
 
 app.post('/api/payment/faspay/topup/create', requireAccess, async (req, res) => {

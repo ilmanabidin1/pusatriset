@@ -4544,23 +4544,61 @@
         });
       }
 
+      // Harga dasar (dalam Rupiah) - dipakai untuk render tampilan & hitung diskon
+      // promo client-side. Angka yang BENAR-BENAR ditagih tetap dihitung ulang di
+      // server dari FASPAY_PLAN_PRICES + PROMO_CODES saat checkout, jadi ini murni
+      // tampilan - bukan sumber kebenaran pembayaran.
+      const MODAL_BASE_PRICES = {
+        premium_monthly: 79000, ultimate_monthly: 149000,
+        premium_yearly_per_month: 66000, ultimate_yearly_per_month: 125000
+      };
+      let appliedPromoCode = null;
+      let appliedPromoDiscountPercent = 0;
+      window.appliedPromoCode = null; // dibaca saat submit /api/payment/create
+
+      function formatRb(n) {
+        return 'Rp' + Math.round(n / 1000) + 'rb';
+      }
+
+      function renderModalPrices() {
+        const isYearly = switchYearly && switchYearly.classList.contains('active');
+        const premiumPriceText = document.getElementById('premiumPriceText');
+        const premiumPriceDetail = document.getElementById('premiumPriceDetail');
+        const ultimatePriceText = document.getElementById('ultimatePriceText');
+        const ultimatePriceDetail = document.getElementById('ultimatePriceDetail');
+        const suffix = '<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
+
+        if (isYearly) {
+          // Promo hanya berlaku untuk paket bulanan - tampilan tahunan selalu normal.
+          if (premiumPriceText) premiumPriceText.innerHTML = formatRb(MODAL_BASE_PRICES.premium_yearly_per_month) + suffix;
+          if (premiumPriceDetail) premiumPriceDetail.textContent = 'Ditagih Rp800rb/tahun';
+          if (ultimatePriceText) ultimatePriceText.innerHTML = formatRb(MODAL_BASE_PRICES.ultimate_yearly_per_month) + suffix;
+          if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Ditagih Rp1.5jt/tahun';
+          return;
+        }
+
+        if (appliedPromoCode) {
+          const premiumDiscounted = Math.round(MODAL_BASE_PRICES.premium_monthly * (1 - appliedPromoDiscountPercent / 100));
+          const ultimateDiscounted = Math.round(MODAL_BASE_PRICES.ultimate_monthly * (1 - appliedPromoDiscountPercent / 100));
+          const strike = (n) => `<span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500; text-decoration: line-through; margin-right: 0.3rem;">${formatRb(n)}</span>`;
+          if (premiumPriceText) premiumPriceText.innerHTML = strike(MODAL_BASE_PRICES.premium_monthly) + formatRb(premiumDiscounted) + suffix;
+          if (premiumPriceDetail) premiumPriceDetail.textContent = `Promo ${appliedPromoCode} -${appliedPromoDiscountPercent}%`;
+          if (ultimatePriceText) ultimatePriceText.innerHTML = strike(MODAL_BASE_PRICES.ultimate_monthly) + formatRb(ultimateDiscounted) + suffix;
+          if (ultimatePriceDetail) ultimatePriceDetail.textContent = `Promo ${appliedPromoCode} -${appliedPromoDiscountPercent}%`;
+        } else {
+          if (premiumPriceText) premiumPriceText.innerHTML = formatRb(MODAL_BASE_PRICES.premium_monthly) + suffix;
+          if (premiumPriceDetail) premiumPriceDetail.textContent = 'Ditagih bulanan';
+          if (ultimatePriceText) ultimatePriceText.innerHTML = formatRb(MODAL_BASE_PRICES.ultimate_monthly) + suffix;
+          if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Ditagih bulanan';
+        }
+      }
+
       // Switch to Monthly Plan
       if (switchMonthly) {
         switchMonthly.addEventListener('click', () => {
           switchMonthly.classList.add('active');
           if (switchYearly) switchYearly.classList.remove('active');
-          
-          const premiumPriceText = document.getElementById('premiumPriceText');
-          const premiumPriceDetail = document.getElementById('premiumPriceDetail');
-          const ultimatePriceText = document.getElementById('ultimatePriceText');
-          const ultimatePriceDetail = document.getElementById('ultimatePriceDetail');
-
-          if (premiumPriceText) premiumPriceText.innerHTML = 'Rp79rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
-          if (premiumPriceDetail) premiumPriceDetail.textContent = 'Ditagih bulanan';
-          
-          if (ultimatePriceText) ultimatePriceText.innerHTML = 'Rp149rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
-          if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Ditagih bulanan';
-
+          renderModalPrices();
           if (window.updateModalButtonStates) window.updateModalButtonStates();
         });
       }
@@ -4570,19 +4608,66 @@
         switchYearly.addEventListener('click', () => {
           switchYearly.classList.add('active');
           if (switchMonthly) switchMonthly.classList.remove('active');
-          
-          const premiumPriceText = document.getElementById('premiumPriceText');
-          const premiumPriceDetail = document.getElementById('premiumPriceDetail');
-          const ultimatePriceText = document.getElementById('ultimatePriceText');
-          const ultimatePriceDetail = document.getElementById('ultimatePriceDetail');
-
-          if (premiumPriceText) premiumPriceText.innerHTML = 'Rp66rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
-          if (premiumPriceDetail) premiumPriceDetail.textContent = 'Ditagih Rp800rb/tahun';
-
-          if (ultimatePriceText) ultimatePriceText.innerHTML = 'Rp125rb<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">/bulan</span>';
-          if (ultimatePriceDetail) ultimatePriceDetail.textContent = 'Ditagih Rp1.5jt/tahun';
-
+          renderModalPrices();
           if (window.updateModalButtonStates) window.updateModalButtonStates();
+        });
+      }
+
+      // Terapkan kode promo (potongan harga paket bulanan)
+      const promoCodeInput = document.getElementById('promoCodeInput');
+      const promoCodeApplyBtn = document.getElementById('promoCodeApplyBtn');
+      const promoCodeMessage = document.getElementById('promoCodeMessage');
+      if (promoCodeApplyBtn && promoCodeInput) {
+        const applyPromoCode = async () => {
+          const code = promoCodeInput.value.trim();
+          if (!code) return;
+          const isYearly = switchYearly && switchYearly.classList.contains('active');
+          if (isYearly) {
+            promoCodeMessage.style.display = 'block';
+            promoCodeMessage.style.color = '#ef4444';
+            promoCodeMessage.textContent = 'Kode promo hanya berlaku untuk paket Bulanan - pindah ke tab Bulanan dulu.';
+            return;
+          }
+          const originalHtml = promoCodeApplyBtn.innerHTML;
+          promoCodeApplyBtn.disabled = true;
+          promoCodeApplyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+          try {
+            const res = await fetch('/api/promo/validate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            promoCodeMessage.style.display = 'block';
+            if (res.ok && data.ok) {
+              appliedPromoCode = code.toUpperCase();
+              appliedPromoDiscountPercent = data.discountPercent;
+              window.appliedPromoCode = appliedPromoCode;
+              promoCodeMessage.style.color = '#10b981';
+              promoCodeMessage.textContent = `Kode ${appliedPromoCode} diterapkan - potongan ${appliedPromoDiscountPercent}% untuk paket bulanan.`;
+              renderModalPrices();
+            } else {
+              appliedPromoCode = null;
+              window.appliedPromoCode = null;
+              promoCodeMessage.style.color = '#ef4444';
+              promoCodeMessage.textContent = data.message || 'Kode promo tidak valid.';
+              renderModalPrices();
+            }
+          } catch (err) {
+            promoCodeMessage.style.display = 'block';
+            promoCodeMessage.style.color = '#ef4444';
+            promoCodeMessage.textContent = 'Terjadi kesalahan koneksi. Coba lagi.';
+          } finally {
+            promoCodeApplyBtn.disabled = false;
+            promoCodeApplyBtn.innerHTML = originalHtml;
+          }
+        };
+        promoCodeApplyBtn.addEventListener('click', applyPromoCode);
+        promoCodeInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyPromoCode();
+          }
         });
       }
 
@@ -4704,12 +4789,15 @@
           const typeBeforePayment = (window.currentUser && window.currentUser.user && window.currentUser.user.type) || 'free';
 
           try {
+            // Promo cuma berlaku untuk paket bulanan - jangan ikut dikirim kalau yang
+            // dibeli paket tahunan, supaya tidak salah ditolak server.
+            const promoCodeToSend = (!isYearly && window.appliedPromoCode) ? window.appliedPromoCode : undefined;
             const response = await fetch('/api/payment/create', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({ planId })
+              body: JSON.stringify({ planId, promoCode: promoCodeToSend })
             });
 
             const resData = await response.json();
@@ -4918,6 +5006,13 @@
             <button class="switcher-btn active" id="switchYearly">Tahunan <span class="save-badge">Hemat s.d 16%</span></button>
           </div>
         </div>
+
+        <!-- Kode Promo (potongan harga paket bulanan) -->
+        <div style="max-width: 340px; margin: 0 auto 1.25rem; display: flex; gap: 0.5rem;">
+          <input type="text" id="promoCodeInput" placeholder="Punya kode promo? (khusus paket bulanan)" style="flex: 1; padding: 0.6rem 0.85rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.8rem; outline: none; text-transform: uppercase;">
+          <button id="promoCodeApplyBtn" type="button" class="upgrade-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; background: var(--brand-blue); color: #fff;">Terapkan</button>
+        </div>
+        <p id="promoCodeMessage" style="max-width: 340px; margin: -0.9rem auto 1.25rem; font-size: 0.76rem; text-align: center; display: none; font-weight: 600;"></p>
 
         <!-- Pricing Cards Container -->
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;" id="pricingCardsContainer">
