@@ -973,21 +973,17 @@
       }
     }
 
-    .research-chat-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--border-light-hover);
-      margin-bottom: 0.75rem;
-      flex-shrink: 0;
+    /* Layout ala ChatGPT: saat belum ada pesan, sapaan + composer dikumpulkan
+       jadi satu blok yang di-center vertikal di tengah layar (bukan mepet bawah). */
+    .research-chat-main.chat-empty {
+      justify-content: center;
     }
-
-    .research-chat-topbar #researchChatDesc {
-      flex: 1;
-      min-width: 260px;
+    .research-chat-main.chat-empty .research-chat-messages {
+      flex: 0 0 auto;
+      overflow: visible;
+    }
+    .research-chat-main.chat-empty .research-chat-composer-wrapper {
+      max-width: 700px;
     }
 
     .research-chat-messages {
@@ -3734,23 +3730,21 @@
           </div>
 
           <!-- Kolom utama percakapan -->
-          <div class="research-chat-main">
+          <div class="research-chat-main chat-empty">
 
-            <!-- Slim top bar (1 baris - deskripsi singkat + kuota + tombol baru) -->
-            <div class="research-chat-topbar">
-              <p id="researchChatDesc" style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.5;"><strong>Bukan LLM biasa.</strong> JurnalHub Intelligence dirancang khusus untuk memberi argumen yang jujur, kritis, dan objektif serta bertindak sebagai dosen pembimbing virtual yang siap menguji dan menyempurnakan kualitas riset Anda.</p>
-              <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
-                <div id="researchChatQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
-                  <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kuota: 0/0 Bulan Ini</span>
-                </div>
+            <!-- Kuota - dipindah jadi badge kecil & tidak mencolok (dulu di top bar
+                 yang sekarang dihapus supaya tampilan lebih bersih ala ChatGPT). -->
+            <div style="display: flex; justify-content: flex-end; flex-shrink: 0; padding-bottom: 0.4rem;">
+              <div id="researchChatQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
+                <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kuota: 0/0 Bulan Ini</span>
               </div>
             </div>
 
             <!-- Chat Messages (mengisi seluruh sisa tinggi layar) -->
             <div id="researchChatMessages" class="research-chat-messages">
-              <div id="researchChatEmptyState" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted); max-width: 480px; margin: auto;">
-                <i class="fa-solid fa-graduation-cap" style="font-size: 2.5rem; color: var(--brand-blue); opacity: 0.5; margin-bottom: 0.75rem;"></i>
-                <p id="researchChatEmptyText" style="font-size: 0.95rem; margin: 0;">Mulai diskusi dengan mengetik pertanyaan riset Anda di bawah ini.</p>
+              <div id="researchChatEmptyState" style="text-align: center; padding: 1rem; max-width: 640px; margin: auto; width: 100%;">
+                <h2 id="researchChatGreeting" style="font-family: var(--font-outfit); font-weight: 800; font-size: 2rem; color: var(--text-main); margin: 0 0 0.5rem;">Mau nulis apa hari ini, Peneliti?</h2>
+                <p id="researchChatEmptyText" style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Bukan LLM biasa - JurnalHub Intelligence menjawab jujur, kritis, dan tidak asal mengiyakan (no yes-man), layaknya dosen pembimbing sungguhan.</p>
               </div>
             </div>
 

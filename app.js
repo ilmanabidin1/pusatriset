@@ -1131,6 +1131,7 @@ document.addEventListener('DOMContentLoaded', () => {
           renderBillingHistory();
           renderBerandaRecentActivity();
           updateResearchChatAccess(currentUser.user);
+          if (typeof updateResearchChatGreeting === 'function') updateResearchChatGreeting();
         }
 
         // Logout handler
@@ -4051,13 +4052,30 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    function updateResearchChatGreeting() {
+      const greetingEl = document.getElementById('researchChatGreeting');
+      if (!greetingEl) return;
+      const lang = window.currentLanguage || 'id';
+      const user = currentUser && currentUser.user;
+      const displayName = (user && user.name && user.name.trim())
+        || (user && user.email && user.email.includes('@') && user.email.split('@')[0])
+        || 'Peneliti';
+      greetingEl.textContent = lang === 'en' ? `What do you want to write today, ${displayName}?` : `Mau nulis apa hari ini, ${displayName}?`;
+    }
+
     function renderResearchChatMessages() {
       if (!researchChatMessagesEl) return;
+      const chatMainEl = document.querySelector('.research-chat-main');
       if (researchChatMessages.length === 0) {
         researchChatMessagesEl.innerHTML = '';
-        if (researchChatEmptyState) researchChatMessagesEl.appendChild(researchChatEmptyState);
+        if (researchChatEmptyState) {
+          updateResearchChatGreeting();
+          researchChatMessagesEl.appendChild(researchChatEmptyState);
+        }
+        if (chatMainEl) chatMainEl.classList.add('chat-empty');
         return;
       }
+      if (chatMainEl) chatMainEl.classList.remove('chat-empty');
       researchChatMessagesEl.innerHTML = researchChatMessages.map((m, idx) => {
         if (m.role === 'user') {
           return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
