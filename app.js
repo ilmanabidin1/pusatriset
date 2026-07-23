@@ -4199,8 +4199,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!message) return;
         const exportType = btn.getAttribute('data-export');
         const citations = message.citations || [];
-        const titleText = message.litReviewTitle || 'Tinjauan Pustaka';
-        const cleanTitle = titleText.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'Tinjauan_Pustaka';
+        const titleText = message.litReviewTitle || 'Referensi_JurnalHub_Intelligence';
+        const cleanTitle = titleText.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'Referensi';
 
         if (exportType === 'pdf') {
           const bodyEl = document.getElementById(`researchChatMsgBody${idx}`);
@@ -4642,11 +4642,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let buffer = '';
         let thinkingText = '';
         let contentText = '';
+        let streamCitations = null;
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          
+
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split('\n');
           buffer = lines.pop();
@@ -4660,6 +4661,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 thinkingText += data.content;
               } else if (data.type === 'content') {
                 contentText += data.content;
+              } else if (data.type === 'citations') {
+                streamCitations = data.citations;
               }
             } catch (e) {
               // Abaikan line parsial yang corrupt
@@ -4684,7 +4687,11 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        researchChatMessages.push({ role: 'assistant', content: contentText });
+        const newAssistantMsg = { role: 'assistant', content: contentText };
+        if (streamCitations && streamCitations.length > 0) {
+          newAssistantMsg.citations = streamCitations;
+        }
+        researchChatMessages.push(newAssistantMsg);
         // Re-render penuh supaya bubble sementara diganti struktur final (dengan tombol salin)
         renderResearchChatMessages();
         // Percakapan baru saja disimpan/diperbarui di server - refresh daftar riwayat

@@ -1931,8 +1931,12 @@ function reconstructAbstractFromInvertedIndex(invertedIndex) {
 
 async function searchOpenAlexWorks(query, perPage) {
   const fetchFn = globalThis.fetch || require('node-fetch');
+  // "?" dan "*" dianggap wildcard oleh OpenAlex full-text search dan bikin request
+  // 400 kalau dipakai di luar mode search.exact - buang dulu supaya pertanyaan user
+  // yang natural (mis. berakhiran "?") tidak bikin pencarian gagal total.
+  const cleanQuery = String(query || '').replace(/[?*]/g, ' ').replace(/\s+/g, ' ').trim();
   const params = new URLSearchParams({
-    search: query,
+    search: cleanQuery,
     per_page: String(perPage),
     filter: 'has_abstract:true',
     select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access'
@@ -2624,9 +2628,23 @@ async function searchAcademicContext(query) {
     if (!papers || papers.length === 0) return null;
     const top = [...papers].sort((a, b) => b.citedByCount - a.citedByCount).slice(0, 5);
     const text = top.map((p, i) =>
-      `${i + 1}. (${p.authors}, ${p.year}) "${p.title}" - dikutip ${p.citedByCount}x. Link: ${p.url}`
+      `${i + 1}. "${p.title}" - ${p.authors} (${p.year}), dikutip ${p.citedByCount}x. Link: ${p.url}`
     ).join('\n');
-    return `Berikut paper ilmiah ASLI dari OpenAlex yang relevan dengan pertanyaan pengguna. Gunakan untuk mem-backup/memperkuat jawabanmu dengan sitasi format (Penulis, Tahun), sertakan link sumbernya kalau dipakai dalam jawaban. JANGAN mengarang paper atau sitasi lain di luar daftar ini - kalau tidak ada paper yang cocok/relevan dari daftar ini, jangan paksa mengutip, cukup jawab berdasarkan penalaranmu sendiri dan katakan terus terang tidak ada rujukan spesifik yang ditemukan:\n\n${text}`;
+    const contextText = `Berikut paper ilmiah ASLI dari OpenAlex yang relevan dengan pertanyaan pengguna. Gunakan untuk mem-backup/memperkuat jawabanmu. Rujuk paper HANYA dengan format angka bernomor dalam kurung siku, contoh [2], sesuai nomor urut paper pada daftar di bawah - taruh tepat setelah klausa/kalimat yang didukung paper tersebut. JANGAN pakai format (Penulis, Tahun). JANGAN mengarang paper atau sitasi lain di luar daftar ini - kalau tidak ada paper yang cocok/relevan dari daftar ini, jangan paksa mengutip, cukup jawab berdasarkan penalaranmu sendiri dan katakan terus terang tidak ada rujukan spesifik yang ditemukan:\n\n${text}`;
+    // Bentuk sama seperti citations Lit Review - dipakai frontend untuk kartu
+    // preview hover di marker [n] dalam jawaban chat.
+    const citations = top.map(p => ({
+      title: p.title,
+      authors: p.authors,
+      journal: p.journal,
+      year: p.year,
+      url: p.url,
+      doi: p.doi || null,
+      citedByCount: p.citedByCount,
+      isOpenAccess: p.isOpenAccess,
+      abstract: p.abstract ? p.abstract.slice(0, 280) : ''
+    }));
+    return { contextText, citations };
   } catch (error) {
     console.warn('[Academic Search] Gagal ambil konteks OpenAlex (diabaikan):', error.message);
     return null;
@@ -2800,7 +2818,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   // SEMUA tier & mode, supaya jawaban JurnalHub Intelligence selalu bisa di-backup
   // sitasi nyata, bukan cuma di mode paling mahal.
   let webSearchContext = null;
-  let academicContext = null;
+  let academicResult = null;
   const lastUserMessage = [...sanitizedMessages].reverse().find(m => m.role === 'user');
   if (lastUserMessage) {
     const query = lastUserMessage.content.slice(0, 400);
@@ -2809,9 +2827,10 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
       tasks.push(searchWebForContext(query));
     }
     const results = await Promise.all(tasks);
-    academicContext = results[0];
+    academicResult = results[0];
     if (tasks.length > 1) webSearchContext = results[1];
   }
+  const academicCitations = academicResult ? academicResult.citations : null;
 
   // DEEPSEEK_API_URL cuma untuk keperluan testing lokal (arahkan ke mock server) -
   // di production selalu pakai endpoint resmi DeepSeek.
@@ -2829,8 +2848,8 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     if (webSearchContext) {
       systemMessages.push({ role: 'system', content: webSearchContext });
     }
-    if (academicContext) {
-      systemMessages.push({ role: 'system', content: academicContext });
+    if (academicResult) {
+      systemMessages.push({ role: 'system', content: academicResult.contextText });
     }
 
     const bodyPayload = {
@@ -2910,6 +2929,11 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
       }
     }
 
+    // Kirim daftar sitasi akademik (kalau ada) sebagai chunk terakhir - dipakai
+    // frontend untuk kartu preview hover di marker [n] dalam jawaban.
+    if (fullReply && academicCitations && academicCitations.length > 0) {
+      res.write(JSON.stringify({ type: 'citations', citations: academicCitations }) + '\n');
+    }
     res.end();
 
     if (!fullReply && !fullReasoning) {
@@ -2938,6 +2962,9 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     const assistantMsg = { role: 'assistant', content: fullReply };
     if (fullReasoning) {
       assistantMsg.reasoning = fullReasoning;
+    }
+    if (academicCitations && academicCitations.length > 0) {
+      assistantMsg.citations = academicCitations;
     }
     const updatedMessages = [...sanitizedMessages, assistantMsg];
     const now = new Date().toISOString();
