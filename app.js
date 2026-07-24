@@ -293,19 +293,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (trimmed === '') {
         // Model sering menaruh baris kosong DI ANTARA item list (terutama list
-        // bernomor). Kalau langsung flush di sini, tiap item jadi <ol> terpisah
-        // yang masing-masing mulai lagi dari "1.". Makanya intip baris berikutnya
-        // (lewati baris kosong lain) - kalau itu masih item list bertipe sama,
-        // jangan flush, supaya tetap jadi satu <ol>/<ul> yang bernomor berurutan.
+        // bernomor) ATAU di antara item list dan paragraf penjelasannya. Kalau
+        // langsung flush di sini, tiap item jadi <ol> terpisah yang masing-masing
+        // mulai lagi dari "1." - parah kalau modelnya juga literal menulis "1."
+        // di setiap poin (kebiasaan umum LLM, bukan 1/2/3 yang benar). Makanya
+        // list HANYA diputus kalau baris berikutnya benar-benar blok lain
+        // (heading/hr/tabel) atau teksnya sudah habis - paragraf polos tetap
+        // dianggap lanjutan item terakhir (lihat fallthrough paragraf di bawah).
         let j = i + 1;
         while (j < lines.length && lines[j].trim() === '') j++;
         const nextTrimmed = j < lines.length ? lines[j].trim() : '';
-        const nextIsSameList = listType === 'ol'
-          ? /^\d+\.\s+/.test(nextTrimmed)
-          : listType === 'ul'
-            ? /^[-*]\s+/.test(nextTrimmed)
-            : false;
-        if (!nextIsSameList) {
+        const nextBreaksList = nextTrimmed === ''
+          || /^#{1,6}\s+/.test(nextTrimmed)
+          || /^-{3,}$/.test(nextTrimmed)
+          || isTableRow(nextTrimmed);
+        if (nextBreaksList) {
           flushList();
         }
         i++;
@@ -353,6 +355,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (olMatch) {
         if (listType !== 'ol') { flushList(); listType = 'ol'; }
         listBuffer.push(inline(olMatch[1]));
+        i++;
+        continue;
+      }
+      if (listType && listBuffer.length > 0) {
+        // Paragraf polos tepat setelah item list - anggap lanjutan/penjelasan
+        // item TERAKHIR, bukan paragraf baru yang memutus list (lihat catatan
+        // di blok baris-kosong di atas soal kenapa ini penting untuk penomoran).
+        listBuffer[listBuffer.length - 1] += `<br><br>${inline(trimmed)}`;
         i++;
         continue;
       }
