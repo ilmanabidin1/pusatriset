@@ -1795,8 +1795,8 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
       },
       body: JSON.stringify({
         model: claudeModel,
-        max_tokens: 1500,
-        system: `You are an expert academic writing advisor for Indonesian ${docConfig.label}. Based on the title and abstract provided, generate a highly structured outline of what the author must write in each segment of their manuscript. Here are the segments and what each one must cover:\n${segmentDescriptions}\n\nFor each segment, provide 3-4 specific, concrete, and highly customized points tailored directly to their research topic (do NOT output generic writing tips). Output ONLY a valid JSON object with exactly these keys: {${jsonExample}}. Do not wrap in markdown block.`,
+        max_tokens: 4000,
+        system: `You are an expert academic writing advisor for Indonesian ${docConfig.label}. Based on the title and abstract provided, generate a highly structured outline of what the author must write in each segment of their manuscript. Here are the segments and what each one must cover:\n${segmentDescriptions}\n\nFor each segment, provide 3-4 specific, concrete, and highly customized points tailored directly to their research topic (do NOT output generic writing tips). Keep each point to ONE short sentence (max ~20 words) - conciseness matters more than exhaustiveness. Output ONLY a valid JSON object with exactly these keys: {${jsonExample}}. Do not wrap in markdown block.`,
         messages: [
           {
             role: 'user',
@@ -1817,7 +1817,13 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
 
     const resData = await response.json();
     const rawText = resData?.content?.[0]?.text || '}';
-    const parsed = cleanAndParseAIResponse('{' + rawText, true);
+    let parsed;
+    try {
+      parsed = cleanAndParseAIResponse('{' + rawText, true);
+    } catch (parseError) {
+      console.error('[AI Draft Generator] Gagal parse JSON, raw text:', rawText.slice(0, 2000));
+      throw parseError;
+    }
 
     // Increment usage for Free & Premium users
     if (user && (user.type === 'free' || user.type === 'premium')) {
