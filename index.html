@@ -1267,6 +1267,24 @@
       padding: 0.6rem 0;
     }
 
+    /* Kontainer composer sebelumnya tidak punya override dark mode (tetap
+       hardcode putih), sementara aturan global "[data-theme=dark] textarea"
+       di bawah memaksa textarea di dalamnya jadi hitam pekat - hasilnya pil
+       putih dengan kotak hitam mismatch di dalamnya. Samakan keduanya supaya
+       jadi satu kartu gelap yang konsisten seperti komponen lain. */
+    [data-theme="dark"] .research-chat-composer {
+      background: var(--bg-card) !important;
+      border-color: var(--border-light) !important;
+    }
+    [data-theme="dark"] .research-chat-composer textarea {
+      background: transparent !important;
+      border: none !important;
+      color: var(--text-main) !important;
+    }
+    [data-theme="dark"] .research-chat-composer textarea::placeholder {
+      color: var(--text-muted);
+    }
+
     .research-chat-composer > button {
       width: 44px;
       height: 44px;
