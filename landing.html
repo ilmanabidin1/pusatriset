@@ -94,7 +94,10 @@
           <span style="width:11px;height:11px;border-radius:50%;background:#28c840"></span>
           <span style="margin-left:.6rem;flex:1;text-align:center;font-size:.72rem;color:rgba(255,255,255,.45);background:rgba(255,255,255,.05);border-radius:6px;padding:.22rem .5rem"><i class="fa-solid fa-lock" style="font-size:.62rem;margin-right:.35rem"></i>jurnalhub.id/app — AI Journal Match Score</span>
         </div>
-        <video data-demo src="assets/demo-ai-match-score.mp4" muted loop playsinline preload="metadata" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000;cursor:pointer" onclick="toggleVideoPlay(this)"></video>
+        <div style="position:relative">
+          <video id="heroDemoVideo" data-demo src="assets/demo-ai-match-score.mp4" muted loop playsinline preload="none" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000;cursor:pointer" onclick="toggleVideoPlay(this)"></video>
+          <div class="video-play-btn" onclick="toggleVideoPlay(document.getElementById('heroDemoVideo'))" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer"><span style="width:64px;height:64px;border-radius:50%;background:rgba(7,135,220,.85);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.4);backdrop-filter:blur(4px)"><i class="fa-solid fa-play" style="color:#fff;font-size:1.3rem;margin-left:3px"></i></span></div>
+        </div>
       </div>
       <div style="position:absolute;bottom:-22px;left:-18px;z-index:3;background:rgba(8,20,42,.92);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:.75rem .95rem;box-shadow:0 16px 40px rgba(0,0,0,.4);animation:floatY 8s ease-in-out infinite;animation-delay:-2s" class="hide-sm">
         <div style="font-size:.66rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:.2rem">Skor kecocokan</div>
@@ -138,7 +141,7 @@
       </div>
       <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);box-shadow:0 24px 60px rgba(0,0,0,.4)">
         <div style="display:flex;align-items:center;gap:.5rem;padding:.6rem .8rem;background:rgba(3,11,26,.85);border-bottom:1px solid rgba(255,255,255,.07)"><span style="width:10px;height:10px;border-radius:50%;background:#ff5f57"></span><span style="width:10px;height:10px;border-radius:50%;background:#febc2e"></span><span style="width:10px;height:10px;border-radius:50%;background:#28c840"></span></div>
-        <video data-demo src="assets/demo-ai-match-score.mp4" muted loop playsinline controls preload="metadata" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
+        <video data-demo src="assets/demo-ai-match-score.mp4" muted loop playsinline controls preload="none" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
       </div>
     </div>
 
@@ -146,7 +149,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;margin-bottom:5rem" class="feat-row feat-rev">
       <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);box-shadow:0 24px 60px rgba(0,0,0,.4)" class="feat-media">
         <div style="display:flex;align-items:center;gap:.5rem;padding:.6rem .8rem;background:rgba(3,11,26,.85);border-bottom:1px solid rgba(255,255,255,.07)"><span style="width:10px;height:10px;border-radius:50%;background:#ff5f57"></span><span style="width:10px;height:10px;border-radius:50%;background:#febc2e"></span><span style="width:10px;height:10px;border-radius:50%;background:#28c840"></span></div>
-        <video data-demo src="assets/demo2.mp4" muted loop playsinline controls preload="metadata" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
+        <video data-demo src="assets/demo2.mp4" muted loop playsinline controls preload="none" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
       </div>
       <div class="feat-copy">
         <div style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(7,135,220,.12);border:1px solid rgba(7,135,220,.3);color:#5eb8f0;padding:.35rem .8rem;border-radius:30px;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1.1rem"><i class="fa-solid fa-list-check"></i>AI Outline Generator</div>
@@ -176,7 +179,7 @@
       </div>
       <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);box-shadow:0 24px 60px rgba(0,0,0,.4)">
         <div style="display:flex;align-items:center;gap:.5rem;padding:.6rem .8rem;background:rgba(3,11,26,.85);border-bottom:1px solid rgba(255,255,255,.07)"><span style="width:10px;height:10px;border-radius:50%;background:#ff5f57"></span><span style="width:10px;height:10px;border-radius:50%;background:#febc2e"></span><span style="width:10px;height:10px;border-radius:50%;background:#28c840"></span></div>
-        <video data-demo src="assets/demo3.mp4" muted loop playsinline controls preload="metadata" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
+        <video data-demo src="assets/demo3.mp4" muted loop playsinline controls preload="none" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
       </div>
     </div>
 
@@ -184,7 +187,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center" class="feat-row feat-rev">
       <div style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,116,23,.25);background:rgba(255,255,255,.03);box-shadow:0 24px 60px rgba(255,116,23,.14)" class="feat-media">
         <div style="display:flex;align-items:center;gap:.5rem;padding:.6rem .8rem;background:rgba(3,11,26,.85);border-bottom:1px solid rgba(255,255,255,.07)"><span style="width:10px;height:10px;border-radius:50%;background:#ff5f57"></span><span style="width:10px;height:10px;border-radius:50%;background:#febc2e"></span><span style="width:10px;height:10px;border-radius:50%;background:#28c840"></span></div>
-        <video data-demo src="assets/demo4.mp4" muted loop playsinline controls preload="metadata" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
+        <video data-demo src="assets/demo4.mp4" muted loop playsinline controls preload="none" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
       </div>
       <div class="feat-copy">
         <div style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.32);color:#fbbf24;padding:.35rem .8rem;border-radius:30px;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1.1rem"><i class="fa-solid fa-shield-halved"></i>JurnalHub Humanizer Engine</div>
@@ -203,18 +206,18 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;margin-top:5rem" class="feat-row">
       <div>
         <div style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.32);color:#a78bfa;padding:.35rem .8rem;border-radius:30px;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1.1rem"><i class="fa-solid fa-comments"></i>JurnalHub Intelligence</div>
-        <h3 style="font-family:'Outfit';font-size:1.85rem;font-weight:800;line-height:1.2;margin-bottom:.9rem">Bukan AI biasa yang selalu nurut</h3>
-        <p style="color:rgba(255,255,255,.68);font-size:1.02rem;line-height:1.6;margin-bottom:1.4rem">Kenalin Prof Juju — reviewer jurnal internasional AI yang tegas, kritis, dan tidak asal setuju. Dia akan mengkritik novelty dan metodologi risetmu seperti reviewer Q1 sungguhan, sebelum editor asli yang menolak. Tonton sendiri saat kami stress test seberapa kritis dia menilai novelty sebuah naskah.</p>
+        <h3 style="font-family:'Outfit';font-size:1.85rem;font-weight:800;line-height:1.2;margin-bottom:.9rem">Kolega riset yang selalu siap diajak diskusi</h3>
+        <p style="color:rgba(255,255,255,.68);font-size:1.02rem;line-height:1.6;margin-bottom:1.4rem">JurnalHub Intelligence adalah rekan diskusi AI yang jujur dan bisa diandalkan — dari menyusun proposal, tinjauan pustaka, metodologi, sampai analisis data. Dia tidak akan mengarang sitasi atau data supaya terdengar meyakinkan, dan selalu terus terang kalau ada keterbatasan, plus dibekingi pencarian paper ilmiah asli dari OpenAlex supaya jawabannya bisa dipertanggungjawabkan.</p>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.6rem">
-          <li style="display:flex;align-items:flex-start;gap:.65rem;color:rgba(255,255,255,.82);font-size:.96rem"><i class="fa-solid fa-circle-check" style="color:#a78bfa;margin-top:.2rem"></i>Menguji novelty, scope jurnal &amp; rigor metodologi seperti reviewer sungguhan</li>
-          <li style="display:flex;align-items:flex-start;gap:.65rem;color:rgba(255,255,255,.82);font-size:.96rem"><i class="fa-solid fa-circle-check" style="color:#a78bfa;margin-top:.2rem"></i>Jujur &amp; kritis — tidak memuji asal-asalan supaya terdengar sopan</li>
+          <li style="display:flex;align-items:flex-start;gap:.65rem;color:rgba(255,255,255,.82);font-size:.96rem"><i class="fa-solid fa-circle-check" style="color:#a78bfa;margin-top:.2rem"></i>Dibekingi paper ilmiah asli dari OpenAlex, bukan sekadar mengarang jawaban</li>
+          <li style="display:flex;align-items:flex-start;gap:.65rem;color:rgba(255,255,255,.82);font-size:.96rem"><i class="fa-solid fa-circle-check" style="color:#a78bfa;margin-top:.2rem"></i>Jujur soal keterbatasan — tidak mengarang sitasi atau data supaya terdengar meyakinkan</li>
           <li style="display:flex;align-items:flex-start;gap:.65rem;color:rgba(255,255,255,.82);font-size:.96rem"><i class="fa-solid fa-circle-check" style="color:#a78bfa;margin-top:.2rem"></i>Riwayat percakapan tersimpan, bisa lanjut kapan saja</li>
         </ul>
-        <a href="auth.html" style="display:inline-flex;align-items:center;gap:.55rem;color:#a78bfa;font-weight:700;font-size:.98rem" onmouseover="this.style.gap='.85rem'" onmouseout="this.style.gap='.55rem'">Diskusi dengan Prof Juju <i class="fa-solid fa-arrow-right"></i></a>
+        <a href="auth.html" style="display:inline-flex;align-items:center;gap:.55rem;color:#a78bfa;font-weight:700;font-size:.98rem" onmouseover="this.style.gap='.85rem'" onmouseout="this.style.gap='.55rem'">Diskusi dengan JurnalHub Intelligence <i class="fa-solid fa-arrow-right"></i></a>
       </div>
       <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(139,92,246,.25);background:rgba(255,255,255,.03);box-shadow:0 24px 60px rgba(139,92,246,.16)">
         <div style="display:flex;align-items:center;gap:.5rem;padding:.6rem .8rem;background:rgba(3,11,26,.85);border-bottom:1px solid rgba(255,255,255,.07)"><span style="width:10px;height:10px;border-radius:50%;background:#ff5f57"></span><span style="width:10px;height:10px;border-radius:50%;background:#febc2e"></span><span style="width:10px;height:10px;border-radius:50%;background:#28c840"></span></div>
-        <video data-demo src="assets/demo-jurnalhub-intelligence.mp4" muted loop playsinline controls preload="metadata" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
+        <video data-demo src="assets/demo-jurnalhub-intelligence.mp4" muted loop playsinline controls preload="none" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#000"></video>
       </div>
     </div>
   </div>
@@ -391,31 +394,19 @@
 </footer>
 
 <script>
-  // Autoplay demo videos hanya saat terlihat di layar (hemat bandwidth)
-  document.addEventListener('DOMContentLoaded', function () {
-    var vids = Array.prototype.slice.call(document.querySelectorAll('video[data-demo]'));
-    vids.forEach(function (v) { v.muted = true; });
-    if (typeof IntersectionObserver === 'undefined') return;
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        var v = entry.target;
-        if (entry.isIntersecting) {
-          var p = v.play();
-          if (p && p.catch) p.catch(function () {});
-        } else {
-          v.pause();
-        }
-      });
-    }, { threshold: 0.35 });
-    vids.forEach(function (v) { io.observe(v); });
-  });
-
+  // Video demo TIDAK autoplay dan TIDAK preload (lihat preload="none" di tiap
+  // tag <video>) - supaya user dengan koneksi terbatas tidak kebebanan bandwidth
+  // cuma karena scroll lewat landing page. Video baru mulai di-buffer begitu
+  // user sendiri yang klik tombol play.
   function toggleVideoPlay(video) {
+    var overlay = video.parentElement && video.parentElement.querySelector('.video-play-btn');
     if (video.paused) {
       var p = video.play();
       if (p && p.catch) p.catch(function () {});
+      if (overlay) overlay.style.display = 'none';
     } else {
       video.pause();
+      if (overlay) overlay.style.display = 'flex';
     }
   }
 
