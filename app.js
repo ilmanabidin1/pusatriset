@@ -4415,6 +4415,43 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Export PDF/DOCX generik dari sebuah elemen DOM - dipakai di riwayat Outline
+    // Generator & Lit Review (dan bisa dipakai ulang di tempat lain nanti) supaya
+    // tidak duplikasi logic html2pdf/blob .doc di banyak tempat.
+    function exportElementToPdf(el, filename) {
+      if (!el || !el.innerText.trim()) {
+        alert('Tidak ada konten untuk diunduh.');
+        return;
+      }
+      html2pdf().set({
+        margin: 1,
+        filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      }).from(el).save();
+    }
+
+    function exportElementToDocx(el, title, filename) {
+      if (!el || !el.innerText.trim()) {
+        alert('Tidak ada konten untuk diunduh.');
+        return;
+      }
+      const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                     "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                     "xmlns='http://www.w3.org/TR/REC-html40'>" +
+                     "<head><title>" + title + "</title><style>body { font-family: Arial, sans-serif; line-height: 1.6; } h1, h2, h3 { color: #0b1a30; }</style></head><body>" +
+                     "<h2>" + title + "</h2>";
+      const footer = "</body></html>";
+      const blob = new Blob(['﻿' + header + el.innerHTML + footer], { type: 'application/msword;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     // Konversi HTML hasil Lit Review (tag h4/p/table/li dst) jadi markdown ringkas
     // yang dipahami renderMarkdownSafe() (yang mem-escape HTML mentah demi keamanan,
     // jadi tag asli tidak bisa dikirim langsung ke situ).
@@ -5574,11 +5611,19 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
               <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">PANDUAN OUTLINE DRAFT</h5>
-              <button id="copyHistoryDraftBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: #10b981; color: white;" type="button">
-                <i class="fa-regular fa-copy"></i> Salin Semua Draf
-              </button>
+              <div style="display: flex; gap: 0.5rem;">
+                <button id="copyHistoryDraftBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: #10b981; color: white;" type="button">
+                  <i class="fa-regular fa-copy"></i> Salin Semua Draf
+                </button>
+                <button id="exportHistoryDraftPdfBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.7rem; font-size: 0.72rem; background: #ef4444; color: white;" type="button">
+                  <i class="fa-solid fa-file-pdf"></i> PDF
+                </button>
+                <button id="exportHistoryDraftDocxBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.7rem; font-size: 0.72rem; background: #2563eb; color: white;" type="button">
+                  <i class="fa-solid fa-file-word"></i> DOCX
+                </button>
+              </div>
             </div>
             <div id="historyDraftTextWrapper" style="display: flex; flex-direction: column; gap: 1rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
               ${Object.keys(sections).map(key => {
@@ -5615,6 +5660,20 @@ document.addEventListener('DOMContentLoaded', () => {
               });
             });
           }
+
+          const cleanFileTitle = (item.input.title || 'Outline_Draft').slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'Outline_Draft';
+          const exportPdfBtn = document.getElementById('exportHistoryDraftPdfBtn');
+          if (exportPdfBtn) {
+            exportPdfBtn.addEventListener('click', () => {
+              exportElementToPdf(document.getElementById('historyDraftTextWrapper'), `Outline_${cleanFileTitle}.pdf`);
+            });
+          }
+          const exportDocxBtn = document.getElementById('exportHistoryDraftDocxBtn');
+          if (exportDocxBtn) {
+            exportDocxBtn.addEventListener('click', () => {
+              exportElementToDocx(document.getElementById('historyDraftTextWrapper'), `Outline Draft: ${escapeHtml(item.input.title || '')}`, `Outline_${cleanFileTitle}.doc`);
+            });
+          }
         }, 100);
 
       } else if (item.type === 'lit-review') {
@@ -5627,11 +5686,19 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
               <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">HASIL LITERATURE REVIEW</h5>
-              <button id="copyHistoryLitReviewBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: #8b5cf6; color: white;" type="button">
-                <i class="fa-regular fa-copy"></i> Salin Review
-              </button>
+              <div style="display: flex; gap: 0.5rem;">
+                <button id="copyHistoryLitReviewBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: #8b5cf6; color: white;" type="button">
+                  <i class="fa-regular fa-copy"></i> Salin Review
+                </button>
+                <button id="exportHistoryLitReviewPdfBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.7rem; font-size: 0.72rem; background: #ef4444; color: white;" type="button">
+                  <i class="fa-solid fa-file-pdf"></i> PDF
+                </button>
+                <button id="exportHistoryLitReviewDocxBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.7rem; font-size: 0.72rem; background: #2563eb; color: white;" type="button">
+                  <i class="fa-solid fa-file-word"></i> DOCX
+                </button>
+              </div>
             </div>
             <div id="historyLitReviewTextWrapper" style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1.25rem; font-size: 0.85rem; background: #ffffff; line-height: 1.6; max-height: 300px; overflow-y: auto; color: var(--text-main);">
               ${item.output.review}
@@ -5667,6 +5734,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
                 setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Salin Review', 2000);
               });
+            });
+          }
+
+          const cleanLitReviewFileTitle = (item.input.title || 'Tinjauan_Pustaka').slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'Tinjauan_Pustaka';
+          const exportLitReviewPdfBtn = document.getElementById('exportHistoryLitReviewPdfBtn');
+          if (exportLitReviewPdfBtn) {
+            exportLitReviewPdfBtn.addEventListener('click', () => {
+              exportElementToPdf(document.getElementById('historyLitReviewTextWrapper'), `Tinjauan_Pustaka_${cleanLitReviewFileTitle}.pdf`);
+            });
+          }
+          const exportLitReviewDocxBtn = document.getElementById('exportHistoryLitReviewDocxBtn');
+          if (exportLitReviewDocxBtn) {
+            exportLitReviewDocxBtn.addEventListener('click', () => {
+              exportElementToDocx(document.getElementById('historyLitReviewTextWrapper'), `Tinjauan Pustaka: ${escapeHtml(item.input.title || '')}`, `Tinjauan_Pustaka_${cleanLitReviewFileTitle}.doc`);
             });
           }
 
