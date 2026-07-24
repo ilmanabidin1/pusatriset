@@ -4201,13 +4201,13 @@ document.addEventListener('DOMContentLoaded', () => {
               <button class="research-chat-disclosure-btn" type="button" data-msg-index="${idx}" title="Generate AI Disclosure Statement">
                 <i class="fa-solid fa-file-shield"></i> <span>Disclosure</span>
               </button>
-              ${hasCitations ? `
               <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="pdf" title="Unduh PDF">
                 <i class="fa-solid fa-file-pdf"></i> <span>PDF</span>
               </button>
               <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="docx" title="Unduh Word (.doc)">
                 <i class="fa-solid fa-file-word"></i> <span>DOCX</span>
               </button>
+              ${hasCitations ? `
               <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="ris" title="Unduh referensi .ris">
                 <i class="fa-solid fa-book"></i> <span>.ris</span>
               </button>
@@ -4295,38 +4295,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!message) return;
         const exportType = btn.getAttribute('data-export');
         const citations = message.citations || [];
-        const titleText = message.litReviewTitle || 'Referensi_JurnalHub_Intelligence';
-        const cleanTitle = titleText.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'Referensi';
+        // Lit Review sudah punya judul topiknya sendiri (litReviewTitle); untuk
+        // jawaban chat biasa, pakai pertanyaan user tepat sebelum jawaban ini
+        // sebagai judul file - lebih deskriptif daripada nama generik.
+        const precedingUserMsg = [...researchChatMessages.slice(0, idx)].reverse().find(m => m.role === 'user');
+        const titleText = message.litReviewTitle || (precedingUserMsg && precedingUserMsg.content.slice(0, 60)) || 'Jawaban JurnalHub Intelligence';
+        const cleanTitle = titleText.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'Jawaban_JurnalHub_Intelligence';
 
         if (exportType === 'pdf') {
-          const bodyEl = document.getElementById(`researchChatMsgBody${idx}`);
-          if (!bodyEl) return;
-          html2pdf().set({
-            margin: 1,
-            filename: `Tinjauan_Pustaka_${cleanTitle}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-          }).from(bodyEl).save();
+          exportElementToPdf(document.getElementById(`researchChatMsgBody${idx}`), `${cleanTitle}.pdf`);
           return;
         }
 
         if (exportType === 'docx') {
-          const bodyEl = document.getElementById(`researchChatMsgBody${idx}`);
-          if (!bodyEl) return;
-          const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
-                         "xmlns:w='urn:schemas-microsoft-com:office:word' " +
-                         "xmlns='http://www.w3.org/TR/REC-html40'>" +
-                         "<head><title>Tinjauan Pustaka</title><style>body { font-family: Arial, sans-serif; line-height: 1.6; } h1, h2, h3 { color: #0b1a30; }</style></head><body>" +
-                         "<h2>" + titleText + "</h2>";
-          const footer = "</body></html>";
-          const blob = new Blob(['﻿' + header + bodyEl.innerHTML + footer], { type: 'application/msword;charset=utf-8' });
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `Tinjauan_Pustaka_${cleanTitle}.doc`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          exportElementToDocx(document.getElementById(`researchChatMsgBody${idx}`), escapeHtml(titleText), `${cleanTitle}.doc`);
           return;
         }
 
