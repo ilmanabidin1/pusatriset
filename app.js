@@ -4611,9 +4611,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const loadingBubble = document.createElement('div');
       loadingBubble.className = 'research-chat-bubble loading';
-      loadingBubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
       researchChatMessagesEl.appendChild(loadingBubble);
       researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+
+      // Pesan berganti tiap beberapa detik + penghitung waktu berjalan, supaya user
+      // tahu prosesnya masih jalan (bukan macet/error) - Lit Review/Deep Lit Review
+      // memang bisa makan waktu karena mencari & menyaring paper asli dari OpenAlex
+      // (+ Semantic Scholar untuk Deep) sebelum ditulis jadi narasi.
+      const quickToolStatusMessages = {
+        outline: [
+          'Menganalisis topik/rencana penelitian Anda...',
+          'Menyusun kerangka sesuai struktur dokumen...',
+          'Merapikan poin-poin per bab...'
+        ],
+        'lit-review': [
+          'Mencari paper ilmiah relevan di OpenAlex...',
+          'Menyaring paper paling relevan...',
+          'Menyusun narasi tinjauan pustaka...',
+          'Merangkai daftar referensi...'
+        ],
+        'deep-lit-review': [
+          'Mencari paper ilmiah relevan di OpenAlex...',
+          'Memperkaya data lewat Semantic Scholar...',
+          'Menyusun tabel kerangka konseptual...',
+          'Menganalisis gap penelitian & peluang novelty...',
+          'Merangkai daftar referensi...'
+        ]
+      };
+      const stopQuickToolStatus = startProcessingStatus(loadingBubble, quickToolStatusMessages[tool] || quickToolStatusMessages['lit-review'], 2500);
 
       researchChatSendBtn.disabled = true;
       const originalBtnHtml = researchChatSendBtn.innerHTML;
@@ -4659,6 +4684,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         researchChatMessages.push(assistantMsg);
         renderResearchChatMessages();
+
+        // Hasilnya sudah lengkap sekaligus (bukan streaming asli dari API), tapi
+        // ditampilkan bertahap kata demi kata biar terasa cepat & hidup, bukan
+        // "nge-dump" teks panjang sekaligus.
+        const assistantContents = researchChatMessagesEl.querySelectorAll('.research-chat-bubble.assistant .chat-main-content');
+        const lastContentEl = assistantContents[assistantContents.length - 1];
+        if (lastContentEl) revealWordsInElement(lastContentEl, { tickMs: 20, targetDurationMs: 1600 });
+
         justGeneratedDraft = true;
         justGeneratedLitReview = true;
         await checkAuthState();
@@ -4670,6 +4703,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(error.message || 'Gagal memproses permintaan.');
         researchChatInput.value = text;
       } finally {
+        stopQuickToolStatus();
         researchChatSendBtn.disabled = false;
         researchChatSendBtn.innerHTML = originalBtnHtml;
       }
@@ -4689,12 +4723,17 @@ document.addEventListener('DOMContentLoaded', () => {
       researchChatInput.style.height = 'auto';
       renderResearchChatMessages();
 
-      // Bubble loading sementara menunggu token pertama dari stream
+      // Bubble loading sementara menunggu token pertama dari stream - pesan berganti
+      // tiap beberapa detik supaya user tahu ini masih berjalan, bukan macet/error.
       const loadingBubble = document.createElement('div');
       loadingBubble.className = 'research-chat-bubble loading';
-      loadingBubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
       researchChatMessagesEl.appendChild(loadingBubble);
       researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+      const stopChatStatus = startProcessingStatus(loadingBubble, [
+        'Menghubungi JurnalHub Intelligence...',
+        'Mencari referensi ilmiah pendukung...',
+        'Menyusun jawaban...'
+      ], 2200);
 
       researchChatSendBtn.disabled = true;
       const originalBtnHtml = researchChatSendBtn.innerHTML;
@@ -4835,6 +4874,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Terjadi kesalahan koneksi saat menghubungi JurnalHub Intelligence.');
         researchChatInput.value = text;
       } finally {
+        stopChatStatus();
         researchChatSendBtn.disabled = false;
         researchChatSendBtn.innerHTML = originalBtnHtml;
       }
