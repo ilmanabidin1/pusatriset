@@ -5568,6 +5568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
 
       } else if (item.type === 'lit-review') {
+        const citations = item.output.citations || [];
         historyDetailBody.innerHTML = `
           <div>
             <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">INPUT METADATA</h5>
@@ -5586,6 +5587,25 @@ document.addEventListener('DOMContentLoaded', () => {
               ${item.output.review}
             </div>
           </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">REFERENSI (${citations.length})</h5>
+              ${citations.length > 0 ? `
+              <div style="display: flex; gap: 0.5rem;">
+                <button id="exportHistoryRisBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.7rem; font-size: 0.72rem; background: #f59e0b; color: #051329;" type="button">.ris</button>
+                <button id="exportHistoryBibBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.7rem; font-size: 0.72rem; background: #f59e0b; color: #051329;" type="button">.bib</button>
+              </div>` : ''}
+            </div>
+            <div id="historyLitReviewCitationsWrapper" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 300px; overflow-y: auto; padding-right: 0.25rem;">
+              ${citations.length === 0 ? `<p style="font-size: 0.82rem; color: var(--text-muted);">Tidak ada data referensi tersimpan untuk riwayat ini.</p>` : citations.map((cit, i) => `
+                <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.75rem 1rem; background: #ffffff; text-align: left;">
+                  <h6 style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin: 0 0 0.25rem 0;">${i + 1}. ${escapeHtml(cit.title || 'Tanpa judul')}</h6>
+                  <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0 0 0.35rem 0;">${escapeHtml(cit.authors || '-')} · ${escapeHtml(String(cit.year || '-'))} · ${escapeHtml(cit.journal || '-')}</p>
+                  ${cit.url ? `<a href="${cit.url}" target="_blank" rel="noopener" style="font-size: 0.76rem; color: var(--brand-blue); font-weight: 600; text-decoration: none;">Buka sumber <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
         `;
 
         setTimeout(() => {
@@ -5597,6 +5617,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
                 setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Salin Review', 2000);
               });
+            });
+          }
+
+          const exportRisBtn = document.getElementById('exportHistoryRisBtn');
+          if (exportRisBtn) {
+            exportRisBtn.addEventListener('click', () => {
+              let risContent = '';
+              citations.forEach(cit => {
+                risContent += 'TY  - JOUR\r\n';
+                risContent += `TI  - ${cit.title || 'Untitled'}\r\n`;
+                if (cit.authors) {
+                  String(cit.authors).split(/,|&|dan/i).forEach(auth => {
+                    if (auth.trim()) risContent += `AU  - ${auth.trim()}\r\n`;
+                  });
+                }
+                if (cit.journal) risContent += `JO  - ${cit.journal}\r\n`;
+                if (cit.year) risContent += `PY  - ${cit.year}\r\n`;
+                if (cit.url) risContent += `UR  - ${cit.url}\r\n`;
+                risContent += 'ER  - \r\n\r\n';
+              });
+              const blob = new Blob([risContent], { type: 'text/plain;charset=utf-8' });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = 'Referensi_Kutipan.ris';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            });
+          }
+
+          const exportBibBtn = document.getElementById('exportHistoryBibBtn');
+          if (exportBibBtn) {
+            exportBibBtn.addEventListener('click', () => {
+              let bibContent = '';
+              citations.forEach((cit, i) => {
+                const firstAuthor = cit.authors ? String(cit.authors).split(/,| /)[0].toLowerCase().replace(/[^a-z]/g, '') : 'author';
+                const year = cit.year || '2026';
+                const titleWord = cit.title ? String(cit.title).split(' ')[0].toLowerCase().replace(/[^a-z]/g, '') : 'article';
+                const citeKey = `${firstAuthor}${year}${titleWord}${i + 1}`;
+                bibContent += `@article{${citeKey},\r\n`;
+                bibContent += `  title = {${cit.title || 'Untitled'}},\r\n`;
+                if (cit.authors) bibContent += `  author = {${cit.authors}},\r\n`;
+                if (cit.journal) bibContent += `  journal = {${cit.journal}},\r\n`;
+                if (cit.year) bibContent += `  year = {${cit.year}},\r\n`;
+                if (cit.url) bibContent += `  url = {${cit.url}},\r\n`;
+                bibContent += '}\r\n\r\n';
+              });
+              const blob = new Blob([bibContent], { type: 'text/plain;charset=utf-8' });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = 'Referensi_Kutipan.bib';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
             });
           }
         }, 100);
