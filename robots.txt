@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /reset-password.html
+Disallow: /payment-success
+Disallow: /payment-cancel
+Disallow: /api/
+
+Sitemap: https://jurnalhub.id/sitemap.xml
