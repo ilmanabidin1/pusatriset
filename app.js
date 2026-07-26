@@ -6571,7 +6571,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const exclusionCriteria = document.getElementById('slrExclusion').value.trim();
 
         if (loader) {
-          loaderText.textContent = 'Menyusun ulasan sistematis dengan DeepSeek AI...';
+          loaderText.textContent = 'Menyusun ulasan sistematis dengan AI...';
           loader.style.display = 'flex';
         }
         if (nextBtn) nextBtn.disabled = true;
