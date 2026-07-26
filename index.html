@@ -625,6 +625,48 @@
       z-index: 60;
     }
 
+    .sidebar-more-dropdown {
+      display: none;
+      flex-direction: column;
+      gap: 0.2rem;
+      position: fixed;
+      background: var(--bg-sidebar-active);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.4rem;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      z-index: 9999;
+      width: 210px;
+    }
+
+    .sidebar-more-dropdown.open {
+      display: flex;
+      animation: profileDropUpIn 0.15s ease-out;
+    }
+
+    .sidebar-more-dropdown .dropdown-item {
+      padding: 0.6rem 0.75rem;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      gap: 0.75rem;
+      color: rgba(255, 255, 255, 0.85) !important;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-more-dropdown .dropdown-item:hover {
+      background-color: var(--bg-sidebar-hover);
+      color: #ffffff !important;
+    }
+
+    .sidebar-more-dropdown .dropdown-item i {
+      font-size: 0.95rem;
+      width: 16px;
+      text-align: center;
+    }
+
     .user-profile-section.open .profile-dropdown {
       display: flex;
       animation: profileDropUpIn 0.18s ease-out;
@@ -3086,11 +3128,8 @@
       <a href="#" class="sidebar-link" data-tab="ai-research">
         <i class="fa-solid fa-user-check"></i> <span>Paraphraser &amp; Humanizer</span>
       </a>
-      <a href="#" class="sidebar-link" data-tab="templates">
-        <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="prompt-bank">
-        <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
+      <a href="#" class="sidebar-link" id="sidebarMoreTrigger">
+        <i class="fa-solid fa-ellipsis"></i> <span>More</span>
       </a>
     </nav>
 
@@ -3138,6 +3177,16 @@
       </div>
     </div>
   </aside>
+
+  <!-- More Floating Dropdown Menu -->
+  <div class="sidebar-more-dropdown" id="sidebarMoreDropdown">
+    <a href="#" class="sidebar-link dropdown-item" data-tab="templates">
+      <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
+    </a>
+    <a href="#" class="sidebar-link dropdown-item" data-tab="prompt-bank">
+      <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
+    </a>
+  </div>
 
   <!-- Right Main Content Panel -->
   <main class="main-content">
@@ -4479,6 +4528,16 @@
           }
         });
 
+        // Also highlight More trigger if active tab is templates or prompt-bank
+        const moreTrigger = document.getElementById('sidebarMoreTrigger');
+        if (moreTrigger) {
+          if (['templates', 'prompt-bank'].includes(tabName)) {
+            moreTrigger.classList.add('active');
+          } else {
+            moreTrigger.classList.remove('active');
+          }
+        }
+
         // Hide all tabs and show active
         tabContents.forEach(content => {
           content.classList.remove('active');
@@ -4529,9 +4588,64 @@
         link.addEventListener('click', (e) => {
           e.preventDefault();
           const tabName = link.getAttribute('data-tab');
-          switchTab(tabName);
+          if (tabName) {
+            switchTab(tabName);
+          }
         });
       });
+
+      // More menu dropdown (Template Jurnal & Prompt Bank)
+      const moreTrigger = document.getElementById('sidebarMoreTrigger');
+      const moreDropdown = document.getElementById('sidebarMoreDropdown');
+      if (moreTrigger && moreDropdown) {
+        moreTrigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const isOpen = moreDropdown.classList.contains('open');
+
+          // Close profile dropup if open
+          const profileMenuTrigger = document.getElementById('profileMenuTrigger');
+          if (profileMenuTrigger) {
+            profileMenuTrigger.classList.remove('open');
+          }
+
+          if (!isOpen) {
+            const rect = moreTrigger.getBoundingClientRect();
+            // Position it floating to the right of the More trigger button
+            moreDropdown.style.top = `${rect.top}px`;
+            moreDropdown.style.left = `${rect.right + 10}px`;
+            moreDropdown.classList.add('open');
+            moreTrigger.classList.add('active');
+          } else {
+            moreDropdown.classList.remove('open');
+            moreTrigger.classList.remove('active');
+          }
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!moreDropdown.contains(e.target) && e.target !== moreTrigger && !moreTrigger.contains(e.target)) {
+            moreDropdown.classList.remove('open');
+            moreTrigger.classList.remove('active');
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            moreDropdown.classList.remove('open');
+            moreTrigger.classList.remove('active');
+          }
+        });
+
+        // Wire dropdown items to close menu on select
+        const dropdownItems = moreDropdown.querySelectorAll('.dropdown-item');
+        dropdownItems.forEach(item => {
+          item.addEventListener('click', () => {
+            moreDropdown.classList.remove('open');
+            moreTrigger.classList.remove('active');
+          });
+        });
+      }
 
       // Mobile Menu Toggle
       mobileMenuBtn.addEventListener('click', () => {
@@ -4552,6 +4666,13 @@
           // Klik di dalam panel dropdown sendiri (item tab / tombol keluar) dibiarkan
           // ditangani handler masing-masing, bukan toggle ulang menu-nya.
           if (profileDropdown.contains(e.target)) return;
+
+          // Close More dropdown if open
+          if (moreDropdown) {
+            moreDropdown.classList.remove('open');
+            if (moreTrigger) moreTrigger.classList.remove('active');
+          }
+
           profileMenuTrigger.classList.toggle('open');
         });
 
