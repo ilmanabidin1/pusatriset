@@ -2533,7 +2533,7 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
       },
       body: JSON.stringify({
         model: 'deepseek-v4-flash',
-        max_tokens: 4000,
+        max_tokens: 8192,
         stream: false,
         thinking: { type: 'disabled' },
         extra_body: { thinking: { type: 'disabled' } },
@@ -2570,8 +2570,25 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
     try {
       parsedResult = JSON.parse(cleanText);
     } catch (parseError) {
-      console.error('[SLR Synthesis] JSON Parse Error. Raw Text:', cleanText);
-      throw new Error('Format respon AI tidak valid JSON: ' + parseError.message);
+      console.warn('[SLR Synthesis] Direct JSON parse failed, attempting auto-repair...', parseError.message);
+      try {
+        let repaired = cleanText;
+        const quoteMatches = (repaired.match(/"/g) || []).length;
+        if (quoteMatches % 2 !== 0) repaired += '"';
+
+        const openBraces = (repaired.match(/\{/g) || []).length;
+        const closeBraces = (repaired.match(/\}/g) || []).length;
+        const openBrackets = (repaired.match(/\[/g) || []).length;
+        const closeBrackets = (repaired.match(/\]/g) || []).length;
+
+        for (let i = 0; i < openBrackets - closeBrackets; i++) repaired += ']';
+        for (let i = 0; i < openBraces - closeBraces; i++) repaired += '}';
+
+        parsedResult = JSON.parse(repaired);
+      } catch (repairErr) {
+        console.error('[SLR Synthesis] JSON Parse Error. Raw Text Snippet:', cleanText.slice(-300));
+        throw new Error('Format respon AI terpotong/tidak valid JSON: ' + parseError.message);
+      }
     }
 
     // Update usage for Free & Premium users
