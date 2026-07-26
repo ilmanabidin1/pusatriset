@@ -2613,14 +2613,14 @@ app.post('/api/slr/generate-criteria', requireAccess, async (req, res) => {
   const fetchFn = globalThis.fetch || require('node-fetch');
   const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
 
-  let systemPrompt = "Anda adalah pakar akademisi riset. Berikan saran kriteria untuk topik Systematic Literature Review (SLR) yang diberikan. Jawab langsung dengan teks Bahasa Indonesia, berupa poin-poin menggunakan tanda hubung (-). Kembalikan hanya poin-poin tersebut, tanpa intro atau kata pengantar apapun.";
+  let systemPrompt = "Anda adalah pakar akademisi riset. Berikan saran kriteria atau pertanyaan penelitian untuk topik Systematic Literature Review (SLR) yang diberikan.\n\nPENTING SESUAIKAN BAHASA: Deteksi dan gunakan BAHASA YANG SAMA persis dengan bahasa topik/judul yang diberikan pengguna. Jika topik/judul dalam Bahasa Inggris, jawab seluruh poin dalam Bahasa Inggris akademis. Jika topik dalam Bahasa Indonesia, jawab dalam Bahasa Indonesia.\n\nFormat output: Jawab berupa poin-poin ringkas menggunakan tanda hubung (-). Kembalikan HANYA poin-poin tersebut tanpa intro, salam, atau teks pengantar apapun.";
   let userPrompt = "";
   if (field === 'questions') {
     userPrompt = `Tuliskan 3 Pertanyaan Penelitian (Research Questions) yang relevan dan kritis untuk studi SLR dengan topik/kata kunci: "${query}"`;
   } else if (field === 'inclusion') {
-    userPrompt = `Tuliskan 3 kriteria inklusi (kriteria penerimaan studi) yang relevan untuk studi SLR dengan topik/kata kunci: "${query}"`;
+    userPrompt = `Tuliskan 3 kriteria inklusi (Inclusion Criteria) yang relevan untuk studi SLR dengan topik/kata kunci: "${query}"`;
   } else if (field === 'exclusion') {
-    userPrompt = `Tuliskan 3 kriteria eksklusi (kriteria penolakan studi) yang relevan untuk studi SLR dengan topik/kata kunci: "${query}"`;
+    userPrompt = `Tuliskan 3 kriteria eksklusi (Exclusion Criteria) yang relevan untuk studi SLR dengan topik/kata kunci: "${query}"`;
   }
 
   try {
