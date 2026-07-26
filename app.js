@@ -6612,14 +6612,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const prisma = slrResult.prisma || {};
         const iden = document.getElementById('prismaIdentifiedCount');
         const scre = document.getElementById('prismaScreenedCount');
+        const excl = document.getElementById('prismaExcludedCount');
+        const sought = document.getElementById('prismaSoughtCount');
         const elig = document.getElementById('prismaEligibleCount');
         const incl = document.getElementById('prismaIncludedCount');
 
-        if (iden) iden.textContent = prisma.identified || fetchedPapers.length;
-        // Screened is the number of manually checked papers in step 3
+        const totalIdentified = prisma.identified || fetchedPapers.length;
         const checkedCount = document.querySelectorAll('.slr-paper-checkbox:checked').length;
-        if (scre) scre.textContent = prisma.screened || checkedCount;
-        if (elig) elig.textContent = prisma.eligible || checkedCount;
+        const excludedCount = Math.max(0, totalIdentified - checkedCount);
+
+        if (iden) iden.textContent = totalIdentified;
+        if (scre) scre.textContent = totalIdentified;
+        if (excl) excl.textContent = excludedCount;
+        if (sought) sought.textContent = checkedCount;
+        if (elig) elig.textContent = checkedCount;
         if (incl) incl.textContent = prisma.included || checkedCount;
 
         // Update Matrix Table

@@ -767,53 +767,100 @@
       display: block;
     }
     
-    /* PRISMA Diagram */
-    .prisma-container {
-      display: flex;
-      flex-direction: column;
+    /* PRISMA Diagram 2020 Grid Layout */
+    .prisma-2020-layout {
+      display: grid;
+      grid-template-columns: 50px 280px 40px 280px;
+      gap: 0.75rem 1rem;
+      background: #ffffff;
+      padding: 2rem;
+      border: 1px solid rgba(8,34,64,0.08);
+      border-radius: 12px;
+      margin: 1.5rem 0;
+      overflow-x: auto;
       align-items: center;
-      gap: 1.5rem;
-      margin: 2rem 0;
+      justify-content: center;
+    }
+    
+    .prisma-phase-label {
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.72rem;
+      writing-mode: vertical-lr;
+      transform: rotate(180deg);
+      text-align: center;
+      letter-spacing: 1px;
+      padding: 0.5rem 0;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      user-select: none;
     }
     
     .prisma-box {
       background: #f8fafc;
-      border: 1px solid rgba(8,34,64,0.08);
       border-radius: 8px;
-      padding: 1rem;
-      width: 340px;
-      text-align: center;
-      position: relative;
-      box-shadow: 0 4px 12px rgba(8, 34, 64, 0.02);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      box-shadow: 0 4px 10px rgba(8, 34, 64, 0.02);
+      border: 2px dashed #cbd5e1;
+      transition: all 0.2s ease;
     }
     
-    .prisma-box::after {
-      content: '↓';
-      position: absolute;
-      bottom: -28px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.5rem;
-      color: var(--text-muted);
-      font-weight: 700;
+    .prisma-box.main-box {
+      border: 2px solid var(--brand-blue);
+      background: rgba(7, 135, 220, 0.01);
     }
     
-    .prisma-box:last-child::after {
-      display: none;
+    .prisma-box.side-box {
+      border: 2px solid #94a3b8;
+      background: #fdfdfd;
     }
     
-    .prisma-box h5 {
-      margin: 0 0 0.25rem 0;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
+    .prisma-box.final-included {
+      border: 2px solid #10b981;
+      background: rgba(16, 185, 129, 0.01);
     }
     
-    .prisma-box .prisma-count {
-      font-size: 1.5rem;
+    .prisma-box-title {
+      font-size: 0.7rem;
       font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.5px;
+    }
+    
+    .prisma-box-content {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    
+    .prisma-arrow-right {
+      font-size: 1.25rem;
       color: var(--brand-blue);
+      font-weight: 900;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: pulseArrow 2s infinite ease-in-out;
+    }
+    
+    .prisma-arrow-down {
+      font-size: 1.25rem;
+      color: var(--brand-blue);
+      font-weight: 900;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    @keyframes pulseArrow {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.1) translateX(2px); opacity: 1; }
     }
 
     .btn-slr-ai-suggest {
@@ -4643,26 +4690,81 @@
 
               <!-- Content SLR Step 4: PRISMA flow -->
               <div class="slr-sub-content active" id="slrSubContentPrisma">
-                <div class="prisma-container">
-                  <div class="prisma-box">
-                    <h5>Identification</h5>
-                    <div class="prisma-count" id="prismaIdentifiedCount">0</div>
-                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Artikel diidentifikasi dari pencarian OpenAlex</p>
+                <div class="prisma-2020-layout">
+                  <!-- Row 1: Identification Phase -->
+                  <div class="prisma-phase-label phase-identification" style="grid-row: 1 / 3; grid-column: 1; background: linear-gradient(135deg, #f59e0b, #d97706); height: 100%;">IDENTIFICATION</div>
+                  
+                  <div class="prisma-box main-box" style="grid-row: 1; grid-column: 2;">
+                    <div class="prisma-box-title">Records identified from:</div>
+                    <div class="prisma-box-content">Databases (OpenAlex)<br>(n = <span id="prismaIdentifiedCount">0</span>)</div>
                   </div>
-                  <div class="prisma-box">
-                    <h5>Screening</h5>
-                    <div class="prisma-count" id="prismaScreenedCount">0</div>
-                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Artikel lolos penyaringan manual (dicentang)</p>
+                  
+                  <div class="prisma-arrow-right" style="grid-row: 1; grid-column: 3;">➡</div>
+                  
+                  <div class="prisma-box side-box" style="grid-row: 1; grid-column: 4;">
+                    <div class="prisma-box-title">Records removed before screening:</div>
+                    <div class="prisma-box-content">Duplicate records removed<br>(n = 0)</div>
                   </div>
-                  <div class="prisma-box">
-                    <h5>Eligibility</h5>
-                    <div class="prisma-count" id="prismaEligibleCount">0</div>
-                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Artikel dievaluasi abstrak & kriteria oleh AI</p>
+
+                  <!-- Row 2: Arrow Down to Screening -->
+                  <div class="prisma-arrow-down" style="grid-row: 2; grid-column: 2; padding: 0.25rem 0;">⬇</div>
+
+                  <!-- Row 3: Screening Phase -->
+                  <div class="prisma-phase-label phase-screening" style="grid-row: 3 / 8; grid-column: 1; background: linear-gradient(135deg, #3b82f6, #1d4ed8); height: 100%;">SCREENING</div>
+                  
+                  <div class="prisma-box main-box" style="grid-row: 3; grid-column: 2;">
+                    <div class="prisma-box-title">Records screened:</div>
+                    <div class="prisma-box-content">Title and abstract<br>(n = <span id="prismaScreenedCount">0</span>)</div>
                   </div>
-                  <div class="prisma-box">
-                    <h5>Included</h5>
-                    <div class="prisma-count" id="prismaIncludedCount">0</div>
-                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Artikel akhir dianalisis dalam review</p>
+                  
+                  <div class="prisma-arrow-right" style="grid-row: 3; grid-column: 3;">➡</div>
+                  
+                  <div class="prisma-box side-box" style="grid-row: 3; grid-column: 4;">
+                    <div class="prisma-box-title">Records excluded:</div>
+                    <div class="prisma-box-content">Not matching criteria<br>(n = <span id="prismaExcludedCount">0</span>)</div>
+                  </div>
+
+                  <!-- Row 4: Arrow Down to Sought -->
+                  <div class="prisma-arrow-down" style="grid-row: 4; grid-column: 2; padding: 0.25rem 0;">⬇</div>
+
+                  <!-- Row 5: Sought Retrieval -->
+                  <div class="prisma-box main-box" style="grid-row: 5; grid-column: 2;">
+                    <div class="prisma-box-title">Reports sought for retrieval:</div>
+                    <div class="prisma-box-content">Full-text reports<br>(n = <span id="prismaSoughtCount">0</span>)</div>
+                  </div>
+                  
+                  <div class="prisma-arrow-right" style="grid-row: 5; grid-column: 3;">➡</div>
+                  
+                  <div class="prisma-box side-box" style="grid-row: 5; grid-column: 4;">
+                    <div class="prisma-box-title">Reports not retrieved:</div>
+                    <div class="prisma-box-content">Unable to retrieve<br>(n = 0)</div>
+                  </div>
+
+                  <!-- Row 6: Arrow Down to Eligibility -->
+                  <div class="prisma-arrow-down" style="grid-row: 6; grid-column: 2; padding: 0.25rem 0;">⬇</div>
+
+                  <!-- Row 7: Eligibility Assessment -->
+                  <div class="prisma-box main-box" style="grid-row: 7; grid-column: 2;">
+                    <div class="prisma-box-title">Reports assessed for eligibility:</div>
+                    <div class="prisma-box-content">Full-text screening<br>(n = <span id="prismaEligibleCount">0</span>)</div>
+                  </div>
+                  
+                  <div class="prisma-arrow-right" style="grid-row: 7; grid-column: 3;">➡</div>
+                  
+                  <div class="prisma-box side-box" style="grid-row: 7; grid-column: 4;">
+                    <div class="prisma-box-title">Reports excluded:</div>
+                    <div class="prisma-box-content">Ineligible content/methods<br>(n = 0)</div>
+                  </div>
+
+                  <!-- Row 8: Arrow Down to Included -->
+                  <div class="prisma-arrow-down" style="grid-row: 8; grid-column: 2; padding: 0.25rem 0;">⬇</div>
+
+                  <!-- Row 9: Included Phase -->
+                  <div class="prisma-phase-label phase-included" style="grid-row: 9; grid-column: 1; background: linear-gradient(135deg, #10b981, #047857); height: 100%;">INCLUDED</div>
+                  
+                  <div class="prisma-box main-box final-included" style="grid-row: 9; grid-column: 2;">
+                    <div class="prisma-box-title">Studies included in review:</div>
+                    <div class="prisma-box-content">Synthesis matrix<br>(n = <span id="prismaIncludedCount">0</span>)</div>
                   </div>
                 </div>
               </div>
