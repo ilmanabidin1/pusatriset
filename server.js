@@ -2366,9 +2366,9 @@ app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Daftar paper kosong atau tidak valid.' });
   }
 
-  const deepSeekKey = process.env.STEALTH_API_KEY || process.env.DEEPSEEK_API_KEY;
+  const deepSeekKey = process.env.DEEPSEEK_API_KEY;
   if (!deepSeekKey) {
-    return res.status(500).json({ ok: false, message: 'DeepSeek/Stealth API Key belum dikonfigurasi di Railway.' });
+    return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di Railway.' });
   }
 
   const fetchFn = globalThis.fetch || require('node-fetch');
@@ -2487,9 +2487,9 @@ app.post('/api/slr/generate-criteria', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Topik/Query dan kolom wajib diisi.' });
   }
 
-  const deepSeekKey = process.env.STEALTH_API_KEY || process.env.DEEPSEEK_API_KEY;
+  const deepSeekKey = process.env.DEEPSEEK_API_KEY;
   if (!deepSeekKey) {
-    return res.status(500).json({ ok: false, message: 'DeepSeek/Stealth API Key belum dikonfigurasi di Railway.' });
+    return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di Railway.' });
   }
 
   const fetchFn = globalThis.fetch || require('node-fetch');
@@ -2551,9 +2551,9 @@ app.post('/api/slr/auto-screen', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Daftar paper kosong atau tidak valid.' });
   }
 
-  const deepSeekKey = process.env.STEALTH_API_KEY || process.env.DEEPSEEK_API_KEY;
+  const deepSeekKey = process.env.DEEPSEEK_API_KEY;
   if (!deepSeekKey) {
-    return res.status(500).json({ ok: false, message: 'DeepSeek/Stealth API Key belum dikonfigurasi di Railway.' });
+    return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di Railway.' });
   }
 
   const fetchFn = globalThis.fetch || require('node-fetch');
