@@ -667,6 +667,155 @@
       text-align: center;
     }
 
+    /* SLR Wizard Styling */
+    .slr-wizard-container {
+      background: #ffffff;
+      border: 1px solid rgba(8,34,64,0.08);
+      border-radius: var(--card-radius);
+      padding: 2rem;
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    
+    .slr-steps-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3.5rem;
+      position: relative;
+    }
+    
+    .slr-steps-line {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      right: 10px;
+      height: 2px;
+      background: #e2e8f0;
+      z-index: 1;
+      transform: translateY(-50%);
+    }
+    
+    .slr-steps-line-progress {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      height: 2px;
+      background: var(--brand-blue);
+      z-index: 2;
+      transform: translateY(-50%);
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    
+    .slr-step-node {
+      position: relative;
+      z-index: 3;
+      background: #ffffff;
+      border: 2px solid #e2e8f0;
+      color: var(--text-muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    
+    .slr-step-node.active {
+      border-color: var(--brand-blue);
+      color: var(--brand-blue);
+      box-shadow: 0 0 0 4px rgba(7, 135, 220, 0.15);
+    }
+    
+    .slr-step-node.completed {
+      border-color: var(--brand-blue);
+      background: var(--brand-blue);
+      color: #ffffff;
+    }
+    
+    .slr-step-label {
+      position: absolute;
+      top: 42px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .slr-step-node.active .slr-step-label {
+      color: var(--text-main);
+    }
+    
+    .slr-step-content {
+      display: none;
+      flex: 1 1 auto;
+      margin-bottom: 2rem;
+    }
+    
+    .slr-step-content.active {
+      display: block;
+    }
+    
+    /* PRISMA Diagram */
+    .prisma-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .prisma-box {
+      background: #f8fafc;
+      border: 1px solid rgba(8,34,64,0.08);
+      border-radius: 8px;
+      padding: 1rem;
+      width: 340px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(8, 34, 64, 0.02);
+    }
+    
+    .prisma-box::after {
+      content: '↓';
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    
+    .prisma-box:last-child::after {
+      display: none;
+    }
+    
+    .prisma-box h5 {
+      margin: 0 0 0.25rem 0;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+    
+    .prisma-box .prisma-count {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--brand-blue);
+    }
+
     .user-profile-section.open .profile-dropdown {
       display: flex;
       animation: profileDropUpIn 0.18s ease-out;
@@ -3186,6 +3335,9 @@
     <a href="#" class="sidebar-link dropdown-item" data-tab="prompt-bank">
       <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
     </a>
+    <a href="#" class="sidebar-link dropdown-item" data-tab="slr">
+      <i class="fa-solid fa-book-bookmark"></i> <span>Systematic Lit Review</span>
+    </a>
   </div>
 
   <!-- Right Main Content Panel -->
@@ -4291,6 +4443,225 @@
         </div>
       </div>
 
+      <!-- TAB: SYSTEMATIC LITERATURE REVIEW (SLR) -->
+      <div id="tabContentSlr" class="tab-content">
+        <div class="settings-container" style="max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+          
+          <div class="slr-wizard-container">
+            <!-- Step Navigation Header -->
+            <div class="slr-steps-bar">
+              <div class="slr-steps-line"></div>
+              <div class="slr-steps-line-progress" id="slrProgressLine"></div>
+              
+              <div class="slr-step-node active" data-step="1">
+                1
+                <span class="slr-step-label">Identification</span>
+              </div>
+              <div class="slr-step-node" data-step="2">
+                2
+                <span class="slr-step-label">Criteria</span>
+              </div>
+              <div class="slr-step-node" data-step="3">
+                3
+                <span class="slr-step-label">Screening</span>
+              </div>
+              <div class="slr-step-node" data-step="4">
+                4
+                <span class="slr-step-label">Synthesis</span>
+              </div>
+            </div>
+
+            <!-- Step 1: Identification (Pencarian Paper) -->
+            <div class="slr-step-content active" id="slrStep1">
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text-main);">Langkah 1: Pencarian Literature (Identification)</h4>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;">Cari artikel ilmiah yang relevan langsung dari database OpenAlex. Tentukan filter pencarian di bawah ini.</p>
+              
+              <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
+                <div class="filter-dropdown-item">
+                  <label for="slrQuery" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">KATA KUNCI / JUDUL TOPIK PENELITIAN</label>
+                  <input type="text" id="slrQuery" placeholder="Contoh: 'artificial intelligence in education' OR 'AI learning model'..." style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc;">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="filter-dropdown-item">
+                    <label for="slrStartYear" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">TAHUN MULAI</label>
+                    <input type="number" id="slrStartYear" value="2020" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc;">
+                  </div>
+                  <div class="filter-dropdown-item">
+                    <label for="slrEndYear" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">TAHUN AKHIR</label>
+                    <input type="number" id="slrEndYear" value="2026" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc;">
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center;">
+                  <div class="filter-dropdown-item">
+                    <label for="slrLimit" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">MAKSIMAL HASIL ARTIKEL</label>
+                    <select id="slrLimit" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc;">
+                      <option value="20">20 Artikel</option>
+                      <option value="50">50 Artikel</option>
+                      <option value="100">100 Artikel</option>
+                    </select>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                    <input type="checkbox" id="slrOaOnly" style="width: 18px; height: 18px; cursor: pointer;">
+                    <label for="slrOaOnly" style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); cursor: pointer; user-select: none;">Hanya Artikel Open Access</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Criteria (Parameter Review) -->
+            <div class="slr-step-content" id="slrStep2">
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text-main);">Langkah 2: Parameter Tinjauan & Kriteria</h4>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;">Definisikan pertanyaan penelitian serta kriteria penyaringan agar AI dapat menyeleksi artikel secara akurat.</p>
+              
+              <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="filter-dropdown-item">
+                  <label for="slrQuestions" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">PERTANYAAN PENELITIAN (RESEARCH QUESTIONS)</label>
+                  <textarea id="slrQuestions" placeholder="Contoh: &#10;1. Apa metode pembelajaran AI yang paling dominan digunakan?&#10;2. Bagaimana dampak penggunaan AI terhadap hasil belajar siswa?" style="width:100%; height: 100px; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc; resize: vertical;"></textarea>
+                </div>
+                
+                <div class="filter-dropdown-item">
+                  <label for="slrInclusion" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">KRITERIA INKLUSI (DITERIMA)</label>
+                  <textarea id="slrInclusion" placeholder="Contoh: &#10;- Artikel diterbitkan di jurnal internasional terakreditasi&#10;- Studi berfokus pada pendidikan dasar atau menengah" style="width:100%; height: 80px; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc; resize: vertical;"></textarea>
+                </div>
+                
+                <div class="filter-dropdown-item">
+                  <label for="slrExclusion" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">KRITERIA EKSKLUSI (DITOLAK)</label>
+                  <textarea id="slrExclusion" placeholder="Contoh: &#10;- Artikel review, opini, atau dokumen paten&#10;- Studi tidak memiliki data empiris hasil belajar" style="width:100%; height: 80px; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc; resize: vertical;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Screening (Seleksi Manual) -->
+            <div class="slr-step-content" id="slrStep3">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.3rem; color: var(--text-main); margin: 0;">Langkah 3: Seleksi Artikel (Screening)</h4>
+                  <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Centang artikel yang ingin dimasukkan ke dalam sintesis review. Artikel yang tidak dicentang akan otomatis di-eksklusi.</p>
+                </div>
+                <div style="background: rgba(7, 135, 220, 0.08); border: 1px solid rgba(7, 135, 220, 0.2); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--brand-blue);" id="slrSelectedCounter">
+                  0 dari 0 Artikel Dipilih
+                </div>
+              </div>
+              
+              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1rem;">
+                <button type="button" id="slrCheckAllBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); transition: all 0.2s;">Pilih Semua</button>
+                <button type="button" id="slrUncheckAllBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); transition: all 0.2s;">Hapus Semua</button>
+              </div>
+
+              <!-- Papers selection list container -->
+              <div style="max-height: 480px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid rgba(8,34,64,0.08); border-radius: 12px; padding: 1rem; background: #f8fafc;" id="slrPapersSelectionList">
+                <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+                  <i class="fa-solid fa-cloud-arrow-down" style="font-size: 2rem; margin-bottom: 0.75rem; display: block; opacity: 0.5;"></i>
+                  Belum ada data. Silakan kembali ke Langkah 1 dan klik "Cari Artikel".
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: Synthesis (Hasil Akhir & PRISMA) -->
+            <div class="slr-step-content" id="slrStep4">
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.3rem; margin-bottom: 1rem; color: var(--text-main);">Langkah 4: Hasil Sintesis Systematic Review</h4>
+              
+              <!-- Tabs internal Step 4 (PRISMA, Synthesis Matrix, Narrative) -->
+              <div style="display: flex; border-bottom: 2px solid rgba(8,34,64,0.06); margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
+                <button type="button" class="slr-tab-btn active" data-slr-tab="prisma" style="border: none; background: none; font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 0.5rem 0.25rem; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -2px;">Diagram PRISMA</button>
+                <button type="button" class="slr-tab-btn" data-slr-tab="matrix" style="border: none; background: none; font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 0.5rem 0.25rem; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -2px;">Matriks Sintesis</button>
+                <button type="button" class="slr-tab-btn" data-slr-tab="narrative" style="border: none; background: none; font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 0.5rem 0.25rem; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -2px;">Laporan Naratif SLR</button>
+              </div>
+
+              <!-- Content SLR Step 4: PRISMA flow -->
+              <div class="slr-sub-content active" id="slrSubContentPrisma">
+                <div class="prisma-container">
+                  <div class="prisma-box">
+                    <h5>Identification</h5>
+                    <div class="prisma-count" id="prismaIdentifiedCount">0</div>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Artikel diidentifikasi dari pencarian OpenAlex</p>
+                  </div>
+                  <div class="prisma-box">
+                    <h5>Screening</h5>
+                    <div class="prisma-count" id="prismaScreenedCount">0</div>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Artikel lolos penyaringan manual (dicentang)</p>
+                  </div>
+                  <div class="prisma-box">
+                    <h5>Eligibility</h5>
+                    <div class="prisma-count" id="prismaEligibleCount">0</div>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Artikel dievaluasi abstrak & kriteria oleh AI</p>
+                  </div>
+                  <div class="prisma-box">
+                    <h5>Included</h5>
+                    <div class="prisma-count" id="prismaIncludedCount">0</div>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Artikel akhir dianalisis dalam review</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content SLR Step 4: Matrix Table -->
+              <div class="slr-sub-content" id="slrSubContentMatrix" style="display: none;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 0.75rem;">
+                  <button type="button" id="slrExportCsvBtn" style="background: var(--brand-blue); color: #ffffff; border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.45rem 1rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">
+                    <i class="fa-solid fa-file-excel"></i> Ekspor CSV
+                  </button>
+                </div>
+                <div style="overflow-x: auto; border: 1px solid rgba(8,34,64,0.08); border-radius: 8px; background: #ffffff;">
+                  <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.82rem;" id="slrMatrixTable">
+                    <thead>
+                      <tr style="background: #f8fafc; border-bottom: 1px solid rgba(8,34,64,0.08);">
+                        <th style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-main); width: 180px;">Penulis & Tahun</th>
+                        <th style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-main); width: 140px;">Metodologi</th>
+                        <th style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-main);">Temuan Utama</th>
+                        <th style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-main);">Research Gap / Novelty</th>
+                      </tr>
+                    </thead>
+                    <tbody id="slrMatrixTableBody">
+                      <tr>
+                        <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">Belum ada data sintesis.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Content SLR Step 4: Narrative Report -->
+              <div class="slr-sub-content" id="slrSubContentNarrative" style="display: none;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 0.75rem;">
+                  <button type="button" id="slrCopyNarrativeBtn" style="background: var(--brand-blue); color: #ffffff; border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.45rem 1rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">
+                    <i class="fa-solid fa-copy"></i> Salin Laporan
+                  </button>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.08); border-radius: 12px; padding: 1.5rem; max-height: 500px; overflow-y: auto; font-size: 0.9rem; line-height: 1.6; text-align: left; color: var(--text-main);" id="slrNarrativeOutput" class="chat-md-block">
+                  <p style="color: var(--text-muted); text-align: center; padding: 2rem 0;">Belum ada hasil narasi laporan.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Wizard Footer Action Buttons -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(8,34,64,0.06); padding-top: 1.5rem; margin-top: 2rem;">
+              <button type="button" id="slrPrevBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; color: var(--text-main); font-family: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; padding: 0.6rem 1.25rem; border-radius: 8px; transition: all 0.2s; visibility: hidden;">
+                <i class="fa-solid fa-arrow-left"></i> Sebelumnya
+              </button>
+              
+              <!-- Loader inside wizard footer -->
+              <div id="slrStepLoader" style="display: none; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="color: var(--brand-blue);"></i>
+                <span id="slrLoaderText">Mencari artikel...</span>
+              </div>
+              
+              <button type="button" id="slrNextBtn" style="background: var(--brand-blue); color: #ffffff; border: none; font-family: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; padding: 0.6rem 1.25rem; border-radius: 8px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.35rem;">
+                <span>Selanjutnya</span> <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+            
+          </div>
+
+          <!-- Powered by Claude Logo at the bottom -->
+          <div style="margin-top: 1rem; border-top: 1px solid rgba(8,34,64,0.06); padding-top: 1.5rem; display: flex; justify-content: center; align-items: center;">
+            <img src="assets/powered-by-claude-light.png" alt="Powered by Claude" style="height: 38px; width: auto; opacity: 0.85;">
+          </div>
+          
+        </div>
+      </div>
+
       <!-- TAB: RIWAYAT (HISTORY) -->
       <div id="tabContentRiwayat" class="tab-content">
         <div class="settings-container" style="max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
@@ -4303,6 +4674,7 @@
               <button class="filter-badge" data-type="draft" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Outline Generator</button>
               <button class="filter-badge" data-type="lit-review" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Literature Review</button>
               <button class="filter-badge" data-type="humanizer" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Humanizer Engine</button>
+              <button class="filter-badge" data-type="slr" style="border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.2s;">Systematic Lit Review</button>
             </div>
             
             <button id="clearHistoryBtn" style="border: 1px solid #ef4444; color: #ef4444; background: transparent; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">

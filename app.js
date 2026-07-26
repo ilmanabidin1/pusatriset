@@ -1215,7 +1215,8 @@ document.addEventListener('DOMContentLoaded', () => {
       match: { label: t.hist_type_match, icon: 'fa-solid fa-magnifying-glass-chart', bg: 'rgba(7, 135, 220, 0.08)', color: 'var(--brand-blue)' },
       draft: { label: t.hist_type_draft, icon: 'fa-regular fa-file-lines', bg: 'rgba(16, 185, 129, 0.08)', color: '#10b981' },
       'lit-review': { label: t.hist_type_litreview, icon: 'fa-solid fa-book-open-reader', bg: 'rgba(139, 92, 246, 0.08)', color: '#8b5cf6' },
-      humanizer: { label: t.hist_type_humanizer, icon: 'fa-solid fa-wand-magic-sparkles', bg: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }
+      humanizer: { label: t.hist_type_humanizer, icon: 'fa-solid fa-wand-magic-sparkles', bg: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' },
+      slr: { label: t.hist_type_slr || "Systematic Lit Review", icon: 'fa-solid fa-book-bookmark', bg: 'rgba(236, 72, 153, 0.08)', color: '#ec4899' }
     };
   }
 
@@ -1225,6 +1226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (item.type === 'draft') return item.input.title || t.hist_fallback_draft;
     if (item.type === 'lit-review') return item.input.title || t.hist_fallback_litreview;
     if (item.type === 'humanizer') return item.input.text ? item.input.text.slice(0, 60) + '...' : t.hist_fallback_humanizer;
+    if (item.type === 'slr') return item.input.query || t.hist_fallback_slr || "Systematic Literature Review";
     return t.hist_fallback_generic;
   }
 
@@ -5410,6 +5412,13 @@ document.addEventListener('DOMContentLoaded', () => {
           iconColor = '#f59e0b';
           titleText = item.input.text ? item.input.text.slice(0, 80) + '...' : t.hist_fallback_humanizer;
           descText = `${t.hist_desc_mode}: ${item.input.mode === 'academic' ? t.hist_desc_mode_academic : t.hist_desc_mode_standard} | ${t.hist_desc_originality}: ${item.output.originalityScore}% | ${t.hist_desc_cost}: ${item.output.actualCost} ${t.hist_desc_words}`;
+        } else if (item.type === 'slr') {
+          typeLabel = t.hist_type_slr || "Systematic Lit Review";
+          typeIcon = 'fa-solid fa-book-bookmark';
+          iconBg = 'rgba(236, 72, 153, 0.08)';
+          iconColor = '#ec4899';
+          titleText = item.input.query || t.hist_fallback_slr || "Systematic Literature Review";
+          descText = `${item.output.prisma ? item.output.prisma.included : 0} paper disintesis | Kriteria: ${item.input.criteria ? item.input.criteria.inclusion.slice(0, 50) + '...' : '-'}`;
         }
 
         const card = document.createElement('div');
@@ -5538,6 +5547,11 @@ document.addEventListener('DOMContentLoaded', () => {
         iconColor = '#f59e0b';
         iconBg = 'rgba(245, 158, 11, 0.1)';
         typeLabel = 'JurnalHub Humanizer Engine';
+      } else if (item.type === 'slr') {
+        typeIcon = 'fa-solid fa-book-bookmark';
+        iconColor = '#ec4899';
+        iconBg = 'rgba(236, 72, 153, 0.1)';
+        typeLabel = 'Systematic Lit Review';
       }
 
       historyDetailIconWrapper.className = '';
@@ -5822,6 +5836,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
                 setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Salin Hasil', 2000);
               });
+            });
+          }
+        }, 100);
+      } else if (item.type === 'slr') {
+        const result = item.output || {};
+        historyDetailBody.innerHTML = `
+          <div>
+            <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">METADATA PENCARIAN</h5>
+            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem; text-align: left;">
+              <div><strong>Kata Kunci:</strong> ${escapeHtml(item.input.query) || '-'}</div>
+              <div><strong>Pertanyaan Penelitian:</strong> ${escapeHtml(item.input.questions) || '-'}</div>
+              <div><strong>Kriteria Inklusi:</strong> ${escapeHtml(item.input.criteria?.inclusion) || '-'}</div>
+              <div><strong>Kriteria Eksklusi:</strong> ${escapeHtml(item.input.criteria?.exclusion) || '-'}</div>
+            </div>
+          </div>
+          <div>
+            <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">DIAGRAM PRISMA</h5>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; text-align: center;">
+              <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 6px;">
+                <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Identified</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--brand-blue);">${result.prisma?.identified || 0}</div>
+              </div>
+              <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 6px;">
+                <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Screened</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--brand-blue);">${result.prisma?.screened || 0}</div>
+              </div>
+              <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 6px;">
+                <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Eligible</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--brand-blue);">${result.prisma?.eligible || 0}</div>
+              </div>
+              <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 6px;">
+                <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Included</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--brand-blue);">${result.prisma?.included || 0}</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">MATRIKS SINTESIS & LAPORAN</h5>
+              <button id="loadHistorySlrBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: var(--brand-blue); color: white;" type="button">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Tampilkan di Tab SLR
+              </button>
+            </div>
+            <div style="background: #ffffff; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.82rem; color: var(--text-muted); text-align: center;">
+              Klik tombol di atas untuk memuat data lengkap dan narasi Systematic Review ini ke dalam tab navigasi Systematic Lit Review Anda.
+            </div>
+          </div>
+        `;
+
+        setTimeout(() => {
+          const loadBtn = document.getElementById('loadHistorySlrBtn');
+          if (loadBtn) {
+            loadBtn.addEventListener('click', () => {
+              if (window.switchTab) window.switchTab('slr');
+              if (window.loadSlrFromHistory) window.loadSlrFromHistory(result);
+              if (historyDetailModal) historyDetailModal.classList.remove('active');
             });
           }
         }, 100);
@@ -6211,6 +6281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (type === 'draft') badge.textContent = lang === 'id' ? 'Outline Generator' : 'Outline Generator';
         else if (type === 'lit-review') badge.textContent = lang === 'id' ? 'Literature Review' : 'Literature Review';
         else if (type === 'humanizer') badge.textContent = lang === 'id' ? 'Humanizer Engine' : 'Humanizer Engine';
+        else if (type === 'slr') badge.textContent = lang === 'id' ? 'Systematic Lit Review' : 'Systematic Lit Review';
       });
 
       // Translate Quota Tracker Card static items
@@ -6301,6 +6372,437 @@ document.addEventListener('DOMContentLoaded', () => {
     const berandaDbJurnalCount = document.getElementById('berandaDbJurnalCount');
     if (berandaDbJurnalCount) {
       berandaDbJurnalCount.textContent = JOURNAL_DATABASE.length.toLocaleString('id-ID');
+    }
+
+    // Initialize SLR Wizard Feature
+    initSlrWizard();
+
+    // --- SYSTEMATIC LITERATURE REVIEW (SLR) WIZARD LOGIC ---
+    function initSlrWizard() {
+      let currentStep = 1;
+      let fetchedPapers = [];
+      let slrResult = null;
+
+      const progressLine = document.getElementById('slrProgressLine');
+      const prevBtn = document.getElementById('slrPrevBtn');
+      const nextBtn = document.getElementById('slrNextBtn');
+      const loader = document.getElementById('slrStepLoader');
+      const loaderText = document.getElementById('slrLoaderText');
+
+      const steps = [
+        document.getElementById('slrStep1'),
+        document.getElementById('slrStep2'),
+        document.getElementById('slrStep3'),
+        document.getElementById('slrStep4')
+      ];
+
+      function updateStepUI() {
+        // Show/hide step content
+        steps.forEach((step, idx) => {
+          if (step) {
+            step.classList.toggle('active', idx + 1 === currentStep);
+            step.style.display = idx + 1 === currentStep ? 'block' : 'none';
+          }
+        });
+
+        // Update step nodes active/completed states
+        const nodes = document.querySelectorAll('.slr-step-node');
+        nodes.forEach((node) => {
+          const stepNum = parseInt(node.getAttribute('data-step'));
+          node.classList.toggle('active', stepNum === currentStep);
+          node.classList.toggle('completed', stepNum < currentStep);
+        });
+
+        // Update progress line width
+        if (progressLine) {
+          const percent = ((currentStep - 1) / (steps.length - 1)) * 100;
+          progressLine.style.width = `${percent}%`;
+        }
+
+        // Update footer buttons visibility & labels
+        if (prevBtn) {
+          prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+        }
+
+        if (nextBtn) {
+          if (currentStep === 1) {
+            nextBtn.innerHTML = `Cari Artikel <i class="fa-solid fa-arrow-right"></i>`;
+          } else if (currentStep === 3) {
+            nextBtn.innerHTML = `Mulai Sintesis <i class="fa-solid fa-wand-magic-sparkles"></i>`;
+          } else if (currentStep === 4) {
+            nextBtn.innerHTML = `Mulai Baru <i class="fa-solid fa-rotate-right"></i>`;
+          } else {
+            nextBtn.innerHTML = `Selanjutnya <i class="fa-solid fa-arrow-right"></i>`;
+          }
+        }
+      }
+
+      // Step 1: Cari Artikel dari OpenAlex
+      async function searchArticles() {
+        const query = document.getElementById('slrQuery').value.trim();
+        if (!query || query.length < 3) {
+          alert('Kata kunci pencarian minimal 3 karakter.');
+          return;
+        }
+
+        const startYear = document.getElementById('slrStartYear').value.trim();
+        const endYear = document.getElementById('slrEndYear').value.trim();
+        const oaOnly = document.getElementById('slrOaOnly').checked;
+        const limit = document.getElementById('slrLimit').value;
+
+        if (loader) {
+          loaderText.textContent = 'Mencari artikel ilmiah di OpenAlex...';
+          loader.style.display = 'flex';
+        }
+        if (nextBtn) nextBtn.disabled = true;
+
+        try {
+          const res = await fetch('/api/slr/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ query, startYear, endYear, oaOnly, limit })
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.message);
+
+          fetchedPapers = data.papers || [];
+          renderStep3SelectionList();
+
+          currentStep = 2; // Auto advance to Step 2: Criteria
+          updateStepUI();
+        } catch (err) {
+          alert('Error: ' + err.message);
+        } finally {
+          if (loader) loader.style.display = 'none';
+          if (nextBtn) nextBtn.disabled = false;
+        }
+      }
+
+      // Render Step 3 list with checkboxes
+      function renderStep3SelectionList() {
+        const container = document.getElementById('slrPapersSelectionList');
+        if (!container) return;
+
+        if (fetchedPapers.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+              <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; margin-bottom: 0.75rem; display: block; opacity: 0.5;"></i>
+              Tidak ada artikel yang ditemukan. Coba perluas kata kunci pencarian Anda.
+            </div>
+          `;
+          updateCounter(0);
+          return;
+        }
+
+        container.innerHTML = fetchedPapers.map((p, idx) => {
+          return `
+            <div class="filter-box-card" style="padding: 1rem; border-radius: 10px; border: 1px solid rgba(8,34,64,0.06); background: #ffffff; display: flex; gap: 1rem; align-items: flex-start; text-align: left; margin-bottom: 0.75rem;">
+              <input type="checkbox" class="slr-paper-checkbox" data-index="${idx}" checked style="margin-top: 0.25rem; width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+              <div style="flex: 1; overflow: hidden;">
+                <h5 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; margin: 0 0 0.25rem; color: var(--text-main); line-height: 1.3;">${escapeHtml(p.title)}</h5>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500;">
+                  <span>${escapeHtml(p.authors)}</span> &bull; 
+                  <span>${escapeHtml(p.journal)} (${p.year})</span> &bull; 
+                  <span>Dikutip ${p.citedByCount}x</span>
+                  ${p.isOpenAccess ? ' &bull; <span style="color: #10b981; font-weight: 700;">Open Access</span>' : ''}
+                </div>
+                <details style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer; outline: none;">
+                  <summary style="font-weight: 700; margin-bottom: 0.25rem; color: var(--brand-blue);">Tampilkan Abstrak</summary>
+                  <div style="padding-top: 0.25rem; line-height: 1.5; color: var(--text-main);">${escapeHtml(p.abstract)}</div>
+                </details>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Attach change listeners to checkboxes to update counter
+        const checkboxes = container.querySelectorAll('.slr-paper-checkbox');
+        checkboxes.forEach((cb) => {
+          cb.addEventListener('change', () => {
+            const checkedCount = container.querySelectorAll('.slr-paper-checkbox:checked').length;
+            updateCounter(checkedCount);
+          });
+        });
+
+        updateCounter(fetchedPapers.length);
+      }
+
+      function updateCounter(checkedCount) {
+        const counter = document.getElementById('slrSelectedCounter');
+        if (counter) {
+          counter.textContent = `${checkedCount} dari ${fetchedPapers.length} Artikel Dipilih`;
+        }
+      }
+
+      // Step 4: Sintesis menggunakan DeepSeek
+      async function runSynthesis() {
+        const container = document.getElementById('slrPapersSelectionList');
+        if (!container) return;
+
+        const checkedCheckboxes = container.querySelectorAll('.slr-paper-checkbox:checked');
+        if (checkedCheckboxes.length === 0) {
+          alert('Silakan pilih minimal 1 artikel untuk disintesis.');
+          return;
+        }
+
+        const selectedPapers = [];
+        checkedCheckboxes.forEach((cb) => {
+          const idx = parseInt(cb.getAttribute('data-index'));
+          selectedPapers.push(fetchedPapers[idx]);
+        });
+
+        const researchQuestions = document.getElementById('slrQuestions').value.trim();
+        const inclusionCriteria = document.getElementById('slrInclusion').value.trim();
+        const exclusionCriteria = document.getElementById('slrExclusion').value.trim();
+
+        if (loader) {
+          loaderText.textContent = 'Menyusun ulasan sistematis dengan DeepSeek AI...';
+          loader.style.display = 'flex';
+        }
+        if (nextBtn) nextBtn.disabled = true;
+
+        try {
+          const res = await fetch('/api/slr/synthesize', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              papers: selectedPapers,
+              researchQuestions,
+              inclusionCriteria,
+              exclusionCriteria
+            })
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.message);
+
+          slrResult = data.result;
+          renderSynthesisOutput();
+
+          currentStep = 4;
+          updateStepUI();
+        } catch (err) {
+          alert('Error: ' + err.message);
+        } finally {
+          if (loader) loader.style.display = 'none';
+          if (nextBtn) nextBtn.disabled = false;
+        }
+      }
+
+      function renderSynthesisOutput() {
+        if (!slrResult) return;
+
+        // Update PRISMA counts
+        const prisma = slrResult.prisma || {};
+        const iden = document.getElementById('prismaIdentifiedCount');
+        const scre = document.getElementById('prismaScreenedCount');
+        const elig = document.getElementById('prismaEligibleCount');
+        const incl = document.getElementById('prismaIncludedCount');
+
+        if (iden) iden.textContent = prisma.identified || fetchedPapers.length;
+        // Screened is the number of manually checked papers in step 3
+        const checkedCount = document.querySelectorAll('.slr-paper-checkbox:checked').length;
+        if (scre) scre.textContent = prisma.screened || checkedCount;
+        if (elig) elig.textContent = prisma.eligible || checkedCount;
+        if (incl) incl.textContent = prisma.included || checkedCount;
+
+        // Update Matrix Table
+        const matrixTableBody = document.getElementById('slrMatrixTableBody');
+        if (matrixTableBody) {
+          const matrix = slrResult.matrix || [];
+          if (matrix.length === 0) {
+            matrixTableBody.innerHTML = `<tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">Tidak ada matriks sintesis dari AI.</td></tr>`;
+          } else {
+            matrixTableBody.innerHTML = matrix.map((row) => {
+              return `
+                <tr style="border-bottom: 1px solid rgba(8,34,64,0.04);">
+                  <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--text-main); vertical-align: top;">${escapeHtml(row.authorYear)}<br><span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500; display: block; margin-top: 0.2rem;">${escapeHtml(row.title)}</span></td>
+                  <td style="padding: 0.85rem 1rem; color: var(--text-main); vertical-align: top; font-weight: 500;">${escapeHtml(row.methodology)}</td>
+                  <td style="padding: 0.85rem 1rem; color: var(--text-main); vertical-align: top; line-height: 1.4;">${escapeHtml(row.findings)}</td>
+                  <td style="padding: 0.85rem 1rem; color: var(--text-main); vertical-align: top; line-height: 1.4;">${escapeHtml(row.gap)}</td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
+
+        // Update Narrative Output
+        const narrativeOutput = document.getElementById('slrNarrativeOutput');
+        if (narrativeOutput) {
+          narrativeOutput.innerHTML = slrResult.narrative || '<p style="color: var(--text-muted); text-align: center;">Respons naratif tidak tersedia.</p>';
+        }
+
+        // Reset internal Step 4 sub-tabs view to "prisma"
+        const subTabs = document.querySelectorAll('.slr-tab-btn');
+        subTabs.forEach((tab) => {
+          tab.classList.toggle('active', tab.getAttribute('data-slr-tab') === 'prisma');
+        });
+        const subContents = [
+          document.getElementById('slrSubContentPrisma'),
+          document.getElementById('slrSubContentMatrix'),
+          document.getElementById('slrSubContentNarrative')
+        ];
+        subContents.forEach((content) => {
+          if (content) {
+            content.classList.toggle('active', content.id === 'slrSubContentPrisma');
+            content.style.display = content.id === 'slrSubContentPrisma' ? 'block' : 'none';
+          }
+        });
+      }
+
+      // Attach step click actions
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          if (currentStep > 1) {
+            currentStep--;
+            updateStepUI();
+          }
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          if (currentStep === 1) {
+            searchArticles();
+          } else if (currentStep === 2) {
+            // Validate Step 2 inputs are filled
+            const q = document.getElementById('slrQuestions').value.trim();
+            if (!q) {
+              alert('Silakan masukkan pertanyaan penelitian terlebih dahulu.');
+              return;
+            }
+            currentStep = 3;
+            updateStepUI();
+          } else if (currentStep === 3) {
+            runSynthesis();
+          } else if (currentStep === 4) {
+            // Restart wizard
+            currentStep = 1;
+            fetchedPapers = [];
+            slrResult = null;
+            document.getElementById('slrQuery').value = '';
+            document.getElementById('slrQuestions').value = '';
+            document.getElementById('slrInclusion').value = '';
+            document.getElementById('slrExclusion').value = '';
+            const container = document.getElementById('slrPapersSelectionList');
+            if (container) {
+              container.innerHTML = `
+                <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+                  <i class="fa-solid fa-cloud-arrow-down" style="font-size: 2rem; margin-bottom: 0.75rem; display: block; opacity: 0.5;"></i>
+                  Belum ada data. Silakan kembali ke Langkah 1 dan klik "Cari Artikel".
+                </div>
+              `;
+            }
+            updateStepUI();
+          }
+        });
+      }
+
+      // Step 3: Check/Uncheck all
+      const checkAll = document.getElementById('slrCheckAllBtn');
+      const uncheckAll = document.getElementById('slrUncheckAllBtn');
+      if (checkAll) {
+        checkAll.addEventListener('click', () => {
+          const checkboxes = document.querySelectorAll('.slr-paper-checkbox');
+          checkboxes.forEach(cb => cb.checked = true);
+          updateCounter(checkboxes.length);
+        });
+      }
+      if (uncheckAll) {
+        uncheckAll.addEventListener('click', () => {
+          const checkboxes = document.querySelectorAll('.slr-paper-checkbox');
+          checkboxes.forEach(cb => cb.checked = false);
+          updateCounter(0);
+        });
+      }
+
+      // Step 4: Sub-tabs click listener
+      const subTabs = document.querySelectorAll('.slr-tab-btn');
+      subTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          subTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          const tabName = tab.getAttribute('data-slr-tab');
+          const contents = {
+            prisma: document.getElementById('slrSubContentPrisma'),
+            matrix: document.getElementById('slrSubContentMatrix'),
+            narrative: document.getElementById('slrSubContentNarrative')
+          };
+
+          Object.keys(contents).forEach((key) => {
+            if (contents[key]) {
+              contents[key].style.display = key === tabName ? 'block' : 'none';
+            }
+          });
+        });
+      });
+
+      // Step 4: Export CSV Button
+      const exportCsv = document.getElementById('slrExportCsvBtn');
+      if (exportCsv) {
+        exportCsv.addEventListener('click', () => {
+          if (!slrResult || !slrResult.matrix) return;
+          const rows = [
+            ['Penulis & Tahun', 'Judul Paper', 'Metodologi', 'Temuan Utama', 'Research Gap']
+          ];
+          slrResult.matrix.forEach((row) => {
+            rows.push([
+              row.authorYear || '',
+              row.title || '',
+              row.methodology || '',
+              row.findings || '',
+              row.gap || ''
+            ]);
+          });
+
+          const csvContent = "data:text/csv;charset=utf-8," 
+            + rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")).join("\n");
+          
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", `synthesis_matrix_${Date.now()}.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        });
+      }
+
+      // Step 4: Copy Narrative Button
+      const copyNarrative = document.getElementById('slrCopyNarrativeBtn');
+      if (copyNarrative) {
+        copyNarrative.addEventListener('click', () => {
+          const narrativeOutput = document.getElementById('slrNarrativeOutput');
+          if (!narrativeOutput) return;
+
+          // Extract plain text from HTML
+          const tempElement = document.createElement('div');
+          tempElement.innerHTML = narrativeOutput.innerHTML;
+          const text = tempElement.innerText || tempElement.textContent;
+
+          navigator.clipboard.writeText(text).then(() => {
+            const originalText = copyNarrative.innerHTML;
+            copyNarrative.innerHTML = `<i class="fa-solid fa-check"></i> Disalin!`;
+            setTimeout(() => {
+              copyNarrative.innerHTML = originalText;
+            }, 2000);
+          }).catch(err => {
+            alert('Gagal menyalin teks: ' + err.message);
+          });
+        });
+      }
+
+      // Expose history loader globally
+      window.loadSlrFromHistory = function(result) {
+        slrResult = result;
+        renderSynthesisOutput();
+        currentStep = 4;
+        updateStepUI();
+      };
     }
   }
 

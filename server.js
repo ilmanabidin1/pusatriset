@@ -2283,6 +2283,203 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   }
 });
 
+// --- SYSTEMATIC LITERATURE REVIEW (SLR) ---
+
+// Helper searchOpenAlexWorksFull: mengambil data abstrak utuh (tidak dislice terlalu pendek)
+async function searchOpenAlexWorksFull(query, perPage, extraFilter) {
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const cleanQuery = String(query || '').replace(/[?*]/g, ' ').replace(/\s+/g, ' ').trim();
+  const params = new URLSearchParams({
+    search: cleanQuery,
+    per_page: String(perPage),
+    filter: `has_abstract:true${extraFilter || ''}`,
+    select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access'
+  });
+  const apiKey = process.env.OPENALEX_API_KEY;
+  if (apiKey) params.set('api_key', apiKey);
+  const mailto = process.env.OPENALEX_MAILTO;
+  if (mailto) params.set('mailto', mailto);
+
+  const response = await fetchFn(`https://api.openalex.org/works?${params.toString()}`);
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenAlex API Error: ${response.status} - ${errText}`);
+  }
+  const data = await response.json();
+  const results = Array.isArray(data.results) ? data.results : [];
+
+  return results
+    .map(w => {
+      const abstract = reconstructAbstractFromInvertedIndex(w.abstract_inverted_index);
+      if (!abstract) return null;
+      const authorNames = (w.authorships || []).map(a => a.author?.display_name).filter(Boolean);
+      const authors = authorNames.length > 3
+        ? `${authorNames.slice(0, 3).join(', ')}, et al.`
+        : authorNames.join(', ') || 'Tidak diketahui';
+      const doi = w.doi ? String(w.doi).replace('https://doi.org/', '') : null;
+      return {
+        title: w.title || 'Tanpa judul',
+        authors,
+        journal: w.primary_location?.source?.display_name || '-',
+        year: w.publication_year ? String(w.publication_year) : '-',
+        doi,
+        url: w.doi || w.primary_location?.landing_page_url || '#',
+        citedByCount: w.cited_by_count || 0,
+        isOpenAccess: !!w.open_access?.is_oa,
+        abstract: abstract.slice(0, 3000)
+      };
+    })
+    .filter(Boolean);
+}
+
+// Endpoint pencarian paper SLR
+app.post('/api/slr/search', requireAccess, async (req, res) => {
+  const { query, startYear, endYear, oaOnly, limit } = req.body;
+  if (!query || String(query).trim().length < 3) {
+    return res.status(400).json({ ok: false, message: 'Kata kunci pencarian minimal 3 karakter.' });
+  }
+
+  try {
+    let extraFilter = '';
+    const sy = parseInt(startYear);
+    const ey = parseInt(endYear);
+    if (!isNaN(sy) && !isNaN(ey)) {
+      extraFilter += `,publication_year:${sy}-${ey}`;
+    }
+    if (oaOnly === true) {
+      extraFilter += ',is_oa:true';
+    }
+
+    const maxResults = Math.min(100, Math.max(5, parseInt(limit) || 20));
+    const papers = await searchOpenAlexWorksFull(query, maxResults, extraFilter);
+    res.json({ ok: true, papers });
+  } catch (error) {
+    console.error('[SLR Search] Error:', error);
+    res.status(500).json({ ok: false, message: 'Gagal mencari paper di OpenAlex: ' + error.message });
+  }
+});
+
+// Endpoint Sintesis SLR dengan DeepSeek
+app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
+  const { papers, researchQuestions, inclusionCriteria, exclusionCriteria } = req.body;
+  if (!Array.isArray(papers) || papers.length === 0) {
+    return res.status(400).json({ ok: false, message: 'Daftar paper kosong atau tidak valid.' });
+  }
+
+  const deepSeekKey = process.env.STEALTH_API_KEY || process.env.DEEPSEEK_API_KEY;
+  if (!deepSeekKey) {
+    return res.status(500).json({ ok: false, message: 'DeepSeek/Stealth API Key belum dikonfigurasi di Railway.' });
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+
+  try {
+    // Bangun teks daftar paper
+    const paperListText = papers.map((p, idx) => {
+      return `[Paper ${idx + 1}]
+Judul: ${p.title}
+Penulis: ${p.authors}
+Jurnal: ${p.journal}
+Tahun: ${p.year}
+Sitasi: ${p.citedByCount || 0}
+Abstrak: ${p.abstract}`;
+    }).join('\n\n');
+
+    const systemPrompt = `Anda adalah pakar Systematic Literature Review (SLR) akademik tingkat internasional. Tugas Anda adalah melakukan screening (penyaringan) dan sintesis secara objektif terhadap daftar paper yang diberikan berdasarkan kriteria inklusi, eksklusi, dan pertanyaan penelitian.
+
+Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markdown seperti \`\`\`json ... \`\`\`, TANPA penjelasan tambahan). JSON harus memiliki struktur persis seperti berikut:
+{
+  "screenedPapers": [
+    {
+      "title": "Judul paper",
+      "verdict": "Included" atau "Excluded",
+      "reason": "Alasan penyaringan singkat yang mengacu pada kriteria inklusi/eksklusi"
+    }
+  ],
+  "prisma": {
+    "identified": total paper awal,
+    "screened": total paper yang dinilai,
+    "eligible": total paper yang lolos kriteria inklusi,
+    "included": total paper yang disintesis
+  },
+  "matrix": [
+    {
+      "title": "Judul paper",
+      "authorYear": "Nama Penulis & Tahun (misal: Smith et al., 2023)",
+      "methodology": "Metode penelitian yang digunakan (misal: Kuantitatif Survei, Kualitatif Wawancara, Eksperimen)",
+      "findings": "Temuan atau hasil utama penelitian",
+      "gap": "Celah penelitian (gap) atau keterbatasan yang disebutkan"
+    }
+  ],
+  "narrative": "Teks analisis naratif SLR lengkap dalam Bahasa Indonesia (berisi subbab: Pendahuluan, Analisis Metodologi, Temuan Tematik, serta Celah Penelitian & Novelty). Gunakan format HTML untuk penulisan teks ini agar mudah ditampilkan di web (tag h4/h5, p, ul/li, strong)."
+}`;
+
+    const userPrompt = `Daftar Paper:\n${paperListText}\n\nPertanyaan Penelitian (Research Questions):\n${researchQuestions || '-'}\n\nKriteria Inklusi:\n${inclusionCriteria || '-'}\n\nKriteria Eksklusi:\n${exclusionCriteria || '-'}\n\nLakukan analisis screening, hitung diagram PRISMA, bangun tabel matriks sintesis, dan tulis narasi SLR lengkap sekarang. Kembalikan HANYA dalam format JSON sesuai spesifikasi system prompt:`;
+
+    const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 4000,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+    }
+
+    const dsData = await dsResponse.json();
+    const choice = dsData?.choices?.[0];
+    let content = choice?.message?.content?.trim();
+    if (!content && choice?.message?.reasoning_content) {
+      content = String(choice.message.reasoning_content).trim();
+    }
+
+    if (!content) {
+      throw new Error('Respons AI kosong saat melakukan sintesis SLR.');
+    }
+
+    // Bersihkan pembungkus markdown JSON jika ada
+    let cleanText = content.trim();
+    if (cleanText.startsWith('```')) {
+      cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+    }
+
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(cleanText);
+    } catch (parseError) {
+      console.error('[SLR Synthesis] JSON Parse Error. Raw Text:', cleanText);
+      throw new Error('Format respon AI tidak valid JSON: ' + parseError.message);
+    }
+
+    // Tambahkan item riwayat SLR
+    addHistoryItem(req.session.userId, 'slr', {
+      query: `SLR: ${papers.length} artikel`,
+      questions: researchQuestions,
+      criteria: { inclusion: inclusionCriteria, exclusion: exclusionCriteria }
+    }, parsedResult);
+
+    res.json({ ok: true, result: parsedResult });
+  } catch (error) {
+    console.error('[SLR Synthesize] Error:', error);
+    res.status(500).json({ ok: false, message: 'Gagal melakukan sintesis SLR: ' + error.message });
+  }
+});
+
 app.post('/api/humanize', requireAccess, async (req, res) => {
   const { text, mode } = req.body;
   if (!text || String(text).trim() === '') {
