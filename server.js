@@ -3172,34 +3172,87 @@ const documentUploadLimiter = rateLimit({
 });
 const documentUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB batas mentah file, di luar batas kata teks hasil ekstraksi
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB batas mentah file
   fileFilter: (req, file, cb) => {
-    const allowed = [
+    const originalName = (file.originalname || '').toLowerCase();
+    const isAllowedExt = originalName.endsWith('.pdf') || originalName.endsWith('.docx') || originalName.endsWith('.doc') || originalName.endsWith('.txt');
+    const allowedMime = [
       'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-      'text/plain'
+      'application/x-pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'application/docx',
+      'text/plain',
+      'application/octet-stream'
     ];
-    if (allowed.includes(file.mimetype)) {
+    if (allowedMime.includes(file.mimetype) || isAllowedExt) {
       cb(null, true);
     } else {
-      cb(new Error('Format file tidak didukung. Gunakan PDF, DOCX, atau TXT.'));
+      cb(new Error('Format file tidak didukung. Gunakan file PDF, DOCX, atau TXT.'));
     }
   }
 });
 
 async function extractTextFromDocument(file) {
-  if (file.mimetype === 'application/pdf') {
-    const parsed = await pdfParse(file.buffer);
-    return parsed.text || '';
+  const filename = (file.originalname || '').toLowerCase();
+  const mimetype = (file.mimetype || '').toLowerCase();
+
+  const isPdf = filename.endsWith('.pdf') || mimetype.includes('pdf');
+  const isDocx = filename.endsWith('.docx') || mimetype.includes('wordprocessingml') || mimetype.includes('docx');
+  const isDoc = filename.endsWith('.doc') || mimetype === 'application/msword';
+  const isTxt = filename.endsWith('.txt') || mimetype.includes('text/plain');
+
+  if (isDoc) {
+    throw new Error('Format file .doc (Word lama) tidak didukung. Mohon simpan/konversi file Anda ke format .docx atau .pdf sebelum diunggah.');
   }
-  if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-    const result = await mammoth.extractRawText({ buffer: file.buffer });
-    return result.value || '';
+
+  if (isPdf) {
+    try {
+      const parsed = await pdfParse(file.buffer);
+      const extractedText = (parsed ? (parsed.text || '') : '').trim();
+      if (!extractedText) {
+        throw new Error('PDF tidak berisi teks yang dapat dibaca (seperti PDF hasil scan/gambar). Mohon gunakan file PDF berbasis teks atau file Word (.docx).');
+      }
+      return extractedText;
+    } catch (err) {
+      if (err.message && err.message.includes('PDF tidak berisi teks')) {
+        throw err;
+      }
+      const errMsg = (err.message || '').toLowerCase();
+      if (errMsg.includes('password') || errMsg.includes('encrypt') || errMsg.includes('decrypt') || errMsg.includes('code 1')) {
+        throw new Error('File PDF ini dilindungi oleh kata sandi (password). Silakan hapus kunci proteksi PDF sebelum diunggah.');
+      }
+      console.error('[PDF Parse Error]', err);
+      throw new Error('File PDF tidak dapat dibaca oleh sistem: ' + (err.message || 'File mungkin korup.'));
+    }
   }
-  if (file.mimetype === 'text/plain') {
-    return file.buffer.toString('utf-8');
+
+  if (isDocx) {
+    try {
+      const result = await mammoth.extractRawText({ buffer: file.buffer });
+      const extractedText = (result ? (result.value || '') : '').trim();
+      if (!extractedText) {
+        throw new Error('Dokumen Word (.docx) tidak berisi teks yang dapat dibaca.');
+      }
+      return extractedText;
+    } catch (err) {
+      if (err.message && err.message.includes('tidak berisi teks')) {
+        throw err;
+      }
+      console.error('[Mammoth Error]', err);
+      throw new Error('File Word (.docx) tidak dapat dibaca. Pastikan file tidak terkunci kata sandi atau korup: ' + (err.message || ''));
+    }
   }
-  throw new Error('Format file tidak didukung.');
+
+  if (isTxt) {
+    const text = file.buffer.toString('utf-8').trim();
+    if (!text) {
+      throw new Error('File TXT kosong.');
+    }
+    return text;
+  }
+
+  throw new Error('Format file tidak didukung. Mohon unggah dokumen berformat PDF, DOCX, atau TXT.');
 }
 
 app.post('/api/research-chat/upload', requireAccess, documentUploadLimiter, (req, res) => {
@@ -3225,9 +3278,6 @@ app.post('/api/research-chat/upload', requireAccess, documentUploadLimiter, (req
 
     try {
       const rawText = (await extractTextFromDocument(req.file)).trim();
-      if (!rawText) {
-        return res.status(400).json({ ok: false, message: 'Tidak ada teks yang bisa diekstrak dari dokumen ini.' });
-      }
 
       const words = rawText.split(/\s+/).filter(Boolean);
       if (words.length > DOCUMENT_MAX_WORDS) {
@@ -3245,7 +3295,7 @@ app.post('/api/research-chat/upload', requireAccess, documentUploadLimiter, (req
       });
     } catch (error) {
       console.error('[Document Upload] Gagal ekstrak dokumen:', error.message);
-      res.status(500).json({ ok: false, message: 'Gagal memproses dokumen. Pastikan file tidak rusak/terkunci password.' });
+      res.status(400).json({ ok: false, message: error.message || 'Gagal memproses dokumen.' });
     }
   });
 });
