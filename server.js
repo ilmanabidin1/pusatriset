@@ -3193,6 +3193,24 @@ const documentUpload = multer({
   }
 });
 
+async function parsePdfBuffer(buffer) {
+  const pdfModule = require('pdf-parse');
+  if (pdfModule && pdfModule.PDFParse) {
+    const parser = new pdfModule.PDFParse({ data: new Uint8Array(buffer) });
+    const result = await parser.getText();
+    return result ? (result.text || '') : '';
+  }
+  if (typeof pdfModule === 'function') {
+    const result = await pdfModule(buffer);
+    return result ? (result.text || '') : '';
+  }
+  if (pdfModule && typeof pdfModule.default === 'function') {
+    const result = await pdfModule.default(buffer);
+    return result ? (result.text || '') : '';
+  }
+  throw new Error('Modul pemroses PDF tidak kompatibel.');
+}
+
 async function extractTextFromDocument(file) {
   const filename = (file.originalname || '').toLowerCase();
   const mimetype = (file.mimetype || '').toLowerCase();
@@ -3208,8 +3226,8 @@ async function extractTextFromDocument(file) {
 
   if (isPdf) {
     try {
-      const parsed = await pdfParse(file.buffer);
-      const extractedText = (parsed ? (parsed.text || '') : '').trim();
+      const rawText = await parsePdfBuffer(file.buffer);
+      const extractedText = (rawText || '').trim();
       if (!extractedText) {
         throw new Error('PDF tidak berisi teks yang dapat dibaca (seperti PDF hasil scan/gambar). Mohon gunakan file PDF berbasis teks atau file Word (.docx).');
       }
