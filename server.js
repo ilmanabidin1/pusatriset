@@ -2480,6 +2480,176 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
   }
 });
 
+// Endpoint untuk generate kriteria & research questions otomatis dengan DeepSeek
+app.post('/api/slr/generate-criteria', requireAccess, async (req, res) => {
+  const { query, field } = req.body;
+  if (!query || !field) {
+    return res.status(400).json({ ok: false, message: 'Topik/Query dan kolom wajib diisi.' });
+  }
+
+  const deepSeekKey = process.env.STEALTH_API_KEY || process.env.DEEPSEEK_API_KEY;
+  if (!deepSeekKey) {
+    return res.status(500).json({ ok: false, message: 'DeepSeek/Stealth API Key belum dikonfigurasi di Railway.' });
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+  let systemPrompt = "Anda adalah pakar akademisi riset. Berikan saran kriteria untuk topik Systematic Literature Review (SLR) yang diberikan. Jawab langsung dengan teks Bahasa Indonesia, berupa poin-poin menggunakan tanda hubung (-). Kembalikan hanya poin-poin tersebut, tanpa intro atau kata pengantar apapun.";
+  let userPrompt = "";
+  if (field === 'questions') {
+    userPrompt = `Tuliskan 3 Pertanyaan Penelitian (Research Questions) yang relevan dan kritis untuk studi SLR dengan topik/kata kunci: "${query}"`;
+  } else if (field === 'inclusion') {
+    userPrompt = `Tuliskan 3 kriteria inklusi (kriteria penerimaan studi) yang relevan untuk studi SLR dengan topik/kata kunci: "${query}"`;
+  } else if (field === 'exclusion') {
+    userPrompt = `Tuliskan 3 kriteria eksklusi (kriteria penolakan studi) yang relevan untuk studi SLR dengan topik/kata kunci: "${query}"`;
+  }
+
+  try {
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 1000,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+    }
+
+    const dsData = await dsResponse.json();
+    const choice = dsData?.choices?.[0];
+    let content = choice?.message?.content?.trim();
+    if (!content && choice?.message?.reasoning_content) {
+      content = String(choice.message.reasoning_content).trim();
+    }
+
+    res.json({ ok: true, suggestions: content });
+  } catch (error) {
+    console.error('[SLR Generate Criteria] Error:', error);
+    res.status(500).json({ ok: false, message: 'Gagal men-generate kriteria: ' + error.message });
+  }
+});
+
+// Endpoint untuk melakukan penyaringan (screening) artikel secara otomatis dengan DeepSeek
+app.post('/api/slr/auto-screen', requireAccess, async (req, res) => {
+  const { query, questions, inclusion, exclusion, papers } = req.body;
+  if (!Array.isArray(papers) || papers.length === 0) {
+    return res.status(400).json({ ok: false, message: 'Daftar paper kosong atau tidak valid.' });
+  }
+
+  const deepSeekKey = process.env.STEALTH_API_KEY || process.env.DEEPSEEK_API_KEY;
+  if (!deepSeekKey) {
+    return res.status(500).json({ ok: false, message: 'DeepSeek/Stealth API Key belum dikonfigurasi di Railway.' });
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+  const systemPrompt = `Anda adalah asisten screening riset untuk Systematic Literature Review (SLR).
+Evaluasi daftar paper yang diberikan berdasarkan Kriteria Inklusi, Kriteria Eksklusi, dan Pertanyaan Penelitian.
+Kembalikan keputusan screening (include atau exclude) untuk SETIAP paper.
+
+Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markdown seperti \`\`\`json ... \`\`\`, TANPA penjelasan tambahan).
+JSON harus berupa array obyek dengan format seperti berikut:
+[
+  {
+    "id": "ID/Indeks paper yang dikirimkan",
+    "decision": "include" atau "exclude",
+    "reason": "Penjelasan singkat mengapa paper ini diterima/ditolak berdasarkan kriteria inklusi/eksklusi (dalam Bahasa Indonesia)."
+  }
+]`;
+
+  const paperListText = papers.map((p) => {
+    return `ID: ${p.id}
+Judul: ${p.title}
+Abstrak: ${p.abstract || '(Tanpa abstrak)'}`;
+  }).join('\n\n');
+
+  const userPrompt = `Topik SLR: "${query || '-'}"
+Pertanyaan Penelitian:
+${questions || '-'}
+
+Kriteria Inklusi:
+${inclusion || '-'}
+
+Kriteria Eksklusi:
+${exclusion || '-'}
+
+Daftar Paper yang dinilai:
+${paperListText}
+
+Evaluasi masing-masing paper tersebut dan kembalikan array keputusan dalam JSON:`;
+
+  try {
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 3000,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+    }
+
+    const dsData = await dsResponse.json();
+    const choice = dsData?.choices?.[0];
+    let content = choice?.message?.content?.trim();
+    if (!content && choice?.message?.reasoning_content) {
+      content = String(choice.message.reasoning_content).trim();
+    }
+
+    if (!content) {
+      throw new Error('Respons AI kosong saat melakukan auto-screening.');
+    }
+
+    let cleanText = content.trim();
+    if (cleanText.startsWith('```')) {
+      cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+    }
+
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(cleanText);
+    } catch (parseError) {
+      console.error('[SLR Auto-Screen] JSON Parse Error. Raw Text:', cleanText);
+      throw new Error('Format respon AI tidak valid JSON: ' + parseError.message);
+    }
+
+    res.json({ ok: true, results: parsedResult });
+  } catch (error) {
+    console.error('[SLR Auto-Screen] Error:', error);
+    res.status(500).json({ ok: false, message: 'Gagal melakukan auto-screening: ' + error.message });
+  }
+});
+
 app.post('/api/humanize', requireAccess, async (req, res) => {
   const { text, mode } = req.body;
   if (!text || String(text).trim() === '') {

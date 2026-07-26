@@ -816,6 +816,53 @@
       color: var(--brand-blue);
     }
 
+    .btn-slr-ai-suggest {
+      margin-top: 0.5rem;
+      background: transparent;
+      border: 1px solid rgba(7, 135, 220, 0.25);
+      color: var(--brand-blue);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+      width: fit-content;
+    }
+    .btn-slr-ai-suggest:hover {
+      background: rgba(7, 135, 220, 0.06);
+      border-color: var(--brand-blue);
+      transform: translateY(-1px);
+    }
+    .btn-slr-ai-suggest:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .slr-screen-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      margin-top: 0.5rem;
+    }
+    .slr-screen-badge.include {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    .slr-screen-badge.exclude {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
     .user-profile-section.open .profile-dropdown {
       display: flex;
       animation: profileDropUpIn 0.18s ease-out;
@@ -3277,6 +3324,9 @@
       <a href="#" class="sidebar-link" data-tab="ai-research">
         <i class="fa-solid fa-user-check"></i> <span>Paraphraser &amp; Humanizer</span>
       </a>
+      <a href="#" class="sidebar-link" data-tab="slr">
+        <i class="fa-solid fa-book-bookmark"></i> <span>Systematic Lit Review</span>
+      </a>
       <a href="#" class="sidebar-link" id="sidebarMoreTrigger">
         <i class="fa-solid fa-ellipsis"></i> <span>More</span>
       </a>
@@ -3334,9 +3384,6 @@
     </a>
     <a href="#" class="sidebar-link dropdown-item" data-tab="prompt-bank">
       <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
-    </a>
-    <a href="#" class="sidebar-link dropdown-item" data-tab="slr">
-      <i class="fa-solid fa-book-bookmark"></i> <span>Systematic Lit Review</span>
     </a>
   </div>
 
@@ -4448,6 +4495,18 @@
         <div class="settings-container" style="max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
           
           <div class="slr-wizard-container">
+            <!-- Overlay Lock for Non-Ultimate User -->
+            <div id="slrUltimateLock" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: rgba(11, 26, 48, 0.96); border-radius: var(--card-radius); flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; color: #ffffff; backdrop-filter: blur(4px);">
+              <i class="fa-solid fa-lock" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
+              <h3 id="slrLockTitle">Fitur Ultimate Khusus Pelanggan</h3>
+              <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;" id="slrLockDesc">
+                Systematic Literature Review (SLR) hanya tersedia untuk akun Ultimate. Upgrade untuk mulai menyusun SLR secara otomatis.
+              </p>
+              <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fa-solid fa-crown"></i> <span id="slrUpgradeBtnText">Upgrade Ultimate</span>
+              </button>
+            </div>
+
             <!-- Step Navigation Header -->
             <div class="slr-steps-bar">
               <div class="slr-steps-line"></div>
@@ -4519,16 +4578,25 @@
                 <div class="filter-dropdown-item">
                   <label for="slrQuestions" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">PERTANYAAN PENELITIAN (RESEARCH QUESTIONS)</label>
                   <textarea id="slrQuestions" placeholder="Contoh: &#10;1. Apa metode pembelajaran AI yang paling dominan digunakan?&#10;2. Bagaimana dampak penggunaan AI terhadap hasil belajar siswa?" style="width:100%; height: 100px; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc; resize: vertical;"></textarea>
+                  <button type="button" class="btn-slr-ai-suggest" data-field="questions">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Generate dengan AI</span>
+                  </button>
                 </div>
                 
                 <div class="filter-dropdown-item">
                   <label for="slrInclusion" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">KRITERIA INKLUSI (DITERIMA)</label>
                   <textarea id="slrInclusion" placeholder="Contoh: &#10;- Artikel diterbitkan di jurnal internasional terakreditasi&#10;- Studi berfokus pada pendidikan dasar atau menengah" style="width:100%; height: 80px; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc; resize: vertical;"></textarea>
+                  <button type="button" class="btn-slr-ai-suggest" data-field="inclusion">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Generate dengan AI</span>
+                  </button>
                 </div>
                 
                 <div class="filter-dropdown-item">
                   <label for="slrExclusion" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-main); margin-bottom: 0.4rem; display: block;">KRITERIA EKSKLUSI (DITOLAK)</label>
                   <textarea id="slrExclusion" placeholder="Contoh: &#10;- Artikel review, opini, atau dokumen paten&#10;- Studi tidak memiliki data empiris hasil belajar" style="width:100%; height: 80px; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc; resize: vertical;"></textarea>
+                  <button type="button" class="btn-slr-ai-suggest" data-field="exclusion">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Generate dengan AI</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -4545,9 +4613,12 @@
                 </div>
               </div>
               
-              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
                 <button type="button" id="slrCheckAllBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); transition: all 0.2s;">Pilih Semua</button>
                 <button type="button" id="slrUncheckAllBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); transition: all 0.2s;">Hapus Semua</button>
+                <button type="button" id="slrAiScreenBtn" style="border: 1px solid rgba(7,135,220,0.3); background: var(--bg-sidebar-hover); color: #ffffff; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="slrAiScreenBtnText">AI Auto-Screen</span>
+                </button>
               </div>
 
               <!-- Papers selection list container -->
@@ -4952,6 +5023,14 @@
         // Call renderHistoryTab if riwayat tab is selected
         if (tabName === 'riwayat' && window.renderHistoryTab) {
           window.renderHistoryTab();
+        }
+
+        // SLR access update on tab switch
+        if (tabName === 'slr') {
+          const currentUserVal = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+          if (window.updateSlrAccess && currentUserVal?.user) {
+            window.updateSlrAccess(currentUserVal.user);
+          }
         }
       }
       window.switchTab = switchTab;

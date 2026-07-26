@@ -383,6 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "research-chat": "JurnalHub Intelligence",
       templates: "Template Jurnal",
       "prompt-bank": "Prompt Bank",
+      slr: "Systematic Lit Review",
       tersimpan: "Tersimpan",
       riwayat: "Riwayat AI",
       pengaturan: "Pengaturan",
@@ -536,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "research-chat": "JurnalHub Intelligence",
       templates: "Journal Templates",
       "prompt-bank": "Prompt Bank",
+      slr: "Systematic Lit Review",
       tersimpan: "Bookmarks",
       riwayat: "AI History",
       pengaturan: "Settings",
@@ -1149,6 +1151,7 @@ document.addEventListener('DOMContentLoaded', () => {
           renderBillingHistory();
           renderBerandaRecentActivity();
           updateResearchChatAccess(currentUser.user);
+          updateSlrAccess(currentUser.user);
         }
 
         // Logout handler
@@ -1383,6 +1386,13 @@ document.addEventListener('DOMContentLoaded', () => {
         toolQuotaEl.style.display = 'none';
       }
     }
+  }
+
+  function updateSlrAccess(user) {
+    const lock = document.getElementById('slrUltimateLock');
+    if (!lock) return;
+    const isUltimate = user && user.type === 'ultimate';
+    lock.style.display = isUltimate ? 'none' : 'flex';
   }
 
   // --- VISUAL QUOTA TRACKER ---
@@ -4895,6 +4905,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (meData.loggedIn && meData.user) {
             currentUser = meData;
             updateResearchChatAccess(meData.user);
+            updateSlrAccess(meData.user);
           }
         }).catch(() => {});
       } catch (error) {
@@ -6262,6 +6273,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (researchChatPromptShortcutHeadingEl) researchChatPromptShortcutHeadingEl.textContent = TRANSLATIONS[lang].research_chat_prompt_shortcut_heading;
       if (currentUser?.user) {
         updateResearchChatAccess(currentUser.user);
+        updateSlrAccess(currentUser.user);
       }
 
       // 10. Translate History Tab static elements
@@ -6512,6 +6524,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <summary style="font-weight: 700; margin-bottom: 0.25rem; color: var(--brand-blue);">Tampilkan Abstrak</summary>
                   <div style="padding-top: 0.25rem; line-height: 1.5; color: var(--text-main);">${escapeHtml(p.abstract)}</div>
                 </details>
+                <div class="slr-ai-badge-container" id="slrAiBadgeContainer_${idx}"></div>
               </div>
             </div>
           `;
@@ -6796,13 +6809,133 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // Expose history loader globally
+      // Step 2 suggestions generator
+      const suggestBtns = document.querySelectorAll('.btn-slr-ai-suggest');
+      suggestBtns.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const query = document.getElementById('slrQuery').value.trim();
+          if (!query) {
+            alert(window.currentLanguage === 'en' 
+              ? 'Please fill in Keywords / Research Topic in Step 1 first.' 
+              : 'Silakan isi Kata Kunci / Judul Topik Penelitian terlebih dahulu di Langkah 1.');
+            currentStep = 1;
+            updateStepUI();
+            return;
+          }
+          
+          const field = btn.getAttribute('data-field');
+          const targetTextarea = document.getElementById(
+            field === 'questions' ? 'slrQuestions' : (field === 'inclusion' ? 'slrInclusion' : 'slrExclusion')
+          );
+          if (!targetTextarea) return;
+
+          const originalHtml = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating...`;
+
+          try {
+            const res = await fetch('/api/slr/generate-criteria', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ query, field })
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.message);
+            targetTextarea.value = data.suggestions;
+          } catch (err) {
+            alert('Gagal membuat rekomendasi: ' + err.message);
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+          }
+        });
+      });
+
+      // Step 3 AI Auto-Screen
+      const aiScreenBtn = document.getElementById('slrAiScreenBtn');
+      if (aiScreenBtn) {
+        aiScreenBtn.addEventListener('click', async () => {
+          if (fetchedPapers.length === 0) {
+            alert(window.currentLanguage === 'en' ? 'No papers to screen.' : 'Tidak ada artikel untuk disaring.');
+            return;
+          }
+
+          const query = document.getElementById('slrQuery').value.trim();
+          const questions = document.getElementById('slrQuestions').value.trim();
+          const inclusion = document.getElementById('slrInclusion').value.trim();
+          const exclusion = document.getElementById('slrExclusion').value.trim();
+
+          const originalHtml = aiScreenBtn.innerHTML;
+          aiScreenBtn.disabled = true;
+          aiScreenBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Auto Screening...`;
+
+          try {
+            const res = await fetch('/api/slr/auto-screen', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                query,
+                questions,
+                inclusion,
+                exclusion,
+                papers: fetchedPapers.map((p, idx) => ({
+                   id: idx,
+                   title: p.title,
+                   abstract: p.abstract
+                }))
+              })
+             });
+             const data = await res.json();
+             if (!data.ok) throw new Error(data.message);
+
+             // Process screening results
+             const results = data.results || [];
+             results.forEach((resItem) => {
+               const idx = parseInt(resItem.id);
+               const checkbox = document.querySelector(`.slr-paper-checkbox[data-index="${idx}"]`);
+               if (checkbox) {
+                 checkbox.checked = (resItem.decision === 'include');
+               }
+
+               const badgeContainer = document.getElementById(`slrAiBadgeContainer_${idx}`);
+               if (badgeContainer) {
+                 badgeContainer.innerHTML = `
+                   <div class="slr-screen-badge ${resItem.decision}">
+                     <i class="fa-solid ${resItem.decision === 'include' ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                     <span>AI: ${resItem.decision === 'include' ? 'Lolos' : 'Eksklusi'} - ${escapeHtml(resItem.reason)}</span>
+                   </div>
+                 `;
+               }
+             });
+
+             // Update counter based on checks
+             const checkedCount = document.querySelectorAll('.slr-paper-checkbox:checked').length;
+             updateCounter(checkedCount);
+
+             alert(window.currentLanguage === 'en' 
+               ? 'AI screening completed! You can review the decisions and adjust them manually.' 
+               : 'Screening AI selesai! Anda dapat meninjau keputusan dan menyesuaikannya secara manual.');
+          } catch (err) {
+            alert('Gagal melakukan auto-screening: ' + err.message);
+          } finally {
+            aiScreenBtn.disabled = false;
+            aiScreenBtn.innerHTML = originalHtml;
+          }
+        });
+      }
+
+      // Expose history loader and access control globally
       window.loadSlrFromHistory = function(result) {
         slrResult = result;
         renderSynthesisOutput();
         currentStep = 4;
         updateStepUI();
       };
+      window.updateSlrAccess = updateSlrAccess;
     }
   }
 
