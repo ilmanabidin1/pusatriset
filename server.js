@@ -3160,9 +3160,9 @@ async function searchAcademicContext(query) {
 }
 
 // --- LAMPIRAN DOKUMEN untuk JurnalHub Intelligence (Premium & Ultimate saja) ---
-// Batas 8.000 kata per dokumen supaya biaya token DeepSeek per unggahan terkendali
+// Batas 15.000 kata per dokumen supaya biaya token DeepSeek per unggahan terkendali
 // (lihat catatan di komentar RESEARCH_CHAT_SYSTEM_PROMPT soal cost histori percakapan).
-const DOCUMENT_MAX_WORDS = 8000;
+const DOCUMENT_MAX_WORDS = 15000;
 const documentUploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
