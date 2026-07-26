@@ -2345,7 +2345,49 @@ async function searchOpenAlexWorksFull(query, perPage, extraFilter) {
     .filter(Boolean);
 }
 
-// Endpoint pencarian paper SLR
+// Helper searchSemanticScholarWorksFull: melakukan pencarian artikel via API Semantic Scholar
+async function searchSemanticScholarWorksFull(query, limit) {
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const cleanQuery = String(query || '').replace(/[?*]/g, ' ').replace(/\s+/g, ' ').trim();
+  const apiKey = process.env.SEMANTIC_SCHOLAR_API_KEY;
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['x-api-key'] = apiKey;
+
+  try {
+    const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(cleanQuery)}&limit=${limit}&fields=title,authors,year,venue,citationCount,isOpenAccess,openAccessPdf,abstract,externalIds`;
+    const response = await fetchFn(url, { headers });
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    const results = Array.isArray(data.data) ? data.data : [];
+
+    return results.map(p => {
+      if (!p.abstract || !p.title) return null;
+      const authorNames = (p.authors || []).map(a => a.name).filter(Boolean);
+      const authors = authorNames.length > 3
+        ? `${authorNames.slice(0, 3).join(', ')}, et al.`
+        : authorNames.join(', ') || 'Tidak diketahui';
+      const doi = p.externalIds?.DOI || null;
+      return {
+        source: 'Semantic Scholar',
+        title: p.title,
+        authors,
+        journal: p.venue || 'Semantic Scholar',
+        year: p.year ? String(p.year) : '-',
+        doi,
+        url: doi ? `https://doi.org/${doi}` : (p.openAccessPdf?.url || '#'),
+        citedByCount: p.citationCount || 0,
+        isOpenAccess: !!p.isOpenAccess,
+        abstract: p.abstract.slice(0, 3000)
+      };
+    }).filter(Boolean);
+  } catch (err) {
+    console.warn('[Semantic Scholar Search] Error:', err.message);
+    return [];
+  }
+}
+
+// Endpoint pencarian paper SLR (Multi-database: OpenAlex + Semantic Scholar)
 app.post('/api/slr/search', requireAccess, async (req, res) => {
   const { query, startYear, endYear, oaOnly, limit } = req.body;
   if (!query || String(query).trim().length < 3) {
@@ -2364,15 +2406,48 @@ app.post('/api/slr/search', requireAccess, async (req, res) => {
     }
 
     const maxResults = Math.min(100, Math.max(5, parseInt(limit) || 20));
-    const papers = await searchOpenAlexWorksFull(query, maxResults, extraFilter);
-    res.json({ ok: true, papers });
+
+    const [openAlexRes, ssRes] = await Promise.allSettled([
+      searchOpenAlexWorksFull(query, maxResults, extraFilter),
+      searchSemanticScholarWorksFull(query, maxResults)
+    ]);
+
+    const openAlexPapers = openAlexRes.status === 'fulfilled' ? openAlexRes.value : [];
+    const ssPapers = ssRes.status === 'fulfilled' ? ssRes.value : [];
+
+    openAlexPapers.forEach(p => p.source = 'OpenAlex');
+
+    // Deduplicate by title
+    const seenTitles = new Set();
+    const combinedPapers = [];
+
+    const allCandidatePapers = [...openAlexPapers, ...ssPapers];
+    allCandidatePapers.forEach(p => {
+      const normTitle = (p.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (normTitle && !seenTitles.has(normTitle)) {
+        seenTitles.add(normTitle);
+        combinedPapers.push(p);
+      }
+    });
+
+    const papers = combinedPapers.slice(0, maxResults);
+
+    res.json({
+      ok: true,
+      papers,
+      sources: {
+        openAlex: openAlexPapers.length,
+        semanticScholar: ssPapers.length,
+        totalCombined: papers.length
+      }
+    });
   } catch (error) {
     console.error('[SLR Search] Error:', error);
-    res.status(500).json({ ok: false, message: 'Gagal mencari paper di OpenAlex: ' + error.message });
+    res.status(500).json({ ok: false, message: 'Gagal mencari paper: ' + error.message });
   }
 });
 
-// Endpoint Sintesis SLR dengan DeepSeek
+// Endpoint Sintesis SLR dengan DeepSeek (Berstandar PRISMA 2020 + Risk of Bias)
 app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
   const { papers, researchQuestions, inclusionCriteria, exclusionCriteria } = req.body;
   if (!Array.isArray(papers) || papers.length === 0) {
@@ -2410,10 +2485,11 @@ Penulis: ${p.authors}
 Jurnal: ${p.journal}
 Tahun: ${p.year}
 Sitasi: ${p.citedByCount || 0}
+Sumber: ${p.source || 'OpenAlex'}
 Abstrak: ${p.abstract}`;
     }).join('\n\n');
 
-    const systemPrompt = `Anda adalah pakar Systematic Literature Review (SLR) akademik tingkat internasional. Tugas Anda adalah melakukan screening (penyaringan) dan sintesis secara objektif terhadap daftar paper yang diberikan berdasarkan kriteria inklusi, eksklusi, dan pertanyaan penelitian.
+    const systemPrompt = `Anda adalah pakar Systematic Literature Review (SLR) akademik berstandar PRISMA 2020. Tugas Anda adalah melakukan evaluasi metodologi, penilaian Risiko Bias (Risk of Bias Assessment), dan sintesis secara komprehensif terhadap daftar paper yang diberikan berdasarkan kriteria inklusi, eksklusi, dan pertanyaan penelitian.
 
 Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markdown seperti \`\`\`json ... \`\`\`, TANPA penjelasan tambahan). JSON harus memiliki struktur persis seperti berikut:
 {
@@ -2436,10 +2512,14 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
       "authorYear": "Nama Penulis & Tahun (misal: Smith et al., 2023)",
       "methodology": "Metode penelitian yang digunakan (misal: Kuantitatif Survei, Kualitatif Wawancara, Eksperimen)",
       "findings": "Temuan atau hasil utama penelitian",
-      "gap": "Celah penelitian (gap) atau keterbatasan yang disebutkan"
+      "gap": "Celah penelitian (gap) atau keterbatasan yang disebutkan",
+      "riskOfBias": {
+        "rating": "Low Risk", "Moderate Risk", atau "High Risk",
+        "reason": "1 kalimat ringkas alasan penilaian risiko bias / evaluasi kualitas metodologi"
+      }
     }
   ],
-  "narrative": "Teks analisis naratif SLR lengkap dalam Bahasa Indonesia (berisi subbab: Pendahuluan, Analisis Metodologi, Temuan Tematik, serta Celah Penelitian & Novelty). Gunakan format HTML untuk penulisan teks ini agar mudah ditampilkan di web (tag h4/h5, p, ul/li, strong)."
+  "narrative": "Teks analisis naratif SLR lengkap berstandar PRISMA 2020 dalam Bahasa Indonesia (berisi subbab: 1. Karakteristik Umum Studi, 2. Analisis Metodologi & Penilaian Risiko Bias (Risk of Bias), 3. Sintesis Temuan Utama per Pertanyaan Penelitian, 4. Celah Penelitian (Research Gaps) & Implikasi Riset Masa Depan). Gunakan format HTML untuk penulisan teks ini (tag h4/h5, p, ul/li, strong) dan wajib menyertakan sitasi dalam teks format (Penulis, Tahun)."
 }`;
 
     const userPrompt = `Daftar Paper:\n${paperListText}\n\nPertanyaan Penelitian (Research Questions):\n${researchQuestions || '-'}\n\nKriteria Inklusi:\n${inclusionCriteria || '-'}\n\nKriteria Eksklusi:\n${exclusionCriteria || '-'}\n\nLakukan analisis screening, hitung diagram PRISMA, bangun tabel matriks sintesis, dan tulis narasi SLR lengkap sekarang. Kembalikan HANYA dalam format JSON sesuai spesifikasi system prompt:`;

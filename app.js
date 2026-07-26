@@ -6687,12 +6687,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (matrixTableBody) {
           const matrix = slrResult.matrix || [];
           if (matrix.length === 0) {
-            matrixTableBody.innerHTML = `<tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">Tidak ada matriks sintesis dari AI.</td></tr>`;
+            matrixTableBody.innerHTML = `<tr><td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">Tidak ada matriks sintesis dari AI.</td></tr>`;
           } else {
             matrixTableBody.innerHTML = matrix.map((row) => {
+              const rob = row.riskOfBias || {};
+              const rating = rob.rating || 'Moderate Risk';
+              let badgeStyle = 'background: #fef9c3; color: #854d0e; border: 1px solid #fde047;';
+              if (rating === 'Low Risk') badgeStyle = 'background: #dcfce7; color: #166534; border: 1px solid #86efac;';
+              else if (rating === 'High Risk') badgeStyle = 'background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;';
+
               return `
                 <tr style="border-bottom: 1px solid rgba(8,34,64,0.04);">
                   <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--text-main); vertical-align: top;">${escapeHtml(row.authorYear)}<br><span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500; display: block; margin-top: 0.2rem;">${escapeHtml(row.title)}</span></td>
+                  <td style="padding: 0.85rem 1rem; vertical-align: top;">
+                    <span style="display: inline-block; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; ${badgeStyle}">${escapeHtml(rating)}</span>
+                    ${rob.reason ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.3;">${escapeHtml(rob.reason)}</div>` : ''}
+                  </td>
                   <td style="padding: 0.85rem 1rem; color: var(--text-main); vertical-align: top; font-weight: 500;">${escapeHtml(row.methodology)}</td>
                   <td style="padding: 0.85rem 1rem; color: var(--text-main); vertical-align: top; line-height: 1.4;">${escapeHtml(row.findings)}</td>
                   <td style="padding: 0.85rem 1rem; color: var(--text-main); vertical-align: top; line-height: 1.4;">${escapeHtml(row.gap)}</td>
@@ -6718,12 +6728,100 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('slrSubContentMatrix'),
           document.getElementById('slrSubContentNarrative')
         ];
-        subContents.forEach((content) => {
-          if (content) {
-            content.classList.toggle('active', content.id === 'slrSubContentPrisma');
-            content.style.display = content.id === 'slrSubContentPrisma' ? 'block' : 'none';
-          }
+        subContents.forEach((c) => {
+          if (c) c.style.display = c.id === 'slrSubContentPrisma' ? 'block' : 'none';
         });
+      }
+
+      function exportSlrToDocx() {
+        if (!slrResult) {
+          alert('Belum ada hasil sintesis SLR untuk diunduh.');
+          return;
+        }
+
+        const queryTitle = document.getElementById('slrQuery')?.value.trim() || 'Systematic Literature Review';
+        const questions = document.getElementById('slrQuestions')?.value.trim() || '-';
+        const inclusion = document.getElementById('slrInclusion')?.value.trim() || '-';
+        const exclusion = document.getElementById('slrExclusion')?.value.trim() || '-';
+
+        const prisma = slrResult.prisma || {};
+        const matrix = slrResult.matrix || [];
+        const narrative = slrResult.narrative || '';
+
+        let docHtml = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b;">
+            <h1 style="color: #0b1a30; font-size: 18pt; text-align: center; margin-bottom: 5pt;">SYSTEMATIC LITERATURE REVIEW (PRISMA 2020)</h1>
+            <p style="text-align: center; font-style: italic; color: #64748b; margin-top: 0;">Topik: ${escapeHtml(queryTitle)}</p>
+            <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 15pt 0;">
+
+            <h2 style="color: #0b1a30; font-size: 14pt;">1. Informasi Protokol & Kriteria Seleksi</h2>
+            <p><b>Pertanyaan Penelitian (Research Questions):</b><br>${escapeHtml(questions).replace(/\n/g, '<br>')}</p>
+            <p><b>Kriteria Inklusi:</b><br>${escapeHtml(inclusion).replace(/\n/g, '<br>')}</p>
+            <p><b>Kriteria Eksklusi:</b><br>${escapeHtml(exclusion).replace(/\n/g, '<br>')}</p>
+
+            <h2 style="color: #0b1a30; font-size: 14pt; margin-top: 20pt;">2. Ringkasan Diagram Alir PRISMA 2020</h2>
+            <table border="1" cellspacing="0" cellpadding="8" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 10pt;">
+              <tr style="background: #f1f5f9; font-weight: bold;">
+                <th>Fase PRISMA 2020</th>
+                <th>Main Flow (Studi Lolos)</th>
+                <th>Exclusions (Studi Dieksklusi)</th>
+              </tr>
+              <tr>
+                <td><b>Identification</b></td>
+                <td>Pencarian Database OpenAlex & Semantic Scholar (n = ${prisma.identified || 0})</td>
+                <td>Duplikasi Dihapus (n = 0)</td>
+              </tr>
+              <tr>
+                <td><b>Screening</b></td>
+                <td>Penyaringan Judul & Abstrak (n = ${prisma.screened || 0})</td>
+                <td>Tidak Memenuhi Kriteria (n = ${Math.max(0, (prisma.identified || 0) - (prisma.eligible || 0))})</td>
+              </tr>
+              <tr>
+                <td><b>Eligibility</b></td>
+                <td>Evaluasi Kelayakan Full-Text (n = ${prisma.eligible || 0})</td>
+                <td>Laporan Tidak Ditemukan / Dieksklusi (n = 0)</td>
+              </tr>
+              <tr>
+                <td><b>Included</b></td>
+                <td><b>Studi Akhir Dimasukkan dalam Sintesis (n = ${prisma.included || 0})</b></td>
+                <td>-</td>
+              </tr>
+            </table>
+
+            <h2 style="color: #0b1a30; font-size: 14pt; margin-top: 20pt;">3. Matriks Sintesis & Evaluasi Risiko Bias (Risk of Bias)</h2>
+            <table border="1" cellspacing="0" cellpadding="6" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 9.5pt;">
+              <tr style="background: #0b1a30; color: #ffffff; font-weight: bold;">
+                <th style="width: 22%;">Penulis & Tahun</th>
+                <th style="width: 18%;">Risk of Bias</th>
+                <th style="width: 18%;">Metodologi</th>
+                <th style="width: 22%;">Temuan Utama</th>
+                <th style="width: 20%;">Celah Penelitian (Gap)</th>
+              </tr>
+              ${matrix.map(r => {
+                const rob = r.riskOfBias || {};
+                return `
+                  <tr>
+                    <td><b>${escapeHtml(r.authorYear)}</b><br><span style="font-size: 8.5pt; color: #475569;">${escapeHtml(r.title)}</span></td>
+                    <td><b>${escapeHtml(rob.rating || 'Moderate Risk')}</b><br><span style="font-size: 8pt; color: #64748b;">${escapeHtml(rob.reason || '-')}</span></td>
+                    <td>${escapeHtml(r.methodology)}</td>
+                    <td>${escapeHtml(r.findings)}</td>
+                    <td>${escapeHtml(r.gap)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </table>
+
+            <h2 style="color: #0b1a30; font-size: 14pt; margin-top: 20pt;">4. Laporan Naratif SLR Terstruktur</h2>
+            <div style="font-size: 10.5pt; line-height: 1.6;">
+              ${narrative}
+            </div>
+          </div>
+        `;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = docHtml;
+        const cleanFileName = `SLR_PRISMA2020_${queryTitle.replace(/[^a-z0-9]/gi, '_')}.doc`;
+        exportElementToDocx(tempDiv, `Systematic Literature Review - ${queryTitle}`, cleanFileName);
       }
 
       // Attach step click actions
