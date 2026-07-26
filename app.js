@@ -1391,8 +1391,47 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateSlrAccess(user) {
     const lock = document.getElementById('slrUltimateLock');
     if (!lock) return;
-    const isUltimate = user && user.type === 'ultimate';
-    lock.style.display = isUltimate ? 'none' : 'flex';
+
+    if (!user) {
+      lock.style.display = 'none';
+      return;
+    }
+
+    const isEn = (window.currentLanguage === 'en');
+    const isUltimate = user.type === 'ultimate';
+    const isLimitReached = user.isSlrLimitReached;
+
+    if (isUltimate) {
+      lock.style.display = 'none';
+    } else if (isLimitReached) {
+      lock.style.display = 'flex';
+      
+      const titleEl = document.getElementById('slrLockTitle');
+      const descEl = document.getElementById('slrLockDesc');
+      const btnTextEl = document.getElementById('slrUpgradeBtnText');
+
+      if (titleEl) {
+        titleEl.textContent = isEn ? 'SLR Quota Limit Reached' : 'Limit Kuota SLR Tercapai';
+      }
+
+      if (descEl) {
+        if (user.type === 'free') {
+          descEl.textContent = isEn
+            ? 'Free accounts are limited to 1 trial of Systematic Literature Review per month. Upgrade to Premium (5x/month) or Ultimate (Unlimited) to continue.'
+            : 'Akun Free dibatasi 1x coba Systematic Literature Review per bulan. Upgrade ke Premium (5/bulan) atau Ultimate (Tanpa Batas) untuk melanjutkan.';
+        } else {
+          descEl.textContent = isEn
+            ? 'Premium accounts are limited to 5 Systematic Literature Reviews per month. Upgrade to Ultimate for unlimited access.'
+            : 'Akun Premium dibatasi 5x Systematic Literature Review per bulan. Upgrade ke Ultimate (Tanpa Batas) untuk akses tidak terbatas.';
+        }
+      }
+
+      if (btnTextEl) {
+        btnTextEl.textContent = isEn ? 'Upgrade Account' : 'Upgrade Akun';
+      }
+    } else {
+      lock.style.display = 'none';
+    }
   }
 
   // --- VISUAL QUOTA TRACKER ---
@@ -6597,6 +6636,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
           currentStep = 4;
           updateStepUI();
+
+          // Refresh user quota information after successful synthesis
+          fetch('/api/me')
+            .then(r => r.json())
+            .then(meData => {
+              if (meData && meData.user) {
+                currentUser = meData;
+                if (window.currentUser) {
+                  window.currentUser = meData;
+                }
+                updateSlrAccess(meData.user);
+                updateVisualQuotaTracker(meData.user);
+              }
+            })
+            .catch(err => console.error('Error refreshing SLR quota:', err));
         } catch (err) {
           alert('Error: ' + err.message);
         } finally {

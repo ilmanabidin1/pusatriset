@@ -961,6 +961,8 @@ app.get('/api/me', (req, res) => {
     let isResearchChatLimitReached = false;
     let researchChatsRemaining = 0;
     let researchChatLimit = 0;
+    let isSlrLimitReached = false;
+    let slrRemaining = 1;
 
     const userType = req.session.userType || 'free';
     const isFree = userType === 'free';
@@ -985,6 +987,9 @@ app.get('/api/me', (req, res) => {
       const chatUsedFree = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
       researchChatsRemaining = Math.max(0, researchChatLimit - chatUsedFree);
       isResearchChatLimitReached = researchChatsRemaining <= 0;
+
+      isSlrLimitReached = (user.lastSlrMonth === currentMonth) && (user.slrCountThisMonth >= 1);
+      slrRemaining = Math.max(0, 1 - (user.lastSlrMonth === currentMonth ? user.slrCountThisMonth : 0));
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -1009,6 +1014,9 @@ app.get('/api/me', (req, res) => {
       isResearchChatLimitReached = false;
       researchChatsRemaining = 999;
       researchChatLimit = 999;
+
+      isSlrLimitReached = (user.lastSlrMonth === currentMonth) && (user.slrCountThisMonth >= 5);
+      slrRemaining = Math.max(0, 5 - (user.lastSlrMonth === currentMonth ? user.slrCountThisMonth : 0));
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
@@ -1018,6 +1026,8 @@ app.get('/api/me', (req, res) => {
       isResearchChatLimitReached = false;
       researchChatsRemaining = 999;
       researchChatLimit = 999;
+      isSlrLimitReached = false;
+      slrRemaining = 999;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
@@ -1062,6 +1072,9 @@ app.get('/api/me', (req, res) => {
         matchCountThisMonth: user ? (user.matchCountThisMonth || 0) : 0,
         draftCountThisMonth: user ? (user.draftCountThisMonth || 0) : 0,
         litReviewCountThisMonth: user ? (user.litReviewCountThisMonth || 0) : 0,
+        slrCountThisMonth: user ? (user.slrCountThisMonth || 0) : 0,
+        isSlrLimitReached: isSlrLimitReached,
+        slrRemaining: slrRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
@@ -2366,6 +2379,21 @@ app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Daftar paper kosong atau tidak valid.' });
   }
 
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  // Check quota for SLR (Free: 1x, Premium: 5x, Ultimate: unlimited)
+  if (user && (user.type || 'free') === 'free') {
+    if (user.lastSlrMonth === currentMonth && user.slrCountThisMonth >= 1) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x coba Systematic Literature Review per bulan.' });
+    }
+  } else if (user && user.type === 'premium') {
+    if (user.lastSlrMonth === currentMonth && user.slrCountThisMonth >= 5) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 5x Systematic Literature Review per bulan.' });
+    }
+  }
+
   const deepSeekKey = process.env.DEEPSEEK_API_KEY;
   if (!deepSeekKey) {
     return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di Railway.' });
@@ -2464,6 +2492,16 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
     } catch (parseError) {
       console.error('[SLR Synthesis] JSON Parse Error. Raw Text:', cleanText);
       throw new Error('Format respon AI tidak valid JSON: ' + parseError.message);
+    }
+
+    // Update usage for Free & Premium users
+    if (user && (user.type === 'free' || user.type === 'premium')) {
+      if (user.lastSlrMonth !== currentMonth) {
+        user.lastSlrMonth = currentMonth;
+        user.slrCountThisMonth = 0;
+      }
+      user.slrCountThisMonth += 1;
+      saveUsers(users);
     }
 
     // Tambahkan item riwayat SLR
