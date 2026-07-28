@@ -5167,6 +5167,14 @@
             window.updateSlrAccess(currentUserVal.user);
           }
         }
+
+        // Patent search quota update on tab switch
+        if (tabName === 'patent-search') {
+          const currentUserVal = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+          if (window.updatePatentSearchAccess && currentUserVal?.user) {
+            window.updatePatentSearchAccess(currentUserVal.user);
+          }
+        }
       }
       window.switchTab = switchTab;
 

@@ -1152,6 +1152,7 @@ document.addEventListener('DOMContentLoaded', () => {
           renderBerandaRecentActivity();
           updateResearchChatAccess(currentUser.user);
           updateSlrAccess(currentUser.user);
+          updatePatentSearchAccess(currentUser.user);
         }
 
         // Logout handler
@@ -1387,6 +1388,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
+
+  function updatePatentSearchAccess(user) {
+    const hintEl = document.getElementById('patentSearchHint');
+    const btn = document.getElementById('patentSearchBtn');
+    if (!hintEl || !btn) return;
+
+    if (!user) return;
+
+    const limitLabel = { free: '1x', premium: '5x', ultimate: '20x' }[user.type] || '1x';
+    const remaining = typeof user.patentSearchRemaining === 'number' ? user.patentSearchRemaining : null;
+
+    if (user.isPatentSearchLimitReached) {
+      hintEl.innerHTML = `Kuota pencarian paten bulan ini habis (batas ${limitLabel}/bulan untuk akun ${user.type}). <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">Upgrade</a> untuk kuota lebih besar.`;
+      btn.disabled = true;
+    } else {
+      hintEl.textContent = remaining !== null
+        ? `Minimal 20 karakter. Sisa kuota bulan ini: ${remaining}x (batas ${limitLabel}/bulan untuk akun ${user.type}).`
+        : 'Minimal 20 karakter. Semakin detail teksnya, semakin akurat hasilnya.';
+      btn.disabled = false;
+    }
+  }
+  window.updatePatentSearchAccess = updatePatentSearchAccess;
 
   function updateSlrAccess(user) {
     const lock = document.getElementById('slrUltimateLock');
@@ -2480,6 +2503,14 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         patentSearchResults.appendChild(card);
       });
+
+      fetch('/api/me').then(r => r.json()).then(meData => {
+        if (meData.loggedIn && meData.user) {
+          currentUser = meData;
+          window.currentUser = meData;
+          if (window.updatePatentSearchAccess) window.updatePatentSearchAccess(meData.user);
+        }
+      }).catch(() => {});
     } catch (err) {
       console.error('[Patent Search Live]', err);
       if (patentSearchStatus) {
@@ -5027,6 +5058,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = meData;
             updateResearchChatAccess(meData.user);
             updateSlrAccess(meData.user);
+            updatePatentSearchAccess(meData.user);
           }
         }).catch(() => {});
       } catch (error) {
@@ -6395,6 +6427,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentUser?.user) {
         updateResearchChatAccess(currentUser.user);
         updateSlrAccess(currentUser.user);
+        updatePatentSearchAccess(currentUser.user);
       }
 
       // 10. Translate History Tab static elements
@@ -6729,6 +6762,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   window.currentUser = meData;
                 }
                 updateSlrAccess(meData.user);
+                updatePatentSearchAccess(meData.user);
                 updateVisualQuotaTracker(meData.user);
               }
             })

@@ -963,6 +963,8 @@ app.get('/api/me', (req, res) => {
     let researchChatLimit = 0;
     let isSlrLimitReached = false;
     let slrRemaining = 1;
+    let isPatentSearchLimitReached = false;
+    let patentSearchRemaining = 1;
 
     const userType = req.session.userType || 'free';
     const isFree = userType === 'free';
@@ -990,6 +992,9 @@ app.get('/api/me', (req, res) => {
 
       isSlrLimitReached = (user.lastSlrMonth === currentMonth) && (user.slrCountThisMonth >= 1);
       slrRemaining = Math.max(0, 1 - (user.lastSlrMonth === currentMonth ? user.slrCountThisMonth : 0));
+
+      isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 1);
+      patentSearchRemaining = Math.max(0, 1 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -1017,6 +1022,9 @@ app.get('/api/me', (req, res) => {
 
       isSlrLimitReached = (user.lastSlrMonth === currentMonth) && (user.slrCountThisMonth >= 5);
       slrRemaining = Math.max(0, 5 - (user.lastSlrMonth === currentMonth ? user.slrCountThisMonth : 0));
+
+      isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 5);
+      patentSearchRemaining = Math.max(0, 5 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
@@ -1028,9 +1036,13 @@ app.get('/api/me', (req, res) => {
       researchChatLimit = 999;
       isSlrLimitReached = false;
       slrRemaining = 999;
+      isPatentSearchLimitReached = false;
+      patentSearchRemaining = 20;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
+        isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 20);
+        patentSearchRemaining = Math.max(0, 20 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
         if (user.lastHumanizerMonth !== currentMonth) {
           user.lastHumanizerMonth = currentMonth;
           user.humanizerWordsUsedThisMonth = 0;
@@ -1075,6 +1087,9 @@ app.get('/api/me', (req, res) => {
         slrCountThisMonth: user ? (user.slrCountThisMonth || 0) : 0,
         isSlrLimitReached: isSlrLimitReached,
         slrRemaining: slrRemaining,
+        patentSearchCountThisMonth: user ? (user.patentSearchCountThisMonth || 0) : 0,
+        isPatentSearchLimitReached: isPatentSearchLimitReached,
+        patentSearchRemaining: patentSearchRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
@@ -2044,13 +2059,39 @@ async function searchPatsnapPatents(text) {
   };
 }
 
+const PATENT_SEARCH_MONTHLY_LIMIT = { free: 1, premium: 5, ultimate: 20 };
+
 app.post('/api/patents/search-live', requireAccess, async (req, res) => {
   const text = String((req.body && req.body.text) || '').trim().slice(0, 3000);
   if (!text || text.length < 20) {
     return res.status(400).json({ ok: false, message: 'Masukkan judul, abstrak, atau klaim minimal 20 karakter agar pencarian semantik akurat.' });
   }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const planType = user ? (user.type || 'free') : 'free';
+  const limit = PATENT_SEARCH_MONTHLY_LIMIT[planType] ?? PATENT_SEARCH_MONTHLY_LIMIT.free;
+
+  if (user) {
+    const usedThisMonth = user.lastPatentSearchMonth === currentMonth ? (user.patentSearchCountThisMonth || 0) : 0;
+    if (usedThisMonth >= limit) {
+      return res.status(403).json({ ok: false, message: `Limit bulanan tercapai. Akun ${planType} dibatasi ${limit}x pencarian paten per bulan.` });
+    }
+  }
+
   try {
     const result = await searchPatsnapPatents(text);
+
+    if (user) {
+      if (user.lastPatentSearchMonth !== currentMonth) {
+        user.lastPatentSearchMonth = currentMonth;
+        user.patentSearchCountThisMonth = 0;
+      }
+      user.patentSearchCountThisMonth += 1;
+      saveUsers(users);
+    }
+
     res.json({ ok: true, ...result });
   } catch (error) {
     console.error('[Patent Search Live] Error:', error.message);
