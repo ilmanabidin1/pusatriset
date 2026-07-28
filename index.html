@@ -3374,6 +3374,9 @@
       <a href="#" class="sidebar-link" data-tab="slr">
         <i class="fa-solid fa-book-bookmark"></i> <span>Systematic Lit Review</span>
       </a>
+      <a href="#" class="sidebar-link" data-tab="patent-search">
+        <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
+      </a>
       <a href="#" class="sidebar-link" id="sidebarMoreTrigger">
         <i class="fa-solid fa-ellipsis"></i> <span>More</span>
       </a>
@@ -4836,6 +4839,32 @@
 
 
           
+        </div>
+      </div>
+
+      <!-- TAB: PENCARIAN PATEN (Patsnap Semantic Search) -->
+      <div id="tabContentPatentSearch" class="tab-content">
+        <div style="width: 100%; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+          <div>
+            <h2 style="margin: 0 0 0.35rem;">Pencarian Paten (Semantic Search)</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+              Tempel judul, abstrak, atau klaim ide riset Anda. Sistem akan mencari paten global yang mirip secara makna (bukan sekadar kata kunci) menggunakan data Patsnap — cocok untuk cek novelty sebelum mengajukan permohonan paten atau hibah.
+            </p>
+          </div>
+
+          <div class="card" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            <textarea id="patentSearchInput" rows="6" placeholder="Contoh: Material katoda baterai lithium-ion dengan stabilitas termal yang ditingkatkan untuk kendaraan listrik..." style="width: 100%; resize: vertical; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-light-hover); font-family: inherit; font-size: 0.9rem; background: var(--bg-card); color: var(--text-main);"></textarea>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+              <span id="patentSearchHint" style="font-size: 0.78rem; color: var(--text-muted);">Minimal 20 karakter. Semakin detail teksnya, semakin akurat hasilnya.</span>
+              <button type="button" id="patentSearchBtn" class="upgrade-btn" style="max-width: 220px; margin: 0;">
+                <i class="fa-solid fa-magnifying-glass"></i> <span>Cari Paten Serupa</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="patentSearchStatus" style="display: none; font-size: 0.85rem; color: var(--text-muted); text-align: center;"></div>
+          <div id="patentSearchSummary" style="display: none; font-size: 0.82rem; color: var(--text-muted);"></div>
+          <div id="patentSearchResults" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
         </div>
       </div>
 

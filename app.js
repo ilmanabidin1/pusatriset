@@ -2412,6 +2412,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // --- Pencarian Paten (Patsnap semantic search) ---
+  const patentSearchInput = document.getElementById('patentSearchInput');
+  const patentSearchBtn = document.getElementById('patentSearchBtn');
+  const patentSearchStatus = document.getElementById('patentSearchStatus');
+  const patentSearchSummary = document.getElementById('patentSearchSummary');
+  const patentSearchResults = document.getElementById('patentSearchResults');
+
+  async function runPatentSearch() {
+    if (!patentSearchInput || !patentSearchResults) return;
+    const text = patentSearchInput.value.trim();
+    if (text.length < 20) {
+      alert('Masukkan judul, abstrak, atau klaim minimal 20 karakter agar pencarian semantik akurat.');
+      patentSearchInput.focus();
+      return;
+    }
+
+    const originalHtml = patentSearchBtn.innerHTML;
+    patentSearchBtn.disabled = true;
+    patentSearchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
+    patentSearchResults.innerHTML = '';
+    if (patentSearchSummary) patentSearchSummary.style.display = 'none';
+    if (patentSearchStatus) {
+      patentSearchStatus.style.display = 'block';
+      patentSearchStatus.textContent = 'Mencari paten serupa secara semantik...';
+    }
+
+    try {
+      const res = await fetch('/api/patents/search-live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        if (patentSearchStatus) patentSearchStatus.textContent = data.message || 'Gagal mencari paten.';
+        return;
+      }
+
+      const patents = data.patents || [];
+      if (patentSearchStatus) patentSearchStatus.style.display = 'none';
+
+      if (patents.length === 0) {
+        if (patentSearchStatus) {
+          patentSearchStatus.style.display = 'block';
+          patentSearchStatus.textContent = 'Tidak ditemukan paten yang mirip.';
+        }
+        return;
+      }
+
+      if (patentSearchSummary) {
+        patentSearchSummary.style.display = 'block';
+        patentSearchSummary.textContent = `Menampilkan ${patents.length} paten paling mirip dari total ${data.totalCount} hasil. Klik "Lihat Detail" untuk membaca judul, abstrak, dan status legal lengkapnya di Google Patents.`;
+      }
+
+      patents.forEach((patent, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.cssText = 'padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; animation-delay: ' + (index * 0.03) + 's;';
+        card.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="rank-badge" style="background: rgba(7,135,220,0.1); color: var(--brand-blue); border: 1px solid rgba(7,135,220,0.2); white-space: nowrap;">${escapeHtml(patent.relevancy)} mirip</span>
+            <span style="font-weight: 700; font-family: monospace; font-size: 0.95rem;">${escapeHtml(patent.patentNumber)}</span>
+          </div>
+          <a href="${patent.googlePatentsUrl}" target="_blank" rel="noopener" class="journal-link">Lihat Detail <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        `;
+        patentSearchResults.appendChild(card);
+      });
+    } catch (err) {
+      console.error('[Patent Search Live]', err);
+      if (patentSearchStatus) {
+        patentSearchStatus.style.display = 'block';
+        patentSearchStatus.textContent = 'Gagal menghubungi server untuk mencari paten.';
+      }
+    } finally {
+      patentSearchBtn.disabled = false;
+      patentSearchBtn.innerHTML = originalHtml;
+    }
+  }
+
+  if (patentSearchBtn) patentSearchBtn.addEventListener('click', runPatentSearch);
+
   if (realtimeSearchBtn) realtimeSearchBtn.addEventListener('click', runRealtimeSearch);
   if (realtimeBooleanToggle) {
     realtimeBooleanToggle.addEventListener('change', () => {

@@ -2011,6 +2011,53 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
   }
 });
 
+// --- Pencarian Paten (Patsnap semantic search) ---
+// Free-tier key hanya punya akses ke endpoint semantic search (bukan
+// bibliographic/legal-status detail), jadi kita hanya kembalikan nomor
+// paten + skor relevansi; detail lengkap diarahkan ke Google Patents di frontend.
+async function searchPatsnapPatents(text) {
+  const apiKey = process.env.PATSNAP_API_KEY;
+  if (!apiKey) {
+    throw new Error('PATSNAP_API_KEY belum diset di server.');
+  }
+  const response = await fetch('https://connect.patsnap.com/search/patent/semantic-search-patent', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ text })
+  });
+  const data = await response.json();
+  if (!data.status) {
+    throw new Error(data.error_msg || 'Patsnap API mengembalikan error.');
+  }
+  const results = (data.data && data.data.results) || [];
+  return {
+    totalCount: (data.data && data.data.total_search_result_count) || results.length,
+    patents: results.map((r) => ({
+      patentNumber: r.pn,
+      patentId: r.patent_id,
+      relevancy: r.relevancy,
+      googlePatentsUrl: `https://patents.google.com/patent/${encodeURIComponent(r.pn)}`
+    }))
+  };
+}
+
+app.post('/api/patents/search-live', requireAccess, async (req, res) => {
+  const text = String((req.body && req.body.text) || '').trim().slice(0, 3000);
+  if (!text || text.length < 20) {
+    return res.status(400).json({ ok: false, message: 'Masukkan judul, abstrak, atau klaim minimal 20 karakter agar pencarian semantik akurat.' });
+  }
+  try {
+    const result = await searchPatsnapPatents(text);
+    res.json({ ok: true, ...result });
+  } catch (error) {
+    console.error('[Patent Search Live] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mencari paten: ' + error.message });
+  }
+});
+
 // --- Database Jurnal enrichment: cari jurnal via OpenAlex Sources API ---
 // Dipakai untuk (1) memperluas kandidat AI Match Score di luar 756 jurnal statis
 // lokal, dan (2) hasil pencarian "live" di halaman Database Jurnal. Dinormalisasi
