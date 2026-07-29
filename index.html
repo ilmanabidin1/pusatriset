@@ -3624,13 +3624,13 @@
              No APC Database (shortcut filter jurnal gratis dari database lokal). -->
         <div class="ai-writer-switcher" id="dbSubtabSwitcher" style="margin-bottom: 1.5rem;">
           <button type="button" class="ai-writer-pill active" id="dbSubtabMainBtn" data-dbtab="main">
-            <i class="fa-solid fa-database"></i> Database Utama
+            <i class="fa-solid fa-database"></i> <span id="dbSubtabMainBtnText">Database Utama</span>
           </button>
           <button type="button" class="ai-writer-pill" id="dbSubtabRealtimeBtn" data-dbtab="realtime">
-            <i class="fa-solid fa-globe"></i> Realtime Database
+            <i class="fa-solid fa-globe"></i> <span id="dbSubtabRealtimeBtnText">Realtime Database</span>
           </button>
           <button type="button" class="ai-writer-pill" id="dbSubtabNoApcBtn" data-dbtab="noapc">
-            <i class="fa-solid fa-wallet"></i> No APC Database
+            <i class="fa-solid fa-wallet"></i> <span id="dbSubtabNoApcBtnText">No APC Database</span>
           </button>
         </div>
 
@@ -3854,19 +3854,19 @@
             </div>
             <div class="filter-dropdowns" style="grid-template-columns: repeat(2, 1fr);">
               <div class="filter-dropdown-item">
-                <label>TIPE DOKUMEN</label>
+                <label id="realtimeFilterTypeLabel">TIPE DOKUMEN</label>
                 <select id="realtimeFilterType">
-                  <option value="">Semua Tipe</option>
-                  <option value="article">Artikel</option>
+                  <option value="" id="realtimeFilterTypeAll">Semua Tipe</option>
+                  <option value="article" id="realtimeFilterTypeArticle">Artikel</option>
                   <option value="review">Review</option>
                   <option value="book-chapter">Book Chapter</option>
-                  <option value="dissertation">Disertasi/Tesis</option>
+                  <option value="dissertation" id="realtimeFilterTypeDissertation">Disertasi/Tesis</option>
                   <option value="preprint">Preprint</option>
                   <option value="report">Report</option>
                 </select>
               </div>
               <div class="filter-dropdown-item">
-                <label>MODE PENCARIAN</label>
+                <label id="realtimeModeLabel">MODE PENCARIAN</label>
                 <div class="custom-toggle-switch-wrapper" style="display: flex; align-items: center; gap: 0.6rem; height: 100%; padding-top: 0.35rem;">
                   <label class="toggle-switch">
                     <input type="checkbox" id="realtimeBooleanToggle">
@@ -3878,7 +3878,7 @@
             </div>
             <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
               <button type="button" id="realtimeSearchBtn" class="reset-filter-btn" style="background: var(--brand-blue); color: #ffffff; border: none;">
-                <i class="fa-solid fa-magnifying-glass"></i> Cari
+                <i class="fa-solid fa-magnifying-glass"></i> <span id="realtimeSearchBtnText">Cari</span>
               </button>
             </div>
           </div>
@@ -4846,8 +4846,8 @@
       <div id="tabContentPatentSearch" class="tab-content">
         <div style="width: 100%; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
           <div>
-            <h2 style="margin: 0 0 0.35rem;">Pencarian Paten (Semantic Search)</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+            <h2 id="patentSearchTitle" style="margin: 0 0 0.35rem;">Pencarian Paten (Semantic Search)</h2>
+            <p id="patentSearchIntro" style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
               Tempel judul, abstrak, atau klaim ide riset Anda. Sistem akan mencari paten global yang mirip secara makna (bukan sekadar kata kunci) menggunakan data Patsnap — cocok untuk cek novelty sebelum mengajukan permohonan paten atau hibah.
             </p>
           </div>
@@ -4857,7 +4857,7 @@
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
               <span id="patentSearchHint" style="font-size: 0.78rem; color: var(--text-muted);">Minimal 20 karakter. Semakin detail teksnya, semakin akurat hasilnya.</span>
               <button type="button" id="patentSearchBtn" class="upgrade-btn" style="max-width: 220px; margin: 0;">
-                <i class="fa-solid fa-magnifying-glass"></i> <span>Cari Paten Serupa</span>
+                <i class="fa-solid fa-magnifying-glass"></i> <span id="patentSearchBtnText">Cari Paten Serupa</span>
               </button>
             </div>
           </div>
@@ -5443,13 +5443,14 @@
       const promoCodeMessage = document.getElementById('promoCodeMessage');
       if (promoCodeApplyBtn && promoCodeInput) {
         const applyPromoCode = async () => {
+          const t = window.TRANSLATIONS_REF ? window.TRANSLATIONS_REF[window.currentLanguage || 'id'] : null;
           const code = promoCodeInput.value.trim();
           if (!code) return;
           const isYearly = switchYearly && switchYearly.classList.contains('active');
           if (isYearly) {
             promoCodeMessage.style.display = 'block';
             promoCodeMessage.style.color = '#ef4444';
-            promoCodeMessage.textContent = 'Kode promo hanya berlaku untuk paket Bulanan - pindah ke tab Bulanan dulu.';
+            promoCodeMessage.textContent = t ? t.promo_monthly_only_msg : 'Kode promo hanya berlaku untuk paket Bulanan - pindah ke tab Bulanan dulu.';
             return;
           }
           const originalHtml = promoCodeApplyBtn.innerHTML;
@@ -5468,19 +5469,21 @@
               appliedPromoDiscountPercent = data.discountPercent;
               window.appliedPromoCode = appliedPromoCode;
               promoCodeMessage.style.color = '#10b981';
-              promoCodeMessage.textContent = `Kode ${appliedPromoCode} diterapkan - potongan ${appliedPromoDiscountPercent}% untuk paket bulanan.`;
+              promoCodeMessage.textContent = t
+                ? t.promo_applied_msg.replace('{code}', appliedPromoCode).replace('{percent}', appliedPromoDiscountPercent)
+                : `Kode ${appliedPromoCode} diterapkan - potongan ${appliedPromoDiscountPercent}% untuk paket bulanan.`;
               renderModalPrices();
             } else {
               appliedPromoCode = null;
               window.appliedPromoCode = null;
               promoCodeMessage.style.color = '#ef4444';
-              promoCodeMessage.textContent = data.message || 'Kode promo tidak valid.';
+              promoCodeMessage.textContent = data.message || (t ? t.promo_invalid_msg : 'Kode promo tidak valid.');
               renderModalPrices();
             }
           } catch (err) {
             promoCodeMessage.style.display = 'block';
             promoCodeMessage.style.color = '#ef4444';
-            promoCodeMessage.textContent = 'Terjadi kesalahan koneksi. Coba lagi.';
+            promoCodeMessage.textContent = t ? t.promo_conn_error_msg : 'Terjadi kesalahan koneksi. Coba lagi.';
           } finally {
             promoCodeApplyBtn.disabled = false;
             promoCodeApplyBtn.innerHTML = originalHtml;
@@ -5834,7 +5837,7 @@
         <!-- Kode Promo (potongan harga paket bulanan) -->
         <div style="max-width: 340px; margin: 0 auto 1.25rem; display: flex; gap: 0.5rem;">
           <input type="text" id="promoCodeInput" placeholder="Punya kode promo? (khusus paket bulanan)" style="flex: 1; padding: 0.6rem 0.85rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.8rem; outline: none; text-transform: uppercase;">
-          <button id="promoCodeApplyBtn" type="button" class="upgrade-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; background: var(--brand-blue); color: #fff;">Terapkan</button>
+          <button id="promoCodeApplyBtn" type="button" class="upgrade-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; background: var(--brand-blue); color: #fff;"><span id="promoCodeApplyBtnText">Terapkan</span></button>
         </div>
         <p id="promoCodeMessage" style="max-width: 340px; margin: -0.9rem auto 1.25rem; font-size: 0.76rem; text-align: center; display: none; font-weight: 600;"></p>
 

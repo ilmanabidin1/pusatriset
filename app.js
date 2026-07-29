@@ -384,9 +384,11 @@ document.addEventListener('DOMContentLoaded', () => {
       templates: "Template Jurnal",
       "prompt-bank": "Prompt Bank",
       slr: "Systematic Lit Review",
+      "patent-search": "Pencarian Paten",
       tersimpan: "Tersimpan",
       riwayat: "Riwayat AI",
       pengaturan: "Pengaturan",
+      sidebar_more: "Lainnya",
       upgrade_pro: "Upgrade ke PRO",
       upgrade_desc: "Buka AI Match Score & filter tanpa batas",
       upgrade_btn: "Upgrade Sekarang",
@@ -528,7 +530,74 @@ document.addEventListener('DOMContentLoaded', () => {
       research_chat_lock_desc: "JurnalHub Intelligence hanya tersedia untuk akun Premium & Ultimate. Upgrade untuk mulai berdiskusi seputar riset Anda.",
       research_chat_upgrade_btn: "Upgrade PRO",
       research_chat_attach_btn: "Lampirkan Dokumen",
-      research_chat_prompt_shortcut_heading: "Shortcut Prompt Bank"
+      research_chat_prompt_shortcut_heading: "Shortcut Prompt Bank",
+      // Pencarian Paten (Patent Search)
+      patent_search_title: "Pencarian Paten (Semantic Search)",
+      patent_search_intro: "Tempel judul, abstrak, atau klaim ide riset Anda. Sistem akan mencari paten global yang mirip secara makna (bukan sekadar kata kunci) menggunakan data Patsnap — cocok untuk cek novelty sebelum mengajukan permohonan paten atau hibah.",
+      patent_search_placeholder: "Contoh: Material katoda baterai lithium-ion dengan stabilitas termal yang ditingkatkan untuk kendaraan listrik...",
+      patent_search_hint_default: "Minimal 20 karakter. Semakin detail teksnya, semakin akurat hasilnya.",
+      patent_search_hint_remaining: "Minimal 20 karakter. Sisa kuota bulan ini: {n}x (batas {limit}/bulan untuk akun {type}).",
+      patent_search_hint_limit_reached: "Kuota pencarian paten bulan ini habis (batas {limit}/bulan untuk akun {type}).",
+      patent_search_upgrade_link: "Upgrade",
+      patent_search_upgrade_suffix: "untuk kuota lebih besar.",
+      patent_search_btn: "Cari Paten Serupa",
+      patent_search_searching: "Mencari paten serupa secara semantik...",
+      patent_search_no_results: "Tidak ditemukan paten yang mirip.",
+      patent_search_summary: "Menampilkan {n} paten paling mirip dari total {total} hasil. Klik \"Lihat Detail\" untuk membaca abstrak dan status legal lengkapnya di Google Patents.",
+      patent_search_view_detail: "Lihat Detail",
+      patent_search_similar_badge: "mirip",
+      patent_search_no_title: "Judul tidak tersedia",
+      patent_search_published: "Publikasi",
+      patent_search_min_chars_alert: "Masukkan judul, abstrak, atau klaim minimal 20 karakter agar pencarian semantik akurat.",
+      patent_search_generic_error: "Gagal menghubungi server untuk mencari paten.",
+      // Database Jurnal sub-tabs
+      db_subtab_main: "Database Utama",
+      db_subtab_realtime: "Realtime Database",
+      db_subtab_noapc: "No APC Database",
+      realtime_filter_type_label: "TIPE DOKUMEN",
+      realtime_filter_all: "Semua Tipe",
+      realtime_filter_article: "Artikel",
+      realtime_filter_dissertation: "Disertasi/Tesis",
+      realtime_mode_label: "MODE PENCARIAN",
+      realtime_boolean_label: "Mode Boolean (AND/OR/NOT)",
+      realtime_search_btn: "Cari",
+      realtime_search_placeholder_normal: "Cari 480 juta+ karya ilmiah dari OpenAlex... (bisa pakai AND / OR / NOT)",
+      realtime_search_placeholder_example: "Contoh: \"machine learning\" AND (education OR pedagogy) NOT survey",
+      realtime_default_hint: "Ketik kata kunci lalu klik Cari untuk menampilkan hasil (maks. 50).",
+      realtime_min_chars_alert: "Ketik kata kunci (minimal 3 karakter) terlebih dahulu.",
+      realtime_no_results: "Tidak ditemukan hasil untuk kata kunci ini.",
+      realtime_showing_results: "Menampilkan {n} dari maks. 50 hasil",
+      realtime_searching: "Mencari...",
+      realtime_cited_suffix: "x dikutip",
+      realtime_open_source: "Buka Sumber",
+      realtime_generic_error: "Gagal mencari data dari OpenAlex.",
+      realtime_conn_error: "Gagal menghubungi server untuk mencari data.",
+      // Kode Promo
+      promo_apply_btn: "Terapkan",
+      promo_input_placeholder: "Punya kode promo? (khusus paket bulanan)",
+      promo_monthly_only_msg: "Kode promo hanya berlaku untuk paket Bulanan - pindah ke tab Bulanan dulu.",
+      promo_applied_msg: "Kode {code} diterapkan - potongan {percent}% untuk paket bulanan.",
+      promo_invalid_msg: "Kode promo tidak valid.",
+      promo_conn_error_msg: "Terjadi kesalahan koneksi. Coba lagi.",
+      // Outline doc type & quick-tool chip (JurnalHub Intelligence)
+      outline_doctype_jurnal: "Jurnal Ilmiah (IMRaD)",
+      outline_doctype_tesis: "Tesis",
+      outline_doctype_disertasi: "Disertasi",
+      quicktool_outline_chip: "Mode: Outline Generator - pilih jenis dokumen, jelaskan topik, lalu kirim",
+      quicktool_outline_placeholder: "Jelaskan topik/rencana penelitian Anda...",
+      quicktool_deeplit_chip: "Mode: Deep Lit Review - jelaskan topik Anda lalu kirim",
+      quicktool_deeplit_placeholder: "Jelaskan topik penelitian yang ingin dicari referensinya (mendalam)...",
+      quicktool_litreview_chip: "Mode: Lit Review - jelaskan topik Anda lalu kirim",
+      quicktool_litreview_placeholder: "Jelaskan topik penelitian yang ingin dicari referensinya...",
+      // Export & citation popover
+      export_btn_pdf_title: "Unduh PDF",
+      export_btn_docx_title: "Unduh Word (.doc)",
+      export_btn_ris_title: "Unduh referensi .ris",
+      export_btn_bib_title: "Unduh referensi .bib",
+      cite_popover_pdf_title: "Unduh PDF (Open Access)",
+      cite_popover_no_title: "Tanpa judul",
+      cite_popover_citations_suffix: "sitasi",
+      cite_popover_open_source: "Buka sumber"
     },
     en: {
       beranda: "Home",
@@ -538,9 +607,11 @@ document.addEventListener('DOMContentLoaded', () => {
       templates: "Journal Templates",
       "prompt-bank": "Prompt Bank",
       slr: "Systematic Lit Review",
+      "patent-search": "Patent Search",
       tersimpan: "Bookmarks",
       riwayat: "AI History",
       pengaturan: "Settings",
+      sidebar_more: "More",
       upgrade_pro: "Upgrade to PRO",
       upgrade_desc: "Unlock Match Score & unlimited filters",
       upgrade_btn: "Upgrade Now",
@@ -683,9 +754,77 @@ document.addEventListener('DOMContentLoaded', () => {
       research_chat_lock_desc: "JurnalHub Intelligence is only available for Premium & Ultimate accounts. Upgrade to start discussing your research.",
       research_chat_upgrade_btn: "Upgrade PRO",
       research_chat_attach_btn: "Attach Document",
-      research_chat_prompt_shortcut_heading: "Prompt Bank Shortcuts"
+      research_chat_prompt_shortcut_heading: "Prompt Bank Shortcuts",
+      // Patent Search
+      patent_search_title: "Patent Search (Semantic Search)",
+      patent_search_intro: "Paste the title, abstract, or claims of your research idea. The system will search global patents that are semantically similar (not just keyword matching) using Patsnap data - useful for checking novelty before filing a patent application or grant proposal.",
+      patent_search_placeholder: "Example: Lithium-ion battery cathode material with improved thermal stability for electric vehicles...",
+      patent_search_hint_default: "Minimum 20 characters. The more detailed the text, the more accurate the results.",
+      patent_search_hint_remaining: "Minimum 20 characters. Remaining quota this month: {n}x (limit {limit}/month for {type} accounts).",
+      patent_search_hint_limit_reached: "Monthly patent search quota reached (limit {limit}/month for {type} accounts).",
+      patent_search_upgrade_link: "Upgrade",
+      patent_search_upgrade_suffix: "for a larger quota.",
+      patent_search_btn: "Search Similar Patents",
+      patent_search_searching: "Searching for semantically similar patents...",
+      patent_search_no_results: "No similar patents found.",
+      patent_search_summary: "Showing {n} most similar patents out of {total} total results. Click \"View Detail\" to read the full abstract and legal status on Google Patents.",
+      patent_search_view_detail: "View Detail",
+      patent_search_similar_badge: "similar",
+      patent_search_no_title: "Title unavailable",
+      patent_search_published: "Published",
+      patent_search_min_chars_alert: "Enter a title, abstract, or claim with at least 20 characters for accurate semantic search.",
+      patent_search_generic_error: "Failed to contact the server to search for patents.",
+      // Journal Database sub-tabs
+      db_subtab_main: "Main Database",
+      db_subtab_realtime: "Realtime Database",
+      db_subtab_noapc: "No APC Database",
+      realtime_filter_type_label: "DOCUMENT TYPE",
+      realtime_filter_all: "All Types",
+      realtime_filter_article: "Article",
+      realtime_filter_dissertation: "Dissertation/Thesis",
+      realtime_mode_label: "SEARCH MODE",
+      realtime_boolean_label: "Boolean Mode (AND/OR/NOT)",
+      realtime_search_btn: "Search",
+      realtime_search_placeholder_normal: "Search 480 million+ scholarly works from OpenAlex... (supports AND / OR / NOT)",
+      realtime_search_placeholder_example: "Example: \"machine learning\" AND (education OR pedagogy) NOT survey",
+      realtime_default_hint: "Type a keyword and click Search to show results (max. 50).",
+      realtime_min_chars_alert: "Type a keyword (minimum 3 characters) first.",
+      realtime_no_results: "No results found for this keyword.",
+      realtime_showing_results: "Showing {n} of max. 50 results",
+      realtime_searching: "Searching...",
+      realtime_cited_suffix: "x cited",
+      realtime_open_source: "Open Source",
+      realtime_generic_error: "Failed to fetch data from OpenAlex.",
+      realtime_conn_error: "Failed to contact the server to search for data.",
+      // Promo Code
+      promo_apply_btn: "Apply",
+      promo_input_placeholder: "Have a promo code? (monthly plans only)",
+      promo_monthly_only_msg: "Promo codes only apply to Monthly plans - switch to the Monthly tab first.",
+      promo_applied_msg: "Code {code} applied - {percent}% off monthly plans.",
+      promo_invalid_msg: "Invalid promo code.",
+      promo_conn_error_msg: "A connection error occurred. Please try again.",
+      // Outline doc type & quick-tool chip (JurnalHub Intelligence)
+      outline_doctype_jurnal: "Journal Article (IMRaD)",
+      outline_doctype_tesis: "Thesis",
+      outline_doctype_disertasi: "Dissertation",
+      quicktool_outline_chip: "Mode: Outline Generator - pick a document type, describe your topic, then send",
+      quicktool_outline_placeholder: "Describe your research topic/plan...",
+      quicktool_deeplit_chip: "Mode: Deep Lit Review - describe your topic then send",
+      quicktool_deeplit_placeholder: "Describe the research topic you want to find references for (in-depth)...",
+      quicktool_litreview_chip: "Mode: Lit Review - describe your topic then send",
+      quicktool_litreview_placeholder: "Describe the research topic you want to find references for...",
+      // Export & citation popover
+      export_btn_pdf_title: "Download PDF",
+      export_btn_docx_title: "Download Word (.doc)",
+      export_btn_ris_title: "Download .ris reference",
+      export_btn_bib_title: "Download .bib reference",
+      cite_popover_pdf_title: "Download PDF (Open Access)",
+      cite_popover_no_title: "Untitled",
+      cite_popover_citations_suffix: "citations",
+      cite_popover_open_source: "Open source"
     }
   };
+  window.TRANSLATIONS_REF = TRANSLATIONS;
 
   // DOM Elements
   const searchInput = document.getElementById('searchInput');
@@ -1396,16 +1535,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!user) return;
 
+    const t = TRANSLATIONS[window.currentLanguage || 'id'];
     const limitLabel = { free: '1x', premium: '5x', ultimate: '20x' }[user.type] || '1x';
     const remaining = typeof user.patentSearchRemaining === 'number' ? user.patentSearchRemaining : null;
 
     if (user.isPatentSearchLimitReached) {
-      hintEl.innerHTML = `Kuota pencarian paten bulan ini habis (batas ${limitLabel}/bulan untuk akun ${user.type}). <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">Upgrade</a> untuk kuota lebih besar.`;
+      const msg = t.patent_search_hint_limit_reached.replace('{limit}', limitLabel).replace('{type}', user.type);
+      hintEl.innerHTML = `${msg} <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">${t.patent_search_upgrade_link}</a> ${t.patent_search_upgrade_suffix}`;
       btn.disabled = true;
     } else {
       hintEl.textContent = remaining !== null
-        ? `Minimal 20 karakter. Sisa kuota bulan ini: ${remaining}x (batas ${limitLabel}/bulan untuk akun ${user.type}).`
-        : 'Minimal 20 karakter. Semakin detail teksnya, semakin akurat hasilnya.';
+        ? t.patent_search_hint_remaining.replace('{n}', remaining).replace('{limit}', limitLabel).replace('{type}', user.type)
+        : t.patent_search_hint_default;
       btn.disabled = false;
     }
   }
@@ -2359,18 +2500,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function runRealtimeSearch() {
     if (!realtimeSearchInput || !realtimeResultsContainer) return;
+    const t = TRANSLATIONS[window.currentLanguage || 'id'];
     const query = realtimeSearchInput.value.trim();
     if (!query || query.length < 3) {
-      alert('Ketik kata kunci (minimal 3 karakter) terlebih dahulu.');
+      alert(t.realtime_min_chars_alert);
       realtimeSearchInput.focus();
       return;
     }
 
     const originalHtml = realtimeSearchBtn.innerHTML;
     realtimeSearchBtn.disabled = true;
-    realtimeSearchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
+    realtimeSearchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${t.realtime_searching}`;
     realtimeResultsContainer.innerHTML = '';
-    if (realtimeResultsCount) realtimeResultsCount.textContent = 'Mencari...';
+    if (realtimeResultsCount) {
+      realtimeResultsCount.textContent = t.realtime_searching;
+      delete realtimeResultsCount.dataset.hasResults;
+    }
 
     try {
       const params = new URLSearchParams({ q: query });
@@ -2381,17 +2526,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       if (!res.ok || !data.ok) {
-        if (realtimeResultsCount) realtimeResultsCount.textContent = data.message || 'Gagal mencari data dari OpenAlex.';
+        if (realtimeResultsCount) realtimeResultsCount.textContent = data.message || t.realtime_generic_error;
         return;
       }
 
       const works = data.works || [];
       if (works.length === 0) {
-        if (realtimeResultsCount) realtimeResultsCount.textContent = 'Tidak ditemukan hasil untuk kata kunci ini.';
+        if (realtimeResultsCount) realtimeResultsCount.textContent = t.realtime_no_results;
         return;
       }
 
-      if (realtimeResultsCount) realtimeResultsCount.textContent = `Menampilkan ${works.length} dari maks. 50 hasil`;
+      if (realtimeResultsCount) {
+        realtimeResultsCount.textContent = t.realtime_showing_results.replace('{n}', works.length);
+        realtimeResultsCount.dataset.hasResults = '1';
+      }
 
       works.forEach((work, index) => {
         const card = document.createElement('div');
@@ -2404,12 +2552,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <div class="card-header">
               <div class="card-badge-group">
-                <span class="card-type-tag type-openalex" title="Sumber: OpenAlex (data real-time)">
+                <span class="card-type-tag type-openalex" title="OpenAlex (real-time data)">
                   <i class="fa-solid fa-globe"></i> OpenAlex
                 </span>
                 ${work.isOpenAccess ? '<span class="card-type-tag" style="background: rgba(16,185,129,0.1); color:#10b981; border-color: rgba(16,185,129,0.2);">Open Access</span>' : ''}
               </div>
-              <span class="rank-badge" style="background: rgba(139,92,246,0.1); color: #7c3aed; border: 1px solid rgba(139,92,246,0.2);">${work.citedByCount}x dikutip</span>
+              <span class="rank-badge" style="background: rgba(139,92,246,0.1); color: #7c3aed; border: 1px solid rgba(139,92,246,0.2);">${work.citedByCount}${t.realtime_cited_suffix}</span>
             </div>
             <div class="card-body">
               <h3 class="journal-title" title="${escapeHtml(work.title)}">${escapeHtml(work.title)}</h3>
@@ -2420,7 +2568,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="card-footer-wrapper">
             <div class="card-footer" style="margin-top: 1.25rem;">
-              <a href="${work.url}" target="_blank" class="journal-link">Buka Sumber <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+              <a href="${work.url}" target="_blank" class="journal-link">${t.realtime_open_source} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
             </div>
           </div>
         `;
@@ -2428,7 +2576,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (err) {
       console.error('[Realtime Database Search]', err);
-      if (realtimeResultsCount) realtimeResultsCount.textContent = 'Gagal menghubungi server untuk mencari data.';
+      if (realtimeResultsCount) realtimeResultsCount.textContent = t.realtime_conn_error;
     } finally {
       realtimeSearchBtn.disabled = false;
       realtimeSearchBtn.innerHTML = originalHtml;
@@ -2444,21 +2592,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function runPatentSearch() {
     if (!patentSearchInput || !patentSearchResults) return;
+    const t = TRANSLATIONS[window.currentLanguage || 'id'];
     const text = patentSearchInput.value.trim();
     if (text.length < 20) {
-      alert('Masukkan judul, abstrak, atau klaim minimal 20 karakter agar pencarian semantik akurat.');
+      alert(t.patent_search_min_chars_alert);
       patentSearchInput.focus();
       return;
     }
 
     const originalHtml = patentSearchBtn.innerHTML;
     patentSearchBtn.disabled = true;
-    patentSearchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
+    patentSearchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${t.patent_search_searching}`;
     patentSearchResults.innerHTML = '';
     if (patentSearchSummary) patentSearchSummary.style.display = 'none';
     if (patentSearchStatus) {
       patentSearchStatus.style.display = 'block';
-      patentSearchStatus.textContent = 'Mencari paten serupa secara semantik...';
+      patentSearchStatus.textContent = t.patent_search_searching;
     }
 
     try {
@@ -2470,7 +2619,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       if (!res.ok || !data.ok) {
-        if (patentSearchStatus) patentSearchStatus.textContent = data.message || 'Gagal mencari paten.';
+        if (patentSearchStatus) patentSearchStatus.textContent = data.message || t.patent_search_generic_error;
         return;
       }
 
@@ -2480,14 +2629,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (patents.length === 0) {
         if (patentSearchStatus) {
           patentSearchStatus.style.display = 'block';
-          patentSearchStatus.textContent = 'Tidak ditemukan paten yang mirip.';
+          patentSearchStatus.textContent = t.patent_search_no_results;
         }
         return;
       }
 
       if (patentSearchSummary) {
         patentSearchSummary.style.display = 'block';
-        patentSearchSummary.textContent = `Menampilkan ${patents.length} paten paling mirip dari total ${data.totalCount} hasil. Klik "Lihat Detail" untuk membaca abstrak dan status legal lengkapnya di Google Patents.`;
+        patentSearchSummary.textContent = t.patent_search_summary.replace('{n}', patents.length).replace('{total}', data.totalCount);
       }
 
       patents.forEach((patent, index) => {
@@ -2497,17 +2646,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const metaParts = [];
         if (patent.assignee) metaParts.push(`<i class="fa-regular fa-building"></i> ${escapeHtml(patent.assignee)}`);
-        if (patent.publicationDate) metaParts.push(`<i class="fa-regular fa-calendar"></i> Publikasi ${escapeHtml(patent.publicationDate)}`);
+        if (patent.publicationDate) metaParts.push(`<i class="fa-regular fa-calendar"></i> ${t.patent_search_published} ${escapeHtml(patent.publicationDate)}`);
 
         card.innerHTML = `
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span class="rank-badge" style="background: rgba(7,135,220,0.1); color: var(--brand-blue); border: 1px solid rgba(7,135,220,0.2); white-space: nowrap;">${escapeHtml(patent.relevancy)} mirip</span>
+              <span class="rank-badge" style="background: rgba(7,135,220,0.1); color: var(--brand-blue); border: 1px solid rgba(7,135,220,0.2); white-space: nowrap;">${escapeHtml(patent.relevancy)} ${t.patent_search_similar_badge}</span>
               <span style="font-weight: 700; font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(patent.patentNumber)}</span>
             </div>
-            <a href="${patent.googlePatentsUrl}" target="_blank" rel="noopener" class="journal-link">Lihat Detail <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <a href="${patent.googlePatentsUrl}" target="_blank" rel="noopener" class="journal-link">${t.patent_search_view_detail} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
           </div>
-          <h3 class="journal-title" style="margin: 0;">${patent.title ? escapeHtml(patent.title) : '<span style="color: var(--text-muted); font-weight: 400;">Judul tidak tersedia</span>'}</h3>
+          <h3 class="journal-title" style="margin: 0;">${patent.title ? escapeHtml(patent.title) : `<span style="color: var(--text-muted); font-weight: 400;">${t.patent_search_no_title}</span>`}</h3>
           ${metaParts.length ? `<p class="journal-desc" style="margin: 0; display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.82rem;">${metaParts.join('')}</p>` : ''}
         `;
         patentSearchResults.appendChild(card);
@@ -2524,7 +2673,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('[Patent Search Live]', err);
       if (patentSearchStatus) {
         patentSearchStatus.style.display = 'block';
-        patentSearchStatus.textContent = 'Gagal menghubungi server untuk mencari paten.';
+        patentSearchStatus.textContent = t.patent_search_generic_error;
       }
     } finally {
       patentSearchBtn.disabled = false;
@@ -2538,9 +2687,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (realtimeBooleanToggle) {
     realtimeBooleanToggle.addEventListener('change', () => {
       if (!realtimeSearchInput) return;
+      const t = TRANSLATIONS[window.currentLanguage || 'id'];
       realtimeSearchInput.placeholder = realtimeBooleanToggle.checked
-        ? 'Contoh: "machine learning" AND (education OR pedagogy) NOT survey'
-        : 'Cari 480 juta+ karya ilmiah dari OpenAlex... (bisa pakai AND / OR / NOT)';
+        ? t.realtime_search_placeholder_example
+        : t.realtime_search_placeholder_normal;
     });
   }
 
@@ -4344,6 +4494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderResearchChatMessages() {
       if (!researchChatMessagesEl) return;
+      const t = TRANSLATIONS[window.currentLanguage || 'id'];
       const chatMainEl = document.querySelector('.research-chat-main');
       if (researchChatMessages.length === 0) {
         researchChatMessagesEl.innerHTML = '';
@@ -4374,17 +4525,17 @@ document.addEventListener('DOMContentLoaded', () => {
               <button class="research-chat-disclosure-btn" type="button" data-msg-index="${idx}" title="Generate AI Disclosure Statement">
                 <i class="fa-solid fa-file-shield"></i> <span>Disclosure</span>
               </button>
-              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="pdf" title="Unduh PDF">
+              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="pdf" title="${t.export_btn_pdf_title}">
                 <i class="fa-solid fa-file-pdf"></i> <span>PDF</span>
               </button>
-              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="docx" title="Unduh Word (.doc)">
+              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="docx" title="${t.export_btn_docx_title}">
                 <i class="fa-solid fa-file-word"></i> <span>DOCX</span>
               </button>
               ${hasCitations ? `
-              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="ris" title="Unduh referensi .ris">
+              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="ris" title="${t.export_btn_ris_title}">
                 <i class="fa-solid fa-book"></i> <span>.ris</span>
               </button>
-              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="bib" title="Unduh referensi .bib">
+              <button class="research-chat-export-btn" type="button" data-msg-index="${idx}" data-export="bib" title="${t.export_btn_bib_title}">
                 <i class="fa-solid fa-book"></i> <span>.bib</span>
               </button>
               ` : ''}
@@ -4688,22 +4839,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function showLitCitePopover(markerEl, citation) {
       cancelLitCitePopoverHide();
       const pop = ensureLitCitePopover();
+      const t = TRANSLATIONS[window.currentLanguage || 'id'];
       const abstractText = citation.abstract
         ? (citation.abstract.length > 200 ? citation.abstract.slice(0, 200) + '…' : citation.abstract)
         : '';
       pop.innerHTML = `
-        <div class="lit-cite-popover-title">${escapeHtml(citation.title || 'Tanpa judul')}</div>
+        <div class="lit-cite-popover-title">${escapeHtml(citation.title || t.cite_popover_no_title)}</div>
         ${abstractText ? `<div class="lit-cite-popover-abstract">"${escapeHtml(abstractText)}"</div>` : ''}
         <div class="lit-cite-popover-meta">
           <span>${escapeHtml(citation.year || '-')}</span>
-          ${typeof citation.citedByCount === 'number' ? `<span>· ${citation.citedByCount} sitasi</span>` : ''}
+          ${typeof citation.citedByCount === 'number' ? `<span>· ${citation.citedByCount} ${t.cite_popover_citations_suffix}</span>` : ''}
           ${citation.isOpenAccess ? `<span class="lit-cite-popover-oa">· Open Access</span>` : ''}
         </div>
         <div class="lit-cite-popover-authors">${escapeHtml(citation.authors || '')}</div>
         <div class="lit-cite-popover-journal">${escapeHtml(citation.journal || '-')}</div>
         <div class="lit-cite-popover-actions">
-          ${citation.url ? `<a href="${citation.url}" target="_blank" rel="noopener" class="lit-cite-popover-link">Buka sumber <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
-          ${citation.pdfUrl ? `<a href="${citation.pdfUrl}" target="_blank" rel="noopener" class="lit-cite-popover-pdf" title="Unduh PDF (Open Access)"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : ''}
+          ${citation.url ? `<a href="${citation.url}" target="_blank" rel="noopener" class="lit-cite-popover-link">${t.cite_popover_open_source} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+          ${citation.pdfUrl ? `<a href="${citation.pdfUrl}" target="_blank" rel="noopener" class="lit-cite-popover-pdf" title="${t.cite_popover_pdf_title}"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : ''}
         </div>
       `;
       pop.style.display = 'block';
@@ -4773,26 +4925,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (deepLitReviewBtn) deepLitReviewBtn.classList.toggle('active', tool === 'deep-lit-review');
       if (outlineDocTypeSelect) outlineDocTypeSelect.style.display = tool === 'outline' ? 'inline-block' : 'none';
 
+      const t = TRANSLATIONS[window.currentLanguage || 'id'];
       if (tool && chip) {
         chip.style.display = 'flex';
         if (tool === 'outline') {
           if (chipIcon) chipIcon.className = 'fa-solid fa-wand-magic-sparkles';
-          if (chipText) chipText.textContent = 'Mode: Outline Generator - pilih jenis dokumen, jelaskan topik, lalu kirim';
-          if (researchChatInput) researchChatInput.placeholder = 'Jelaskan topik/rencana penelitian Anda...';
+          if (chipText) chipText.textContent = t.quicktool_outline_chip;
+          if (researchChatInput) researchChatInput.placeholder = t.quicktool_outline_placeholder;
         } else if (tool === 'deep-lit-review') {
           if (chipIcon) chipIcon.className = 'fa-solid fa-layer-group';
-          if (chipText) chipText.textContent = 'Mode: Deep Lit Review - jelaskan topik Anda lalu kirim';
-          if (researchChatInput) researchChatInput.placeholder = 'Jelaskan topik penelitian yang ingin dicari referensinya (mendalam)...';
+          if (chipText) chipText.textContent = t.quicktool_deeplit_chip;
+          if (researchChatInput) researchChatInput.placeholder = t.quicktool_deeplit_placeholder;
         } else {
           if (chipIcon) chipIcon.className = 'fa-solid fa-book-open';
-          if (chipText) chipText.textContent = 'Mode: Lit Review - jelaskan topik Anda lalu kirim';
-          if (researchChatInput) researchChatInput.placeholder = 'Jelaskan topik penelitian yang ingin dicari referensinya...';
+          if (chipText) chipText.textContent = t.quicktool_litreview_chip;
+          if (researchChatInput) researchChatInput.placeholder = t.quicktool_litreview_placeholder;
         }
       } else if (chip) {
         chip.style.display = 'none';
-        if (researchChatInput) researchChatInput.placeholder = 'Tulis pertanyaan riset Anda...';
+        if (researchChatInput) researchChatInput.placeholder = t.research_chat_input_placeholder;
       }
     }
+    window.setActiveQuickTool = setActiveQuickTool;
 
     // Outline Generator & Lit Review dipanggil langsung dari chat (bukan lewat
     // /api/research-chat) - hasilnya dirender sebagai bubble asisten biasa dan ikut
@@ -6437,6 +6591,83 @@ document.addEventListener('DOMContentLoaded', () => {
         updateResearchChatAccess(currentUser.user);
         updateSlrAccess(currentUser.user);
         updatePatentSearchAccess(currentUser.user);
+      }
+      // Re-render chat bubbles so export button tooltips (PDF/DOCX/.ris/.bib) pick up the new language
+      if (typeof renderResearchChatMessages === 'function' && typeof researchChatMessages !== 'undefined' && researchChatMessages.length > 0) {
+        renderResearchChatMessages();
+      }
+
+      // 9i. Translate "More" sidebar trigger (no data-tab, so not covered by the sidebar-link loop)
+      const moreTriggerSpan = document.querySelector('#sidebarMoreTrigger span');
+      if (moreTriggerSpan) moreTriggerSpan.textContent = TRANSLATIONS[lang].sidebar_more;
+
+      // 9j. Translate Pencarian Paten (Patent Search) tab
+      const patentSearchTitleEl = document.getElementById('patentSearchTitle');
+      if (patentSearchTitleEl) patentSearchTitleEl.textContent = TRANSLATIONS[lang].patent_search_title;
+      const patentSearchIntroEl = document.getElementById('patentSearchIntro');
+      if (patentSearchIntroEl) patentSearchIntroEl.textContent = TRANSLATIONS[lang].patent_search_intro;
+      const patentSearchInputEl = document.getElementById('patentSearchInput');
+      if (patentSearchInputEl) patentSearchInputEl.placeholder = TRANSLATIONS[lang].patent_search_placeholder;
+      const patentSearchBtnTextEl = document.getElementById('patentSearchBtnText');
+      if (patentSearchBtnTextEl) patentSearchBtnTextEl.textContent = TRANSLATIONS[lang].patent_search_btn;
+      // Kuota hint di-refresh langsung dari data user terkini (bukan cuma teks statis)
+      if (currentUser?.user && window.updatePatentSearchAccess) {
+        window.updatePatentSearchAccess(currentUser.user);
+      } else {
+        const patentSearchHintEl = document.getElementById('patentSearchHint');
+        if (patentSearchHintEl) patentSearchHintEl.textContent = TRANSLATIONS[lang].patent_search_hint_default;
+      }
+
+      // 9k. Translate Database Jurnal sub-tabs (Database Utama / Realtime / No APC)
+      const dbSubtabMainBtnTextEl = document.getElementById('dbSubtabMainBtnText');
+      if (dbSubtabMainBtnTextEl) dbSubtabMainBtnTextEl.textContent = TRANSLATIONS[lang].db_subtab_main;
+      const dbSubtabRealtimeBtnTextEl = document.getElementById('dbSubtabRealtimeBtnText');
+      if (dbSubtabRealtimeBtnTextEl) dbSubtabRealtimeBtnTextEl.textContent = TRANSLATIONS[lang].db_subtab_realtime;
+      const dbSubtabNoApcBtnTextEl = document.getElementById('dbSubtabNoApcBtnText');
+      if (dbSubtabNoApcBtnTextEl) dbSubtabNoApcBtnTextEl.textContent = TRANSLATIONS[lang].db_subtab_noapc;
+
+      const realtimeFilterTypeLabelEl = document.getElementById('realtimeFilterTypeLabel');
+      if (realtimeFilterTypeLabelEl) realtimeFilterTypeLabelEl.textContent = TRANSLATIONS[lang].realtime_filter_type_label;
+      const realtimeFilterTypeAllEl = document.getElementById('realtimeFilterTypeAll');
+      if (realtimeFilterTypeAllEl) realtimeFilterTypeAllEl.textContent = TRANSLATIONS[lang].realtime_filter_all;
+      const realtimeFilterTypeArticleEl = document.getElementById('realtimeFilterTypeArticle');
+      if (realtimeFilterTypeArticleEl) realtimeFilterTypeArticleEl.textContent = TRANSLATIONS[lang].realtime_filter_article;
+      const realtimeFilterTypeDissertationEl = document.getElementById('realtimeFilterTypeDissertation');
+      if (realtimeFilterTypeDissertationEl) realtimeFilterTypeDissertationEl.textContent = TRANSLATIONS[lang].realtime_filter_dissertation;
+      const realtimeModeLabelEl = document.getElementById('realtimeModeLabel');
+      if (realtimeModeLabelEl) realtimeModeLabelEl.textContent = TRANSLATIONS[lang].realtime_mode_label;
+      const realtimeBooleanToggleLabelEl = document.getElementById('realtimeBooleanToggleLabel');
+      if (realtimeBooleanToggleLabelEl) realtimeBooleanToggleLabelEl.textContent = TRANSLATIONS[lang].realtime_boolean_label;
+      const realtimeSearchBtnTextEl = document.getElementById('realtimeSearchBtnText');
+      if (realtimeSearchBtnTextEl) realtimeSearchBtnTextEl.textContent = TRANSLATIONS[lang].realtime_search_btn;
+      const realtimeSearchInputEl = document.getElementById('realtimeSearchInput');
+      const realtimeBooleanToggleEl = document.getElementById('realtimeBooleanToggle');
+      if (realtimeSearchInputEl) {
+        realtimeSearchInputEl.placeholder = (realtimeBooleanToggleEl && realtimeBooleanToggleEl.checked)
+          ? TRANSLATIONS[lang].realtime_search_placeholder_example
+          : TRANSLATIONS[lang].realtime_search_placeholder_normal;
+      }
+      const realtimeResultsCountEl = document.getElementById('realtimeResultsCount');
+      if (realtimeResultsCountEl && !realtimeResultsCountEl.dataset.hasResults) {
+        realtimeResultsCountEl.textContent = TRANSLATIONS[lang].realtime_default_hint;
+      }
+
+      // 9l. Translate Promo Code UI in the upgrade modal
+      const promoCodeInputEl = document.getElementById('promoCodeInput');
+      if (promoCodeInputEl) promoCodeInputEl.placeholder = TRANSLATIONS[lang].promo_input_placeholder;
+      const promoCodeApplyBtnTextEl = document.getElementById('promoCodeApplyBtnText');
+      if (promoCodeApplyBtnTextEl) promoCodeApplyBtnTextEl.textContent = TRANSLATIONS[lang].promo_apply_btn;
+
+      // 9m. Translate Outline Generator doc type dropdown (quick-tool chip in JurnalHub Intelligence)
+      const outlineDocTypeOptions = document.querySelectorAll('#researchChatOutlineDocType option');
+      if (outlineDocTypeOptions.length >= 3) {
+        outlineDocTypeOptions[0].textContent = TRANSLATIONS[lang].outline_doctype_jurnal;
+        outlineDocTypeOptions[1].textContent = TRANSLATIONS[lang].outline_doctype_tesis;
+        outlineDocTypeOptions[2].textContent = TRANSLATIONS[lang].outline_doctype_disertasi;
+      }
+      // Re-render chip text/placeholder for currently active quick-tool (if any)
+      if (typeof activeQuickTool !== 'undefined' && window.setActiveQuickTool) {
+        window.setActiveQuickTool(activeQuickTool);
       }
 
       // 10. Translate History Tab static elements
