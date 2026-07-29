@@ -2975,40 +2975,93 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
   }
 
   try {
-    console.log(`[Humanizer] Calling StealthGPT API for user ${req.session.userId || 'unknown'} (${wordCount} words)`);
+    console.log(`[Humanizer] Calling StealthGPT async API for user ${req.session.userId || 'unknown'} (${wordCount} words)`);
     const fetchFn = globalThis.fetch || require('node-fetch');
-    const tone = mode === 'academic' ? 'Academic' : 'Standard';
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-    let response;
+    // Endpoint async (submit run lalu poll status) dipakai untuk menggantikan
+    // endpoint sinkron lama yang sering timeout di teks panjang (dulu dipotong
+    // paksa 25 detik). Billing-nya sama (1 credit per kata input+output), cuma
+    // arsitekturnya beda - tidak ada batas waktu tunggu kaku seperti sebelumnya.
+    // Endpoint ini tidak punya parameter "tone" (Academic/Standard) seperti versi
+    // lama - dipetakan ke qualityMode+model sebagai gantinya (Academic = kualitas
+    // maksimal, Standard = lebih cepat) supaya pilihan mode di UI tetap berarti.
+    const isAcademicMode = mode === 'academic';
+    const createController = new AbortController();
+    const createTimeoutId = setTimeout(() => createController.abort(), 15000);
+    let createResponse;
     try {
-      response = await fetchFn('https://www.stealthgpt.ai/api/stealthify', {
+      createResponse = await fetchFn('https://stealthgpt.ai/api/stealthify/runs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'api-token': stealthApiKey.trim()
         },
         body: JSON.stringify({
-          prompt: cleanText,
-          rephrase: true,
-          tone: tone,
-          mode: 'Medium'
+          text: cleanText,
+          qualityMode: isAcademicMode ? 'quality' : 'fast',
+          model: isAcademicMode ? 'heavy' : 'lite',
+          outputFormat: 'text'
         }),
-        signal: controller.signal
+        signal: createController.signal
       });
     } finally {
-      clearTimeout(timeoutId);
+      clearTimeout(createTimeoutId);
     }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[Humanizer] StealthGPT API error status:', response.status, errorText);
-      throw new Error(`StealthGPT API returned status ${response.status}`);
+    if (!createResponse.ok) {
+      const errorText = await createResponse.text();
+      console.error('[Humanizer] StealthGPT create-run error status:', createResponse.status, errorText);
+      throw new Error(`StealthGPT API returned status ${createResponse.status}`);
     }
 
-    const resData = await response.json();
+    const createData = await createResponse.json();
+    const runId = createData.runId;
+    if (!runId) {
+      throw new Error('StealthGPT tidak mengembalikan runId.');
+    }
+
+    // Poll status run tiap 4 detik, maksimal ~110 detik total (cukup untuk teks
+    // panjang di mode "quality") sebelum menyerah dengan pesan timeout yang jelas.
+    const pollUrl = `https://stealthgpt.ai/api/stealthify/runs/${encodeURIComponent(runId)}`;
+    const pollIntervalMs = 4000;
+    const maxPolls = 27;
+    let resData = null;
+    for (let attempt = 0; attempt < maxPolls; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+
+      const pollController = new AbortController();
+      const pollTimeoutId = setTimeout(() => pollController.abort(), 10000);
+      let pollResponse;
+      try {
+        pollResponse = await fetchFn(pollUrl, {
+          headers: { 'api-token': stealthApiKey.trim() },
+          signal: pollController.signal
+        });
+      } finally {
+        clearTimeout(pollTimeoutId);
+      }
+
+      if (!pollResponse.ok) {
+        const errorText = await pollResponse.text();
+        console.error('[Humanizer] StealthGPT poll error status:', pollResponse.status, errorText);
+        throw new Error(`StealthGPT API returned status ${pollResponse.status}`);
+      }
+
+      const pollData = await pollResponse.json();
+      if (pollData.status === 'completed') {
+        resData = pollData;
+        break;
+      }
+      if (pollData.status === 'failed' || pollData.status === 'cancelled') {
+        throw new Error(pollData.error?.message || `StealthGPT run ${pollData.status}`);
+      }
+      // status masih 'queued' / 'running' - lanjut poll
+    }
+
+    if (!resData) {
+      throw new Error('StealthGPT run tidak selesai dalam waktu yang wajar (timeout polling).');
+    }
+
     const humanized = resData.result || cleanText;
     const outputWordCount = humanized.split(/\s+/).filter(w => w.length > 0).length;
     const actualCost = wordCount + outputWordCount;
@@ -3033,12 +3086,12 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
     });
 
   } catch (apiError) {
-    const isTimeout = apiError.name === 'AbortError';
+    const isTimeout = apiError.name === 'AbortError' || apiError.message.includes('timeout polling');
     console.error('[Humanizer] Gagal menghubungi StealthGPT API:', apiError.message);
     return res.status(502).json({
       ok: false,
       message: isTimeout
-        ? 'Server Humanizer (StealthGPT) tidak merespons dalam waktu yang wajar. Silakan coba lagi.'
+        ? 'Server Humanizer (StealthGPT) tidak merespons dalam waktu yang wajar. Silakan coba lagi, atau coba dengan teks yang lebih pendek.'
         : 'Gagal memproses humanisasi teks. Layanan StealthGPT sedang bermasalah, silakan coba lagi nanti.'
     });
   }
