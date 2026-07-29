@@ -2028,8 +2028,49 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
 
 // --- Pencarian Paten (Patsnap semantic search) ---
 // Free-tier key hanya punya akses ke endpoint semantic search (bukan
-// bibliographic/legal-status detail), jadi kita hanya kembalikan nomor
-// paten + skor relevansi; detail lengkap diarahkan ke Google Patents di frontend.
+// bibliographic/legal-status detail penuh), tapi endpoint lookup nomor paten
+// (patent-search-pn) ternyata tersedia dan mengembalikan judul + assignee +
+// tanggal - dipakai untuk memperkaya tiap hasil semantic search. Di-cache di
+// memori (per proses) karena nomor paten & judulnya statis, tidak berubah.
+const patsnapBiblioCache = new Map();
+
+async function fetchPatsnapPatentBiblio(pn, apiKey) {
+  if (patsnapBiblioCache.has(pn)) {
+    return patsnapBiblioCache.get(pn);
+  }
+  try {
+    const response = await fetch('https://connect.patsnap.com/search/patent/patent-search-pn', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ pn })
+    });
+    const data = await response.json();
+    const item = data.status && data.data && data.data.results && data.data.results[0];
+    const biblio = item ? {
+      title: item.title || null,
+      assignee: item.current_assignee || item.original_assignee || null,
+      inventor: item.inventor || null,
+      applicationDate: item.apdt || null,
+      publicationDate: item.pbdt || null
+    } : null;
+    patsnapBiblioCache.set(pn, biblio);
+    return biblio;
+  } catch (error) {
+    console.error('[Patsnap Biblio] Gagal ambil detail untuk', pn, error.message);
+    return null;
+  }
+}
+
+function formatPatsnapDate(yyyymmdd) {
+  if (!yyyymmdd) return null;
+  const str = String(yyyymmdd);
+  if (str.length !== 8) return null;
+  return `${str.slice(0, 4)}-${str.slice(4, 6)}-${str.slice(6, 8)}`;
+}
+
 async function searchPatsnapPatents(text) {
   const apiKey = process.env.PATSNAP_API_KEY;
   if (!apiKey) {
@@ -2048,14 +2089,24 @@ async function searchPatsnapPatents(text) {
     throw new Error(data.error_msg || 'Patsnap API mengembalikan error.');
   }
   const results = (data.data && data.data.results) || [];
+
+  const biblios = await Promise.all(results.map((r) => fetchPatsnapPatentBiblio(r.pn, apiKey)));
+
   return {
     totalCount: (data.data && data.data.total_search_result_count) || results.length,
-    patents: results.map((r) => ({
-      patentNumber: r.pn,
-      patentId: r.patent_id,
-      relevancy: r.relevancy,
-      googlePatentsUrl: `https://patents.google.com/patent/${encodeURIComponent(r.pn)}`
-    }))
+    patents: results.map((r, i) => {
+      const biblio = biblios[i];
+      return {
+        patentNumber: r.pn,
+        patentId: r.patent_id,
+        relevancy: r.relevancy,
+        title: biblio ? biblio.title : null,
+        assignee: biblio ? biblio.assignee : null,
+        applicationDate: formatPatsnapDate(biblio ? biblio.applicationDate : null),
+        publicationDate: formatPatsnapDate(biblio ? biblio.publicationDate : null),
+        googlePatentsUrl: `https://patents.google.com/patent/${encodeURIComponent(r.pn)}`
+      };
+    })
   };
 }
 

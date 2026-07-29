@@ -2487,19 +2487,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (patentSearchSummary) {
         patentSearchSummary.style.display = 'block';
-        patentSearchSummary.textContent = `Menampilkan ${patents.length} paten paling mirip dari total ${data.totalCount} hasil. Klik "Lihat Detail" untuk membaca judul, abstrak, dan status legal lengkapnya di Google Patents.`;
+        patentSearchSummary.textContent = `Menampilkan ${patents.length} paten paling mirip dari total ${data.totalCount} hasil. Klik "Lihat Detail" untuk membaca abstrak dan status legal lengkapnya di Google Patents.`;
       }
 
       patents.forEach((patent, index) => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.style.cssText = 'padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; animation-delay: ' + (index * 0.03) + 's;';
+        card.style.cssText = 'padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; animation-delay: ' + (index * 0.03) + 's;';
+
+        const metaParts = [];
+        if (patent.assignee) metaParts.push(`<i class="fa-regular fa-building"></i> ${escapeHtml(patent.assignee)}`);
+        if (patent.publicationDate) metaParts.push(`<i class="fa-regular fa-calendar"></i> Publikasi ${escapeHtml(patent.publicationDate)}`);
+
         card.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <span class="rank-badge" style="background: rgba(7,135,220,0.1); color: var(--brand-blue); border: 1px solid rgba(7,135,220,0.2); white-space: nowrap;">${escapeHtml(patent.relevancy)} mirip</span>
-            <span style="font-weight: 700; font-family: monospace; font-size: 0.95rem;">${escapeHtml(patent.patentNumber)}</span>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="rank-badge" style="background: rgba(7,135,220,0.1); color: var(--brand-blue); border: 1px solid rgba(7,135,220,0.2); white-space: nowrap;">${escapeHtml(patent.relevancy)} mirip</span>
+              <span style="font-weight: 700; font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(patent.patentNumber)}</span>
+            </div>
+            <a href="${patent.googlePatentsUrl}" target="_blank" rel="noopener" class="journal-link">Lihat Detail <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
           </div>
-          <a href="${patent.googlePatentsUrl}" target="_blank" rel="noopener" class="journal-link">Lihat Detail <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <h3 class="journal-title" style="margin: 0;">${patent.title ? escapeHtml(patent.title) : '<span style="color: var(--text-muted); font-weight: 400;">Judul tidak tersedia</span>'}</h3>
+          ${metaParts.length ? `<p class="journal-desc" style="margin: 0; display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.82rem;">${metaParts.join('')}</p>` : ''}
         `;
         patentSearchResults.appendChild(card);
       });
