@@ -4402,15 +4402,8 @@
                   <i class="fa-solid fa-plus"></i>
                 </button>
 
-                <!-- Popup menu: unggah dokumen + shortcut Prompt Bank -->
+                <!-- Popup menu: shortcut Prompt Bank + unggah dokumen (di paling bawah) -->
                 <div id="researchChatPlusMenu" class="research-chat-plus-menu">
-                  <button type="button" id="researchChatAttachBtn" class="research-chat-plus-menu-item" title="Lampirkan dokumen (PDF/DOCX/TXT, maks 15.000 kata)">
-                    <i class="fa-solid fa-paperclip"></i>
-                    <span id="researchChatAttachBtnText">Lampirkan Dokumen</span>
-                  </button>
-
-                  <div class="research-chat-plus-menu-divider"></div>
-
                   <div class="research-chat-plus-menu-header">
                     <span id="researchChatPromptShortcutHeading">Shortcut Prompt Bank</span>
                     <button type="button" id="researchChatPromptShuffleBtn" title="Acak prompt lain">
@@ -4420,6 +4413,13 @@
                   <div id="researchChatPromptShortcutList" class="research-chat-prompt-shortcut-list">
                     <!-- Diisi dinamis via JS -->
                   </div>
+
+                  <div class="research-chat-plus-menu-divider"></div>
+
+                  <button type="button" id="researchChatAttachBtn" class="research-chat-plus-menu-item" title="Lampirkan dokumen (PDF/DOCX/TXT, maks 15.000 kata)">
+                    <i class="fa-solid fa-paperclip"></i>
+                    <span id="researchChatAttachBtnText">Lampirkan Dokumen</span>
+                  </button>
                 </div>
 
                 <textarea id="researchChatInput" rows="1" placeholder="Tulis pertanyaan riset Anda..."></textarea>

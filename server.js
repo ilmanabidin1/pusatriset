@@ -168,13 +168,21 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
+// Limit default express.json() cuma 100kb - kekecilan untuk chat JurnalHub
+// Intelligence yang mengirim ulang seluruh riwayat percakapan + teks dokumen
+// terlampir (bisa sampai 15.000 kata / ~100kb+ sendiri) di setiap request.
+// Dulu request sebesar ini gagal dengan PayloadTooLargeError yang ketutup
+// jadi pesan generik "Terjadi kesalahan tak terduga pada server" oleh error
+// handler global di bawah - bikin bingung karena tidak menyebut ukuran file.
 app.use(express.json({
+  limit: '10mb',
   verify: (req, res, buf) => {
     req.rawBody = buf;
   }
 }));
 app.use(express.urlencoded({
   extended: false,
+  limit: '10mb',
   verify: (req, res, buf) => {
     req.rawBody = buf;
   }
@@ -4650,7 +4658,10 @@ app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
-  res.status(500).json({ ok: false, message: 'Terjadi kesalahan tak terduga pada server.' });
+  if (err.type === 'entity.too.large' || err.status === 413) {
+    return res.status(413).json({ ok: false, message: 'Ukuran data yang dikirim terlalu besar (percakapan atau dokumen terlampir terlalu panjang). Mulai percakapan baru atau lampirkan dokumen yang lebih pendek.' });
+  }
+  res.status(err.status || err.statusCode || 500).json({ ok: false, message: 'Terjadi kesalahan tak terduga pada server.' });
 });
 
 // Jaring pengaman terakhir - mencegah proses Node mati total karena error async
