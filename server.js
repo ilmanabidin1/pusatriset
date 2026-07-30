@@ -3389,7 +3389,7 @@ const documentUploadLimiter = rateLimit({
 });
 const documentUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB batas mentah file
+  limits: { fileSize: 1 * 1024 * 1024 }, // 1MB batas mentah file
   fileFilter: (req, file, cb) => {
     const originalName = (file.originalname || '').toLowerCase();
     const isAllowedExt = originalName.endsWith('.pdf') || originalName.endsWith('.docx') || originalName.endsWith('.doc') || originalName.endsWith('.txt');
@@ -3495,7 +3495,7 @@ app.post('/api/research-chat/upload', requireAccess, documentUploadLimiter, (req
     if (err) {
       const message = err.message && err.message.includes('tidak didukung')
         ? err.message
-        : (err.code === 'LIMIT_FILE_SIZE' ? 'Ukuran file maksimal 15MB.' : 'Gagal mengunggah file.');
+        : (err.code === 'LIMIT_FILE_SIZE' ? 'Ukuran file maksimal 1MB. Silakan unggah dokumen yang lebih kecil.' : 'Gagal mengunggah file.');
       return res.status(400).json({ ok: false, message });
     }
 

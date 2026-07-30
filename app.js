@@ -5368,6 +5368,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = researchChatFileInput.files && researchChatFileInput.files[0];
         if (!file) return;
 
+        const maxUploadBytes = 1 * 1024 * 1024;
+        if (file.size > maxUploadBytes) {
+          alert(window.currentLanguage === 'en'
+            ? 'File is too large. Maximum upload size is 1MB.'
+            : 'Ukuran file terlalu besar. Maksimal unggah 1MB.');
+          researchChatFileInput.value = '';
+          return;
+        }
+
         const originalHtml = researchChatAttachBtn.innerHTML;
         researchChatAttachBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (window.currentLanguage === 'en' ? 'Uploading...' : 'Mengunggah...');
         researchChatAttachBtn.disabled = true;
