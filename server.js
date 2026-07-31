@@ -3274,7 +3274,7 @@ app.get('/api/research-chat/conversations', requireAccess, (req, res) => {
   const conversations = getResearchChatConversations()
     .filter(c => c.userId === req.session.userId)
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-    .map(c => ({ id: c.id, title: c.title, updatedAt: c.updatedAt }));
+    .map(c => ({ id: c.id, title: c.title, pinned: !!c.pinned, updatedAt: c.updatedAt }));
   res.json({ ok: true, conversations });
 });
 
@@ -3285,6 +3285,23 @@ app.get('/api/research-chat/conversations/:id', requireAccess, (req, res) => {
     return res.status(404).json({ ok: false, message: 'Percakapan tidak ditemukan.' });
   }
   res.json({ ok: true, conversation });
+});
+
+// Perbarui judul (rename) atau status sematan (pin/unpin) percakapan
+app.patch('/api/research-chat/conversations/:id', requireAccess, (req, res) => {
+  const conversations = getResearchChatConversations();
+  const conv = conversations.find(c => c.id === req.params.id && c.userId === req.session.userId);
+  if (!conv) {
+    return res.status(404).json({ ok: false, message: 'Percakapan tidak ditemukan.' });
+  }
+  if (typeof req.body.title === 'string' && req.body.title.trim()) {
+    conv.title = req.body.title.trim().slice(0, 100);
+  }
+  if (typeof req.body.pinned === 'boolean') {
+    conv.pinned = req.body.pinned;
+  }
+  saveResearchChatConversations(conversations);
+  res.json({ ok: true, conversation: { id: conv.id, title: conv.title, pinned: !!conv.pinned } });
 });
 
 app.delete('/api/research-chat/conversations/:id', requireAccess, (req, res) => {

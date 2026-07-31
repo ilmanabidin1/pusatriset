@@ -4406,7 +4406,43 @@ document.addEventListener('DOMContentLoaded', () => {
       return new Date(isoDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
+    let activeContextMenuEl = null;
+
+    function closeActiveContextMenu() {
+      if (activeContextMenuEl) {
+        activeContextMenuEl.remove();
+        activeContextMenuEl = null;
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      if (activeContextMenuEl && !e.target.closest('.research-chat-context-menu') && !e.target.closest('.history-action-btn.menu-btn')) {
+        closeActiveContextMenu();
+      }
+    });
+
+    function renderHistoryItemHtml(c) {
+      const isPinned = !!c.pinned;
+      const isActive = c.id === currentResearchChatId;
+      return `
+        <button type="button" class="research-chat-history-item ${isActive ? 'active' : ''} ${isPinned ? 'is-pinned' : ''}" data-conv-id="${c.id}">
+          <i class="fa-regular fa-comment" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); flex-shrink: 0;"></i>
+          <span class="research-chat-history-item-title">${escapeHtml(c.title)}</span>
+          <div class="research-chat-history-item-actions">
+            <span class="history-action-btn pin-btn ${isPinned ? 'pinned-active' : ''}" data-action-pin="${c.id}" title="${isPinned ? 'Lepas sematan' : 'Sematkan chat'}">
+              <i class="fa-solid fa-thumbtack"></i>
+            </span>
+            <span class="history-action-btn menu-btn" data-action-menu="${c.id}" data-conv-title="${escapeHtml(c.title)}" data-conv-pinned="${isPinned}" title="Opsi">
+              <i class="fa-solid fa-ellipsis"></i>
+            </span>
+          </div>
+        </button>
+      `;
+    }
+
     async function renderResearchChatHistoryList() {
+      const pinnedSectionEl = document.getElementById('researchChatPinnedSection');
+      const pinnedListEl = document.getElementById('researchChatPinnedList');
       if (!researchChatHistoryListEl) return;
       try {
         const response = await fetch('/api/research-chat/conversations');
@@ -4414,18 +4450,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data.ok) return;
 
         const conversations = data.conversations || [];
-        if (conversations.length === 0) {
+        const pinnedConvs = conversations.filter(c => c.pinned);
+        const unpinnedConvs = conversations.filter(c => !c.pinned);
+
+        if (pinnedSectionEl && pinnedListEl) {
+          if (pinnedConvs.length > 0) {
+            pinnedSectionEl.style.display = 'block';
+            pinnedListEl.innerHTML = pinnedConvs.map(renderHistoryItemHtml).join('');
+          } else {
+            pinnedSectionEl.style.display = 'none';
+            pinnedListEl.innerHTML = '';
+          }
+        }
+
+        if (unpinnedConvs.length === 0 && pinnedConvs.length === 0) {
           researchChatHistoryListEl.innerHTML = '';
           if (researchChatHistoryEmptyEl) researchChatHistoryListEl.appendChild(researchChatHistoryEmptyEl);
           return;
         }
 
-        researchChatHistoryListEl.innerHTML = conversations.map(c => `
-          <button type="button" class="research-chat-history-item ${c.id === currentResearchChatId ? 'active' : ''}" data-conv-id="${c.id}">
-            <span class="research-chat-history-item-title">${escapeHtml(c.title)}</span>
-            <span class="research-chat-history-item-delete" data-delete-conv-id="${c.id}" title="Hapus percakapan"><i class="fa-regular fa-trash-can"></i></span>
-          </button>
-        `).join('');
+        researchChatHistoryListEl.innerHTML = unpinnedConvs.map(renderHistoryItemHtml).join('');
       } catch (err) {
         console.error('Gagal memuat riwayat percakapan:', err);
       }
@@ -4449,36 +4493,128 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    if (researchChatHistoryListEl) {
-      researchChatHistoryListEl.addEventListener('click', (e) => {
-        const deleteBtn = e.target.closest('.research-chat-history-item-delete');
-        if (deleteBtn) {
-          e.stopPropagation();
-          const id = deleteBtn.getAttribute('data-delete-conv-id');
-          if (!confirm('Hapus percakapan ini?')) return;
-          fetch(`/api/research-chat/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' })
-            .then(r => r.json())
-            .then(data => {
-              if (!data.ok) return;
-              if (id === currentResearchChatId) {
-                currentResearchChatId = null;
-                researchChatMessages = [];
-                renderResearchChatMessages();
-              }
-              renderResearchChatHistoryList();
-            })
-            .catch(() => alert('Gagal menghapus percakapan.'));
-          return;
-        }
+    async function togglePinConversation(id, currentPinned) {
+      try {
+        const res = await fetch(`/api/research-chat/conversations/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pinned: !currentPinned })
+        });
+        const data = await res.json();
+        if (data.ok) renderResearchChatHistoryList();
+      } catch (e) {
+        console.error('Gagal memin percakapan:', e);
+      }
+    }
 
-        const item = e.target.closest('.research-chat-history-item');
-        if (item) {
-          const id = item.getAttribute('data-conv-id');
-          if (id !== currentResearchChatId) loadResearchChatConversation(id);
-          // Riwayat sekarang persisten di sidebar utama - pastikan pindah ke tab chat.
-          if (window.switchTab) window.switchTab('research-chat');
+    async function renameConversation(id, oldTitle) {
+      const newTitle = prompt('Masukkan nama baru untuk percakapan ini:', oldTitle);
+      if (!newTitle || !newTitle.trim() || newTitle.trim() === oldTitle) return;
+      try {
+        const res = await fetch(`/api/research-chat/conversations/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: newTitle.trim() })
+        });
+        const data = await res.json();
+        if (data.ok) renderResearchChatHistoryList();
+      } catch (e) {
+        alert('Gagal merename percakapan.');
+      }
+    }
+
+    async function deleteConversation(id) {
+      if (!confirm('Hapus percakapan ini secara permanen?')) return;
+      try {
+        const res = await fetch(`/api/research-chat/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.ok) {
+          if (id === currentResearchChatId) {
+            currentResearchChatId = null;
+            researchChatMessages = [];
+            renderResearchChatMessages();
+          }
+          renderResearchChatHistoryList();
         }
+      } catch (e) {
+        alert('Gagal menghapus percakapan.');
+      }
+    }
+
+    function openContextMenu(btnEl, id, title, isPinned) {
+      closeActiveContextMenu();
+      const rect = btnEl.getBoundingClientRect();
+      const menu = document.createElement('div');
+      menu.className = 'research-chat-context-menu';
+      
+      const topPos = Math.min(rect.bottom + 4, window.innerHeight - 150);
+      const leftPos = Math.min(rect.left, window.innerWidth - 180);
+
+      menu.style.top = topPos + 'px';
+      menu.style.left = leftPos + 'px';
+
+      menu.innerHTML = `
+        <button type="button" class="context-menu-item" data-action="rename">
+          <i class="fa-regular fa-pen-to-square"></i> <span>Rename</span>
+        </button>
+        <button type="button" class="context-menu-item" data-action="pin">
+          <i class="fa-solid fa-thumbtack"></i> <span>${isPinned ? 'Unpin chat' : 'Pin chat'}</span>
+        </button>
+        <button type="button" class="context-menu-item danger" data-action="delete">
+          <i class="fa-regular fa-trash-can"></i> <span>Delete</span>
+        </button>
+      `;
+
+      menu.addEventListener('click', (e) => {
+        const actionBtn = e.target.closest('.context-menu-item');
+        if (!actionBtn) return;
+        const action = actionBtn.getAttribute('data-action');
+        closeActiveContextMenu();
+
+        if (action === 'rename') renameConversation(id, title);
+        else if (action === 'pin') togglePinConversation(id, isPinned);
+        else if (action === 'delete') deleteConversation(id);
       });
+
+      document.body.appendChild(menu);
+      activeContextMenuEl = menu;
+    }
+
+    function handleHistoryListClick(e) {
+      const pinBtn = e.target.closest('[data-action-pin]');
+      if (pinBtn) {
+        e.stopPropagation();
+        const id = pinBtn.getAttribute('data-action-pin');
+        const item = pinBtn.closest('.research-chat-history-item');
+        const isPinned = item ? item.classList.contains('is-pinned') : false;
+        togglePinConversation(id, isPinned);
+        return;
+      }
+
+      const menuBtn = e.target.closest('[data-action-menu]');
+      if (menuBtn) {
+        e.stopPropagation();
+        const id = menuBtn.getAttribute('data-action-menu');
+        const title = menuBtn.getAttribute('data-conv-title');
+        const isPinned = menuBtn.getAttribute('data-conv-pinned') === 'true';
+        openContextMenu(menuBtn, id, title, isPinned);
+        return;
+      }
+
+      const item = e.target.closest('.research-chat-history-item');
+      if (item) {
+        const id = item.getAttribute('data-conv-id');
+        if (id !== currentResearchChatId) loadResearchChatConversation(id);
+        if (window.switchTab) window.switchTab('research-chat');
+      }
+    }
+
+    if (researchChatHistoryListEl) {
+      researchChatHistoryListEl.addEventListener('click', handleHistoryListClick);
+    }
+    const pinnedListEl = document.getElementById('researchChatPinnedList');
+    if (pinnedListEl) {
+      pinnedListEl.addEventListener('click', handleHistoryListClick);
     }
 
     function updateResearchChatGreeting() {
