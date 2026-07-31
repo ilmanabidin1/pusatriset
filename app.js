@@ -4506,7 +4506,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       if (chatMainEl) chatMainEl.classList.remove('chat-empty');
-      researchChatMessagesEl.innerHTML = researchChatMessages.map((m, idx) => {
+      const messagesHtml = researchChatMessages.map((m, idx) => {
         if (m.role === 'user') {
           return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
         }
@@ -4543,7 +4543,139 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
       }).join('');
+
+      let warningBannerHtml = '';
+      if (researchChatMessages.length >= 30) {
+        const remaining = Math.max(0, 40 - researchChatMessages.length);
+        const isEn = (window.currentLanguage === 'en');
+        warningBannerHtml = `
+          <div id="researchChatLimitWarningBanner" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.12)); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 0.75rem 1rem; margin: 1rem 0 0.5rem 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; backdrop-filter: blur(4px);">
+            <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: #b45309; font-weight: 700;">
+              <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.15rem; color: #d97706;"></i>
+              <span>${isEn ? `This thread is approaching the limit (${researchChatMessages.length}/40 messages, ${remaining} left).` : `Percakapan ini mendekati batas thread (${researchChatMessages.length}/40 pesan, sisa ${remaining} pesan).`}</span>
+            </div>
+            <button type="button" id="btnSummarizeThread" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; border: none; padding: 0.45rem 0.95rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> <span>${isEn ? 'Summarize & Start New Chat' : 'Rangkum & Pindah Chat Baru'}</span>
+            </button>
+          </div>
+        `;
+      }
+
+      researchChatMessagesEl.innerHTML = messagesHtml + warningBannerHtml;
       researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+
+      const summarizeBtn = document.getElementById('btnSummarizeThread');
+      if (summarizeBtn) {
+        summarizeBtn.addEventListener('click', summarizeAndStartNewChat);
+      }
+    }
+
+    async function summarizeAndStartNewChat() {
+      if (!researchChatMessages || researchChatMessages.length === 0) return;
+
+      const modal = document.getElementById('summarizeChatModal');
+      const loader = document.getElementById('summarizeChatLoader');
+      const textArea = document.getElementById('summarizeChatModalText');
+      const copyBtn = document.getElementById('summarizeChatModalCopyBtn');
+      const startNewBtn = document.getElementById('summarizeChatModalStartNewBtn');
+
+      if (!modal || !textArea) return;
+
+      modal.classList.add('active');
+      if (loader) loader.style.display = 'block';
+      textArea.style.display = 'none';
+      textArea.value = '';
+
+      try {
+        const promptText = "Tolong buatkan Rangkuman Konteks Eksekutif (Context Summary) dari seluruh poin diskusi di atas secara padat dan jelas. Rangkuman ini akan digunakan sebagai konteks instruksi awal di sesi percakapan baru. Tuliskan dalam 2-3 paragraf ringkas yang mencakup: 1) Topik Utama & Latar Belakang Riset, 2) Temuan / Keputusan Penting yang telah didiskusikan, 3) Pertanyaan / Langkah selanjutnya.";
+        
+        const outgoingMessages = [...researchChatMessages, { role: 'user', content: promptText }];
+        
+        const response = await fetch('/api/research-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: outgoingMessages,
+            conversationId: currentResearchChatId,
+            modelType: selectedResearchModel,
+            thinkingType: 'basic'
+          })
+        });
+
+        if (!response.ok) throw new Error('Gagal merangkum percakapan.');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let contentText = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            try {
+              const data = JSON.parse(trimmed);
+              if (data.type === 'content') {
+                contentText += data.content;
+              }
+            } catch (e) {}
+          }
+        }
+
+        if (loader) loader.style.display = 'none';
+        textArea.style.display = 'block';
+        textArea.value = contentText.trim();
+      } catch (err) {
+        console.error('[Summarize Thread]', err);
+        if (loader) loader.style.display = 'none';
+        textArea.style.display = 'block';
+        
+        const userMsgs = researchChatMessages.filter(m => m.role === 'user').map(m => m.content).slice(-5).join(' | ');
+        textArea.value = `Rangkuman Konteks Percakapan Sebelumnya:\nTopik Diskusi: ${userMsgs.slice(0, 300)}`;
+      }
+
+      if (startNewBtn) {
+        startNewBtn.onclick = () => {
+          modal.classList.remove('active');
+          const summary = textArea.value.trim();
+          
+          currentResearchChatId = null;
+          researchChatMessages = [];
+          renderResearchChatMessages();
+
+          if (researchChatInput) {
+            researchChatInput.value = `Berikut adalah rangkuman konteks dari percakapan sebelumnya:\n\n${summary}\n\n---\n\nMari kita lanjutkan diskusi mengenai `;
+            researchChatInput.focus();
+            researchChatInput.style.height = 'auto';
+            researchChatInput.style.height = Math.min(researchChatInput.scrollHeight, 180) + 'px';
+          }
+        };
+      }
+
+      if (copyBtn) {
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(textArea.value).then(() => {
+            const origHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fa-solid fa-check" style="color: #10b981;"></i> Tersalin!';
+            setTimeout(() => { copyBtn.innerHTML = origHtml; }, 2000);
+          });
+        };
+      }
+    }
+
+    const closeSummarizeModalBtn = document.getElementById('closeSummarizeChatModalBtn');
+    if (closeSummarizeModalBtn) {
+      closeSummarizeModalBtn.addEventListener('click', () => {
+        const modal = document.getElementById('summarizeChatModal');
+        if (modal) modal.classList.remove('active');
+      });
     }
 
     if (researchChatMessagesEl) {

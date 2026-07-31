@@ -6110,7 +6110,7 @@
       <button class="modal-close-btn" id="closeAiDisclosureModalBtn">&times;</button>
       <div class="modal-header">
         <div class="modal-crown-circle" style="background: rgba(139,92,246,0.1); color: #7c3aed;">
-          <i class="fa-solid fa-file-shield"></i>
+          <i class="fa-solid fa-quote-left"></i>
         </div>
         <h3>AI Disclosure Statement</h3>
         <p>Salin pernyataan ini untuk dicantumkan pada naskah Anda sesuai ketentuan transparansi AI dari publisher (mis. Taylor & Francis, Sage).</p>
@@ -6120,6 +6120,36 @@
         <button type="button" id="aiDisclosureModalCopyBtn" class="upgrade-btn" style="width: auto; margin-top: 1rem; padding: 0.6rem 1.5rem; background: var(--brand-blue); color: white; font-size: 0.88rem;">
           <i class="fa-regular fa-copy"></i> Salin Teks
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Rangkuman Konteks Thread Chat -->
+  <div class="modal-overlay" id="summarizeChatModal">
+    <div class="modal-card" style="max-width: 650px;">
+      <button class="modal-close-btn" id="closeSummarizeChatModalBtn">&times;</button>
+      <div class="modal-header">
+        <div class="modal-crown-circle" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <h3 id="summarizeModalTitle">Rangkuman Konteks Percakapan</h3>
+        <p id="summarizeModalSub">AI telah meringkas seluruh diskusi dalam thread ini agar dapat dilanjutkan ke sesi chat baru tanpa kehilangan konteks.</p>
+      </div>
+      <div class="modal-body" style="padding-top: 1rem;">
+        <div id="summarizeChatLoader" style="display: none; text-align: center; padding: 2rem 0; color: var(--text-muted);">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #d97706; margin-bottom: 0.75rem;"></i>
+          <p style="font-weight: 700; margin: 0;">Meringkas seluruh isi riwayat chat...</p>
+        </div>
+        <textarea id="summarizeChatModalText" rows="9" style="width:100%; padding: 1rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.88rem; line-height: 1.6; outline: none; background: #fffbe6; color: var(--text-main); resize: vertical; margin-bottom: 1rem;"></textarea>
+        
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+          <button type="button" id="summarizeChatModalCopyBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; color: var(--text-main); font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 0.6rem 1.1rem; border-radius: 8px; transition: all 0.2s;">
+            <i class="fa-regular fa-copy"></i> Salin Rangkuman
+          </button>
+          <button type="button" id="summarizeChatModalStartNewBtn" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 0.6rem 1.25rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s;">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Mulai Chat Baru dengan Rangkuman Ini
+          </button>
+        </div>
       </div>
     </div>
   </div>
