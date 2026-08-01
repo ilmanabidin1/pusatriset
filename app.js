@@ -4647,6 +4647,23 @@ document.addEventListener('DOMContentLoaded', () => {
           return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
         }
         let bodyHtml = `<div class="chat-main-content">${renderMarkdownSafe(m.content)}</div>`;
+        if (m.reasoning || m.thinking) {
+          const thinkingText = m.reasoning || m.thinking;
+          bodyHtml = `
+            <details class="research-chat-thinking-block">
+              <summary class="research-chat-thinking-summary">
+                <span style="display: flex; align-items: center; gap: 0.4rem;">
+                  <i class="fa-solid fa-brain" style="color: #8b5cf6;"></i>
+                  <span>Proses Berpikir AI</span>
+                </span>
+                <i class="fa-solid fa-chevron-down thinking-chevron"></i>
+              </summary>
+              <div class="research-chat-thinking-body">
+                ${renderMarkdownSafe(thinkingText)}
+              </div>
+            </details>
+          ` + bodyHtml;
+        }
         const hasCitations = Array.isArray(m.citations) && m.citations.length > 0;
         if (hasCitations) {
           bodyHtml = wrapCitationMarkers(bodyHtml, m.citations);
@@ -5353,11 +5370,17 @@ document.addEventListener('DOMContentLoaded', () => {
       loadingBubble.className = 'research-chat-bubble loading';
       researchChatMessagesEl.appendChild(loadingBubble);
       researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
-      const stopChatStatus = startProcessingStatus(loadingBubble, [
-        'Menghubungi JurnalHub Intelligence...',
-        'Mencari referensi ilmiah pendukung...',
-        'Menyusun jawaban...'
-      ], 2200);
+
+      const chatStatusList = [
+        '🔍 Mencari referensi & paper ilmiah di OpenAlex...',
+        '🌐 Memetakan konteks & publikasi terkait...',
+        '🧠 Melakukan analisis & penalaran mendalam...',
+        '✍️ Menyusun balasan berstandar akademik...'
+      ];
+      if (typeof researchChatAttachment !== 'undefined' && researchChatAttachment) {
+        chatStatusList.unshift(`📄 Membaca & mengekstraksi isi dokumen (${researchChatAttachment.fileName})...`);
+      }
+      const stopChatStatus = startProcessingStatus(loadingBubble, chatStatusList, 2200);
 
       researchChatSendBtn.disabled = true;
       const originalBtnHtml = researchChatSendBtn.innerHTML;
@@ -5452,11 +5475,29 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           let html = '';
+          if (thinkingText) {
+            const isOpen = !contentText; // Tetap terbuka selama contentText belum mulai masuk
+            html += `
+              <details class="research-chat-thinking-block" ${isOpen ? 'open' : ''}>
+                <summary class="research-chat-thinking-summary">
+                  <span style="display: flex; align-items: center; gap: 0.4rem;">
+                    <i class="fa-solid fa-brain ${isOpen ? 'fa-pulse' : ''}" style="color: #8b5cf6;"></i>
+                    <span>${isOpen ? 'Proses Berpikir AI (Sedang Menganalisis...)' : 'Proses Berpikir AI'}</span>
+                  </span>
+                  <i class="fa-solid fa-chevron-down thinking-chevron"></i>
+                </summary>
+                <div class="research-chat-thinking-body">
+                  ${renderMarkdownSafe(thinkingText)}
+                </div>
+              </details>
+            `;
+          }
+
           if (contentText) {
             html += `<div class="chat-main-content">${renderMarkdownSafe(contentText)}</div>`;
           }
 
-          assistantBubbleEl.innerHTML = html || '...';
+          assistantBubbleEl.innerHTML = html || '<div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; padding: 0.25rem 0;"><i class="fa-solid fa-spinner fa-spin" style="color: var(--brand-blue); margin-right: 0.4rem;"></i> Menyiapkan jawaban...</div>';
           researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
         }
 
@@ -5470,6 +5511,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const newAssistantMsg = { role: 'assistant', content: contentText };
+        if (thinkingText) {
+          newAssistantMsg.reasoning = thinkingText;
+        }
         if (streamCitations && streamCitations.length > 0) {
           newAssistantMsg.citations = streamCitations;
         }
