@@ -5377,6 +5377,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const outlineDocTypeSelect = document.getElementById('researchChatOutlineDocType');
       const selectedDocType = outlineDocTypeSelect ? outlineDocTypeSelect.value : 'jurnal';
 
+      let fullPayloadText = text;
+      if (typeof researchChatAttachment !== 'undefined' && researchChatAttachment) {
+        fullPayloadText = `[Dokumen terlampir: ${researchChatAttachment.fileName}]\n\n${researchChatAttachment.text}\n\n${text}`.trim();
+        window.removeResearchChatAttachment();
+      }
+
       researchChatMessages.push({ role: 'user', content: text });
       researchChatInput.value = '';
       researchChatInput.style.height = 'auto';
@@ -5427,7 +5433,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const res = await fetch('/api/generate-template-draft', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: text.slice(0, 120), abstract: text, docType: selectedDocType })
+            body: JSON.stringify({ title: fullPayloadText.slice(0, 120), abstract: fullPayloadText, docType: selectedDocType })
           });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal membuat outline.');
@@ -5441,7 +5447,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const res = await fetch('/api/peer-review', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: text.slice(0, 150), abstract: text, text: text, targetJournal: 'Jurnal Bereputasi (SINTA / Scopus)' })
+            body: JSON.stringify({ title: fullPayloadText.slice(0, 150), abstract: fullPayloadText, text: fullPayloadText, targetJournal: 'Jurnal Bereputasi (SINTA / Scopus)' })
           });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal melakukan evaluasi peer reviewer.');
@@ -5451,7 +5457,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const res = await fetch('/api/lit-review', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: text.slice(0, 150), keywords: '', abstract: text, mode: isDeep ? 'pro' : 'standard' })
+            body: JSON.stringify({ title: fullPayloadText.slice(0, 150), keywords: '', abstract: fullPayloadText, mode: isDeep ? 'pro' : 'standard' })
           });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal membuat literature review.');
@@ -5493,8 +5499,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function sendResearchChatMessage() {
       if (!researchChatInput) return;
-      const text = researchChatInput.value.trim();
-      if (!text || researchChatSendBtn.disabled) return;
+      const rawInputText = researchChatInput.value.trim();
+      const hasAttachment = typeof researchChatAttachment !== 'undefined' && researchChatAttachment;
+      if ((!rawInputText && !hasAttachment) || researchChatSendBtn.disabled) return;
+
+      const text = rawInputText || (hasAttachment ? `Mohon analisis dokumen terlampir: ${researchChatAttachment.fileName}` : '');
 
       if (activeQuickTool) {
         return sendQuickToolMessage(activeQuickTool, text);
