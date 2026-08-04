@@ -2475,7 +2475,74 @@
       color: #e6edf3 !important;
     }
 
-    /* Video Demo Modal styling */
+    /* Peer Review Report Styling */
+    .peer-review-report-container {
+      font-family: inherit;
+      color: var(--text-main, #0b1a30);
+    }
+    .peer-review-section-card {
+      background: #ffffff;
+      border: 1px solid rgba(8,34,64,0.08);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 2px 8px rgba(8,34,64,0.02);
+    }
+    .peer-review-section-card h3 {
+      font-family: var(--font-outfit, sans-serif);
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #082240;
+      margin: 0 0 1rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgba(8,34,64,0.08);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .peer-review-section-card h4 {
+      font-family: var(--font-outfit, sans-serif);
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: #0369a1;
+      margin: 1.1rem 0 0.4rem 0;
+    }
+    .peer-review-section-card ul {
+      padding-left: 1.2rem;
+      margin-bottom: 0.75rem;
+    }
+    .peer-review-section-card li {
+      margin-bottom: 0.45rem;
+      line-height: 1.6;
+    }
+    .peer-review-meta-box {
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border: 1px solid #a7f3d0;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .peer-review-badge-decision {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-left: 0.4rem;
+    }
+    [data-theme="dark"] .peer-review-section-card {
+      background: #161b22;
+      border-color: rgba(255,255,255,0.08);
+    }
+    [data-theme="dark"] .peer-review-section-card h3 {
+      color: #f0f6fc;
+      border-bottom-color: rgba(255,255,255,0.1);
+    }
+    [data-theme="dark"] .peer-review-meta-box {
+      background: rgba(16,185,129,0.1);
+      border-color: rgba(16,185,129,0.25);
+    }
     .video-modal-overlay {
       position: fixed;
       top: 0;

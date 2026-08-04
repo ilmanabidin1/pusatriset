@@ -4219,51 +4219,48 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPeerReviewReportHtml(rawMarkdown) {
       if (!rawMarkdown) return '';
 
-      // Clean up unformatted bold tags inside headers
+      // Bersihkan sintaks markdown mentah yang berpotensi merusak layout
       let clean = rawMarkdown
         .replace(/###\s*\*\*([^*]+)\*\*/g, '### $1')
         .replace(/####\s*\*\*([^*]+)\*\*/g, '#### $1')
         .replace(/\*\*###\s*/g, '### ')
         .replace(/---\s*/g, '');
 
-      let html = typeof marked !== 'undefined'
+      let rawHtml = typeof marked !== 'undefined'
         ? marked.parse(clean)
         : clean.replace(/\n/g, '<br>');
 
+      const temp = document.createElement('div');
+      temp.innerHTML = rawHtml;
+
       const container = document.createElement('div');
       container.className = 'peer-review-report-container';
-      container.innerHTML = html;
 
-      // Style h3 headers nicely with underline & spacing
-      container.querySelectorAll('h3').forEach(h3 => {
-        h3.style.fontFamily = 'var(--font-outfit, sans-serif)';
-        h3.style.fontWeight = '800';
-        h3.style.fontSize = '1.2rem';
-        h3.style.color = 'var(--text-main, #0b1a30)';
-        h3.style.marginTop = '1.5rem';
-        h3.style.marginBottom = '0.75rem';
-        h3.style.paddingBottom = '0.4rem';
-        h3.style.borderBottom = '2px solid rgba(8,34,64,0.08)';
+      let currentCard = null;
+
+      Array.from(temp.childNodes).forEach(node => {
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName.toLowerCase() === 'h3') {
+          currentCard = document.createElement('div');
+          currentCard.className = 'peer-review-section-card';
+          container.appendChild(currentCard);
+
+          const h3 = document.createElement('h3');
+          h3.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #059669; font-size: 1rem;"></i> ${node.textContent.replace(/\*/g, '').trim()}`;
+          currentCard.appendChild(h3);
+        } else {
+          if (!currentCard) {
+            currentCard = document.createElement('div');
+            currentCard.className = 'peer-review-section-card';
+            container.appendChild(currentCard);
+          }
+          currentCard.appendChild(node.cloneNode(true));
+        }
       });
 
-      // Style h4 subheaders
-      container.querySelectorAll('h4').forEach(h4 => {
-        h4.style.fontFamily = 'var(--font-outfit, sans-serif)';
-        h4.style.fontWeight = '700';
-        h4.style.fontSize = '1.02rem';
-        h4.style.color = '#0369a1';
-        h4.style.marginTop = '1.25rem';
-        h4.style.marginBottom = '0.5rem';
-      });
-
-      container.querySelectorAll('ul').forEach(ul => {
-        ul.style.paddingLeft = '1.25rem';
-        ul.style.marginBottom = '1rem';
-      });
-
-      container.querySelectorAll('li').forEach(li => {
-        li.style.marginBottom = '0.4rem';
-        li.style.lineHeight = '1.6';
+      // Style badge & highlight text di dalam container
+      container.querySelectorAll('strong').forEach(strong => {
+        strong.style.color = 'var(--text-main, #0b1a30)';
+        strong.style.fontWeight = '700';
       });
 
       return container.innerHTML;
