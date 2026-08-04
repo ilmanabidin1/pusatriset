@@ -589,6 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
       quicktool_deeplit_placeholder: "Jelaskan topik penelitian yang ingin dicari referensinya (mendalam)...",
       quicktool_litreview_chip: "Mode: Lit Review - jelaskan topik Anda lalu kirim",
       quicktool_litreview_placeholder: "Jelaskan topik penelitian yang ingin dicari referensinya...",
+      quicktool_peer_chip: "Mode: AI Peer Reviewer - tempel abstrak/naskah Anda lalu kirim",
+      quicktool_peer_placeholder: "Tempelkan abstrak atau draf naskah penelitian Anda di sini...",
       // Export & citation popover
       export_btn_pdf_title: "Unduh PDF",
       export_btn_docx_title: "Unduh Word (.doc)",
@@ -4103,6 +4105,131 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // --- AI PEER REVIEWER (DEDICATED TAB) ---
+    const runPeerReviewerBtn = document.getElementById('runPeerReviewerBtn');
+    const peerReviewTitle = document.getElementById('peerReviewTitle');
+    const peerReviewTarget = document.getElementById('peerReviewTarget');
+    const peerReviewText = document.getElementById('peerReviewText');
+    const peerReviewUploadBtn = document.getElementById('peerReviewUploadBtn');
+    const peerReviewFileInput = document.getElementById('peerReviewFileInput');
+    const peerReviewFileChip = document.getElementById('peerReviewFileChip');
+    const peerReviewFileName = document.getElementById('peerReviewFileName');
+    const peerReviewFileRemoveBtn = document.getElementById('peerReviewFileRemoveBtn');
+    const peerReviewResultsPanel = document.getElementById('peerReviewResultsPanel');
+    const peerReviewContentEl = document.getElementById('peerReviewContentEl');
+    const copyPeerReviewBtn = document.getElementById('copyPeerReviewBtn');
+
+    if (peerReviewUploadBtn && peerReviewFileInput) {
+      peerReviewUploadBtn.addEventListener('click', () => {
+        peerReviewFileInput.click();
+      });
+
+      peerReviewFileInput.addEventListener('change', async () => {
+        const file = peerReviewFileInput.files && peerReviewFileInput.files[0];
+        if (!file) return;
+
+        const maxUploadBytes = 1 * 1024 * 1024;
+        if (file.size > maxUploadBytes) {
+          alert(window.currentLanguage === 'en'
+            ? 'File is too large. Maximum upload size is 1MB.'
+            : 'Ukuran file terlalu besar. Maksimal unggah 1MB.');
+          peerReviewFileInput.value = '';
+          return;
+        }
+
+        const originalHtml = peerReviewUploadBtn.innerHTML;
+        peerReviewUploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membaca Paper...';
+        peerReviewUploadBtn.disabled = true;
+
+        try {
+          const formData = new FormData();
+          formData.append('document', file);
+          const res = await fetch('/api/research-chat/upload', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            alert(data.message || 'Gagal mengunggah dokumen.');
+            return;
+          }
+
+          if (peerReviewText) peerReviewText.value = data.text;
+          if (peerReviewFileChip && peerReviewFileName) {
+            peerReviewFileName.textContent = `${data.fileName} (${data.wordCount.toLocaleString('id-ID')} kata)`;
+            peerReviewFileChip.style.display = 'inline-flex';
+          }
+        } catch (err) {
+          console.error('[Peer Reviewer File Upload]', err);
+          alert('Gagal mengekstrak dokumen paper.');
+        } finally {
+          peerReviewUploadBtn.innerHTML = originalHtml;
+          peerReviewUploadBtn.disabled = false;
+          peerReviewFileInput.value = '';
+        }
+      });
+    }
+
+    if (peerReviewFileRemoveBtn) {
+      peerReviewFileRemoveBtn.addEventListener('click', () => {
+        if (peerReviewFileChip) peerReviewFileChip.style.display = 'none';
+        if (peerReviewText) peerReviewText.value = '';
+      });
+    }
+
+    if (runPeerReviewerBtn) {
+      runPeerReviewerBtn.addEventListener('click', async () => {
+        const title = peerReviewTitle ? peerReviewTitle.value.trim() : '';
+        const targetJournal = peerReviewTarget ? peerReviewTarget.value : 'Scopus Q1/Q2';
+        const text = peerReviewText ? peerReviewText.value.trim() : '';
+
+        if (!text && !title) {
+          alert('Harap tempelkan draf naskah/abstrak Anda atau unggah file paper terlebih dahulu.');
+          return;
+        }
+
+        const originalHtml = runPeerReviewerBtn.innerHTML;
+        runPeerReviewerBtn.disabled = true;
+        runPeerReviewerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mensimulasikan Reviewer AI...';
+        if (peerReviewResultsPanel) peerReviewResultsPanel.style.display = 'none';
+
+        try {
+          const res = await fetch('/api/peer-review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, abstract: text, text, targetJournal })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal melakukan evaluasi.');
+
+          if (peerReviewContentEl) {
+            peerReviewContentEl.innerHTML = typeof marked !== 'undefined'
+              ? marked.parse(data.review)
+              : data.review.replace(/\n/g, '<br>');
+          }
+          if (peerReviewResultsPanel) {
+            peerReviewResultsPanel.style.display = 'block';
+            peerReviewResultsPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        } catch (err) {
+          console.error('[AI Peer Reviewer Tab]', err);
+          alert(err.message || 'Gagal memproses evaluasi.');
+        } finally {
+          runPeerReviewerBtn.disabled = false;
+          runPeerReviewerBtn.innerHTML = originalHtml;
+        }
+      });
+    }
+
+    if (copyPeerReviewBtn) {
+      copyPeerReviewBtn.addEventListener('click', () => {
+        if (!peerReviewContentEl) return;
+        const textToCopy = peerReviewContentEl.innerText || peerReviewContentEl.textContent;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const originalText = copyPeerReviewBtn.innerHTML;
+          copyPeerReviewBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+          setTimeout(() => { copyPeerReviewBtn.innerHTML = originalText; }, 2000);
+        });
+      });
+    }
+
     // PDF Export
     const downloadLitPdfBtn = document.getElementById('downloadLitPdfBtn');
     if (downloadLitPdfBtn) {
@@ -5202,10 +5329,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const chipText = document.getElementById('researchChatToolChipText');
       const chipIcon = document.getElementById('researchChatToolChipIcon');
       const outlineBtn = document.getElementById('researchChatToolOutlineBtn');
+      const peerReviewerBtn = document.getElementById('researchChatToolPeerReviewerBtn');
       const litReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
       const deepLitReviewBtn = document.getElementById('researchChatToolDeepLitReviewBtn');
       const outlineDocTypeSelect = document.getElementById('researchChatOutlineDocType');
       if (outlineBtn) outlineBtn.classList.toggle('active', tool === 'outline');
+      if (peerReviewerBtn) peerReviewerBtn.classList.toggle('active', tool === 'peer-reviewer');
       if (litReviewBtn) litReviewBtn.classList.toggle('active', tool === 'lit-review');
       if (deepLitReviewBtn) deepLitReviewBtn.classList.toggle('active', tool === 'deep-lit-review');
       if (outlineDocTypeSelect) outlineDocTypeSelect.style.display = tool === 'outline' ? 'inline-block' : 'none';
@@ -5217,6 +5346,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (chipIcon) chipIcon.className = 'fa-solid fa-wand-magic-sparkles';
           if (chipText) chipText.textContent = t.quicktool_outline_chip;
           if (researchChatInput) researchChatInput.placeholder = t.quicktool_outline_placeholder;
+        } else if (tool === 'peer-reviewer') {
+          if (chipIcon) chipIcon.className = 'fa-solid fa-user-check';
+          if (chipText) chipText.textContent = t.quicktool_peer_chip || 'Mode: AI Peer Reviewer - tempel abstrak/naskah Anda lalu kirim';
+          if (researchChatInput) researchChatInput.placeholder = t.quicktool_peer_placeholder || 'Tempelkan abstrak atau draf naskah penelitian Anda di sini...';
         } else if (tool === 'deep-lit-review') {
           if (chipIcon) chipIcon.className = 'fa-solid fa-layer-group';
           if (chipText) chipText.textContent = t.quicktool_deeplit_chip;
@@ -5233,7 +5366,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.setActiveQuickTool = setActiveQuickTool;
 
-    // Outline Generator & Lit Review dipanggil langsung dari chat (bukan lewat
+    // Outline Generator & Lit Review & Peer Reviewer dipanggil langsung dari chat (bukan lewat
     // /api/research-chat) - hasilnya dirender sebagai bubble asisten biasa dan ikut
     // masuk ke researchChatMessages, jadi tetap jadi konteks untuk follow-up prompt
     // berikutnya (dan otomatis tersimpan ke riwayat begitu user kirim chat normal
@@ -5255,15 +5388,17 @@ document.addEventListener('DOMContentLoaded', () => {
       researchChatMessagesEl.appendChild(loadingBubble);
       researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
 
-      // Pesan berganti tiap beberapa detik + penghitung waktu berjalan, supaya user
-      // tahu prosesnya masih jalan (bukan macet/error) - Lit Review/Deep Lit Review
-      // memang bisa makan waktu karena mencari & menyaring paper asli dari OpenAlex
-      // (+ Semantic Scholar untuk Deep) sebelum ditulis jadi narasi.
       const quickToolStatusMessages = {
         outline: [
           'Menganalisis topik/rencana penelitian Anda...',
           'Menyusun kerangka sesuai struktur dokumen...',
           'Merapikan poin-poin per bab...'
+        ],
+        'peer-reviewer': [
+          'Membaca & menganalisis draf naskah Anda...',
+          'Mensimulasikan penilaian Reviewer 1 & Reviewer 2...',
+          'Mengevaluasi metodologi, klaim novelty, & referensi...',
+          'Menyusun laporan evaluasi pre-submission...'
         ],
         'lit-review': [
           'Mencari paper ilmiah relevan di OpenAlex...',
@@ -5302,6 +5437,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const points = (data.draft && data.draft[seg.key]) || [];
             return `#### ${seg.label}\n` + points.map(p => `- ${p}`).join('\n');
           }).join('\n\n');
+        } else if (tool === 'peer-reviewer') {
+          const res = await fetch('/api/peer-review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: text.slice(0, 150), abstract: text, text: text, targetJournal: 'Jurnal Bereputasi (SINTA / Scopus)' })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal melakukan evaluasi peer reviewer.');
+          resultMarkdown = `### Laporan AI Peer Reviewer & Pre-Submission Evaluator\n\n` + data.review;
         } else {
           const isDeep = tool === 'deep-lit-review';
           const res = await fetch('/api/lit-review', {
@@ -5319,16 +5463,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         loadingBubble.remove();
         const assistantMsg = { role: 'assistant', content: resultMarkdown };
-        if (tool !== 'outline' && litReviewCitations && litReviewCitations.length > 0) {
+        if (tool !== 'outline' && tool !== 'peer-reviewer' && litReviewCitations && litReviewCitations.length > 0) {
           assistantMsg.citations = litReviewCitations;
           assistantMsg.litReviewTitle = text.slice(0, 60);
         }
         researchChatMessages.push(assistantMsg);
         renderResearchChatMessages();
 
-        // Hasilnya sudah lengkap sekaligus (bukan streaming asli dari API), tapi
-        // ditampilkan bertahap kata demi kata biar terasa cepat & hidup, bukan
-        // "nge-dump" teks panjang sekaligus.
         const assistantContents = researchChatMessagesEl.querySelectorAll('.research-chat-bubble.assistant .chat-main-content');
         const lastContentEl = assistantContents[assistantContents.length - 1];
         if (lastContentEl) revealWordsInElement(lastContentEl, { tickMs: 20, targetDurationMs: 1600 });
@@ -5563,9 +5704,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function isDeepLitReviewLockedForUser() {
       return !(currentUser && currentUser.user && currentUser.user.type === 'ultimate');
     }
+    const researchChatToolPeerReviewerBtn = document.getElementById('researchChatToolPeerReviewerBtn');
     if (researchChatToolOutlineBtn) {
       researchChatToolOutlineBtn.addEventListener('click', () => {
         setActiveQuickTool(activeQuickTool === 'outline' ? null : 'outline');
+        if (researchChatInput) researchChatInput.focus();
+      });
+    }
+    if (researchChatToolPeerReviewerBtn) {
+      researchChatToolPeerReviewerBtn.addEventListener('click', () => {
+        setActiveQuickTool(activeQuickTool === 'peer-reviewer' ? null : 'peer-reviewer');
         if (researchChatInput) researchChatInput.focus();
       });
     }

@@ -4433,6 +4433,97 @@
         </div>
       </div>
 
+      <!-- TAB: AI PEER REVIEWER & PRE-SUBMISSION EVALUATOR -->
+      <div id="tabContentPeerReviewer" class="tab-content">
+        <div class="match-score-main-container">
+          <div class="ai-writer-switcher">
+            <button type="button" class="ai-writer-pill" onclick="switchTab('drafting-companion')"><i class="fa-solid fa-wand-magic-sparkles"></i> Outline Generator</button>
+            <button type="button" class="ai-writer-pill active" onclick="switchTab('peer-reviewer')"><i class="fa-solid fa-user-check"></i> AI Peer Reviewer</button>
+            <button type="button" class="ai-writer-pill" onclick="switchTab('lit-review')"><i class="fa-solid fa-book-open"></i> Literature Review</button>
+            <button type="button" class="ai-writer-pill" onclick="switchTab('humanizer')"><i class="fa-solid fa-user-check"></i> Paraphraser &amp; Humanizer</button>
+          </div>
+          <div class="match-box-wrapper" id="peerReviewerBoxWrapper" style="position: relative; min-height: 400px; padding: 2rem; background: #ffffff; border-radius: var(--card-radius); border: 1px solid rgba(8,34,64,0.08);">
+            
+            <!-- Form Content -->
+            <div class="match-card-content">
+              <div class="match-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                <div>
+                  <span class="banner-badge" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25); color: #059669;"><i class="fa-solid fa-user-check"></i> Pre-Submission Evaluator</span>
+                  <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">AI Peer Reviewer (Simulasi Reviewer Jurnal)</h3>
+                </div>
+                <div id="peerReviewerQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fa-solid fa-bolt" style="color: #059669;"></i> <span>DeepSeek Engine</span>
+                </div>
+              </div>
+
+              <div class="match-form" style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                  <div class="filter-dropdown-item">
+                    <label for="peerReviewTitle">RENCANA JUDUL NASKAH (OPSIONAL)</label>
+                    <input type="text" id="peerReviewTitle" placeholder="Contoh: Analisis Kinerja Algoritma Deep Learning pada Klasifikasi Citra Medis" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc;">
+                  </div>
+                  <div class="filter-dropdown-item">
+                    <label for="peerReviewTarget">TARGET JURNAL / TINGKATAN</label>
+                    <select id="peerReviewTarget" style="width:100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; background: #f8fafc;">
+                      <option value="Jurnal Scopus Q1/Q2">Scopus Q1 / Q2 (Internasional Bereputasi)</option>
+                      <option value="Jurnal Scopus Q3/Q4">Scopus Q3 / Q4 (Internasional)</option>
+                      <option value="Jurnal Sinta 1/Sinta 2">SINTA 1 / SINTA 2 (Nasional Terakreditasi Tinggi)</option>
+                      <option value="Jurnal Sinta 3/Sinta 4">SINTA 3 / SINTA 4 (Nasional)</option>
+                      <option value="Jurnal Sinta 5/Sinta 6">SINTA 5 / SINTA 6 / umum</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Input Option: Upload File OR Paste Abstract -->
+                <div class="filter-dropdown-item">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label for="peerReviewText" style="margin: 0;">TEMPEL ABSTRAK / TEKS NASKAH PENELITIAN</label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <input type="file" id="peerReviewFileInput" accept=".pdf,.docx,.txt" style="display: none;">
+                      <button type="button" id="peerReviewUploadBtn" class="reset-filter-btn" style="background: rgba(7,135,220,0.08); border: 1px solid rgba(7,135,220,0.2); color: var(--brand-blue); font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                        <i class="fa-solid fa-file-arrow-up"></i> Unggah Paper (.pdf/.docx/.txt)
+                      </button>
+                    </div>
+                  </div>
+                  <div id="peerReviewFileChip" style="display: none; align-items: center; gap: 0.5rem; background: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 6px; padding: 0.4rem 0.75rem; margin-bottom: 0.5rem; font-size: 0.82rem; color: #0369a1;">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span id="peerReviewFileName" style="flex: 1;">dokumen.pdf</span>
+                    <button type="button" id="peerReviewFileRemoveBtn" style="background: none; border: none; color: #0369a1; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                  <textarea id="peerReviewText" rows="10" placeholder="Tempelkan abstrak, pendahuluan, atau draf naskah ilmiah Anda di sini (hingga maks. 15.000 kata)... atau klik tombol Unggah Paper di atas." style="width:100%; padding: 0.85rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical; background: #f8fafc; line-height: 1.6;"></textarea>
+                </div>
+              </div>
+
+              <div class="match-actions" style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                <button id="runPeerReviewerBtn" class="upgrade-btn" style="width: auto; padding: 0.85rem 2.2rem; background: linear-gradient(135deg, #059669, #10b981); color: #ffffff;" type="button">
+                  <i class="fa-solid fa-user-check"></i> Jalankan Simulasi Reviewer AI
+                </button>
+                <p class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0; flex-grow: 1;">
+                  DeepSeek AI akan mengevaluasi naskah Anda layaknya Reviewer Jurnal 1 & 2 profesional: prediksi acceptance rate, analisis kelemahan per bab, dan peringatan desk reject.
+                </p>
+              </div>
+
+              <!-- Output Results Panel -->
+              <div id="peerReviewResultsPanel" style="display: none; border-top: 1px solid rgba(8,34,64,0.08); padding-top: 2rem; animation: fadeInUp 0.4s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                  <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-clipboard-check" style="color: #059669;"></i> Laporan Evaluasi Pre-Submission Reviewer
+                  </h4>
+                  <button id="copyPeerReviewBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: #f1f5f9; border: 1px solid #cbd5e1; color: var(--text-main);">
+                    <i class="fa-regular fa-copy"></i> Salin Laporan Evaluasi
+                  </button>
+                </div>
+
+                <div id="peerReviewContentEl" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.08); border-radius: 12px; padding: 1.5rem; font-size: 0.92rem; line-height: 1.7; color: var(--text-main); overflow-x: auto;">
+                  <!-- Rendered via Markdown -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB: ASISTEN RISET AI (DeepSeek Chat) - layout full-height ala ChatGPT/Claude -->
       <div id="tabContentResearchChat" class="tab-content active">
         <div class="research-chat-shell" id="researchChatBoxWrapper">
@@ -4564,10 +4655,13 @@
                   <i class="fa-solid fa-paper-plane"></i>
                 </button>
               </div>
-              <!-- Quick actions: integrasi Outline Generator & Lit Review langsung dari chat -->
+              <!-- Quick actions: integrasi Outline Generator & Lit Review & Peer Reviewer langsung dari chat -->
               <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap;">
                 <button type="button" id="researchChatToolOutlineBtn" class="research-chat-quick-tool-btn" data-tool="outline">
                   <i class="fa-solid fa-wand-magic-sparkles"></i> Outline Generator
+                </button>
+                <button type="button" id="researchChatToolPeerReviewerBtn" class="research-chat-quick-tool-btn" data-tool="peer-reviewer">
+                  <i class="fa-solid fa-user-check"></i> AI Peer Reviewer
                 </button>
                 <button type="button" id="researchChatToolLitReviewBtn" class="research-chat-quick-tool-btn" data-tool="lit-review">
                   <i class="fa-solid fa-book-open"></i> Lit Review
@@ -5216,7 +5310,7 @@
         // dalam JurnalHub Intelligence. Highlight sidebar & judul halaman tetap
         // mengacu ke 'ai-research' lewat logika di bawah.
         if (tabName === 'ai-research') tabName = 'humanizer';
-        if (window.resetJustGeneratedFlags && !['drafting-companion', 'lit-review', 'humanizer'].includes(tabName)) {
+        if (window.resetJustGeneratedFlags && !['drafting-companion', 'peer-reviewer', 'lit-review', 'humanizer'].includes(tabName)) {
           window.resetJustGeneratedFlags();
         }
         // Close mobile menu if open
@@ -5236,7 +5330,7 @@
         sidebarLinks.forEach(link => {
           const currentTab = link.getAttribute('data-tab');
           if (currentTab === tabName || 
-             (currentTab === 'ai-research' && ['drafting-companion', 'lit-review', 'humanizer'].includes(tabName))) {
+             (currentTab === 'ai-research' && ['drafting-companion', 'peer-reviewer', 'lit-review', 'humanizer'].includes(tabName))) {
             link.classList.add('active');
           } else {
             link.classList.remove('active');

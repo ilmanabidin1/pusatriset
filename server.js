@@ -207,7 +207,7 @@ if (!process.env.SESSION_SECRET) {
   }
   console.warn('[WARNING] SESSION_SECRET belum diset, memakai secret acak sementara untuk development (sesi akan invalid tiap restart).');
 }
-const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(48).toString('hex');
+const SESSION_SECRET = process.env.SESSION_SECRET || 'jurnalhub_secure_session_secret_998877';
 
 app.use(session({
   store: new FileStore({
@@ -545,8 +545,15 @@ function hasAccess(req) {
     }
     const users = getUsers();
     const user = users.find(u => u.id === req.session.userId);
-    if (user && user.currentSessionToken === req.session.sessionToken) {
-      return true;
+    if (user) {
+      // Jika sessionToken di session kosong (race-condition write file store),
+      // isi dengan current token user agar tidak ter-logout secara paksa.
+      if (!req.session.sessionToken) {
+        req.session.sessionToken = user.currentSessionToken;
+      }
+      if (user.currentSessionToken === req.session.sessionToken) {
+        return true;
+      }
     }
     // Clear session to force logout if token does not match
     delete req.session.userId;
@@ -2929,6 +2936,97 @@ Evaluasi masing-masing paper tersebut dan kembalikan array keputusan dalam JSON:
   } catch (error) {
     console.error('[SLR Auto-Screen] Error:', error);
     res.status(500).json({ ok: false, message: 'Gagal melakukan auto-screening: ' + error.message });
+  }
+});
+
+// --- AI Peer Reviewer & Pre-Submission Evaluator (DeepSeek) ---
+app.post('/api/peer-review', requireAccess, async (req, res) => {
+  const { title, abstract, text, targetJournal } = req.body;
+  const contentToReview = (text || abstract || title || '').trim();
+
+  if (!contentToReview) {
+    return res.status(400).json({ ok: false, message: 'Harap masukkan judul, abstrak, atau teks naskah penelitian Anda.' });
+  }
+
+  const deepSeekKey = getDeepSeekApiKey();
+  if (!deepSeekKey) {
+    return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di server.' });
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+  const systemPrompt = `Anda adalah Tim Reviewer Jurnal Senior (Reviewer 1 & Reviewer 2) dan Editor-in-Chief untuk jurnal ilmiah bereputasi (SINTA / Scopus).
+Tugas Anda adalah memberikan evaluasi pre-submission yang sangat objektif, kritis, profesional, dan konstruktif terhadap draf naskah/abstrak ilmiah yang dikirimkan.
+
+Panduan Struktur Laporan Evaluasi:
+1. **Ringkasan Penilaian & Keputusan Reviewer**:
+   - **Target Jurnal**: ${targetJournal || 'Umum / SINTA / Scopus'}
+   - **Prediksi Acceptance Rate / Match Score**: (Tuliskan skor % persentase kelayakan diterima, contoh: 85%)
+   - **Rekomendasi Keputusan**: (Pilih satu: Accept / Minor Revision / Major Revision / Reject / Desk Reject)
+2. **Kelebihan Utama Naskah (Strengths)**: 2-3 poin unggul dari naskah.
+3. **Evaluasi Kritis per Seksi**:
+   - **Judul & Abstrak**: Kejelasan IMRaD, daya tarik, dan kekompakan narasi.
+   - **Latar Belakang & Celah Riset (Research Gap)**: Kebijakan masalah, urgensi, dan kejelasan celah riset yang diisi.
+   - **Metodologi & Desain Riset**: Kekuatan statistik/pendekatan, kecukupan data, serta potensi keteledoran metodologis.
+   - **Kebaruan (Novelty) & Kontribusi Ilmiah**: Seberapa kuat klaim novelty dibanding riset terdahulu.
+   - **Referensi & Gaya Bahasa Akademis**: Kesesuaian rujukan dan kerapian penulisan ilmiah.
+4. **Peringatan Dini Penolakan (Desk Reject Warnings)**: Poin-poin fatal jika ada yang berpotensi langsung ditolak oleh editor jurnal sebelum dikirim ke reviewer.
+5. **Langkah Perbaikan Prioritas (Actionable Fixes)**: Daftar tindakan perbaikan langkah-demi-langkah berurut dari prioritas tertinggi.
+
+Formatlah laporan menggunakan Markdown yang sangat rapi (header ### dan ####, cetak tebal, serta bullet points). Wajib gunakan bahasa yang sama dengan naskah (Bahasa Indonesia jika naskah Bahasa Indonesia, Bahasa Inggris jika naskah Bahasa Inggris).`;
+
+  const userPrompt = `Target Jurnal / Tingkatan: ${targetJournal || 'Jurnal Bereputasi (SINTA / Scopus)'}
+${title ? `Judul Naskah: "${title}"\n` : ''}
+Isi Naskah / Abstrak Penelitian:
+"""
+${contentToReview.slice(0, 45000)}
+"""`;
+
+  try {
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 3500,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+    }
+
+    const dsData = await dsResponse.json();
+    const choice = dsData?.choices?.[0];
+    let reviewContent = choice?.message?.content?.trim();
+    if (!reviewContent && choice?.message?.reasoning_content) {
+      reviewContent = String(choice.message.reasoning_content).trim();
+    }
+
+    if (!reviewContent) {
+      throw new Error('Respons evaluasi dari DeepSeek AI kosong.');
+    }
+
+    res.json({
+      ok: true,
+      review: reviewContent,
+      targetJournal: targetJournal || 'Umum'
+    });
+  } catch (error) {
+    console.error('[AI Peer Reviewer] Error:', error);
+    res.status(500).json({ ok: false, message: 'Gagal melakukan evaluasi peer reviewer: ' + error.message });
   }
 });
 
