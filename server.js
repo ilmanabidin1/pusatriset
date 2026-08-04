@@ -2974,7 +2974,7 @@ Panduan Struktur Laporan Evaluasi:
 4. **Peringatan Dini Penolakan (Desk Reject Warnings)**: Poin-poin fatal jika ada yang berpotensi langsung ditolak oleh editor jurnal sebelum dikirim ke reviewer.
 5. **Langkah Perbaikan Prioritas (Actionable Fixes)**: Daftar tindakan perbaikan langkah-demi-langkah berurut dari prioritas tertinggi.
 
-Formatlah laporan menggunakan Markdown yang sangat rapi (header ### dan ####, cetak tebal, serta bullet points). Wajib gunakan bahasa yang sama dengan naskah (Bahasa Indonesia jika naskah Bahasa Indonesia, Bahasa Inggris jika naskah Bahasa Inggris).`;
+Formatlah laporan menggunakan Markdown yang sangat rapi. PENTING: Gunakan header standar tanpa cetak tebal di dalam tag header (contoh: "### Laporan Evaluasi", BUKAN "### **Laporan...**"). Berikan spasi yang jelas setelah ### dan ####, serta gunakan bullet points. Wajib gunakan bahasa yang sama dengan naskah (Bahasa Indonesia jika naskah Bahasa Indonesia, Bahasa Inggris jika naskah Bahasa Inggris).`;
 
   const userPrompt = `Target Jurnal / Tingkatan: ${targetJournal || 'Jurnal Bereputasi (SINTA / Scopus)'}
 ${title ? `Judul Naskah: "${title}"\n` : ''}

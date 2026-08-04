@@ -4200,9 +4200,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal melakukan evaluasi.');
 
           if (peerReviewContentEl) {
-            peerReviewContentEl.innerHTML = typeof marked !== 'undefined'
-              ? marked.parse(data.review)
-              : data.review.replace(/\n/g, '<br>');
+            peerReviewContentEl.innerHTML = renderPeerReviewReportHtml(data.review);
           }
           if (peerReviewResultsPanel) {
             peerReviewResultsPanel.style.display = 'block';
@@ -4215,6 +4213,72 @@ document.addEventListener('DOMContentLoaded', () => {
           runPeerReviewerBtn.disabled = false;
           runPeerReviewerBtn.innerHTML = originalHtml;
         }
+      });
+    }
+
+    function renderPeerReviewReportHtml(rawMarkdown) {
+      if (!rawMarkdown) return '';
+
+      // Clean up unformatted bold tags inside headers
+      let clean = rawMarkdown
+        .replace(/###\s*\*\*([^*]+)\*\*/g, '### $1')
+        .replace(/####\s*\*\*([^*]+)\*\*/g, '#### $1')
+        .replace(/\*\*###\s*/g, '### ')
+        .replace(/---\s*/g, '');
+
+      let html = typeof marked !== 'undefined'
+        ? marked.parse(clean)
+        : clean.replace(/\n/g, '<br>');
+
+      const container = document.createElement('div');
+      container.className = 'peer-review-report-container';
+      container.innerHTML = html;
+
+      // Style h3 headers nicely with underline & spacing
+      container.querySelectorAll('h3').forEach(h3 => {
+        h3.style.fontFamily = 'var(--font-outfit, sans-serif)';
+        h3.style.fontWeight = '800';
+        h3.style.fontSize = '1.2rem';
+        h3.style.color = 'var(--text-main, #0b1a30)';
+        h3.style.marginTop = '1.5rem';
+        h3.style.marginBottom = '0.75rem';
+        h3.style.paddingBottom = '0.4rem';
+        h3.style.borderBottom = '2px solid rgba(8,34,64,0.08)';
+      });
+
+      // Style h4 subheaders
+      container.querySelectorAll('h4').forEach(h4 => {
+        h4.style.fontFamily = 'var(--font-outfit, sans-serif)';
+        h4.style.fontWeight = '700';
+        h4.style.fontSize = '1.02rem';
+        h4.style.color = '#0369a1';
+        h4.style.marginTop = '1.25rem';
+        h4.style.marginBottom = '0.5rem';
+      });
+
+      container.querySelectorAll('ul').forEach(ul => {
+        ul.style.paddingLeft = '1.25rem';
+        ul.style.marginBottom = '1rem';
+      });
+
+      container.querySelectorAll('li').forEach(li => {
+        li.style.marginBottom = '0.4rem';
+        li.style.lineHeight = '1.6';
+      });
+
+      return container.innerHTML;
+    }
+
+    const downloadPeerReviewPdfBtn = document.getElementById('downloadPeerReviewPdfBtn');
+    if (downloadPeerReviewPdfBtn) {
+      downloadPeerReviewPdfBtn.addEventListener('click', () => {
+        if (!peerReviewContentEl || !peerReviewContentEl.innerText.trim()) {
+          alert('Belum ada laporan evaluasi untuk diunduh.');
+          return;
+        }
+        const titleText = peerReviewTitle ? peerReviewTitle.value.trim() : 'Evaluasi_Naskah';
+        const cleanTitle = titleText.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_') || 'Naskah';
+        exportElementToPdf(peerReviewContentEl, `JurnalHub_Peer_Review_${cleanTitle}.pdf`);
       });
     }
 

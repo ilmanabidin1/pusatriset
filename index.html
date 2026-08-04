@@ -4449,7 +4449,7 @@
                   <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">AI Peer Reviewer (Simulasi Reviewer Jurnal)</h3>
                 </div>
                 <div id="peerReviewerQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
-                  <i class="fa-solid fa-bolt" style="color: #059669;"></i> <span>DeepSeek Engine</span>
+                  <i class="fa-solid fa-bolt" style="color: #059669;"></i> <span>JurnalHub Intelligence Engine</span>
                 </div>
               </div>
 
@@ -4496,7 +4496,7 @@
                   <i class="fa-solid fa-user-check"></i> Jalankan Simulasi Reviewer AI
                 </button>
                 <p class="match-summary" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0; flex-grow: 1;">
-                  DeepSeek AI akan mengevaluasi naskah Anda layaknya Reviewer Jurnal 1 & 2 profesional: prediksi acceptance rate, analisis kelemahan per bab, dan peringatan desk reject.
+                  JurnalHub AI akan mengevaluasi naskah Anda layaknya Reviewer Jurnal 1 & 2 profesional: prediksi acceptance rate, analisis kelemahan per bab, dan peringatan desk reject.
                 </p>
               </div>
 
@@ -4506,9 +4506,14 @@
                   <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa-solid fa-clipboard-check" style="color: #059669;"></i> Laporan Evaluasi Pre-Submission Reviewer
                   </h4>
-                  <button id="copyPeerReviewBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: #f1f5f9; border: 1px solid #cbd5e1; color: var(--text-main);">
-                    <i class="fa-regular fa-copy"></i> Salin Laporan Evaluasi
-                  </button>
+                  <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                    <button id="downloadPeerReviewPdfBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;">
+                      <i class="fa-solid fa-file-pdf"></i> Unduh PDF
+                    </button>
+                    <button id="copyPeerReviewBtn" class="reset-filter-btn" type="button" style="display: inline-flex; background: #f1f5f9; border: 1px solid #cbd5e1; color: var(--text-main);">
+                      <i class="fa-regular fa-copy"></i> Salin Laporan
+                    </button>
+                  </div>
                 </div>
 
                 <div id="peerReviewContentEl" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.08); border-radius: 12px; padding: 1.5rem; font-size: 0.92rem; line-height: 1.7; color: var(--text-main); overflow-x: auto;">
