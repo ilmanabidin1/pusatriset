@@ -4224,11 +4224,14 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/###\s*\*\*([^*]+)\*\*/g, '### $1')
         .replace(/####\s*\*\*([^*]+)\*\*/g, '#### $1')
         .replace(/\*\*###\s*/g, '### ')
-        .replace(/---\s*/g, '');
+        .replace(/^\s*-{3,}\s*$/gm, '')
+        .replace(/^\s*\*{3,}\s*$/gm, '');
 
-      let rawHtml = typeof marked !== 'undefined'
-        ? marked.parse(clean)
-        : clean.replace(/\n/g, '<br>');
+      // renderMarkdownSafe() adalah parser markdown internal yang sama dipakai
+      // chat biasa - tidak bergantung pada library eksternal `marked` yang
+      // sebelumnya dipakai di sini padahal tidak pernah di-load, sehingga
+      // sintaks mentah (###, **, ***) lolos apa adanya ke layar.
+      let rawHtml = renderMarkdownSafe(clean);
 
       const temp = document.createElement('div');
       temp.innerHTML = rawHtml;
