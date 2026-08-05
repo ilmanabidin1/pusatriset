@@ -4352,6 +4352,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const titleText = titleInput ? titleInput.value.trim() : 'Tinjauan_Pustaka';
         const cleanTitle = titleText.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_');
 
+        if (typeof html2pdf === 'undefined') {
+          alert('Gagal memuat modul PDF. Periksa koneksi internet Anda lalu coba lagi.');
+          return;
+        }
+
         const opt = {
           margin:       1,
           filename:     `Tinjauan_Pustaka_${cleanTitle}.pdf`,
@@ -5247,6 +5252,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function exportElementToPdf(el, filename) {
       if (!el || !el.innerText.trim()) {
         alert('Tidak ada konten untuk diunduh.');
+        return;
+      }
+      if (typeof html2pdf === 'undefined') {
+        alert('Gagal memuat modul PDF. Periksa koneksi internet Anda lalu coba lagi.');
         return;
       }
       html2pdf().set({
