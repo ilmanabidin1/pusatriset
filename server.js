@@ -4796,6 +4796,30 @@ app.get('/', (req, res) => {
   }
 });
 
+// PENTING: express.static(__dirname) sebelumnya menyerve SELURUH isi root folder
+// project apa adanya - termasuk server.js, package.json, package-lock.json, dan
+// (paling parah) seluruh isi data/ (users.json berisi password hash + session
+// token semua user, access-codes.json berisi kode aktivasi Ultimate gratis) bisa
+// diunduh siapa saja tanpa login. Allowlist di bawah memastikan hanya aset publik
+// yang memang dipakai frontend (halaman .html, app.js, styles.css, database.js,
+// dan folder assets/) yang bisa diakses lewat static file serving.
+const PUBLIC_STATIC_FILES = new Set([
+  'index.html', 'auth.html', 'landing.html', 'contact.html', 'faq.html',
+  'terms.html', 'refund.html', 'payment-success.html', 'payment-cancel.html',
+  'reset-password.html', 'robots.txt', 'sitemap.xml',
+  'app.js', 'styles.css', 'database.js'
+]);
+app.use((req, res, next) => {
+  const urlPath = req.path;
+  // .xlsx & /convert.js sudah lolos requireAccess di middleware lebih awal
+  // (baris ~4383) sebelum sampai sini - request yang belum login sudah
+  // di-redirect ke /auth.html duluan, jadi aman diteruskan di sini.
+  const isLegacyProtectedFile = urlPath.toLowerCase().endsWith('.xlsx') || urlPath === '/convert.js';
+  if (urlPath.startsWith('/assets/') || PUBLIC_STATIC_FILES.has(urlPath.replace(/^\//, '')) || isLegacyProtectedFile) {
+    return next();
+  }
+  return res.status(404).send('Not Found');
+});
 app.use(express.static(path.join(__dirname, '.')));
 
 // Arahkan semua request lainnya ke index.html (tapi sudah dilindungi oleh middleware di atas)
