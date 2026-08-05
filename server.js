@@ -108,7 +108,6 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Tentukan port dari environment variable (Railway menyediakannya lewat PORT) atau port 3000 secara lokal
 const PORT = process.env.PORT || 3000;
-const ACCESS_CODE = process.env.ACCESS_CODE;
 const ACCESS_COOKIE = 'jurnalhub_session';
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -261,7 +260,7 @@ function getUsers() {
   }
 }
 
-// Hitung tanggal expired baru saat user bayar/redeem kode - kalau masa aktif
+// Hitung tanggal expired baru saat user bayar - kalau masa aktif
 // SEBELUMNYA masih berlaku (belum lewat), durasi baru ditambahkan ke sisa waktu
 // itu, bukan menimpa dari sekarang. Supaya user yang perpanjang/upgrade lebih
 // awal (sebelum masa aktifnya habis) tidak kehilangan sisa hari yang sudah
@@ -286,9 +285,9 @@ function saveUsers(users) {
   }
 }
 
-// Reset semua counter kuota bulanan saat user upgrade tier (baik lewat pembayaran
-// asli maupun redeem kode akses) - supaya user langsung dapat kuota penuh sesuai
-// paket barunya, bukan melanjutkan sisa pemakaian dari tier sebelumnya.
+// Reset semua counter kuota bulanan saat user upgrade tier lewat pembayaran -
+// supaya user langsung dapat kuota penuh sesuai paket barunya, bukan
+// melanjutkan sisa pemakaian dari tier sebelumnya.
 function resetMonthlyQuotasOnUpgrade(user) {
   const currentMonth = new Date().toISOString().slice(0, 7);
   user.lastMatchMonth = currentMonth;
@@ -402,132 +401,6 @@ function addTransaction(userId, referenceId, desc, amount, status) {
   return newTx;
 }
 
-// --- Kode Akses Manual (upgrade Ultimate 30 hari sambil belum ada payment gateway live) ---
-const ACCESS_CODES_FILE = path.join(DATA_DIR, 'access-codes.json');
-const MANUAL_ACCESS_CODE_PLAN = 'ultimate_monthly';
-const MANUAL_ACCESS_CODE_DURATION_DAYS = 30;
-const MANUAL_ACCESS_CODE_PRICE = 149000; // samakan dengan harga Ultimate Bulanan resmi, untuk catatan transaksi
-
-function getAccessCodes() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    if (!fs.existsSync(ACCESS_CODES_FILE)) fs.writeFileSync(ACCESS_CODES_FILE, '[]');
-    return JSON.parse(fs.readFileSync(ACCESS_CODES_FILE, 'utf8'));
-  } catch (error) {
-    console.error('Gagal membaca access-codes.json:', error);
-    return [];
-  }
-}
-
-function saveAccessCodes(codes) {
-  try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(ACCESS_CODES_FILE, JSON.stringify(codes, null, 2));
-    return true;
-  } catch (error) {
-    console.error('Gagal menyimpan access-codes.json:', error);
-    return false;
-  }
-}
-
-function generateAccessCodeString() {
-  const random = crypto.randomBytes(5).toString('hex').toUpperCase(); // 10 karakter hex
-  return `JHUL-${random.slice(0, 5)}-${random.slice(5, 10)}`;
-}
-
-// Sekali jalan saat server start: kalau belum ada kode sama sekali, buat 30 kode baru
-// sekaligus (dicetak ke log Railway supaya bisa disalin manual). Tidak akan menimpa
-// kode yang sudah ada/terpakai di deploy berikutnya.
-function seedAccessCodesIfEmpty(count = 30) {
-  const existing = getAccessCodes();
-  if (existing.length > 0) return;
-
-  const codes = [];
-  for (let i = 0; i < count; i++) {
-    codes.push({
-      code: generateAccessCodeString(),
-      plan: MANUAL_ACCESS_CODE_PLAN,
-      durationDays: MANUAL_ACCESS_CODE_DURATION_DAYS,
-      used: false,
-      usedBy: null,
-      usedAt: null,
-      createdAt: new Date().toISOString()
-    });
-  }
-  saveAccessCodes(codes);
-
-  console.log('==================================================');
-  console.log(`[Access Code Seed] ${count} kode akses Ultimate ${MANUAL_ACCESS_CODE_DURATION_DAYS} hari berhasil dibuat:`);
-  codes.forEach(c => console.log('  ' + c.code));
-  console.log('==================================================');
-}
-
-app.post('/api/redeem-code', requireAccess, authLimiter, (req, res) => {
-  const submittedCode = String(req.body.code || '').trim().toUpperCase();
-  if (!submittedCode) {
-    return res.status(400).json({ ok: false, message: 'Kode akses wajib diisi.' });
-  }
-
-  const codes = getAccessCodes();
-  const codeIndex = codes.findIndex(c => c.code === submittedCode);
-  if (codeIndex === -1) {
-    return res.status(400).json({ ok: false, message: 'Kode akses tidak ditemukan.' });
-  }
-  if (codes[codeIndex].used) {
-    return res.status(400).json({ ok: false, message: 'Kode akses ini sudah pernah digunakan.' });
-  }
-
-  const users = getUsers();
-  const userIndex = users.findIndex(u => u.id === req.session.userId);
-  if (userIndex === -1) {
-    return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
-  }
-
-  const durationDays = codes[codeIndex].durationDays || MANUAL_ACCESS_CODE_DURATION_DAYS;
-  const expiredAt = computeStackedExpiry(users[userIndex].paymentExpiredAt, durationDays);
-
-  users[userIndex].type = 'ultimate';
-  users[userIndex].planId = codes[codeIndex].plan || MANUAL_ACCESS_CODE_PLAN;
-  users[userIndex].paymentExpiredAt = expiredAt;
-  resetMonthlyQuotasOnUpgrade(users[userIndex]);
-  const savedUsers = saveUsers(users);
-
-  codes[codeIndex].used = true;
-  codes[codeIndex].usedBy = req.session.userId;
-  codes[codeIndex].usedAt = new Date().toISOString();
-  const savedCodes = saveAccessCodes(codes);
-
-  if (!savedUsers || !savedCodes) {
-    return res.status(500).json({ ok: false, message: 'Gagal menyimpan aktivasi. Coba lagi.' });
-  }
-
-  req.session.userType = 'ultimate';
-  addTransaction(req.session.userId, submittedCode, 'Aktivasi Kode Akses Ultimate (Manual)', MANUAL_ACCESS_CODE_PRICE, 'success');
-
-  console.log(`[Access Code] Kode ${submittedCode} diaktifkan oleh user ${req.session.userId}, berlaku sampai ${expiredAt}`);
-
-  res.json({ ok: true, message: `Berhasil! Akun Anda sekarang Ultimate selama ${durationDays} hari.`, expiredAt });
-});
-
-// Lihat daftar kode akses (dipakai/belum) kapan saja - dilindungi ADMIN_SECRET env var,
-// bukan pakai sesi login biasa, supaya bisa dicek langsung lewat browser/curl.
-app.get('/api/admin/access-codes', (req, res) => {
-  const adminSecret = process.env.ADMIN_SECRET;
-  if (!adminSecret) {
-    return res.status(503).json({ ok: false, message: 'ADMIN_SECRET belum dikonfigurasi di server.' });
-  }
-  if (req.query.secret !== adminSecret) {
-    return res.status(401).json({ ok: false, message: 'Tidak diizinkan.' });
-  }
-  const codes = getAccessCodes();
-  res.json({
-    ok: true,
-    total: codes.length,
-    unused: codes.filter(c => !c.used).length,
-    codes
-  });
-});
-
 function parseCookies(cookieHeader = '') {
   return cookieHeader.split(';').reduce((cookies, item) => {
     const [key, ...valueParts] = item.trim().split('=');
@@ -540,9 +413,6 @@ function parseCookies(cookieHeader = '') {
 function hasAccess(req) {
   // Check if session exists and user is authenticated
   if (req.session && req.session.userId) {
-    if (req.session.userId === 'access_code_user') {
-      return true;
-    }
     const users = getUsers();
     const user = users.find(u => u.id === req.session.userId);
     if (user) {
@@ -1279,27 +1149,6 @@ app.get('/api/ai-status', requireAccess, (req, res) => {
   });
 });
 
-app.post('/api/access', authLimiter, (req, res) => {
-  if (!ACCESS_CODE) {
-    res.status(503).json({ ok: false, message: 'Kode akses belum dikonfigurasi.' });
-    return;
-  }
-
-  const submittedCode = String(req.body.code || '').trim();
-
-  if (submittedCode !== ACCESS_CODE) {
-    res.status(401).json({ ok: false, message: 'Kode akses salah.' });
-    return;
-  }
-
-  // Jika kode akses benar, beri sesi premium (kode ini khusus member Telegram)
-  req.session.userId = 'access_code_user';
-  req.session.userType = 'premium';
-  req.session.email = 'Premium User';
-
-  res.json({ ok: true });
-});
-
 function normalizeText(value) {
   return String(value || '').toLowerCase().trim();
 }
@@ -1918,7 +1767,7 @@ app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, 
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const userType = req.session.userId === 'access_code_user' ? 'premium' : ((user && user.type) || 'free');
+  const userType = (user && user.type) || 'free';
   if (userType !== 'ultimate') {
     return res.status(403).json({ ok: false, message: 'Ekspor panduan ke .docx khusus akun Ultimate.' });
   }
@@ -3655,7 +3504,7 @@ app.post('/api/research-chat/upload', requireAccess, documentUploadLimiter, (req
     // Lampiran dokumen hanya untuk Premium & Ultimate.
     const users = getUsers();
     const user = users.find(u => u.id === req.session.userId);
-    const userType = req.session.userId === 'access_code_user' ? 'premium' : ((user && user.type) || 'free');
+    const userType = (user && user.type) || 'free';
     if (userType !== 'premium' && userType !== 'ultimate') {
       return res.status(403).json({ ok: false, message: 'Fitur lampiran dokumen khusus akun Premium & Ultimate.' });
     }
@@ -3699,7 +3548,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   // /api/me sempat menyinkronkan ulang session di request ini.
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const userType = req.session.userId === 'access_code_user' ? 'premium' : ((user && user.type) || 'free');
+  const userType = (user && user.type) || 'free';
 
   const currentMonth = new Date().toISOString().slice(0, 7);
 
@@ -4879,13 +4728,6 @@ app.listen(PORT, async () => {
     }
   } catch (err) {
     console.error('[Database Seed] Gagal membuat akun demo:', err.message);
-  }
-
-  // Seed 30 kode akses manual (sekali saja - lihat seedAccessCodesIfEmpty)
-  try {
-    seedAccessCodesIfEmpty(30);
-  } catch (err) {
-    console.error('[Access Code Seed] Gagal membuat kode akses:', err.message);
   }
 
   // Deteksi IP Outbound Publik dari server (untuk registrasi whitelist di payment gateway)
