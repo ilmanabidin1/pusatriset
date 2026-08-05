@@ -5398,8 +5398,8 @@
         // Clean link state and activate target
         sidebarLinks.forEach(link => {
           const currentTab = link.getAttribute('data-tab');
-          if (currentTab === tabName || 
-             (currentTab === 'ai-research' && ['drafting-companion', 'peer-reviewer', 'lit-review', 'humanizer'].includes(tabName))) {
+          if (currentTab === tabName ||
+             (currentTab === 'ai-research' && ['drafting-companion', 'lit-review', 'humanizer'].includes(tabName))) {
             link.classList.add('active');
           } else {
             link.classList.remove('active');
