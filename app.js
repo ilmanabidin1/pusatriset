@@ -541,6 +541,10 @@ document.addEventListener('DOMContentLoaded', () => {
       patent_search_upgrade_link: "Upgrade",
       patent_search_upgrade_suffix: "untuk kuota lebih besar.",
       patent_search_btn: "Cari Paten Serupa",
+      peer_review_quota_unlimited: "Kuota Tanpa Batas",
+      peer_review_quota_remaining: "Sisa Kuota: {n}/{limit} bulan ini",
+      peer_review_quota_limit_reached: "Kuota bulan ini habis (batas {limit}/bulan)",
+      peer_review_upgrade_link: "Upgrade",
       patent_search_searching: "Mencari paten serupa secara semantik...",
       patent_search_no_results: "Tidak ditemukan paten yang mirip.",
       patent_search_summary: "Menampilkan {n} paten paling mirip dari total {total} hasil. Klik \"Lihat Detail\" untuk membaca abstrak dan status legal lengkapnya di Google Patents.",
@@ -767,6 +771,10 @@ document.addEventListener('DOMContentLoaded', () => {
       patent_search_upgrade_link: "Upgrade",
       patent_search_upgrade_suffix: "for a larger quota.",
       patent_search_btn: "Search Similar Patents",
+      peer_review_quota_unlimited: "Unlimited Quota",
+      peer_review_quota_remaining: "Remaining Quota: {n}/{limit} this month",
+      peer_review_quota_limit_reached: "Monthly quota reached (limit {limit}/month)",
+      peer_review_upgrade_link: "Upgrade",
       patent_search_searching: "Searching for semantically similar patents...",
       patent_search_no_results: "No similar patents found.",
       patent_search_summary: "Showing {n} most similar patents out of {total} total results. Click \"View Detail\" to read the full abstract and legal status on Google Patents.",
@@ -1294,6 +1302,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateResearchChatAccess(currentUser.user);
           updateSlrAccess(currentUser.user);
           updatePatentSearchAccess(currentUser.user);
+          updatePeerReviewerAccess(currentUser.user);
         }
 
         // Logout handler
@@ -1552,6 +1561,33 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.disabled = false;
     }
   }
+
+  function updatePeerReviewerAccess(user) {
+    const badgeEl = document.getElementById('peerReviewerQuotaDisclaimer');
+    const btn = document.getElementById('runPeerReviewerBtn');
+    if (!badgeEl || !user) return;
+
+    const t = TRANSLATIONS[window.currentLanguage || 'id'];
+    const limitLabel = { free: '2x', premium: '15x' }[user.type];
+    const remaining = typeof user.peerReviewRemaining === 'number' ? user.peerReviewRemaining : null;
+
+    if (user.type === 'ultimate' || !limitLabel) {
+      badgeEl.innerHTML = `<i class="fa-solid fa-infinity" style="color: #059669;"></i> <span>${t.peer_review_quota_unlimited}</span>`;
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    if (user.isPeerReviewLimitReached) {
+      const msg = t.peer_review_quota_limit_reached.replace('{limit}', limitLabel);
+      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> <span>${msg}</span> <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">${t.peer_review_upgrade_link}</a>`;
+      if (btn) btn.disabled = true;
+    } else {
+      const msg = t.peer_review_quota_remaining.replace('{n}', remaining !== null ? remaining : '-').replace('{limit}', limitLabel);
+      badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> <span>${msg}</span>`;
+      if (btn) btn.disabled = false;
+    }
+  }
+  window.updatePeerReviewerAccess = updatePeerReviewerAccess;
   window.updatePatentSearchAccess = updatePatentSearchAccess;
 
   function updateSlrAccess(user) {
@@ -4206,6 +4242,14 @@ document.addEventListener('DOMContentLoaded', () => {
             peerReviewResultsPanel.style.display = 'block';
             peerReviewResultsPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
+
+          fetch('/api/me').then(r => r.json()).then(meData => {
+            if (meData.loggedIn && meData.user) {
+              currentUser = meData;
+              window.currentUser = meData;
+              updatePeerReviewerAccess(meData.user);
+            }
+          }).catch(() => {});
         } catch (err) {
           console.error('[AI Peer Reviewer Tab]', err);
           alert(err.message || 'Gagal memproses evaluasi.');
@@ -5748,6 +5792,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateResearchChatAccess(meData.user);
             updateSlrAccess(meData.user);
             updatePatentSearchAccess(meData.user);
+            updatePeerReviewerAccess(meData.user);
           }
         }).catch(() => {});
       } catch (error) {
@@ -7133,6 +7178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateResearchChatAccess(currentUser.user);
         updateSlrAccess(currentUser.user);
         updatePatentSearchAccess(currentUser.user);
+        updatePeerReviewerAccess(currentUser.user);
       }
       // Re-render chat bubbles so export button tooltips (PDF/DOCX/.ris/.bib) pick up the new language
       if (typeof renderResearchChatMessages === 'function' && typeof researchChatMessages !== 'undefined' && researchChatMessages.length > 0) {
@@ -7545,6 +7591,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 updateSlrAccess(meData.user);
                 updatePatentSearchAccess(meData.user);
+                updatePeerReviewerAccess(meData.user);
                 updateVisualQuotaTracker(meData.user);
               }
             })

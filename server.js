@@ -980,6 +980,8 @@ app.get('/api/me', (req, res) => {
     let slrRemaining = 1;
     let isPatentSearchLimitReached = false;
     let patentSearchRemaining = 1;
+    let isPeerReviewLimitReached = false;
+    let peerReviewRemaining = 2;
 
     const userType = req.session.userType || 'free';
     const isFree = userType === 'free';
@@ -1010,6 +1012,9 @@ app.get('/api/me', (req, res) => {
 
       isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 1);
       patentSearchRemaining = Math.max(0, 1 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
+
+      isPeerReviewLimitReached = (user.lastPeerReviewMonth === currentMonth) && (user.peerReviewCountThisMonth >= 2);
+      peerReviewRemaining = Math.max(0, 2 - (user.lastPeerReviewMonth === currentMonth ? user.peerReviewCountThisMonth : 0));
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -1040,6 +1045,9 @@ app.get('/api/me', (req, res) => {
 
       isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 5);
       patentSearchRemaining = Math.max(0, 5 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
+
+      isPeerReviewLimitReached = (user.lastPeerReviewMonth === currentMonth) && (user.peerReviewCountThisMonth >= 15);
+      peerReviewRemaining = Math.max(0, 15 - (user.lastPeerReviewMonth === currentMonth ? user.peerReviewCountThisMonth : 0));
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
@@ -1053,6 +1061,8 @@ app.get('/api/me', (req, res) => {
       slrRemaining = 999;
       isPatentSearchLimitReached = false;
       patentSearchRemaining = 20;
+      isPeerReviewLimitReached = false;
+      peerReviewRemaining = 999;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
@@ -1105,6 +1115,9 @@ app.get('/api/me', (req, res) => {
         patentSearchCountThisMonth: user ? (user.patentSearchCountThisMonth || 0) : 0,
         isPatentSearchLimitReached: isPatentSearchLimitReached,
         patentSearchRemaining: patentSearchRemaining,
+        peerReviewCountThisMonth: user ? (user.peerReviewCountThisMonth || 0) : 0,
+        isPeerReviewLimitReached: isPeerReviewLimitReached,
+        peerReviewRemaining: peerReviewRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
@@ -2948,6 +2961,21 @@ app.post('/api/peer-review', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Harap masukkan judul, abstrak, atau teks naskah penelitian Anda.' });
   }
 
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  // Kuota AI Peer Reviewer (Free: 2x, Premium: 15x, Ultimate: unlimited)
+  if (user && (user.type || 'free') === 'free') {
+    if (user.lastPeerReviewMonth === currentMonth && user.peerReviewCountThisMonth >= 2) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 2x AI Peer Reviewer per bulan.' });
+    }
+  } else if (user && user.type === 'premium') {
+    if (user.lastPeerReviewMonth === currentMonth && user.peerReviewCountThisMonth >= 15) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x AI Peer Reviewer per bulan.' });
+    }
+  }
+
   const deepSeekKey = getDeepSeekApiKey();
   if (!deepSeekKey) {
     return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di server.' });
@@ -3017,6 +3045,16 @@ ${contentToReview.slice(0, 45000)}
 
     if (!reviewContent) {
       throw new Error('Respons evaluasi dari DeepSeek AI kosong.');
+    }
+
+    // Update usage for Free & Premium users (Ultimate unlimited, tidak dihitung)
+    if (user && (user.type === 'free' || user.type === 'premium')) {
+      if (user.lastPeerReviewMonth !== currentMonth) {
+        user.lastPeerReviewMonth = currentMonth;
+        user.peerReviewCountThisMonth = 0;
+      }
+      user.peerReviewCountThisMonth += 1;
+      saveUsers(users);
     }
 
     res.json({
