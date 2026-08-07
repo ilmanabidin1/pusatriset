@@ -2140,7 +2140,7 @@ async function searchOpenAlexSources(query, perPage) {
 // dipakai di versi awal ini - bisa ditambah belakangan untuk highlight sitasi paling
 // berpengaruh (isInfluential), tapi bukan syarat wajib graf ini bisa jalan.
 const CITATION_GRAPH_MONTHLY_LIMIT = { free: 30, premium: 300, ultimate: 999999 };
-const CITATION_GRAPH_WORK_SELECT = 'id,doi,title,display_name,publication_year,cited_by_count,primary_location,authorships,open_access,referenced_works,related_works';
+const CITATION_GRAPH_WORK_SELECT = 'id,doi,title,display_name,publication_year,cited_by_count,primary_location,authorships,open_access,referenced_works,related_works,abstract_inverted_index';
 
 function openAlexShortId(fullId) {
   return String(fullId || '').replace('https://openalex.org/', '').trim();
@@ -2161,6 +2161,7 @@ function normalizeOpenAlexWorkNode(w) {
     ? `${authorNames.slice(0, 3).join(', ')}, et al.`
     : (authorNames.join(', ') || 'Tidak diketahui');
   const doi = w.doi ? String(w.doi).replace('https://doi.org/', '') : null;
+  const abstract = reconstructAbstractFromInvertedIndex(w.abstract_inverted_index);
   return {
     id: openAlexShortId(w.id),
     title: w.title || w.display_name || 'Tanpa judul',
@@ -2171,7 +2172,8 @@ function normalizeOpenAlexWorkNode(w) {
     doi,
     url: w.doi || (w.primary_location && w.primary_location.landing_page_url) || w.id || '#',
     isOpenAccess: !!(w.open_access && w.open_access.is_oa),
-    referencedWorksCount: Array.isArray(w.referenced_works) ? w.referenced_works.length : 0
+    referencedWorksCount: Array.isArray(w.referenced_works) ? w.referenced_works.length : 0,
+    abstract: abstract ? abstract.slice(0, 1500) : null
   };
 }
 
@@ -2323,6 +2325,77 @@ app.post('/api/citation-graph/expand', requireAccess, async (req, res) => {
   } catch (error) {
     console.error('[Citation Graph Expand] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal memuat data sitasi: ' + error.message });
+  }
+});
+
+// TL;DR dwibahasa (EN + ID) untuk paper yang sedang dipilih di peta sitasi - dibuat
+// on-demand dari abstrak asli OpenAlex (bukan dari judul saja) supaya tidak
+// mengarang isi. Sengaja TIDAK dibatasi kuota bulanan seperti /expand - ini cuma
+// 1 pemanggilan DeepSeek super ringan (mirip AI Disclosure Generator), bukan
+// beban utama fitur ini (yang berat & dibatasi kuota adalah panggilan OpenAlex
+// di /expand).
+app.post('/api/citation-graph/tldr', requireAccess, async (req, res) => {
+  const title = String((req.body && req.body.title) || '').trim().slice(0, 500);
+  const abstract = String((req.body && req.body.abstract) || '').trim().slice(0, 1500);
+  if (!title) {
+    return res.status(400).json({ ok: false, message: 'title wajib diisi.' });
+  }
+  if (!abstract) {
+    return res.status(422).json({ ok: false, message: 'Paper ini tidak memiliki abstrak di OpenAlex, TL;DR tidak dapat dibuat tanpa mengarang isi.' });
+  }
+
+  const deepSeekKey = getDeepSeekApiKey();
+  if (!deepSeekKey) {
+    return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di server.' });
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+  const systemPrompt = 'You are an academic assistant that writes an extremely concise TL;DR (1-2 sentences) of what a research paper is about, strictly based ONLY on the title and abstract given - never add claims, numbers, or findings that are not stated in the text. Respond with ONLY valid JSON, no markdown, in this exact shape: {"en": "TL;DR in English", "id": "TL;DR dalam Bahasa Indonesia"}.';
+  const userPrompt = `Title: ${title}\n\nAbstract: ${abstract}`;
+
+  try {
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 400,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+    }
+
+    const dsData = await dsResponse.json();
+    const choice = dsData?.choices?.[0];
+    let content = choice?.message?.content?.trim();
+    if (!content && choice?.message?.reasoning_content) {
+      content = String(choice.message.reasoning_content).trim();
+    }
+    if (!content) throw new Error('Respons AI kosong.');
+
+    const parsed = cleanAndParseAIResponse(content, true);
+    if (!parsed || !parsed.en || !parsed.id) {
+      throw new Error('Format TL;DR dari AI tidak sesuai.');
+    }
+
+    res.json({ ok: true, en: parsed.en, id: parsed.id });
+  } catch (error) {
+    console.error('[Citation Graph TLDR] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal membuat TL;DR: ' + error.message });
   }
 });
 

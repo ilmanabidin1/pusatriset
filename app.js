@@ -2864,8 +2864,12 @@ document.addEventListener('DOMContentLoaded', () => {
       cy.add({ group: 'edges', data: { id: edgeId, source: sourceId, target: targetId, kind } });
     }
 
+    const tldrCache = new Map(); // nodeId -> { en, id } atau { error }
+    let currentDetailNodeId = null;
+
     function renderDetailPanel(data) {
       if (!detailPanel || !data) return;
+      currentDetailNodeId = data.id;
       const oaBadge = data.isOpenAccess ? '<span style="background: rgba(52,211,153,0.12); color: #059669; padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">Open Access</span>' : '';
       detailPanel.innerHTML = `
         <h4 style="margin: 0; font-size: 0.98rem; line-height: 1.35;">${escapeHtml(data.title || '')}</h4>
@@ -2873,7 +2877,66 @@ document.addEventListener('DOMContentLoaded', () => {
         <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(data.journal || '-')} &middot; ${escapeHtml(data.year || '-')}</p>
         <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-quote-right"></i> Disitasi ${data.citedByCount || 0}x ${oaBadge}</p>
         ${data.doi ? `<a href="https://doi.org/${escapeHtml(data.doi)}" target="_blank" rel="noopener" class="journal-link">Buka Paper <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+        <div id="citationGraphTldrBox" style="margin-top: 0.5rem; padding-top: 0.65rem; border-top: 1px solid var(--border-light-hover);"></div>
       `;
+      renderTldrBox(data);
+    }
+
+    function renderTldrResult(box, result) {
+      if (!box) return;
+      if (result.error) {
+        box.innerHTML = `<p style="margin:0; font-size:0.78rem; color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(result.error)}</p>`;
+        return;
+      }
+      box.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:0.55rem;">
+          <div>
+            <span style="font-size:0.66rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color: var(--brand-blue);">TL;DR (English)</span>
+            <p style="margin:0.2rem 0 0; font-size:0.82rem; line-height:1.45; color: var(--text-main);">${escapeHtml(result.en)}</p>
+          </div>
+          <div>
+            <span style="font-size:0.66rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:#f59e0b;">TL;DR (Bahasa Indonesia)</span>
+            <p style="margin:0.2rem 0 0; font-size:0.82rem; line-height:1.45; color: var(--text-main);">${escapeHtml(result.id)}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTldrBox(data) {
+      const box = document.getElementById('citationGraphTldrBox');
+      if (!box) return;
+
+      if (!data.abstract) {
+        box.innerHTML = '<p style="margin:0; font-size:0.78rem; color:var(--text-muted); font-style:italic;">Abstrak tidak tersedia dari OpenAlex untuk paper ini - TL;DR tidak dapat dibuat.</p>';
+        return;
+      }
+
+      const cached = tldrCache.get(data.id);
+      if (cached) {
+        renderTldrResult(box, cached);
+        return;
+      }
+
+      box.innerHTML = '<p style="margin:0; font-size:0.78rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Membuat TL;DR (EN & ID)...</p>';
+
+      fetch('/api/citation-graph/tldr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: data.title, abstract: data.abstract })
+      })
+        .then((r) => r.json())
+        .then((result) => {
+          if (currentDetailNodeId !== data.id) return; // user sudah pindah ke node lain
+          const stored = result.ok ? { en: result.en, id: result.id } : { error: result.message || 'Gagal membuat TL;DR.' };
+          tldrCache.set(data.id, stored);
+          renderTldrResult(document.getElementById('citationGraphTldrBox'), stored);
+        })
+        .catch(() => {
+          if (currentDetailNodeId !== data.id) return;
+          const stored = { error: 'Gagal membuat TL;DR. Coba lagi.' };
+          tldrCache.set(data.id, stored);
+          renderTldrResult(document.getElementById('citationGraphTldrBox'), stored);
+        });
     }
 
     async function expandNode(workId) {
@@ -3012,6 +3075,8 @@ document.addEventListener('DOMContentLoaded', () => {
         searchResults.style.display = 'none';
         searchInput.value = '';
         expandedNodeIds.clear();
+        tldrCache.clear();
+        currentDetailNodeId = null;
         if (cy) cy.elements().remove();
         if (detailPanel) detailPanel.innerHTML = DETAIL_EMPTY_HTML;
       });
