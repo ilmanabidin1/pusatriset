@@ -880,6 +880,8 @@ app.get('/api/me', (req, res) => {
     let patentSearchRemaining = 1;
     let isPeerReviewLimitReached = false;
     let peerReviewRemaining = 2;
+    let isCitationGraphLimitReached = false;
+    let citationGraphRemaining = 30;
 
     const userType = req.session.userType || 'free';
     const isFree = userType === 'free';
@@ -913,6 +915,9 @@ app.get('/api/me', (req, res) => {
 
       isPeerReviewLimitReached = (user.lastPeerReviewMonth === currentMonth) && (user.peerReviewCountThisMonth >= 2);
       peerReviewRemaining = Math.max(0, 2 - (user.lastPeerReviewMonth === currentMonth ? user.peerReviewCountThisMonth : 0));
+
+      isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 30);
+      citationGraphRemaining = Math.max(0, 30 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -946,6 +951,9 @@ app.get('/api/me', (req, res) => {
 
       isPeerReviewLimitReached = (user.lastPeerReviewMonth === currentMonth) && (user.peerReviewCountThisMonth >= 15);
       peerReviewRemaining = Math.max(0, 15 - (user.lastPeerReviewMonth === currentMonth ? user.peerReviewCountThisMonth : 0));
+
+      isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 300);
+      citationGraphRemaining = Math.max(0, 300 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
@@ -961,6 +969,8 @@ app.get('/api/me', (req, res) => {
       patentSearchRemaining = 20;
       isPeerReviewLimitReached = false;
       peerReviewRemaining = 999;
+      isCitationGraphLimitReached = false;
+      citationGraphRemaining = 999999;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
@@ -1016,6 +1026,9 @@ app.get('/api/me', (req, res) => {
         peerReviewCountThisMonth: user ? (user.peerReviewCountThisMonth || 0) : 0,
         isPeerReviewLimitReached: isPeerReviewLimitReached,
         peerReviewRemaining: peerReviewRemaining,
+        citationGraphCountThisMonth: user ? (user.citationGraphCountThisMonth || 0) : 0,
+        isCitationGraphLimitReached: isCitationGraphLimitReached,
+        citationGraphRemaining: citationGraphRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
@@ -2120,6 +2133,195 @@ async function searchOpenAlexSources(query, perPage) {
   openAlexSourcesCache.set(cacheKey, { data: normalized, expiresAt: Date.now() + OPENALEX_SOURCES_CACHE_TTL_MS });
   return normalized;
 }
+
+// --- Citation Graph (ala ResearchRabbit/Connected Papers) - ditenagai OpenAlex ---
+// v1: OpenAlex saja (referenced_works = sitasi keluar, filter "cites:" = sitasi masuk,
+// related_works = rekomendasi mirip bawaan OpenAlex). Semantic Scholar sengaja belum
+// dipakai di versi awal ini - bisa ditambah belakangan untuk highlight sitasi paling
+// berpengaruh (isInfluential), tapi bukan syarat wajib graf ini bisa jalan.
+const CITATION_GRAPH_MONTHLY_LIMIT = { free: 30, premium: 300, ultimate: 999999 };
+const CITATION_GRAPH_WORK_SELECT = 'id,doi,title,display_name,publication_year,cited_by_count,primary_location,authorships,open_access,referenced_works,related_works';
+
+function openAlexShortId(fullId) {
+  return String(fullId || '').replace('https://openalex.org/', '').trim();
+}
+
+function openAlexParams(extra) {
+  const params = new URLSearchParams(extra);
+  const apiKey = process.env.OPENALEX_API_KEY;
+  if (apiKey) params.set('api_key', apiKey);
+  const mailto = process.env.OPENALEX_MAILTO;
+  if (mailto) params.set('mailto', mailto);
+  return params;
+}
+
+function normalizeOpenAlexWorkNode(w) {
+  const authorNames = (w.authorships || []).map(a => a.author && a.author.display_name).filter(Boolean);
+  const authors = authorNames.length > 3
+    ? `${authorNames.slice(0, 3).join(', ')}, et al.`
+    : (authorNames.join(', ') || 'Tidak diketahui');
+  const doi = w.doi ? String(w.doi).replace('https://doi.org/', '') : null;
+  return {
+    id: openAlexShortId(w.id),
+    title: w.title || w.display_name || 'Tanpa judul',
+    authors,
+    year: w.publication_year ? String(w.publication_year) : '-',
+    journal: (w.primary_location && w.primary_location.source && w.primary_location.source.display_name) || '-',
+    citedByCount: w.cited_by_count || 0,
+    doi,
+    url: w.doi || (w.primary_location && w.primary_location.landing_page_url) || w.id || '#',
+    isOpenAccess: !!(w.open_access && w.open_access.is_oa),
+    referencedWorksCount: Array.isArray(w.referenced_works) ? w.referenced_works.length : 0
+  };
+}
+
+// Ambil 1 work lengkap (termasuk daftar ID referenced_works & related_works-nya).
+async function fetchOpenAlexWorkById(id) {
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const params = openAlexParams({ select: CITATION_GRAPH_WORK_SELECT });
+  const response = await fetchFn(`https://api.openalex.org/works/${encodeURIComponent(openAlexShortId(id))}?${params.toString()}`);
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenAlex Work API Error: ${response.status} - ${errText}`);
+  }
+  return response.json();
+}
+
+// Ambil metadata banyak work sekaligus dari daftar ID (referenced_works/related_works
+// cuma berisi ID mentah, bukan judul/penulis) - di-batch 50 ID per request lewat
+// filter OR (ids.openalex:ID1|ID2|...) supaya tidak perlu 1 request per paper.
+async function fetchOpenAlexWorksByIds(ids) {
+  const cleanIds = (ids || []).filter(Boolean);
+  if (!cleanIds.length) return [];
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const chunks = [];
+  for (let i = 0; i < cleanIds.length; i += 50) chunks.push(cleanIds.slice(i, i + 50));
+
+  const chunkResults = await Promise.all(chunks.map(async (chunk) => {
+    const shortIds = chunk.map(openAlexShortId);
+    const params = openAlexParams({
+      filter: `ids.openalex:${shortIds.join('|')}`,
+      per_page: String(shortIds.length),
+      select: CITATION_GRAPH_WORK_SELECT
+    });
+    try {
+      const response = await fetchFn(`https://api.openalex.org/works?${params.toString()}`);
+      if (!response.ok) return [];
+      const data = await response.json();
+      return Array.isArray(data.results) ? data.results : [];
+    } catch (err) {
+      console.warn('[Citation Graph] Gagal batch-fetch works (diabaikan):', err.message);
+      return [];
+    }
+  }));
+
+  return chunkResults.flat();
+}
+
+// Sitasi masuk (works yang mengutip work ini) - diurutkan dari yang paling sering disitasi.
+async function fetchOpenAlexCitingWorks(id, perPage) {
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const params = openAlexParams({
+    filter: `cites:${openAlexShortId(id)}`,
+    sort: 'cited_by_count:desc',
+    per_page: String(perPage),
+    select: CITATION_GRAPH_WORK_SELECT
+  });
+  const response = await fetchFn(`https://api.openalex.org/works?${params.toString()}`);
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenAlex Citing-Works API Error: ${response.status} - ${errText}`);
+  }
+  const data = await response.json();
+  return Array.isArray(data.results) ? data.results : [];
+}
+
+// Cari kandidat paper "seed" (titik awal) untuk mulai eksplorasi peta sitasi.
+app.get('/api/citation-graph/search', requireAccess, async (req, res) => {
+  const query = String(req.query.q || '').trim();
+  if (query.length < 3) {
+    return res.status(400).json({ ok: false, message: 'Masukkan judul atau kata kunci minimal 3 karakter.' });
+  }
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const cleanQuery = query.replace(/[?*]/g, ' ').replace(/\s+/g, ' ').trim();
+    const params = openAlexParams({
+      search: cleanQuery,
+      per_page: '10',
+      filter: 'has_abstract:true',
+      select: CITATION_GRAPH_WORK_SELECT
+    });
+    const response = await fetchFn(`https://api.openalex.org/works?${params.toString()}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`OpenAlex Search API Error: ${response.status} - ${errText}`);
+    }
+    const data = await response.json();
+    const results = Array.isArray(data.results) ? data.results : [];
+    res.json({ ok: true, results: results.map(normalizeOpenAlexWorkNode) });
+  } catch (error) {
+    console.error('[Citation Graph Search] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mencari paper: ' + error.message });
+  }
+});
+
+// Ekspansi 1 node di peta sitasi: kembalikan paper itu sendiri + siapa yang dia
+// rujuk (referensi/keluar), siapa yang merujuk dia (sitasi/masuk), dan paper mirip
+// (related). Frontend memanggil ini tiap kali user klik sebuah node untuk diperluas.
+app.post('/api/citation-graph/expand', requireAccess, async (req, res) => {
+  const workId = String((req.body && req.body.workId) || '').trim();
+  if (!workId) {
+    return res.status(400).json({ ok: false, message: 'workId wajib diisi.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const planType = user ? (user.type || 'free') : 'free';
+  const limit = CITATION_GRAPH_MONTHLY_LIMIT[planType] ?? CITATION_GRAPH_MONTHLY_LIMIT.free;
+
+  if (user) {
+    const usedThisMonth = user.lastCitationGraphMonth === currentMonth ? (user.citationGraphCountThisMonth || 0) : 0;
+    if (usedThisMonth >= limit) {
+      return res.status(403).json({ ok: false, message: `Limit bulanan tercapai. Akun ${planType} dibatasi ${limit}x eksplorasi peta sitasi per bulan.` });
+    }
+  }
+
+  try {
+    const work = await fetchOpenAlexWorkById(workId);
+    const referencedIds = (work.referenced_works || []).slice(0, 20);
+    const relatedIds = (work.related_works || []).slice(0, 10);
+
+    const [referencedWorks, relatedWorks, citingWorks] = await Promise.all([
+      fetchOpenAlexWorksByIds(referencedIds),
+      fetchOpenAlexWorksByIds(relatedIds),
+      fetchOpenAlexCitingWorks(workId, 20).catch((err) => {
+        console.warn('[Citation Graph Expand] Gagal ambil citing works (diabaikan):', err.message);
+        return [];
+      })
+    ]);
+
+    if (user) {
+      if (user.lastCitationGraphMonth !== currentMonth) {
+        user.lastCitationGraphMonth = currentMonth;
+        user.citationGraphCountThisMonth = 0;
+      }
+      user.citationGraphCountThisMonth += 1;
+      saveUsers(users);
+    }
+
+    res.json({
+      ok: true,
+      node: normalizeOpenAlexWorkNode(work),
+      references: referencedWorks.map(normalizeOpenAlexWorkNode),
+      citedBy: citingWorks.map(normalizeOpenAlexWorkNode),
+      related: relatedWorks.map(normalizeOpenAlexWorkNode)
+    });
+  } catch (error) {
+    console.error('[Citation Graph Expand] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal memuat data sitasi: ' + error.message });
+  }
+});
 
 // Enrichment best-effort - kalau gagal (rate limit dsb) tidak menggagalkan seluruh request,
 // cuma citation-nya tidak punya tldr/influentialCitationCount tambahan.

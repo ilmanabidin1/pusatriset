@@ -1303,6 +1303,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateSlrAccess(currentUser.user);
           updatePatentSearchAccess(currentUser.user);
           updatePeerReviewerAccess(currentUser.user);
+          updateCitationGraphAccess(currentUser.user);
         }
 
         // Logout handler
@@ -1587,6 +1588,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btn) btn.disabled = false;
     }
   }
+  function updateCitationGraphAccess(user) {
+    const badgeEl = document.getElementById('citationGraphQuotaBadge');
+    if (!badgeEl || !user) return;
+
+    const limitLabel = { free: '30x', premium: '300x' }[user.type];
+    const remaining = typeof user.citationGraphRemaining === 'number' ? user.citationGraphRemaining : null;
+    badgeEl.style.display = 'block';
+
+    if (user.type === 'ultimate' || !limitLabel) {
+      badgeEl.innerHTML = '<i class="fa-solid fa-infinity" style="color: #059669;"></i> Eksplorasi peta sitasi tanpa batas.';
+      window.citationGraphLimitReached = false;
+      return;
+    }
+
+    window.citationGraphLimitReached = !!user.isCitationGraphLimitReached;
+    if (user.isCitationGraphLimitReached) {
+      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> Limit ${limitLabel}/bulan eksplorasi peta sitasi tercapai. <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">Upgrade</a> untuk kuota lebih besar.`;
+    } else {
+      badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> Sisa ${remaining !== null ? remaining : '-'}x eksplorasi bulan ini (akun ${user.type}, limit ${limitLabel}/bulan).`;
+    }
+  }
+  window.updateCitationGraphAccess = updateCitationGraphAccess;
   window.updatePeerReviewerAccess = updatePeerReviewerAccess;
   window.updatePatentSearchAccess = updatePatentSearchAccess;
 
@@ -2720,6 +2743,246 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (patentSearchBtn) patentSearchBtn.addEventListener('click', runPatentSearch);
+
+  // --- Citation Graph (Peta Sitasi) - powered by OpenAlex ---
+  (function () {
+    const searchInput = document.getElementById('citationGraphSearchInput');
+    const searchBtn = document.getElementById('citationGraphSearchBtn');
+    const searchStatus = document.getElementById('citationGraphSearchStatus');
+    const searchResults = document.getElementById('citationGraphSearchResults');
+    const workspace = document.getElementById('citationGraphWorkspace');
+    const canvasEl = document.getElementById('citationGraphCanvas');
+    const detailPanel = document.getElementById('citationGraphDetailPanel');
+    const resetBtn = document.getElementById('citationGraphResetBtn');
+
+    if (!searchInput || !searchBtn) return; // elemen tab belum ada di halaman ini
+
+    const NODE_COLORS = { seed: '#0787dc', reference: '#34d399', citedBy: '#f59e0b', related: '#a78bfa' };
+    const DETAIL_EMPTY_HTML = '<p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Klik sebuah node di graf untuk melihat detailnya di sini.</p>';
+    let cy = null;
+    const expandedNodeIds = new Set();
+
+    function shortTitle(title) {
+      const t = String(title || '');
+      return t.length > 60 ? t.slice(0, 57) + '...' : t;
+    }
+
+    function initGraph() {
+      if (cy) return cy;
+      if (typeof cytoscape === 'undefined') {
+        canvasEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem;">Gagal memuat modul visualisasi graf. Periksa koneksi internet Anda lalu muat ulang halaman.</div>';
+        return null;
+      }
+      cy = cytoscape({
+        container: canvasEl,
+        style: [
+          { selector: 'node', style: {
+              'background-color': (ele) => NODE_COLORS[ele.data('kind')] || '#94a3b8',
+              'label': 'data(shortTitle)',
+              'font-size': 9,
+              'color': '#1e293b',
+              'text-wrap': 'wrap',
+              'text-max-width': '90px',
+              'text-valign': 'bottom',
+              'text-margin-y': 4,
+              'width': (ele) => 16 + Math.min(28, Math.sqrt(ele.data('citedByCount') || 0)),
+              'height': (ele) => 16 + Math.min(28, Math.sqrt(ele.data('citedByCount') || 0)),
+              'border-width': 2,
+              'border-color': '#fff'
+            }
+          },
+          { selector: 'node[?expanded]', style: { 'border-color': '#0f172a', 'border-width': 3 } },
+          { selector: 'edge', style: {
+              'width': 1.4,
+              'line-color': (ele) => NODE_COLORS[ele.data('kind')] || '#cbd5e1',
+              'target-arrow-color': (ele) => NODE_COLORS[ele.data('kind')] || '#cbd5e1',
+              'target-arrow-shape': 'triangle',
+              'arrow-scale': 0.8,
+              'curve-style': 'bezier',
+              'opacity': 0.55
+            }
+          }
+        ],
+        layout: { name: 'cose' }
+      });
+
+      cy.on('tap', 'node', (evt) => {
+        const node = evt.target;
+        renderDetailPanel(node.data());
+        expandNode(node.data('id'));
+      });
+
+      return cy;
+    }
+
+    function addNodeToGraph(paper, kind) {
+      if (!cy || cy.getElementById(paper.id).nonempty()) return;
+      cy.add({ group: 'nodes', data: Object.assign({}, paper, { kind, shortTitle: shortTitle(paper.title) }) });
+    }
+
+    function addEdgeToGraph(sourceId, targetId, kind) {
+      if (!cy) return;
+      const edgeId = sourceId + '->' + targetId;
+      if (cy.getElementById(edgeId).nonempty()) return;
+      cy.add({ group: 'edges', data: { id: edgeId, source: sourceId, target: targetId, kind } });
+    }
+
+    function renderDetailPanel(data) {
+      if (!detailPanel || !data) return;
+      const oaBadge = data.isOpenAccess ? '<span style="background: rgba(52,211,153,0.12); color: #059669; padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">Open Access</span>' : '';
+      detailPanel.innerHTML = `
+        <h4 style="margin: 0; font-size: 0.98rem; line-height: 1.35;">${escapeHtml(data.title || '')}</h4>
+        <p style="margin: 0; font-size: 0.82rem; color: var(--text-muted);">${escapeHtml(data.authors || '')}</p>
+        <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(data.journal || '-')} &middot; ${escapeHtml(data.year || '-')}</p>
+        <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-quote-right"></i> Disitasi ${data.citedByCount || 0}x ${oaBadge}</p>
+        ${data.doi ? `<a href="https://doi.org/${escapeHtml(data.doi)}" target="_blank" rel="noopener" class="journal-link">Buka Paper <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+      `;
+    }
+
+    async function expandNode(workId) {
+      if (!cy || expandedNodeIds.has(workId)) return;
+      if (window.citationGraphLimitReached) {
+        alert('Limit bulanan eksplorasi peta sitasi Anda sudah tercapai. Upgrade untuk kuota lebih besar.');
+        return;
+      }
+      expandedNodeIds.add(workId);
+      const node = cy.getElementById(workId);
+      if (node.nonempty()) node.data('expanded', true);
+
+      try {
+        const res = await fetch('/api/citation-graph/expand', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workId })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          expandedNodeIds.delete(workId);
+          if (data.message) alert(data.message);
+          return;
+        }
+
+        (data.references || []).forEach((paper) => {
+          addNodeToGraph(paper, 'reference');
+          addEdgeToGraph(workId, paper.id, 'reference');
+        });
+        (data.citedBy || []).forEach((paper) => {
+          addNodeToGraph(paper, 'citedBy');
+          addEdgeToGraph(paper.id, workId, 'citedBy');
+        });
+        (data.related || []).forEach((paper) => {
+          addNodeToGraph(paper, 'related');
+          addEdgeToGraph(workId, paper.id, 'related');
+        });
+
+        cy.layout({ name: 'cose', animate: true, animationDuration: 500, fit: true, padding: 40 }).run();
+
+        fetch('/api/me').then(r => r.json()).then(meData => {
+          if (meData.loggedIn && meData.user) {
+            window.currentUser = meData;
+            if (window.updateCitationGraphAccess) window.updateCitationGraphAccess(meData.user);
+          }
+        }).catch(() => {});
+      } catch (err) {
+        expandedNodeIds.delete(workId);
+        console.error('[Citation Graph Expand]', err);
+        alert('Gagal memuat data sitasi. Coba lagi.');
+      }
+    }
+
+    function startGraphWithSeed(paper) {
+      if (!initGraph()) return;
+      searchResults.innerHTML = '';
+      searchResults.style.display = 'none';
+      if (searchStatus) searchStatus.style.display = 'none';
+      workspace.style.display = 'grid';
+      expandedNodeIds.clear();
+      cy.elements().remove();
+      addNodeToGraph(paper, 'seed');
+      cy.layout({ name: 'cose' }).run();
+      renderDetailPanel(paper);
+      expandNode(paper.id);
+    }
+
+    async function runCitationGraphSearch() {
+      const query = (searchInput.value || '').trim();
+      if (query.length < 3) {
+        alert('Masukkan judul atau kata kunci minimal 3 karakter.');
+        searchInput.focus();
+        return;
+      }
+
+      const originalHtml = searchBtn.innerHTML;
+      searchBtn.disabled = true;
+      searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
+      searchResults.innerHTML = '';
+      searchResults.style.display = 'flex';
+      if (searchStatus) {
+        searchStatus.style.display = 'block';
+        searchStatus.textContent = 'Mencari paper di OpenAlex...';
+      }
+
+      try {
+        const res = await fetch('/api/citation-graph/search?q=' + encodeURIComponent(query));
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          if (searchStatus) searchStatus.textContent = data.message || 'Gagal mencari paper.';
+          return;
+        }
+
+        const results = data.results || [];
+        if (searchStatus) searchStatus.style.display = 'none';
+        if (results.length === 0) {
+          if (searchStatus) {
+            searchStatus.style.display = 'block';
+            searchStatus.textContent = 'Tidak ada hasil. Coba kata kunci lain.';
+          }
+          return;
+        }
+
+        results.forEach((paper) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.cssText = 'padding: 0.85rem 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem;';
+          card.innerHTML = `
+            <h4 style="margin: 0; font-size: 0.92rem;">${escapeHtml(paper.title)}</h4>
+            <p style="margin: 0; font-size: 0.78rem; color: var(--text-muted);">${escapeHtml(paper.authors)} &middot; ${escapeHtml(paper.year)} &middot; ${escapeHtml(paper.journal)} &middot; ${paper.citedByCount}x disitasi</p>
+          `;
+          card.addEventListener('click', () => startGraphWithSeed(paper));
+          searchResults.appendChild(card);
+        });
+      } catch (err) {
+        console.error('[Citation Graph Search]', err);
+        if (searchStatus) {
+          searchStatus.style.display = 'block';
+          searchStatus.textContent = 'Gagal mencari paper. Coba lagi.';
+        }
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = originalHtml;
+      }
+    }
+
+    searchBtn.addEventListener('click', runCitationGraphSearch);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') runCitationGraphSearch();
+    });
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        workspace.style.display = 'none';
+        searchResults.innerHTML = '';
+        searchResults.style.display = 'none';
+        searchInput.value = '';
+        expandedNodeIds.clear();
+        if (cy) cy.elements().remove();
+        if (detailPanel) detailPanel.innerHTML = DETAIL_EMPTY_HTML;
+      });
+    }
+
+    // Hook debug ringan - berguna untuk cek state graf lewat devtools console.
+    window.__citationGraph = { getCy: () => cy };
+  })();
 
   if (realtimeSearchBtn) realtimeSearchBtn.addEventListener('click', runRealtimeSearch);
   if (realtimeBooleanToggle) {
@@ -4248,6 +4511,7 @@ document.addEventListener('DOMContentLoaded', () => {
               currentUser = meData;
               window.currentUser = meData;
               updatePeerReviewerAccess(meData.user);
+              updateCitationGraphAccess(meData.user);
             }
           }).catch(() => {});
         } catch (err) {
@@ -5802,6 +6066,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateSlrAccess(meData.user);
             updatePatentSearchAccess(meData.user);
             updatePeerReviewerAccess(meData.user);
+            updateCitationGraphAccess(meData.user);
           }
         }).catch(() => {});
       } catch (error) {
@@ -7188,6 +7453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSlrAccess(currentUser.user);
         updatePatentSearchAccess(currentUser.user);
         updatePeerReviewerAccess(currentUser.user);
+        updateCitationGraphAccess(currentUser.user);
       }
       // Re-render chat bubbles so export button tooltips (PDF/DOCX/.ris/.bib) pick up the new language
       if (typeof renderResearchChatMessages === 'function' && typeof researchChatMessages !== 'undefined' && researchChatMessages.length > 0) {
@@ -7601,6 +7867,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateSlrAccess(meData.user);
                 updatePatentSearchAccess(meData.user);
                 updatePeerReviewerAccess(meData.user);
+                updateCitationGraphAccess(meData.user);
                 updateVisualQuotaTracker(meData.user);
               }
             })

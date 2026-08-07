@@ -3439,6 +3439,12 @@
       #pricingCardsContainer {
         grid-template-columns: 1fr !important;
       }
+      .citation-graph-workspace {
+        grid-template-columns: 1fr !important;
+      }
+      #citationGraphCanvas {
+        height: 420px !important;
+      }
     }
 
     /* ========================================
@@ -3528,6 +3534,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.15/dist/docx-preview.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
 </head>
 <body>
 
@@ -3641,6 +3648,9 @@
     </a>
     <a href="#" class="sidebar-link dropdown-item" data-tab="prompt-bank">
       <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
+    </a>
+    <a href="#" class="sidebar-link dropdown-item" data-tab="citation-graph">
+      <i class="fa-solid fa-diagram-project"></i> <span>Peta Sitasi</span>
     </a>
   </div>
 
@@ -4840,6 +4850,54 @@
         </div>
       </div>
 
+      <!-- TAB: CITATION GRAPH (PETA SITASI) -->
+      <div id="tabContentCitationGraph" class="tab-content">
+        <div style="width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+          <div>
+            <h2 style="margin: 0 0 0.35rem;">Peta Sitasi (Citation Graph)</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+              Jelajahi keterkaitan antar-paper ilmiah secara visual — cari 1 paper awal, lalu klik node mana pun untuk melihat referensinya, siapa yang mengutipnya, dan paper lain yang mirip. Ditenagai data OpenAlex.
+            </p>
+          </div>
+
+          <div id="citationGraphQuotaBadge" style="font-size: 0.82rem; color: var(--text-muted); display: none;"></div>
+
+          <!-- Search seed paper -->
+          <div class="card" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <input type="text" id="citationGraphSearchInput" placeholder="Cari judul atau topik paper untuk mulai (mis. transformer neural network)..." style="flex: 1; min-width: 240px; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-light-hover); font-family: inherit; font-size: 0.9rem; background: var(--bg-card); color: var(--text-main);">
+              <button type="button" id="citationGraphSearchBtn" class="upgrade-btn" style="max-width: 200px; margin: 0;">
+                <i class="fa-solid fa-magnifying-glass"></i> <span id="citationGraphSearchBtnText">Cari Paper</span>
+              </button>
+            </div>
+            <div id="citationGraphSearchStatus" style="display: none; font-size: 0.85rem; color: var(--text-muted);"></div>
+            <div id="citationGraphSearchResults" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+          </div>
+
+          <!-- Graph canvas + detail panel (muncul setelah paper awal dipilih) -->
+          <div id="citationGraphWorkspace" style="display: none; gap: 1.25rem; grid-template-columns: 1fr 320px;" class="citation-graph-workspace">
+            <div class="card" style="padding: 0.75rem; position: relative;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                <div style="display: flex; gap: 1rem; font-size: 0.78rem; color: var(--text-muted); flex-wrap: wrap;">
+                  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#0787dc;margin-right:0.3rem;"></span>Paper terpilih</span>
+                  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#34d399;margin-right:0.3rem;"></span>Referensi (dikutip)</span>
+                  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:0.3rem;"></span>Mengutip balik</span>
+                  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#a78bfa;margin-right:0.3rem;"></span>Mirip (related)</span>
+                </div>
+                <button type="button" id="citationGraphResetBtn" style="background: none; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-rotate-left"></i> Mulai Ulang</button>
+              </div>
+              <div id="citationGraphCanvas" style="width: 100%; height: 560px; border-radius: 10px; background: #f8fafc; border: 1px solid rgba(8,34,64,0.06);"></div>
+              <div id="citationGraphCanvasHint" style="text-align: center; font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">Klik sebuah node untuk memperluas jaringan sitasinya. Scroll untuk zoom, drag untuk geser.</div>
+            </div>
+
+            <!-- Detail panel node terpilih -->
+            <div class="card" id="citationGraphDetailPanel" style="padding: 1.1rem; display: flex; flex-direction: column; gap: 0.6rem; align-self: start;">
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Klik sebuah node di graf untuk melihat detailnya di sini.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB: SYSTEMATIC LITERATURE REVIEW (SLR) -->
       <div id="tabContentSlr" class="tab-content">
         <div style="width: 100%; display: flex; flex-direction: column; gap: 1.5rem;">
@@ -5397,7 +5455,7 @@
         // Also highlight More trigger if active tab is templates or prompt-bank
         const moreTrigger = document.getElementById('sidebarMoreTrigger');
         if (moreTrigger) {
-          if (['templates', 'prompt-bank'].includes(tabName)) {
+          if (['templates', 'prompt-bank', 'citation-graph'].includes(tabName)) {
             moreTrigger.classList.add('active');
           } else {
             moreTrigger.classList.remove('active');
