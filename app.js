@@ -2758,6 +2758,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!searchInput || !searchBtn) return; // elemen tab belum ada di halaman ini
 
     const NODE_COLORS = { seed: '#0787dc', reference: '#34d399', citedBy: '#f59e0b', related: '#a78bfa' };
+    // Parameter cose default terlalu rapat untuk 20-30 node - dilonggarkan supaya
+    // node dan garis tidak saling tindih (jarak antar-node & gaya tolak diperbesar,
+    // iterasi ditambah supaya sempat "settle" ke posisi yang lebih rapi).
+    const COSE_LAYOUT_OPTIONS = {
+      name: 'cose',
+      fit: true,
+      padding: 50,
+      nodeRepulsion: 15000,
+      idealEdgeLength: 100,
+      nodeOverlap: 6,
+      gravity: 0.35,
+      numIter: 2000,
+      componentSpacing: 120,
+      randomize: true
+    };
     const DETAIL_EMPTY_HTML = '<p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Klik sebuah node di graf untuk melihat detailnya di sini.</p>';
     let cy = null;
     const expandedNodeIds = new Set();
@@ -2773,41 +2788,63 @@ document.addEventListener('DOMContentLoaded', () => {
         canvasEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem;">Gagal memuat modul visualisasi graf. Periksa koneksi internet Anda lalu muat ulang halaman.</div>';
         return null;
       }
+      // Label judul TIDAK ditampilkan permanen di setiap node - dengan puluhan node
+      // sekaligus, teks di bawah tiap node saling tindih dan bikin graf tak
+      // terbaca (lihat kaca hasil sebelumnya). Judul cuma muncul saat node
+      // di-hover atau sedang dipilih (class "show-label" di-toggle lewat JS di
+      // bawah); detail lengkap tetap selalu ada di panel kanan begitu diklik.
       cy = cytoscape({
         container: canvasEl,
         style: [
           { selector: 'node', style: {
               'background-color': (ele) => NODE_COLORS[ele.data('kind')] || '#94a3b8',
-              'label': 'data(shortTitle)',
-              'font-size': 9,
-              'color': '#1e293b',
-              'text-wrap': 'wrap',
-              'text-max-width': '90px',
-              'text-valign': 'bottom',
-              'text-margin-y': 4,
-              'width': (ele) => 16 + Math.min(28, Math.sqrt(ele.data('citedByCount') || 0)),
-              'height': (ele) => 16 + Math.min(28, Math.sqrt(ele.data('citedByCount') || 0)),
+              'width': (ele) => 14 + Math.min(20, Math.sqrt(ele.data('citedByCount') || 0) / 1.4),
+              'height': (ele) => 14 + Math.min(20, Math.sqrt(ele.data('citedByCount') || 0) / 1.4),
               'border-width': 2,
               'border-color': '#fff'
             }
           },
+          { selector: 'node.show-label', style: {
+              'label': 'data(shortTitle)',
+              'font-size': 9,
+              'font-weight': 700,
+              'color': '#0f172a',
+              'text-wrap': 'wrap',
+              'text-max-width': '90px',
+              'text-valign': 'bottom',
+              'text-margin-y': 4,
+              'text-background-color': '#fff',
+              'text-background-opacity': 0.85,
+              'text-background-padding': '2px',
+              'z-index': 999
+            }
+          },
           { selector: 'node[?expanded]', style: { 'border-color': '#0f172a', 'border-width': 3 } },
           { selector: 'edge', style: {
-              'width': 1.4,
+              'width': 1.2,
               'line-color': (ele) => NODE_COLORS[ele.data('kind')] || '#cbd5e1',
               'target-arrow-color': (ele) => NODE_COLORS[ele.data('kind')] || '#cbd5e1',
               'target-arrow-shape': 'triangle',
-              'arrow-scale': 0.8,
+              'arrow-scale': 0.7,
               'curve-style': 'bezier',
-              'opacity': 0.55
+              'opacity': 0.45
             }
           }
         ],
         layout: { name: 'cose' }
       });
 
+      let pinnedLabelNode = null;
+      cy.on('mouseover', 'node', (evt) => evt.target.addClass('show-label'));
+      cy.on('mouseout', 'node', (evt) => {
+        if (evt.target.id() !== (pinnedLabelNode && pinnedLabelNode.id())) evt.target.removeClass('show-label');
+      });
+
       cy.on('tap', 'node', (evt) => {
         const node = evt.target;
+        if (pinnedLabelNode) pinnedLabelNode.removeClass('show-label');
+        node.addClass('show-label');
+        pinnedLabelNode = node;
         renderDetailPanel(node.data());
         expandNode(node.data('id'));
       });
@@ -2875,7 +2912,7 @@ document.addEventListener('DOMContentLoaded', () => {
           addEdgeToGraph(workId, paper.id, 'related');
         });
 
-        cy.layout({ name: 'cose', animate: true, animationDuration: 500, fit: true, padding: 40 }).run();
+        cy.layout(Object.assign({}, COSE_LAYOUT_OPTIONS, { animate: true, animationDuration: 500 })).run();
 
         fetch('/api/me').then(r => r.json()).then(meData => {
           if (meData.loggedIn && meData.user) {
@@ -2899,7 +2936,7 @@ document.addEventListener('DOMContentLoaded', () => {
       expandedNodeIds.clear();
       cy.elements().remove();
       addNodeToGraph(paper, 'seed');
-      cy.layout({ name: 'cose' }).run();
+      cy.layout(COSE_LAYOUT_OPTIONS).run();
       renderDetailPanel(paper);
       expandNode(paper.id);
     }

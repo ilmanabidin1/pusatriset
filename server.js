@@ -2289,13 +2289,16 @@ app.post('/api/citation-graph/expand', requireAccess, async (req, res) => {
 
   try {
     const work = await fetchOpenAlexWorkById(workId);
-    const referencedIds = (work.referenced_works || []).slice(0, 20);
-    const relatedIds = (work.related_works || []).slice(0, 10);
+    // Dibatasi cukup kecil per klik (maks ~26 node baru) - awalnya 20+20+10 (maks
+    // 50 node sekaligus) bikin graf langsung penuh-sesak dan labelnya saling tindih
+    // sejak klik pertama. User tetap bisa memperluas lebih jauh dengan klik node lain.
+    const referencedIds = (work.referenced_works || []).slice(0, 10);
+    const relatedIds = (work.related_works || []).slice(0, 6);
 
     const [referencedWorks, relatedWorks, citingWorks] = await Promise.all([
       fetchOpenAlexWorksByIds(referencedIds),
       fetchOpenAlexWorksByIds(relatedIds),
-      fetchOpenAlexCitingWorks(workId, 20).catch((err) => {
+      fetchOpenAlexCitingWorks(workId, 10).catch((err) => {
         console.warn('[Citation Graph Expand] Gagal ambil citing works (diabaikan):', err.message);
         return [];
       })
