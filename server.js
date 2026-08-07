@@ -9,6 +9,7 @@ const session = require('express-session');
 const FileStore = require('session-file-store')(session);
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const compression = require('compression');
 const { v4: uuidv4 } = require('uuid');
 const { VertexAI } = require('@google-cloud/vertexai');
 const { OAuth2Client } = require('google-auth-library');
@@ -162,6 +163,13 @@ function getVertexModel(modelName = GEMINI_MODEL) {
 // banyak script/CSS dari CDN eksternal (Font Awesome, Google Sign-In, jsdelivr,
 // dst) dan script inline - mengaktifkannya tanpa allowlist yang diuji akan
 // mematahkan halaman. Perlu di-audit & diaktifkan bertahap terpisah.
+// Kompresi gzip/brotli untuk semua response - app.js (~395KB) dan database.js
+// (~640KB) sebelumnya dikirim mentah tanpa kompresi ke setiap pengunjung.
+// Threshold kecil (1KB) supaya asset teks (JS/CSS/HTML/JSON) ikut terkompresi,
+// sedangkan file yang sudah terkompresi (video mp4, gambar) otomatis dilewati
+// middleware ini berdasarkan Content-Type.
+app.use(compression());
+
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
@@ -243,7 +251,17 @@ function withLock(key, fn) {
   return run;
 }
 
-// Fungsi helper untuk user database
+// Fungsi helper untuk user database.
+// getUsers() dipanggil di hasAccess() yang menjaga hampir semua endpoint API -
+// tanpa cache ini, SETIAP request (search, chat, peer review, dll) melakukan
+// fs.readFileSync + JSON.parse SINKRON atas seluruh users.json, yang memblokir
+// event loop Node dan makin lambat seiring jumlah user bertambah. Cache di
+// memori ini hanya dibaca ulang dari disk kalau mtime file berubah (mis. baru
+// ditulis oleh saveUsers, atau diedit manual) - selain itu langsung pakai
+// salinan di memori tanpa I/O sama sekali.
+let usersCache = null;
+let usersCacheMtimeMs = 0;
+
 function getUsers() {
   try {
     if (!fs.existsSync(DATA_DIR)) {
@@ -252,11 +270,17 @@ function getUsers() {
     if (!fs.existsSync(USERS_FILE)) {
       fs.writeFileSync(USERS_FILE, '[]');
     }
+    const mtimeMs = fs.statSync(USERS_FILE).mtimeMs;
+    if (usersCache && mtimeMs === usersCacheMtimeMs) {
+      return usersCache;
+    }
     const data = fs.readFileSync(USERS_FILE, 'utf8');
-    return JSON.parse(data);
+    usersCache = JSON.parse(data);
+    usersCacheMtimeMs = mtimeMs;
+    return usersCache;
   } catch (error) {
     console.error('Gagal membaca users.json:', error);
-    return [];
+    return usersCache || [];
   }
 }
 
@@ -278,6 +302,10 @@ function saveUsers(users) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    // Perbarui cache in-memory langsung supaya getUsers() berikutnya (bahkan di
+    // request yang sama) tidak perlu baca ulang dari disk.
+    usersCache = users;
+    usersCacheMtimeMs = fs.statSync(USERS_FILE).mtimeMs;
     return true;
   } catch (error) {
     console.error('Gagal menyimpan users.json:', error);
@@ -4669,7 +4697,22 @@ app.use((req, res, next) => {
   }
   return res.status(404).send('Not Found');
 });
-app.use(express.static(path.join(__dirname, '.')));
+app.use(express.static(path.join(__dirname, '.'), {
+  // Cache-Control per jenis file:
+  // - /assets/ (logo, video demo) jarang berubah -> cache lama (7 hari) di browser,
+  //   memangkas ulang-unduh 42MB video demo setiap kunjungan berikutnya.
+  // - app.js/database.js/styles.css sering ter-update tiap deploy (auto-deploy
+  //   Railway dari `main`) dan namanya tidak versioned/hashed, jadi cache pendek
+  //   (5 menit) supaya perbaikan bug tidak lama nyangkut di browser user tapi
+  //   tetap dapat manfaat cache untuk request berulang dalam sesi yang sama.
+  setHeaders: (res, filePath) => {
+    if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    } else if (/\.(js|css)$/.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+    }
+  }
+}));
 
 // Arahkan semua request lainnya ke index.html (tapi sudah dilindungi oleh middleware di atas)
 app.get('*', requireAccess, (req, res) => {
