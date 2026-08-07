@@ -207,6 +207,22 @@ const authLimiter = rateLimit({
   message: { ok: false, message: 'Terlalu banyak percobaan. Silakan coba lagi dalam beberapa menit.' }
 });
 
+// Rate limit terpisah untuk Peta Sitasi - independen dari kuota bulanan (yang
+// membatasi TOTAL pemakaian per bulan), ini membatasi KECEPATAN BURST per menit
+// supaya 1 akun (termasuk Ultimate yang jatahnya besar) tidak bisa menghabiskan
+// jatah harian OpenAlex yang dipakai bersama SEMUA fitur (Match Score, Lit
+// Review, dll) dalam hitungan detik lewat script/automasi. Di-key per akun
+// (bukan per IP) supaya tidak salah membatasi user lain yang kebetulan satu
+// jaringan/kantor/kampus.
+const citationGraphLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 menit
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req.session && req.session.userId) || req.ip,
+  message: { ok: false, message: 'Terlalu banyak permintaan peta sitasi dalam waktu singkat. Tunggu sebentar lalu coba lagi.' }
+});
+
 if (!process.env.SESSION_SECRET) {
   if (process.env.NODE_ENV === 'production') {
     console.error('FATAL: SESSION_SECRET belum diset. Set env var SESSION_SECRET di Railway sebelum menjalankan di production.');
@@ -970,14 +986,14 @@ app.get('/api/me', (req, res) => {
       isPeerReviewLimitReached = false;
       peerReviewRemaining = 999;
       isCitationGraphLimitReached = false;
-      citationGraphRemaining = 50;
+      citationGraphRemaining = 100;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
         isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 20);
         patentSearchRemaining = Math.max(0, 20 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
-        isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 50);
-        citationGraphRemaining = Math.max(0, 50 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
+        isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 100);
+        citationGraphRemaining = Math.max(0, 100 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
         if (user.lastHumanizerMonth !== currentMonth) {
           user.lastHumanizerMonth = currentMonth;
           user.humanizerWordsUsedThisMonth = 0;
@@ -2141,7 +2157,7 @@ async function searchOpenAlexSources(query, perPage) {
 // related_works = rekomendasi mirip bawaan OpenAlex). Semantic Scholar sengaja belum
 // dipakai di versi awal ini - bisa ditambah belakangan untuk highlight sitasi paling
 // berpengaruh (isInfluential), tapi bukan syarat wajib graf ini bisa jalan.
-const CITATION_GRAPH_MONTHLY_LIMIT = { free: 5, premium: 20, ultimate: 50 };
+const CITATION_GRAPH_MONTHLY_LIMIT = { free: 5, premium: 20, ultimate: 100 };
 const CITATION_GRAPH_WORK_SELECT = 'id,doi,title,display_name,publication_year,cited_by_count,primary_location,authorships,open_access,referenced_works,related_works,abstract_inverted_index';
 
 function openAlexShortId(fullId) {
@@ -2241,7 +2257,7 @@ async function fetchOpenAlexCitingWorks(id, perPage) {
 }
 
 // Cari kandidat paper "seed" (titik awal) untuk mulai eksplorasi peta sitasi.
-app.get('/api/citation-graph/search', requireAccess, async (req, res) => {
+app.get('/api/citation-graph/search', requireAccess, citationGraphLimiter, async (req, res) => {
   const query = String(req.query.q || '').trim();
   if (query.length < 3) {
     return res.status(400).json({ ok: false, message: 'Masukkan judul atau kata kunci minimal 3 karakter.' });
@@ -2272,7 +2288,7 @@ app.get('/api/citation-graph/search', requireAccess, async (req, res) => {
 // Ekspansi 1 node di peta sitasi: kembalikan paper itu sendiri + siapa yang dia
 // rujuk (referensi/keluar), siapa yang merujuk dia (sitasi/masuk), dan paper mirip
 // (related). Frontend memanggil ini tiap kali user klik sebuah node untuk diperluas.
-app.post('/api/citation-graph/expand', requireAccess, async (req, res) => {
+app.post('/api/citation-graph/expand', requireAccess, citationGraphLimiter, async (req, res) => {
   const workId = String((req.body && req.body.workId) || '').trim();
   if (!workId) {
     return res.status(400).json({ ok: false, message: 'workId wajib diisi.' });
@@ -2336,7 +2352,7 @@ app.post('/api/citation-graph/expand', requireAccess, async (req, res) => {
 // 1 pemanggilan DeepSeek super ringan (mirip AI Disclosure Generator), bukan
 // beban utama fitur ini (yang berat & dibatasi kuota adalah panggilan OpenAlex
 // di /expand).
-app.post('/api/citation-graph/tldr', requireAccess, async (req, res) => {
+app.post('/api/citation-graph/tldr', requireAccess, citationGraphLimiter, async (req, res) => {
   const title = String((req.body && req.body.title) || '').trim().slice(0, 500);
   const abstract = String((req.body && req.body.abstract) || '').trim().slice(0, 1500);
   if (!title) {

@@ -1592,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const badgeEl = document.getElementById('citationGraphQuotaBadge');
     if (!badgeEl || !user) return;
 
-    const limitLabel = { free: '5x', premium: '20x', ultimate: '50x' }[user.type] || '5x';
+    const limitLabel = { free: '5x', premium: '20x', ultimate: '100x' }[user.type] || '5x';
     const remaining = typeof user.citationGraphRemaining === 'number' ? user.citationGraphRemaining : null;
     badgeEl.style.display = 'block';
 
@@ -2748,6 +2748,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvasEl = document.getElementById('citationGraphCanvas');
     const detailPanel = document.getElementById('citationGraphDetailPanel');
     const resetBtn = document.getElementById('citationGraphResetBtn');
+    const zoomInBtn = document.getElementById('citationGraphZoomInBtn');
+    const zoomOutBtn = document.getElementById('citationGraphZoomOutBtn');
+    const fitBtn = document.getElementById('citationGraphFitBtn');
 
     if (!searchInput || !searchBtn) return; // elemen tab belum ada di halaman ini
 
@@ -2825,7 +2828,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
         ],
-        layout: { name: 'cose' }
+        layout: { name: 'cose' },
+        // Default wheelSensitivity (1) kelewat agresif - 1x scroll notch langsung
+        // lompat jauh dan terasa "kaku"/susah dikontrol presisi. Diperlembut ke
+        // 0.25 supaya zoom lebih halus & bertahap, plus dibatasi rentangnya
+        // supaya tidak bisa zoom sampai titik yang tidak berguna.
+        wheelSensitivity: 0.25,
+        minZoom: 0.15,
+        maxZoom: 3
       });
 
       let pinnedLabelNode = null;
@@ -3075,6 +3085,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (detailPanel) detailPanel.innerHTML = DETAIL_EMPTY_HTML;
       });
     }
+
+    // Tombol zoom manual - pelengkap scroll/pinch untuk yang merasa kontrol
+    // wheel-zoom kurang presisi. Step 20% per klik, dizoom ke tengah kanvas.
+    function zoomBy(factor) {
+      if (!cy) return;
+      const w = canvasEl.clientWidth;
+      const h = canvasEl.clientHeight;
+      cy.zoom({ level: cy.zoom() * factor, renderedPosition: { x: w / 2, y: h / 2 } });
+    }
+    if (zoomInBtn) zoomInBtn.addEventListener('click', () => zoomBy(1.25));
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => zoomBy(0.8));
+    if (fitBtn) fitBtn.addEventListener('click', () => { if (cy) cy.fit(undefined, 40); });
 
     // Hook debug ringan - berguna untuk cek state graf lewat devtools console.
     window.__citationGraph = { getCy: () => cy };

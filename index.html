@@ -4886,8 +4886,15 @@
                 </div>
                 <button type="button" id="citationGraphResetBtn" style="background: none; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-rotate-left"></i> Mulai Ulang</button>
               </div>
-              <div id="citationGraphCanvas" style="width: 100%; height: 560px; border-radius: 10px; background: #f8fafc; border: 1px solid rgba(8,34,64,0.06);"></div>
-              <div id="citationGraphCanvasHint" style="text-align: center; font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">Klik sebuah node untuk memperluas jaringan sitasinya. Scroll untuk zoom, drag untuk geser.</div>
+              <div style="position: relative;">
+                <div id="citationGraphCanvas" style="width: 100%; height: 560px; border-radius: 10px; background: #f8fafc; border: 1px solid rgba(8,34,64,0.06);"></div>
+                <div style="position: absolute; bottom: 0.75rem; right: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; background: #fff; border: 1px solid rgba(8,34,64,0.08); border-radius: 8px; padding: 0.3rem; box-shadow: 0 4px 12px rgba(8,34,64,0.08);">
+                  <button type="button" id="citationGraphZoomInBtn" title="Perbesar" style="width: 30px; height: 30px; border: none; background: none; cursor: pointer; color: var(--text-main); font-size: 0.9rem;"><i class="fa-solid fa-plus"></i></button>
+                  <button type="button" id="citationGraphZoomOutBtn" title="Perkecil" style="width: 30px; height: 30px; border: none; background: none; cursor: pointer; color: var(--text-main); font-size: 0.9rem; border-top: 1px solid rgba(8,34,64,0.08); border-bottom: 1px solid rgba(8,34,64,0.08);"><i class="fa-solid fa-minus"></i></button>
+                  <button type="button" id="citationGraphFitBtn" title="Sesuaikan ke layar" style="width: 30px; height: 30px; border: none; background: none; cursor: pointer; color: var(--text-main); font-size: 0.85rem;"><i class="fa-solid fa-compress"></i></button>
+                </div>
+              </div>
+              <div id="citationGraphCanvasHint" style="text-align: center; font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">Klik sebuah node untuk memperluas jaringan sitasinya. Scroll untuk zoom, drag untuk geser, atau pakai tombol +/- di pojok kanan bawah graf.</div>
             </div>
 
             <!-- Detail panel node terpilih -->
