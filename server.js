@@ -881,7 +881,7 @@ app.get('/api/me', (req, res) => {
     let isPeerReviewLimitReached = false;
     let peerReviewRemaining = 2;
     let isCitationGraphLimitReached = false;
-    let citationGraphRemaining = 30;
+    let citationGraphRemaining = 5;
 
     const userType = req.session.userType || 'free';
     const isFree = userType === 'free';
@@ -916,8 +916,8 @@ app.get('/api/me', (req, res) => {
       isPeerReviewLimitReached = (user.lastPeerReviewMonth === currentMonth) && (user.peerReviewCountThisMonth >= 2);
       peerReviewRemaining = Math.max(0, 2 - (user.lastPeerReviewMonth === currentMonth ? user.peerReviewCountThisMonth : 0));
 
-      isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 30);
-      citationGraphRemaining = Math.max(0, 30 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
+      isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 5);
+      citationGraphRemaining = Math.max(0, 5 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -952,8 +952,8 @@ app.get('/api/me', (req, res) => {
       isPeerReviewLimitReached = (user.lastPeerReviewMonth === currentMonth) && (user.peerReviewCountThisMonth >= 15);
       peerReviewRemaining = Math.max(0, 15 - (user.lastPeerReviewMonth === currentMonth ? user.peerReviewCountThisMonth : 0));
 
-      isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 300);
-      citationGraphRemaining = Math.max(0, 300 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
+      isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 20);
+      citationGraphRemaining = Math.max(0, 20 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
@@ -970,12 +970,14 @@ app.get('/api/me', (req, res) => {
       isPeerReviewLimitReached = false;
       peerReviewRemaining = 999;
       isCitationGraphLimitReached = false;
-      citationGraphRemaining = 999999;
+      citationGraphRemaining = 50;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
         isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 20);
         patentSearchRemaining = Math.max(0, 20 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
+        isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 50);
+        citationGraphRemaining = Math.max(0, 50 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
         if (user.lastHumanizerMonth !== currentMonth) {
           user.lastHumanizerMonth = currentMonth;
           user.humanizerWordsUsedThisMonth = 0;
@@ -2139,7 +2141,7 @@ async function searchOpenAlexSources(query, perPage) {
 // related_works = rekomendasi mirip bawaan OpenAlex). Semantic Scholar sengaja belum
 // dipakai di versi awal ini - bisa ditambah belakangan untuk highlight sitasi paling
 // berpengaruh (isInfluential), tapi bukan syarat wajib graf ini bisa jalan.
-const CITATION_GRAPH_MONTHLY_LIMIT = { free: 30, premium: 300, ultimate: 999999 };
+const CITATION_GRAPH_MONTHLY_LIMIT = { free: 5, premium: 20, ultimate: 50 };
 const CITATION_GRAPH_WORK_SELECT = 'id,doi,title,display_name,publication_year,cited_by_count,primary_location,authorships,open_access,referenced_works,related_works,abstract_inverted_index';
 
 function openAlexShortId(fullId) {

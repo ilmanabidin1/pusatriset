@@ -1592,15 +1592,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const badgeEl = document.getElementById('citationGraphQuotaBadge');
     if (!badgeEl || !user) return;
 
-    const limitLabel = { free: '30x', premium: '300x' }[user.type];
+    const limitLabel = { free: '5x', premium: '20x', ultimate: '50x' }[user.type] || '5x';
     const remaining = typeof user.citationGraphRemaining === 'number' ? user.citationGraphRemaining : null;
     badgeEl.style.display = 'block';
-
-    if (user.type === 'ultimate' || !limitLabel) {
-      badgeEl.innerHTML = '<i class="fa-solid fa-infinity" style="color: #059669;"></i> Eksplorasi peta sitasi tanpa batas.';
-      window.citationGraphLimitReached = false;
-      return;
-    }
 
     window.citationGraphLimitReached = !!user.isCitationGraphLimitReached;
     if (user.isCitationGraphLimitReached) {
