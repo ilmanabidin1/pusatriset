@@ -5453,6 +5453,15 @@
           profileMenuTrigger.classList.remove('open');
         }
 
+        // Close "Lainnya" (More) dropdown if open - sebelumnya tidak ditutup saat
+        // pilih tab DARI DALAM dropdown itu sendiri (mis. klik "Peta Sitasi"),
+        // jadi panelnya (position:fixed, z-index:9999) tetap mengambang menutupi
+        // konten tab yang baru dibuka dan memblokir klik ke elemen di baliknya.
+        const sidebarMoreDropdown = document.getElementById('sidebarMoreDropdown');
+        const sidebarMoreTrigger = document.getElementById('sidebarMoreTrigger');
+        if (sidebarMoreDropdown) sidebarMoreDropdown.classList.remove('open');
+        if (sidebarMoreTrigger) sidebarMoreTrigger.classList.remove('active');
+
         // Clean link state and activate target
         sidebarLinks.forEach(link => {
           const currentTab = link.getAttribute('data-tab');
@@ -5589,14 +5598,15 @@
           }
         });
 
-        // Wire dropdown items to close menu on select
-        const dropdownItems = moreDropdown.querySelectorAll('.dropdown-item');
-        dropdownItems.forEach(item => {
-          item.addEventListener('click', () => {
-            moreDropdown.classList.remove('open');
-            moreTrigger.classList.remove('active');
-          });
-        });
+        // Catatan: dulu ada handler kedua di sini ("wire dropdown items to close
+        // on select") yang unconditionally menghapus moreTrigger.classList
+        // 'active' setiap kali item dropdown diklik. Karena addEventListener
+        // berjalan sesuai urutan pendaftaran, handler ini selalu tereksekusi
+        // SETELAH switchTab() (lewat listener sidebarLinks di atas) sempat
+        // menambahkan kembali 'active' untuk tab templates/prompt-bank/
+        // citation-graph - jadi highlight "Lainnya" langsung hilang lagi begitu
+        // ditambahkan. Penutupan dropdown sendiri sudah ditangani konsisten di
+        // switchTab() (lihat awal fungsi itu), jadi handler duplikat ini dihapus.
       }
 
       // Mobile Menu Toggle
