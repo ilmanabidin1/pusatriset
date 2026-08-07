@@ -219,7 +219,7 @@ const citationGraphLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => (req.session && req.session.userId) || req.ip,
+  keyGenerator: (req, res) => (req.session && req.session.userId) || rateLimit.ipKeyGenerator(req.ip),
   message: { ok: false, message: 'Terlalu banyak permintaan peta sitasi dalam waktu singkat. Tunggu sebentar lalu coba lagi.' }
 });
 
@@ -2282,6 +2282,75 @@ app.get('/api/citation-graph/search', requireAccess, citationGraphLimiter, async
   } catch (error) {
     console.error('[Citation Graph Search] Error:', error.message);
     res.status(500).json({ ok: false, message: 'Gagal mencari paper: ' + error.message });
+  }
+});
+
+// Cari kandidat PENULIS (bukan paper) berdasarkan nama - dipakai saat user
+// mencari lewat nama author. Nama sering ambigu (banyak orang dengan nama
+// sama), jadi hasilnya dulu ditampilkan sebagai daftar penulis untuk dipilih
+// (dengan afiliasi & jumlah paper sebagai pembeda), baru setelah dipilih baru
+// diambil daftar papernya lewat /author-works.
+app.get('/api/citation-graph/search-author', requireAccess, citationGraphLimiter, async (req, res) => {
+  const query = String(req.query.q || '').trim();
+  if (query.length < 3) {
+    return res.status(400).json({ ok: false, message: 'Masukkan nama penulis minimal 3 karakter.' });
+  }
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const params = openAlexParams({
+      search: query,
+      per_page: '8',
+      select: 'id,display_name,works_count,cited_by_count,last_known_institutions'
+    });
+    const response = await fetchFn(`https://api.openalex.org/authors?${params.toString()}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`OpenAlex Authors API Error: ${response.status} - ${errText}`);
+    }
+    const data = await response.json();
+    const results = Array.isArray(data.results) ? data.results : [];
+    const normalized = results.map((a) => {
+      const institutions = (a.last_known_institutions || []).map((i) => i.display_name).filter(Boolean);
+      return {
+        id: openAlexShortId(a.id),
+        name: a.display_name || 'Tidak diketahui',
+        institution: institutions.slice(0, 2).join(', ') || null,
+        worksCount: a.works_count || 0,
+        citedByCount: a.cited_by_count || 0
+      };
+    });
+    res.json({ ok: true, results: normalized });
+  } catch (error) {
+    console.error('[Citation Graph Search Author] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mencari penulis: ' + error.message });
+  }
+});
+
+// Daftar paper milik 1 penulis terpilih (diurutkan dari yang paling banyak disitasi).
+app.get('/api/citation-graph/author-works', requireAccess, citationGraphLimiter, async (req, res) => {
+  const authorId = String(req.query.authorId || '').trim();
+  if (!authorId) {
+    return res.status(400).json({ ok: false, message: 'authorId wajib diisi.' });
+  }
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const params = openAlexParams({
+      filter: `author.id:${openAlexShortId(authorId)},has_abstract:true`,
+      sort: 'cited_by_count:desc',
+      per_page: '15',
+      select: CITATION_GRAPH_WORK_SELECT
+    });
+    const response = await fetchFn(`https://api.openalex.org/works?${params.toString()}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`OpenAlex Author-Works API Error: ${response.status} - ${errText}`);
+    }
+    const data = await response.json();
+    const results = Array.isArray(data.results) ? data.results : [];
+    res.json({ ok: true, results: results.map(normalizeOpenAlexWorkNode) });
+  } catch (error) {
+    console.error('[Citation Graph Author Works] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mengambil daftar paper penulis: ' + error.message });
   }
 });
 

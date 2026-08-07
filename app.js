@@ -2751,6 +2751,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const zoomInBtn = document.getElementById('citationGraphZoomInBtn');
     const zoomOutBtn = document.getElementById('citationGraphZoomOutBtn');
     const fitBtn = document.getElementById('citationGraphFitBtn');
+    const modeTopicBtn = document.getElementById('citationGraphModeTopic');
+    const modeAuthorBtn = document.getElementById('citationGraphModeAuthor');
+    const authorResultsHint = document.getElementById('citationGraphAuthorResultsHint');
+    let searchMode = 'topic';
+    let lastAuthorSearchResults = null;
 
     if (!searchInput || !searchBtn) return; // elemen tab belum ada di halaman ini
 
@@ -3008,10 +3013,106 @@ document.addEventListener('DOMContentLoaded', () => {
       expandNode(paper.id);
     }
 
+    function setSearchMode(mode) {
+      searchMode = mode;
+      if (modeTopicBtn) modeTopicBtn.classList.toggle('active', mode === 'topic');
+      if (modeAuthorBtn) modeAuthorBtn.classList.toggle('active', mode === 'author');
+      searchInput.placeholder = mode === 'author'
+        ? 'Cari nama penulis (mis. Yann LeCun)...'
+        : 'Cari judul atau topik paper untuk mulai (mis. transformer neural network)...';
+      searchInput.value = '';
+      searchResults.innerHTML = '';
+      searchResults.style.display = 'none';
+      if (authorResultsHint) authorResultsHint.style.display = 'none';
+      if (searchStatus) searchStatus.style.display = 'none';
+      lastAuthorSearchResults = null;
+    }
+    if (modeTopicBtn) modeTopicBtn.addEventListener('click', () => setSearchMode('topic'));
+    if (modeAuthorBtn) modeAuthorBtn.addEventListener('click', () => setSearchMode('author'));
+
+    function renderPaperCards(papers) {
+      searchResults.innerHTML = '';
+      papers.forEach((paper) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.cssText = 'padding: 0.85rem 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem;';
+        card.innerHTML = `
+          <h4 style="margin: 0; font-size: 0.92rem;">${escapeHtml(paper.title)}</h4>
+          <p style="margin: 0; font-size: 0.78rem; color: var(--text-muted);">${escapeHtml(paper.authors)} &middot; ${escapeHtml(paper.year)} &middot; ${escapeHtml(paper.journal)} &middot; ${paper.citedByCount}x disitasi</p>
+        `;
+        card.addEventListener('click', () => startGraphWithSeed(paper));
+        searchResults.appendChild(card);
+      });
+    }
+
+    function renderAuthorCards(authors) {
+      searchResults.innerHTML = '';
+      authors.forEach((author) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.cssText = 'padding: 0.85rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;';
+        card.innerHTML = `
+          <div>
+            <h4 style="margin: 0; font-size: 0.92rem;"><i class="fa-solid fa-user" style="color: var(--brand-blue); margin-right: 0.35rem;"></i>${escapeHtml(author.name)}</h4>
+            <p style="margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--text-muted);">${author.institution ? escapeHtml(author.institution) + ' &middot; ' : ''}${author.worksCount} paper &middot; ${author.citedByCount}x disitasi</p>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color: var(--text-muted);"></i>
+        `;
+        card.addEventListener('click', () => loadAuthorWorks(author));
+        searchResults.appendChild(card);
+      });
+    }
+
+    async function loadAuthorWorks(author) {
+      searchResults.innerHTML = '';
+      if (searchStatus) {
+        searchStatus.style.display = 'block';
+        searchStatus.textContent = `Memuat paper oleh ${author.name}...`;
+      }
+      try {
+        const res = await fetch('/api/citation-graph/author-works?authorId=' + encodeURIComponent(author.id));
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          if (searchStatus) searchStatus.textContent = data.message || 'Gagal memuat paper penulis.';
+          return;
+        }
+
+        const papers = data.results || [];
+        if (searchStatus) searchStatus.style.display = 'none';
+        if (papers.length === 0) {
+          if (searchStatus) {
+            searchStatus.style.display = 'block';
+            searchStatus.textContent = `${author.name} tidak punya paper dengan abstrak yang bisa dipetakan.`;
+          }
+          return;
+        }
+
+        if (authorResultsHint) {
+          authorResultsHint.style.display = 'block';
+          authorResultsHint.innerHTML = `<a href="#" id="citationGraphBackToAuthors" style="color: var(--brand-blue); font-weight: 600;"><i class="fa-solid fa-arrow-left"></i> Kembali ke daftar penulis</a> &middot; Menampilkan paper oleh <strong>${escapeHtml(author.name)}</strong>`;
+          const backLink = document.getElementById('citationGraphBackToAuthors');
+          if (backLink) {
+            backLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              if (lastAuthorSearchResults) renderAuthorCards(lastAuthorSearchResults);
+              if (authorResultsHint) authorResultsHint.style.display = 'none';
+            });
+          }
+        }
+        renderPaperCards(papers);
+      } catch (err) {
+        console.error('[Citation Graph Author Works]', err);
+        if (searchStatus) {
+          searchStatus.style.display = 'block';
+          searchStatus.textContent = 'Gagal memuat paper penulis. Coba lagi.';
+        }
+      }
+    }
+
     async function runCitationGraphSearch() {
       const query = (searchInput.value || '').trim();
       if (query.length < 3) {
-        alert('Masukkan judul atau kata kunci minimal 3 karakter.');
+        alert(searchMode === 'author' ? 'Masukkan nama penulis minimal 3 karakter.' : 'Masukkan judul atau kata kunci minimal 3 karakter.');
         searchInput.focus();
         return;
       }
@@ -3021,16 +3122,18 @@ document.addEventListener('DOMContentLoaded', () => {
       searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
       searchResults.innerHTML = '';
       searchResults.style.display = 'flex';
+      if (authorResultsHint) authorResultsHint.style.display = 'none';
       if (searchStatus) {
         searchStatus.style.display = 'block';
-        searchStatus.textContent = 'Mencari paper di OpenAlex...';
+        searchStatus.textContent = searchMode === 'author' ? 'Mencari penulis di OpenAlex...' : 'Mencari paper di OpenAlex...';
       }
 
       try {
-        const res = await fetch('/api/citation-graph/search?q=' + encodeURIComponent(query));
+        const endpoint = searchMode === 'author' ? '/api/citation-graph/search-author' : '/api/citation-graph/search';
+        const res = await fetch(endpoint + '?q=' + encodeURIComponent(query));
         const data = await res.json();
         if (!res.ok || !data.ok) {
-          if (searchStatus) searchStatus.textContent = data.message || 'Gagal mencari paper.';
+          if (searchStatus) searchStatus.textContent = data.message || 'Gagal mencari.';
           return;
         }
 
@@ -3044,22 +3147,17 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        results.forEach((paper) => {
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.style.cssText = 'padding: 0.85rem 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem;';
-          card.innerHTML = `
-            <h4 style="margin: 0; font-size: 0.92rem;">${escapeHtml(paper.title)}</h4>
-            <p style="margin: 0; font-size: 0.78rem; color: var(--text-muted);">${escapeHtml(paper.authors)} &middot; ${escapeHtml(paper.year)} &middot; ${escapeHtml(paper.journal)} &middot; ${paper.citedByCount}x disitasi</p>
-          `;
-          card.addEventListener('click', () => startGraphWithSeed(paper));
-          searchResults.appendChild(card);
-        });
+        if (searchMode === 'author') {
+          lastAuthorSearchResults = results;
+          renderAuthorCards(results);
+        } else {
+          renderPaperCards(results);
+        }
       } catch (err) {
         console.error('[Citation Graph Search]', err);
         if (searchStatus) {
           searchStatus.style.display = 'block';
-          searchStatus.textContent = 'Gagal mencari paper. Coba lagi.';
+          searchStatus.textContent = 'Gagal mencari. Coba lagi.';
         }
       } finally {
         searchBtn.disabled = false;
@@ -3075,9 +3173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
         workspace.style.display = 'none';
-        searchResults.innerHTML = '';
-        searchResults.style.display = 'none';
-        searchInput.value = '';
+        setSearchMode('topic');
         expandedNodeIds.clear();
         tldrCache.clear();
         currentDetailNodeId = null;
