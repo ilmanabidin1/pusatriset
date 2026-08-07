@@ -363,6 +363,7 @@
       }
       .sidebar.collapsed .sidebar-link span,
       .sidebar.collapsed .sidebar-link .pro-badge,
+      .sidebar.collapsed .sidebar-link .new-badge,
       .sidebar.collapsed .profile-details,
       .sidebar.collapsed .profile-menu-caret {
         display: none;
@@ -458,6 +459,24 @@
       border-radius: 4px;
       margin-left: auto;
       letter-spacing: 0.5px;
+    }
+
+    .new-badge {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: #fff;
+      font-size: 0.62rem;
+      font-weight: 800;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      margin-left: auto;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      animation: newBadgePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes newBadgePulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
     }
 
     /* Sidebar Promo Card */
@@ -3572,8 +3591,8 @@
       <a href="#" class="sidebar-link" data-tab="database-jurnal">
         <i class="fa-solid fa-database"></i> <span>Database Jurnal</span>
       </a>
-      <a href="#" class="sidebar-link" data-tab="peer-reviewer">
-        <i class="fa-solid fa-clipboard-check"></i> <span>AI Peer Reviewer</span>
+      <a href="#" class="sidebar-link" data-tab="citation-graph">
+        <i class="fa-solid fa-diagram-project"></i> <span>Peta Sitasi</span> <span class="new-badge">Baru</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="ai-research">
         <i class="fa-solid fa-user-check"></i> <span>Paraphraser &amp; Humanizer</span>
@@ -3581,11 +3600,8 @@
       <a href="#" class="sidebar-link" data-tab="slr">
         <i class="fa-solid fa-book-bookmark"></i> <span>Systematic Lit Review</span>
       </a>
-      <a href="#" class="sidebar-link" data-tab="patent-search">
-        <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
-      </a>
       <a href="#" class="sidebar-link" id="sidebarMoreTrigger">
-        <i class="fa-solid fa-ellipsis"></i> <span>More</span>
+        <i class="fa-solid fa-ellipsis"></i> <span>Lainnya</span>
       </a>
     </nav>
 
@@ -3643,14 +3659,17 @@
 
   <!-- More Floating Dropdown Menu -->
   <div class="sidebar-more-dropdown" id="sidebarMoreDropdown">
+    <a href="#" class="sidebar-link dropdown-item" data-tab="peer-reviewer">
+      <i class="fa-solid fa-clipboard-check"></i> <span>AI Peer Reviewer</span>
+    </a>
+    <a href="#" class="sidebar-link dropdown-item" data-tab="patent-search">
+      <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
+    </a>
     <a href="#" class="sidebar-link dropdown-item" data-tab="templates">
       <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
     </a>
     <a href="#" class="sidebar-link dropdown-item" data-tab="prompt-bank">
       <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
-    </a>
-    <a href="#" class="sidebar-link dropdown-item" data-tab="citation-graph">
-      <i class="fa-solid fa-diagram-project"></i> <span>Peta Sitasi</span>
     </a>
   </div>
 
@@ -5476,7 +5495,7 @@
         // Also highlight More trigger if active tab is templates or prompt-bank
         const moreTrigger = document.getElementById('sidebarMoreTrigger');
         if (moreTrigger) {
-          if (['templates', 'prompt-bank', 'citation-graph'].includes(tabName)) {
+          if (['templates', 'prompt-bank', 'peer-reviewer', 'patent-search'].includes(tabName)) {
             moreTrigger.classList.add('active');
           } else {
             moreTrigger.classList.remove('active');
