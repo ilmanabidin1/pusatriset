@@ -67,7 +67,8 @@
   .faq-answer{display:none}
   @media (max-width:900px){
     .hero-grid{grid-template-columns:1fr !important;gap:2.5rem !important}
-    .stats-grid{grid-template-columns:repeat(2,1fr) !important}
+    .price-compare-card{padding:1.4rem 1.2rem !important}
+    .price-compare-card .price-value-col{width:auto !important}
     .feat-row{grid-template-columns:1fr !important;gap:1.8rem !important}
     .feat-rev .feat-media{order:2}
     .feat-rev .feat-copy{order:1}
@@ -142,13 +143,51 @@
     </div>
   </header>
 
-  <!-- STATS BAR -->
+  <!-- PRICE COMPARISON -->
   <section style="position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:1.5rem 2rem 3.5rem">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem" class="stats-grid">
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.4rem 1.2rem;text-align:center;backdrop-filter:blur(12px)"><div style="font-family:'Outfit';font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,#fff,#8fb8ea);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">780+</div><div style="color:rgba(255,255,255,.6);font-size:.86rem;font-weight:500;margin-top:.2rem">Jurnal terverifikasi</div></div>
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.4rem 1.2rem;text-align:center;backdrop-filter:blur(12px)"><div style="font-family:'Outfit';font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,#34d399,#fbbf24);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Scopus &amp; Sinta</div><div style="color:rgba(255,255,255,.6);font-size:.86rem;font-weight:500;margin-top:.2rem">Terindeks &amp; terakreditasi</div></div>
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.4rem 1.2rem;text-align:center;backdrop-filter:blur(12px)"><div style="font-family:'Outfit';font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,#ff8e3c,#ff7417);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">98%</div><div style="color:rgba(255,255,255,.6);font-size:.86rem;font-weight:500;margin-top:.2rem">Lolos Turnitin &amp; GPTZero</div></div>
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.4rem 1.2rem;text-align:center;backdrop-filter:blur(12px)"><div style="font-family:'Outfit';font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,#fff,#8fb8ea);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">8 Tools AI</div><div style="color:rgba(255,255,255,.6);font-size:.86rem;font-weight:500;margin-top:.2rem">Dalam satu langganan</div></div>
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:1.9rem 2.1rem;backdrop-filter:blur(12px)" class="price-compare-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:.9rem;margin-bottom:1.6rem">
+        <div>
+          <div style="text-transform:uppercase;letter-spacing:.08em;font-size:.72rem;font-weight:800;color:#ff9b4a;margin-bottom:.35rem">Bandingkan Biaya</div>
+          <div style="font-family:'Outfit';font-weight:800;font-size:1.3rem;color:#fff">Kenapa bayar 8 langganan AI terpisah, kalau bisa satu?</div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:.4rem;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.32);color:#34d399;font-weight:800;font-size:.85rem;padding:.5rem 1rem;border-radius:30px;white-space:nowrap"><i class="fa-solid fa-arrow-trend-down"></i>Hemat hingga 94%</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1.2rem">
+        <!-- Bar 1: 1 tool AI -->
+        <div>
+          <div style="font-size:.86rem;color:rgba(255,255,255,.62);margin-bottom:.45rem">1 Tools AI (rata-rata pasar)</div>
+          <div style="display:flex;align-items:center;gap:.9rem">
+            <div style="flex:1;height:26px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden">
+              <div style="width:12.5%;height:100%;background:rgba(255,255,255,.2);border-radius:0 4px 4px 0"></div>
+            </div>
+            <div class="price-value-col" style="width:170px;flex-shrink:0;font-weight:700;font-size:.92rem;color:#fff">$20<span style="color:rgba(255,255,255,.5);font-weight:500">/bln (~Rp320rb)</span></div>
+          </div>
+        </div>
+        <!-- Bar 2: 8 tools separately -->
+        <div>
+          <div style="font-size:.86rem;color:rgba(255,255,255,.62);margin-bottom:.45rem">8 Tools AI, Langganan Terpisah-pisah</div>
+          <div style="display:flex;align-items:center;gap:.9rem">
+            <div style="flex:1;height:26px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden">
+              <div style="width:100%;height:100%;background:rgba(255,255,255,.22);border-radius:0 4px 4px 0"></div>
+            </div>
+            <div class="price-value-col" style="width:170px;flex-shrink:0;font-weight:700;font-size:.92rem;color:#fff">$160<span style="color:rgba(255,255,255,.5);font-weight:500">/bln (~Rp2,56jt)</span></div>
+          </div>
+        </div>
+        <!-- Bar 3: JurnalHub Ultimate -->
+        <div>
+          <div style="font-size:.86rem;color:#ffd8b0;margin-bottom:.45rem;font-weight:700">JurnalHub Ultimate — 8 Tools AI Sekaligus</div>
+          <div style="display:flex;align-items:center;gap:.9rem">
+            <div style="flex:1;height:26px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden">
+              <div style="width:6%;min-width:28px;height:100%;background:linear-gradient(135deg,#ff7417,#ff8e3c);border-radius:0 4px 4px 0;box-shadow:0 0 16px rgba(255,116,23,.5)"></div>
+            </div>
+            <div class="price-value-col" style="width:170px;flex-shrink:0;font-weight:800;font-size:.98rem;color:#ffb877">Rp149rb<span style="color:rgba(255,255,255,.5);font-weight:500">/bulan</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:.74rem;color:rgba(255,255,255,.38);margin-top:1.3rem">*Estimasi harga rata-rata langganan tools AI premium sejenis secara terpisah (±US$20/tools/bulan), kurs ilustratif Rp16.000/US$1.</div>
     </div>
   </section>
 </div>
