@@ -364,6 +364,7 @@
       .sidebar.collapsed .sidebar-link span,
       .sidebar.collapsed .sidebar-link .pro-badge,
       .sidebar.collapsed .sidebar-link .new-badge,
+      .sidebar.collapsed .sidebar-group-caret,
       .sidebar.collapsed .profile-details,
       .sidebar.collapsed .profile-menu-caret {
         display: none;
@@ -421,21 +422,38 @@
       flex-grow: 1;
     }
 
-    .sidebar-section-label {
-      display: block;
-      font-size: 0.68rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: rgba(255, 255, 255, 0.32);
-      padding: 0 1rem;
-      margin-top: 0.5rem;
+    /* Grup sidebar dengan flyout submenu (hover di desktop, klik di
+       touch/mobile) - menggantikan pendekatan label-section supaya sidebar
+       cukup menampilkan 3 kategori, bukan 8 item sekaligus. Posisi flyout
+       (.sidebar-flyout-portal, markup-nya ada di luar <aside>) dihitung &
+       ditampilkan lewat JS, bukan CSS :hover murni, karena .sidebar sendiri
+       overflow-y:auto - anak position:fixed/absolute di dalamnya tetap
+       ke-clip walau elemennya sendiri dipindah ke luar lewat portal. */
+    .sidebar-group-trigger {
+      justify-content: space-between;
     }
-    .sidebar-section-label:first-child {
-      margin-top: 0;
+    .sidebar-group-trigger.active .sidebar-group-caret {
+      color: rgba(255, 255, 255, 0.7);
     }
-    .sidebar.collapsed .sidebar-section-label {
+    .sidebar-flyout-portal {
       display: none;
+      flex-direction: column;
+      gap: 0.2rem;
+      position: fixed;
+      background: var(--bg-sidebar-active);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.4rem;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      z-index: 9999;
+      width: 220px;
+    }
+    .sidebar-flyout-portal.open {
+      display: flex;
+    }
+    .sidebar-flyout-portal .sidebar-link {
+      padding: 0.6rem 0.75rem;
+      font-size: 0.85rem;
     }
 
     .sidebar-link {
@@ -3564,34 +3582,14 @@
     </button>
 
     <nav class="sidebar-nav" style="flex-grow: 0;">
-      <span class="sidebar-section-label">Cari &amp; Jelajah</span>
-      <a href="#" class="sidebar-link" data-tab="database-jurnal">
-        <i class="fa-solid fa-database"></i> <span>Database Jurnal</span>
+      <a href="#" class="sidebar-link sidebar-group-trigger" data-group="cari-jelajah">
+        <i class="fa-solid fa-compass"></i> <span>Cari &amp; Jelajah</span> <i class="fa-solid fa-chevron-right sidebar-group-caret"></i>
       </a>
-      <a href="#" class="sidebar-link" data-tab="citation-graph">
-        <i class="fa-solid fa-diagram-project"></i> <span>Peta Sitasi</span> <span class="new-badge">Baru</span>
+      <a href="#" class="sidebar-link sidebar-group-trigger" data-group="tulis-review">
+        <i class="fa-solid fa-pen-nib"></i> <span>Tulis &amp; Review</span> <i class="fa-solid fa-chevron-right sidebar-group-caret"></i>
       </a>
-
-      <span class="sidebar-section-label">Tulis &amp; Review</span>
-      <a href="#" class="sidebar-link" data-tab="ai-research">
-        <i class="fa-solid fa-user-check"></i> <span>Paraphraser &amp; Humanizer</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="peer-reviewer">
-        <i class="fa-solid fa-clipboard-check"></i> <span>AI Peer Reviewer</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="templates">
-        <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="prompt-bank">
-        <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
-      </a>
-
-      <span class="sidebar-section-label">Riset Lanjutan</span>
-      <a href="#" class="sidebar-link" data-tab="slr">
-        <i class="fa-solid fa-book-bookmark"></i> <span>Systematic Lit Review</span>
-      </a>
-      <a href="#" class="sidebar-link" data-tab="patent-search">
-        <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
+      <a href="#" class="sidebar-link sidebar-group-trigger" data-group="riset-lanjutan">
+        <i class="fa-solid fa-flask"></i> <span>Riset Lanjutan</span> <i class="fa-solid fa-chevron-right sidebar-group-caret"></i>
       </a>
     </nav>
 
@@ -3646,6 +3644,43 @@
       </div>
     </div>
   </aside>
+
+  <!-- Flyout submenu tiap grup sidebar - SENGAJA diletakkan di luar <aside>
+       (bukan nested di dalam trigger-nya) karena .sidebar punya
+       overflow-y:auto; elemen position:fixed yang jadi anak dari container
+       ber-overflow tetap ke-clip olehnya walau z-index-nya tinggi. Posisinya
+       dihitung & diisi lewat JS (getBoundingClientRect trigger) persis
+       seperti dropdown "Lainnya" yang lama, supaya tidak kepotong sidebar. -->
+  <div class="sidebar-flyout-portal" id="flyoutCariJelajah" data-group="cari-jelajah">
+    <a href="#" class="sidebar-link" data-tab="database-jurnal">
+      <i class="fa-solid fa-database"></i> <span>Database Jurnal</span>
+    </a>
+    <a href="#" class="sidebar-link" data-tab="citation-graph">
+      <i class="fa-solid fa-diagram-project"></i> <span>Peta Sitasi</span> <span class="new-badge">Baru</span>
+    </a>
+  </div>
+  <div class="sidebar-flyout-portal" id="flyoutTulisReview" data-group="tulis-review">
+    <a href="#" class="sidebar-link" data-tab="ai-research">
+      <i class="fa-solid fa-user-check"></i> <span>Paraphraser &amp; Humanizer</span>
+    </a>
+    <a href="#" class="sidebar-link" data-tab="peer-reviewer">
+      <i class="fa-solid fa-clipboard-check"></i> <span>AI Peer Reviewer</span>
+    </a>
+    <a href="#" class="sidebar-link" data-tab="templates">
+      <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
+    </a>
+    <a href="#" class="sidebar-link" data-tab="prompt-bank">
+      <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
+    </a>
+  </div>
+  <div class="sidebar-flyout-portal" id="flyoutRisetLanjutan" data-group="riset-lanjutan">
+    <a href="#" class="sidebar-link" data-tab="slr">
+      <i class="fa-solid fa-book-bookmark"></i> <span>Systematic Lit Review</span>
+    </a>
+    <a href="#" class="sidebar-link" data-tab="patent-search">
+      <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
+    </a>
+  </div>
 
   <!-- Right Main Content Panel -->
   <main class="main-content">
@@ -5442,6 +5477,13 @@
       const tabContents = document.querySelectorAll('.tab-content');
       const pageTitle = document.getElementById('pageTitle');
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      // Peta kategori sidebar (trigger flyout) -> daftar tab di dalamnya, dipakai
+      // untuk highlight trigger yang relevan saat salah satu tab di dalamnya aktif.
+      const SIDEBAR_GROUPS = {
+        'cari-jelajah': ['database-jurnal', 'citation-graph'],
+        'tulis-review': ['ai-research', 'peer-reviewer', 'templates', 'prompt-bank'],
+        'riset-lanjutan': ['slr', 'patent-search']
+      };
       const sidebar = document.getElementById('sidebar');
 
       // Helper function to capitalize tab names
@@ -5480,6 +5522,17 @@
           } else {
             link.classList.remove('active');
           }
+        });
+
+        // Highlight trigger kategori yang menaungi tab aktif, dan tutup semua
+        // flyout yang sempat dibuka lewat klik (touch/mobile) - hover-nya sendiri
+        // otomatis hilang begitu mouse pindah, jadi ini khusus utk mode klik.
+        document.querySelectorAll('.sidebar-flyout-portal').forEach(flyout => flyout.classList.remove('open'));
+        document.querySelectorAll('.sidebar-group-trigger').forEach(trigger => {
+          const groupName = trigger.getAttribute('data-group');
+          const tabsInGroup = SIDEBAR_GROUPS[groupName] || [];
+          const effectiveTab = ['drafting-companion', 'lit-review', 'humanizer'].includes(tabName) ? 'ai-research' : tabName;
+          trigger.classList.toggle('active', tabsInGroup.includes(effectiveTab));
         });
 
         // Hide all tabs and show active
@@ -5554,11 +5607,63 @@
         });
       });
 
-      // Catatan: sidebar "Lainnya" (More dropdown) dihapus - semua item yang
-      // dulu ada di dalamnya (Peer Reviewer, Patent Search, Template, Prompt
-      // Bank) sekarang tampil langsung di sidebar utama, dikelompokkan pakai
-      // label section kecil (lihat markup .sidebar-nav), supaya tidak ada lagi
-      // fitur yang "tersembunyi" di balik dropdown.
+      // Grup sidebar (Cari & Jelajah / Tulis & Review / Riset Lanjutan) buka
+      // flyout-nya masing-masing (markup .sidebar-flyout-portal ada di luar
+      // <aside>, lihat catatan di HTML) lewat 2 jalur:
+      // 1. Hover (mouseenter/leave, bukan CSS :hover murni, karena posisinya
+      //    dihitung dinamis via getBoundingClientRect) - dengan delay kecil
+      //    sebelum menutup supaya kursor sempat "menyeberang" ke flyout tanpa
+      //    keburu hilang (hover-intent).
+      // 2. Klik - untuk layar sentuh/mobile yang tidak punya event hover, dan
+      //    untuk aksesibilitas keyboard/screen reader.
+      let flyoutCloseTimer = null;
+      function closeAllFlyouts() {
+        document.querySelectorAll('.sidebar-flyout-portal').forEach(f => f.classList.remove('open'));
+      }
+      function openFlyout(trigger, flyout) {
+        clearTimeout(flyoutCloseTimer);
+        closeAllFlyouts();
+        const rect = trigger.getBoundingClientRect();
+        flyout.style.top = `${rect.top}px`;
+        flyout.style.left = `${rect.right + 6}px`;
+        flyout.classList.add('open');
+      }
+      function scheduleCloseFlyout(flyout) {
+        clearTimeout(flyoutCloseTimer);
+        flyoutCloseTimer = setTimeout(() => flyout.classList.remove('open'), 200);
+      }
+
+      document.querySelectorAll('.sidebar-group-trigger').forEach(trigger => {
+        const groupName = trigger.getAttribute('data-group');
+        const flyout = document.querySelector(`.sidebar-flyout-portal[data-group="${groupName}"]`);
+        if (!flyout) return;
+
+        trigger.addEventListener('mouseenter', () => openFlyout(trigger, flyout));
+        trigger.addEventListener('mouseleave', () => scheduleCloseFlyout(flyout));
+        flyout.addEventListener('mouseenter', () => clearTimeout(flyoutCloseTimer));
+        flyout.addEventListener('mouseleave', () => scheduleCloseFlyout(flyout));
+
+        // Selalu BUKA (bukan toggle tutup-jika-sudah-terbuka) - browser sungguhan
+        // memicu mouseenter dulu sebelum click terdaftar (kursor "lewat" elemen
+        // saat bergerak ke sana), jadi flyout ini sudah kepencet .open oleh
+        // hover duluan sebelum handler klik ini sempat jalan. Kalau di sini
+        // logikanya toggle, klik jadi malah langsung menutup yang baru dibuka
+        // hover. Menutup tetap bisa lewat klik di luar / Escape.
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openFlyout(trigger, flyout);
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.sidebar-group-trigger') && !e.target.closest('.sidebar-flyout-portal')) {
+          closeAllFlyouts();
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAllFlyouts();
+      });
 
       // Mobile Menu Toggle
       mobileMenuBtn.addEventListener('click', () => {
@@ -5580,12 +5685,7 @@
           // ditangani handler masing-masing, bukan toggle ulang menu-nya.
           if (profileDropdown.contains(e.target)) return;
 
-          // Close More dropdown if open
-          if (moreDropdown) {
-            moreDropdown.classList.remove('open');
-            if (moreTrigger) moreTrigger.classList.remove('active');
-          }
-
+          closeAllFlyouts();
           profileMenuTrigger.classList.toggle('open');
         });
 
