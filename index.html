@@ -421,6 +421,23 @@
       flex-grow: 1;
     }
 
+    .sidebar-section-label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(255, 255, 255, 0.32);
+      padding: 0 1rem;
+      margin-top: 0.5rem;
+    }
+    .sidebar-section-label:first-child {
+      margin-top: 0;
+    }
+    .sidebar.collapsed .sidebar-section-label {
+      display: none;
+    }
+
     .sidebar-link {
       display: flex;
       align-items: center;
@@ -644,47 +661,6 @@
       z-index: 60;
     }
 
-    .sidebar-more-dropdown {
-      display: none;
-      flex-direction: column;
-      gap: 0.2rem;
-      position: fixed;
-      background: var(--bg-sidebar-active);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 0.4rem;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
-      z-index: 9999;
-      width: 210px;
-    }
-
-    .sidebar-more-dropdown.open {
-      display: flex;
-      animation: profileDropUpIn 0.15s ease-out;
-    }
-
-    .sidebar-more-dropdown .dropdown-item {
-      padding: 0.6rem 0.75rem;
-      font-size: 0.85rem;
-      border-radius: 8px;
-      gap: 0.75rem;
-      color: rgba(255, 255, 255, 0.85) !important;
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      transition: all 0.2s ease;
-    }
-
-    .sidebar-more-dropdown .dropdown-item:hover {
-      background-color: var(--bg-sidebar-hover);
-      color: #ffffff !important;
-    }
-
-    .sidebar-more-dropdown .dropdown-item i {
-      font-size: 0.95rem;
-      width: 16px;
-      text-align: center;
-    }
 
     /* SLR Wizard Styling */
     .slr-wizard-container {
@@ -3588,20 +3564,34 @@
     </button>
 
     <nav class="sidebar-nav" style="flex-grow: 0;">
+      <span class="sidebar-section-label">Cari &amp; Jelajah</span>
       <a href="#" class="sidebar-link" data-tab="database-jurnal">
         <i class="fa-solid fa-database"></i> <span>Database Jurnal</span>
       </a>
       <a href="#" class="sidebar-link" data-tab="citation-graph">
         <i class="fa-solid fa-diagram-project"></i> <span>Peta Sitasi</span> <span class="new-badge">Baru</span>
       </a>
+
+      <span class="sidebar-section-label">Tulis &amp; Review</span>
       <a href="#" class="sidebar-link" data-tab="ai-research">
         <i class="fa-solid fa-user-check"></i> <span>Paraphraser &amp; Humanizer</span>
       </a>
+      <a href="#" class="sidebar-link" data-tab="peer-reviewer">
+        <i class="fa-solid fa-clipboard-check"></i> <span>AI Peer Reviewer</span>
+      </a>
+      <a href="#" class="sidebar-link" data-tab="templates">
+        <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
+      </a>
+      <a href="#" class="sidebar-link" data-tab="prompt-bank">
+        <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
+      </a>
+
+      <span class="sidebar-section-label">Riset Lanjutan</span>
       <a href="#" class="sidebar-link" data-tab="slr">
         <i class="fa-solid fa-book-bookmark"></i> <span>Systematic Lit Review</span>
       </a>
-      <a href="#" class="sidebar-link" id="sidebarMoreTrigger">
-        <i class="fa-solid fa-ellipsis"></i> <span>Lainnya</span>
+      <a href="#" class="sidebar-link" data-tab="patent-search">
+        <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
       </a>
     </nav>
 
@@ -3656,22 +3646,6 @@
       </div>
     </div>
   </aside>
-
-  <!-- More Floating Dropdown Menu -->
-  <div class="sidebar-more-dropdown" id="sidebarMoreDropdown">
-    <a href="#" class="sidebar-link dropdown-item" data-tab="peer-reviewer">
-      <i class="fa-solid fa-clipboard-check"></i> <span>AI Peer Reviewer</span>
-    </a>
-    <a href="#" class="sidebar-link dropdown-item" data-tab="patent-search">
-      <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
-    </a>
-    <a href="#" class="sidebar-link dropdown-item" data-tab="templates">
-      <i class="fa-regular fa-file-word"></i> <span>Template Jurnal</span>
-    </a>
-    <a href="#" class="sidebar-link dropdown-item" data-tab="prompt-bank">
-      <i class="fa-solid fa-folder-open"></i> <span>Prompt Bank</span>
-    </a>
-  </div>
 
   <!-- Right Main Content Panel -->
   <main class="main-content">
@@ -5497,15 +5471,6 @@
           profileMenuTrigger.classList.remove('open');
         }
 
-        // Close "Lainnya" (More) dropdown if open - sebelumnya tidak ditutup saat
-        // pilih tab DARI DALAM dropdown itu sendiri (mis. klik "Peta Sitasi"),
-        // jadi panelnya (position:fixed, z-index:9999) tetap mengambang menutupi
-        // konten tab yang baru dibuka dan memblokir klik ke elemen di baliknya.
-        const sidebarMoreDropdown = document.getElementById('sidebarMoreDropdown');
-        const sidebarMoreTrigger = document.getElementById('sidebarMoreTrigger');
-        if (sidebarMoreDropdown) sidebarMoreDropdown.classList.remove('open');
-        if (sidebarMoreTrigger) sidebarMoreTrigger.classList.remove('active');
-
         // Clean link state and activate target
         sidebarLinks.forEach(link => {
           const currentTab = link.getAttribute('data-tab');
@@ -5516,16 +5481,6 @@
             link.classList.remove('active');
           }
         });
-
-        // Also highlight More trigger if active tab is templates or prompt-bank
-        const moreTrigger = document.getElementById('sidebarMoreTrigger');
-        if (moreTrigger) {
-          if (['templates', 'prompt-bank', 'peer-reviewer', 'patent-search'].includes(tabName)) {
-            moreTrigger.classList.add('active');
-          } else {
-            moreTrigger.classList.remove('active');
-          }
-        }
 
         // Hide all tabs and show active
         tabContents.forEach(content => {
@@ -5599,59 +5554,11 @@
         });
       });
 
-      // More menu dropdown (Template Jurnal & Prompt Bank)
-      const moreTrigger = document.getElementById('sidebarMoreTrigger');
-      const moreDropdown = document.getElementById('sidebarMoreDropdown');
-      if (moreTrigger && moreDropdown) {
-        moreTrigger.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          const isOpen = moreDropdown.classList.contains('open');
-
-          // Close profile dropup if open
-          const profileMenuTrigger = document.getElementById('profileMenuTrigger');
-          if (profileMenuTrigger) {
-            profileMenuTrigger.classList.remove('open');
-          }
-
-          if (!isOpen) {
-            const rect = moreTrigger.getBoundingClientRect();
-            // Position it floating to the right of the More trigger button
-            moreDropdown.style.top = `${rect.top}px`;
-            moreDropdown.style.left = `${rect.right + 10}px`;
-            moreDropdown.classList.add('open');
-            moreTrigger.classList.add('active');
-          } else {
-            moreDropdown.classList.remove('open');
-            moreTrigger.classList.remove('active');
-          }
-        });
-
-        document.addEventListener('click', (e) => {
-          if (!moreDropdown.contains(e.target) && e.target !== moreTrigger && !moreTrigger.contains(e.target)) {
-            moreDropdown.classList.remove('open');
-            moreTrigger.classList.remove('active');
-          }
-        });
-
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            moreDropdown.classList.remove('open');
-            moreTrigger.classList.remove('active');
-          }
-        });
-
-        // Catatan: dulu ada handler kedua di sini ("wire dropdown items to close
-        // on select") yang unconditionally menghapus moreTrigger.classList
-        // 'active' setiap kali item dropdown diklik. Karena addEventListener
-        // berjalan sesuai urutan pendaftaran, handler ini selalu tereksekusi
-        // SETELAH switchTab() (lewat listener sidebarLinks di atas) sempat
-        // menambahkan kembali 'active' untuk tab templates/prompt-bank/
-        // citation-graph - jadi highlight "Lainnya" langsung hilang lagi begitu
-        // ditambahkan. Penutupan dropdown sendiri sudah ditangani konsisten di
-        // switchTab() (lihat awal fungsi itu), jadi handler duplikat ini dihapus.
-      }
+      // Catatan: sidebar "Lainnya" (More dropdown) dihapus - semua item yang
+      // dulu ada di dalamnya (Peer Reviewer, Patent Search, Template, Prompt
+      // Bank) sekarang tampil langsung di sidebar utama, dikelompokkan pakai
+      // label section kecil (lihat markup .sidebar-nav), supaya tidak ada lagi
+      // fitur yang "tersembunyi" di balik dropdown.
 
       // Mobile Menu Toggle
       mobileMenuBtn.addEventListener('click', () => {

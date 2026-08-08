@@ -7763,10 +7763,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderResearchChatMessages();
       }
 
-      // 9i. Translate "More" sidebar trigger (no data-tab, so not covered by the sidebar-link loop)
-      const moreTriggerSpan = document.querySelector('#sidebarMoreTrigger span');
-      if (moreTriggerSpan) moreTriggerSpan.textContent = TRANSLATIONS[lang].sidebar_more;
-
       // 9j. Translate Pencarian Paten (Patent Search) tab
       const patentSearchTitleEl = document.getElementById('patentSearchTitle');
       if (patentSearchTitleEl) patentSearchTitleEl.textContent = TRANSLATIONS[lang].patent_search_title;
