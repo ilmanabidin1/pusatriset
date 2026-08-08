@@ -5425,6 +5425,31 @@
               </div>
             </div>
 
+            <!-- Section 5: Bantuan & Legal -->
+            <div class="filter-box-card" style="padding: 1.5rem 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-muted); margin-bottom: 0.9rem; display: flex; align-items: center; gap: 0.6rem; text-transform: uppercase; letter-spacing: 0.03em;">
+                <i class="fa-regular fa-circle-question"></i> Bantuan & Legal
+              </h3>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-size: 0.82rem;">
+                <a href="/privacy.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Kebijakan Privasi</a>
+                <a href="/terms.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Syarat & Ketentuan</a>
+                <a href="/refund.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Refund Policy</a>
+                <a href="/faq.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">FAQ</a>
+                <a href="/contact.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Kontak</a>
+              </div>
+            </div>
+
+            <!-- Section 6: Zona Berbahaya (Hapus Akun) -->
+            <div class="filter-box-card" style="padding: 1.5rem 2rem; border: 1px solid rgba(220,38,38,0.2);">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem; text-transform: uppercase; letter-spacing: 0.03em;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Zona Berbahaya
+              </h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Menghapus akun bersifat permanen - seluruh profil, riwayat percakapan AI, jurnal tersimpan, dan riwayat transaksi Anda akan dihapus dan tidak dapat dikembalikan. Lihat <a href="/privacy.html" target="_blank" rel="noopener" style="color: var(--brand-blue);">Kebijakan Privasi</a> untuk detail.</p>
+              <button type="button" id="btnOpenDeleteAccount" style="background: #fff; border: 1px solid #dc2626; color: #dc2626; padding: 0.6rem 1.25rem; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                <i class="fa-solid fa-trash-can"></i> Hapus Akun
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
@@ -6434,6 +6459,47 @@
           </button>
           <button type="button" id="summarizeChatModalStartNewBtn" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 0.6rem 1.25rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s;">
             <i class="fa-solid fa-arrow-right-to-bracket"></i> Mulai Chat Baru dengan Rangkuman Ini
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Hapus Akun Permanen -->
+  <div class="modal-overlay" id="deleteAccountModal">
+    <div class="modal-card" style="max-width: 480px;">
+      <button class="modal-close-btn" id="closeDeleteAccountModalBtn">&times;</button>
+      <div class="modal-header">
+        <div class="modal-crown-circle" style="background: rgba(220,38,38,0.1); color: #dc2626;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3>Hapus Akun Secara Permanen</h3>
+        <p>Tindakan ini tidak dapat dibatalkan. Data berikut akan dihapus dari sistem kami:</p>
+      </div>
+      <div class="modal-body" style="padding-top: 0.5rem;">
+        <ul style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.25rem 1.1rem; line-height: 1.7;">
+          <li>Profil dan status langganan Anda</li>
+          <li>Seluruh riwayat percakapan JurnalHub Intelligence</li>
+          <li>Jurnal yang tersimpan (bookmark)</li>
+          <li>Riwayat transaksi pembayaran</li>
+        </ul>
+
+        <div id="deleteAccountPasswordField" style="margin-bottom: 1rem;">
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.4rem;">Masukkan kata sandi Anda untuk konfirmasi</label>
+          <input type="password" id="deleteAccountPassword" placeholder="Kata sandi" style="width: 100%; padding: 0.7rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.88rem; outline: none;">
+        </div>
+
+        <div id="deleteAccountEmailField" style="display: none; margin-bottom: 1rem;">
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.4rem;">Akun Anda masuk lewat Google. Ketik ulang email akun Anda untuk konfirmasi</label>
+          <input type="email" id="deleteAccountEmail" placeholder="email@domain.com" style="width: 100%; padding: 0.7rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.88rem; outline: none;">
+        </div>
+
+        <div id="deleteAccountMessage" style="font-size: 0.85rem; color: #dc2626; font-weight: 600; margin-bottom: 1rem; display: none;"></div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+          <button type="button" id="cancelDeleteAccountBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; color: var(--text-main); font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 0.6rem 1.1rem; border-radius: 8px;">Batal</button>
+          <button type="button" id="confirmDeleteAccountBtn" style="background: #dc2626; color: white; border: none; font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 0.6rem 1.25rem; border-radius: 8px;">
+            <i class="fa-solid fa-trash-can"></i> Ya, Hapus Akun Saya
           </button>
         </div>
       </div>

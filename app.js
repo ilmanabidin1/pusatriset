@@ -3967,6 +3967,95 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // --- Hapus Akun (Zona Berbahaya) - hak "right to erasure" UU PDP/GDPR ---
+    const btnOpenDeleteAccount = document.getElementById('btnOpenDeleteAccount');
+    const deleteAccountModal = document.getElementById('deleteAccountModal');
+    const closeDeleteAccountModalBtn = document.getElementById('closeDeleteAccountModalBtn');
+    const cancelDeleteAccountBtn = document.getElementById('cancelDeleteAccountBtn');
+    const confirmDeleteAccountBtn = document.getElementById('confirmDeleteAccountBtn');
+    const deleteAccountPasswordField = document.getElementById('deleteAccountPasswordField');
+    const deleteAccountEmailField = document.getElementById('deleteAccountEmailField');
+    const deleteAccountPassword = document.getElementById('deleteAccountPassword');
+    const deleteAccountEmail = document.getElementById('deleteAccountEmail');
+    const deleteAccountMessage = document.getElementById('deleteAccountMessage');
+
+    function closeDeleteAccountModal() {
+      if (deleteAccountModal) deleteAccountModal.classList.remove('active');
+      if (deleteAccountPassword) deleteAccountPassword.value = '';
+      if (deleteAccountEmail) deleteAccountEmail.value = '';
+      if (deleteAccountMessage) {
+        deleteAccountMessage.style.display = 'none';
+        deleteAccountMessage.textContent = '';
+      }
+    }
+
+    if (btnOpenDeleteAccount && deleteAccountModal) {
+      btnOpenDeleteAccount.addEventListener('click', () => {
+        // Akun Google tidak punya password lokal - minta ketik ulang email sebagai
+        // gantinya (lihat hasPassword dari /api/me).
+        const hasPassword = !!(currentUser && currentUser.user && currentUser.user.hasPassword);
+        if (deleteAccountPasswordField) deleteAccountPasswordField.style.display = hasPassword ? 'block' : 'none';
+        if (deleteAccountEmailField) deleteAccountEmailField.style.display = hasPassword ? 'none' : 'block';
+        deleteAccountModal.classList.add('active');
+      });
+    }
+    if (closeDeleteAccountModalBtn) closeDeleteAccountModalBtn.addEventListener('click', closeDeleteAccountModal);
+    if (cancelDeleteAccountBtn) cancelDeleteAccountBtn.addEventListener('click', closeDeleteAccountModal);
+    if (deleteAccountModal) {
+      deleteAccountModal.addEventListener('click', (e) => {
+        if (e.target === deleteAccountModal) closeDeleteAccountModal();
+      });
+    }
+
+    if (confirmDeleteAccountBtn) {
+      confirmDeleteAccountBtn.addEventListener('click', async () => {
+        const hasPassword = !!(currentUser && currentUser.user && currentUser.user.hasPassword);
+        const payload = hasPassword
+          ? { password: deleteAccountPassword ? deleteAccountPassword.value : '' }
+          : { confirmEmail: deleteAccountEmail ? deleteAccountEmail.value : '' };
+
+        if (hasPassword && !payload.password) {
+          deleteAccountMessage.textContent = 'Masukkan kata sandi Anda.';
+          deleteAccountMessage.style.display = 'block';
+          return;
+        }
+        if (!hasPassword && !payload.confirmEmail) {
+          deleteAccountMessage.textContent = 'Ketik ulang email akun Anda.';
+          deleteAccountMessage.style.display = 'block';
+          return;
+        }
+
+        const originalHtml = confirmDeleteAccountBtn.innerHTML;
+        confirmDeleteAccountBtn.disabled = true;
+        confirmDeleteAccountBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghapus...';
+        if (deleteAccountMessage) deleteAccountMessage.style.display = 'none';
+
+        try {
+          const res = await fetch('/api/account/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            deleteAccountMessage.textContent = data.message || 'Gagal menghapus akun.';
+            deleteAccountMessage.style.display = 'block';
+            confirmDeleteAccountBtn.disabled = false;
+            confirmDeleteAccountBtn.innerHTML = originalHtml;
+            return;
+          }
+          alert('Akun Anda telah dihapus secara permanen. Terima kasih pernah menggunakan JurnalHub.');
+          window.location.href = '/landing.html';
+        } catch (err) {
+          console.error('[Delete Account]', err);
+          deleteAccountMessage.textContent = 'Gagal menghapus akun. Coba lagi.';
+          deleteAccountMessage.style.display = 'block';
+          confirmDeleteAccountBtn.disabled = false;
+          confirmDeleteAccountBtn.innerHTML = originalHtml;
+        }
+      });
+    }
+
     // --- LOGIKA UPDATE PROFIL & UPLOAD FOTO ---
     const avatarUploadTrigger = document.getElementById('avatarUploadTrigger');
     const profilePicInput = document.getElementById('profilePicInput');

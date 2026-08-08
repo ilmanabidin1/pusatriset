@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kebijakan Privasi - JurnalHub</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --brand-blue: #0787dc;
+      --brand-dark: #0b1a30;
+      --bg-gradient: linear-gradient(135deg, #0b1a30 0%, #082240 100%);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-light: rgba(8, 34, 64, 0.08);
+      --font-outfit: 'Outfit', sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+      background: #f8fafc;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--bg-gradient);
+      color: #ffffff;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .header-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header-content h1 {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .header-content p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--brand-blue);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s;
+    }
+    .back-link:hover {
+      transform: translateX(-4px);
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 20px rgba(8,34,64,0.02);
+    }
+    h2 {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: var(--brand-dark);
+      margin: 2rem 0 1rem;
+    }
+    h2:first-of-type {
+      margin-top: 0;
+    }
+    h3 {
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      font-size: 1.02rem;
+      color: var(--brand-dark);
+      margin: 1.25rem 0 0.5rem;
+    }
+    p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-bottom: 1rem;
+      text-align: justify;
+    }
+    ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.25rem;
+      font-size: 0.86rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem 0.7rem;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+    th {
+      color: var(--brand-dark);
+      font-weight: 700;
+      background: #f8fafc;
+    }
+    .badge-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .compliance-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(7,135,220,0.08);
+      border: 1px solid rgba(7,135,220,0.2);
+      color: var(--brand-blue);
+      padding: 0.4rem 0.85rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .highlight-box {
+      background: #f0f9ff;
+      border: 1px solid rgba(7,135,220,0.15);
+      border-left: 3px solid var(--brand-blue);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .highlight-box p {
+      margin-bottom: 0;
+      color: var(--brand-dark);
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-light);
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>Kebijakan Privasi</h1>
+      <p>Bagaimana JurnalHub mengumpulkan, menggunakan, dan melindungi data pribadi Anda</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <a href="/auth.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Login</a>
+
+    <div class="card">
+      <p>Terakhir diperbarui: 8 Agustus 2026</p>
+
+      <div class="badge-row">
+        <span class="compliance-badge"><i class="fa-solid fa-shield-halved"></i> UU PDP No. 27 Tahun 2022</span>
+        <span class="compliance-badge"><i class="fa-solid fa-globe"></i> GDPR (EU) 2016/679</span>
+      </div>
+
+      <div class="highlight-box">
+        <p>JurnalHub ("kami") berkomitmen melindungi privasi setiap pengguna. Kebijakan ini disusun untuk memenuhi prinsip perlindungan data pribadi menurut <strong>Undang-Undang No. 27 Tahun 2022 tentang Pelindungan Data Pribadi (UU PDP)</strong> di Indonesia, serta menyelaraskan dengan prinsip <strong>General Data Protection Regulation (GDPR)</strong> Uni Eropa bagi pengguna yang berdomisili di wilayah tersebut.</p>
+      </div>
+
+      <h2>1. Data Pribadi yang Kami Kumpulkan</h2>
+      <p>Kami hanya mengumpulkan data yang benar-benar diperlukan untuk menjalankan layanan JurnalHub:</p>
+      <table>
+        <thead>
+          <tr><th>Kategori Data</th><th>Contoh</th><th>Tujuan Pengumpulan</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Data Identitas & Profil</td>
+            <td>Nama lengkap, email, fakultas, universitas/instansi, foto profil</td>
+            <td>Autentikasi akun, personalisasi, komunikasi terkait layanan</td>
+          </tr>
+          <tr>
+            <td>Data Autentikasi</td>
+            <td>Kata sandi (di-hash, tidak pernah disimpan dalam bentuk asli), atau ID akun Google (jika masuk lewat Google)</td>
+            <td>Keamanan login</td>
+          </tr>
+          <tr>
+            <td>Data Manuskrip/Riset</td>
+            <td>Judul, abstrak, draf tulisan, pertanyaan riset yang Anda masukkan ke fitur AI (Match Score, Peer Reviewer, Literature Review, JurnalHub Intelligence, dll.)</td>
+            <td>Diproses oleh model AI untuk menghasilkan rekomendasi, ulasan, atau ringkasan yang Anda minta</td>
+          </tr>
+          <tr>
+            <td>Data Transaksi</td>
+            <td>Riwayat pembelian paket, status pembayaran, nominal</td>
+            <td>Pemrosesan langganan, kuitansi, dan dukungan pelanggan</td>
+          </tr>
+          <tr>
+            <td>Data Penggunaan</td>
+            <td>Kuota fitur yang terpakai per bulan, riwayat percakapan AI, jurnal yang disimpan (bookmark)</td>
+            <td>Menegakkan batas kuota sesuai paket, menyimpan riwayat agar bisa Anda akses kembali</td>
+          </tr>
+          <tr>
+            <td>Data Teknis</td>
+            <td>Cookie sesi login, alamat IP (untuk pembatasan laju permintaan/rate limiting)</td>
+            <td>Menjaga sesi tetap aktif, mencegah penyalahgunaan sistem</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>2. Dasar Hukum Pemrosesan Data</h2>
+      <p>Kami memproses data pribadi Anda berdasarkan:</p>
+      <ul>
+        <li><strong>Persetujuan (consent)</strong> — saat Anda mendaftar dan menyetujui kebijakan ini.</li>
+        <li><strong>Pelaksanaan kontrak/perjanjian layanan</strong> — untuk menyediakan fitur yang Anda gunakan dan memproses pembayaran langganan.</li>
+        <li><strong>Kepentingan sah (legitimate interest)</strong> — untuk keamanan sistem, pencegahan penyalahgunaan, dan peningkatan layanan.</li>
+      </ul>
+
+      <h2>3. Bagaimana Data Manuskrip/Riset Anda Diproses AI</h2>
+      <p>Fitur berbasis AI di JurnalHub (Match Score, AI Peer Reviewer, Literature Review, Systematic Lit Review, Humanizer, JurnalHub Intelligence, Peta Sitasi) mengirim teks yang Anda masukkan ke penyedia model AI pihak ketiga secara terenkripsi (HTTPS) untuk diproses secara real-time.</p>
+      <ul>
+        <li>Kami <strong>tidak menggunakan data manuskrip Anda untuk melatih ulang (fine-tuning) model AI publik</strong> milik penyedia mana pun.</li>
+        <li>Kami <strong>tidak menjual atau membagikan isi manuskrip Anda</strong> ke pihak ketiga di luar penyedia AI yang memprosesnya, dan tidak untuk tujuan selain menjawab permintaan Anda.</li>
+        <li>Teks yang Anda kirim ke fitur AI diteruskan ke penyedia model sesuai kebijakan retensi masing-masing penyedia (lihat Bagian 4) - kami menyarankan untuk tidak menyertakan data pribadi pihak lain (mis. data sensitif subjek penelitian) dalam teks yang Anda proses.</li>
+      </ul>
+
+      <h2>4. Pihak Ketiga yang Membantu Kami Memproses Data (Sub-Prosesor)</h2>
+      <p>Untuk menjalankan fitur-fitur JurnalHub, kami bekerja sama dengan penyedia layanan berikut. Masing-masing hanya menerima data yang relevan dengan fungsinya:</p>
+      <table>
+        <thead>
+          <tr><th>Penyedia</th><th>Fungsi</th><th>Data yang Diproses</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Anthropic (Claude)</td><td>Model AI untuk chat riset, peer review, dan drafting</td><td>Teks/pertanyaan yang Anda masukkan</td></tr>
+          <tr><td>DeepSeek</td><td>Model AI untuk sintesis Literature Review, SLR, ringkasan (TL;DR), Match Score</td><td>Teks/pertanyaan yang Anda masukkan</td></tr>
+          <tr><td>Google (Vertex AI/Gemini)</td><td>Model AI cadangan untuk rekomendasi jurnal</td><td>Judul, keyword, abstrak artikel</td></tr>
+          <tr><td>OpenAlex & Semantic Scholar</td><td>Basis data akademik terbuka untuk pencarian jurnal, Literature Review, dan Peta Sitasi</td><td>Kata kunci pencarian Anda (data ini adalah basis data publik, bukan data pribadi)</td></tr>
+          <tr><td>Google OAuth</td><td>Login dengan akun Google (opsional)</td><td>Nama, email, foto profil Google Anda (hanya jika Anda memilih metode ini)</td></tr>
+          <tr><td>Faspay</td><td>Gateway pembayaran</td><td>Detail transaksi pembayaran. JurnalHub <strong>tidak pernah menyimpan</strong> nomor kartu/rekening Anda - seluruh pemrosesan pembayaran ditangani langsung oleh Faspay di sistem mereka yang sudah tersertifikasi.</td></tr>
+          <tr><td>Railway</td><td>Infrastruktur hosting server & basis data</td><td>Seluruh data yang dijelaskan pada Bagian 1, tersimpan di server Railway</td></tr>
+        </tbody>
+      </table>
+
+      <h2>5. Berapa Lama Data Disimpan</h2>
+      <p>Kami menyimpan data pribadi Anda selama akun Anda aktif. Riwayat transaksi disimpan sesuai kewajiban pembukuan yang berlaku. Jika Anda menghapus akun (lihat Bagian 7), data profil, riwayat percakapan AI, dan riwayat transaksi yang tertaut ke akun Anda akan dihapus secara permanen dari sistem kami, kecuali catatan yang wajib kami simpan untuk memenuhi kewajiban hukum/perpajakan.</p>
+
+      <h2>6. Hak Anda Sebagai Pemilik Data</h2>
+      <p>Sesuai UU PDP dan GDPR, Anda berhak untuk:</p>
+      <ul>
+        <li><strong>Mengakses</strong> data pribadi yang kami simpan tentang Anda.</li>
+        <li><strong>Memperbaiki (rectification)</strong> data yang tidak akurat lewat halaman Pengaturan.</li>
+        <li><strong>Menghapus (right to erasure)</strong> akun dan seluruh data pribadi Anda kapan saja.</li>
+        <li><strong>Menarik persetujuan</strong> yang sebelumnya diberikan.</li>
+        <li><strong>Membatasi atau menolak (objection)</strong> pemrosesan tertentu atas data Anda.</li>
+        <li><strong>Portabilitas data</strong> — meminta salinan data Anda dalam format yang dapat dibaca mesin.</li>
+        <li><strong>Mengajukan keluhan</strong> ke otoritas pengawas terkait (di Indonesia, mengacu pada lembaga yang ditunjuk berdasarkan UU PDP).</li>
+      </ul>
+      <p>Untuk menggunakan hak-hak di atas (selain penghapusan akun yang bisa dilakukan mandiri), silakan hubungi kami melalui <a href="mailto:privacy@jurnalhub.id" style="color: var(--brand-blue); font-weight: 600;">privacy@jurnalhub.id</a>. Kami akan merespons paling lambat dalam 14 hari kerja.</p>
+
+      <h2>7. Cara Menghapus Akun Anda</h2>
+      <div class="highlight-box">
+        <p>Anda dapat menghapus akun secara mandiri kapan saja lewat menu <strong>Pengaturan → Zona Berbahaya → Hapus Akun</strong> setelah masuk ke akun Anda. Penghapusan bersifat <strong>permanen dan tidak dapat dibatalkan</strong> - seluruh data profil, riwayat percakapan AI, jurnal tersimpan, dan riwayat transaksi yang tertaut ke akun Anda akan dihapus dari sistem kami.</p>
+      </div>
+
+      <h2>8. Keamanan Data</h2>
+      <p>Kami menerapkan langkah keamanan teknis yang wajar, termasuk enkripsi HTTPS untuk seluruh komunikasi, hashing kata sandi (bcrypt, tidak dapat dibalik), dan pembatasan akses internal terhadap basis data. Meskipun demikian, tidak ada sistem transmisi data melalui internet yang 100% aman - kami mendorong Anda menjaga kerahasiaan kata sandi Anda sendiri.</p>
+
+      <h2>9. Cookie & Teknologi Pelacakan</h2>
+      <p>JurnalHub menggunakan satu cookie sesi (<code>jurnalhub_session</code>) yang bersifat esensial untuk menjaga Anda tetap masuk ke akun. Cookie ini bersifat <em>httpOnly</em> (tidak dapat diakses skrip pihak ketiga) dan tidak digunakan untuk iklan atau pelacakan lintas situs.</p>
+
+      <h2>10. Privasi Anak</h2>
+      <p>Layanan JurnalHub ditujukan untuk akademisi, peneliti, dan mahasiswa berusia 16 tahun ke atas. Kami tidak dengan sengaja mengumpulkan data pribadi dari anak di bawah usia tersebut.</p>
+
+      <h2>11. Perubahan Kebijakan Privasi</h2>
+      <p>Kami dapat memperbarui kebijakan ini dari waktu ke waktu mengikuti perubahan layanan atau regulasi. Perubahan material akan diinformasikan melalui email atau notifikasi di dalam aplikasi, dan tanggal "Terakhir diperbarui" di atas akan diperbarui.</p>
+
+      <h2>12. Hubungi Kami</h2>
+      <p>Untuk pertanyaan seputar privasi atau permintaan terkait data pribadi Anda, hubungi:</p>
+      <p style="text-align: left;">Email: <a href="mailto:privacy@jurnalhub.id" style="color: var(--brand-blue); font-weight: 600;">privacy@jurnalhub.id</a><br>Dukungan umum: <a href="mailto:admin@jurnalhub.id" style="color: var(--brand-blue); font-weight: 600;">admin@jurnalhub.id</a></p>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 JurnalHub. All rights reserved.</p>
+  </footer>
+</body>
+</html>

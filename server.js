@@ -1052,7 +1052,8 @@ app.get('/api/me', (req, res) => {
         researchChatLimit: researchChatLimit,
         researchChatCountThisMonth: user ? (user.researchChatCountThisMonth || 0) : 0,
         planId: user ? (user.planId || null) : null,
-        paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null
+        paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null,
+        hasPassword: user ? !!user.password : false
       }
     });
   } else {
@@ -1127,6 +1128,60 @@ app.post('/api/change-password', requireAccess, async (req, res) => {
   saveUsers(users);
 
   res.json({ ok: true, message: 'Kata sandi berhasil diperbarui.' });
+});
+
+// Hapus akun secara permanen (hak "right to erasure" UU PDP/GDPR) - dipanggil dari
+// menu Pengaturan > Zona Berbahaya. Sebelum menghapus, identitas user diverifikasi
+// dulu: pakai password kalau dia akun email/password biasa, atau ketik ulang email
+// kalau dia akun Google (tidak ada password lokal untuk diverifikasi). Menghapus
+// data user dari users.json serta seluruh riwayat transaksi & percakapan AI yang
+// tertaut ke akun tsb, lalu menghancurkan sesi supaya langsung logout.
+app.post('/api/account/delete', requireAccess, async (req, res) => {
+  const { password, confirmEmail } = req.body;
+
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === req.session.userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
+  }
+  const user = users[userIndex];
+
+  if (user.password) {
+    if (!password) {
+      return res.status(400).json({ ok: false, message: 'Masukkan kata sandi Anda untuk konfirmasi.' });
+    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ ok: false, message: 'Kata sandi salah.' });
+    }
+  } else {
+    // Akun Google - tidak ada password lokal, verifikasi lewat ketik ulang email terdaftar.
+    if (!confirmEmail || String(confirmEmail).trim().toLowerCase() !== String(user.email).trim().toLowerCase()) {
+      return res.status(400).json({ ok: false, message: 'Email konfirmasi tidak cocok dengan email akun Anda.' });
+    }
+  }
+
+  users.splice(userIndex, 1);
+  saveUsers(users);
+
+  try {
+    const transactions = getTransactions().filter(t => t.userId !== user.id);
+    saveTransactions(transactions);
+  } catch (err) {
+    console.error('[Account Delete] Gagal membersihkan transactions.json (diabaikan):', err.message);
+  }
+
+  try {
+    const conversations = getResearchChatConversations().filter(c => c.userId !== user.id);
+    saveResearchChatConversations(conversations);
+  } catch (err) {
+    console.error('[Account Delete] Gagal membersihkan research-chat-conversations.json (diabaikan):', err.message);
+  }
+
+  req.session.destroy(() => {
+    res.clearCookie(ACCESS_COOKIE);
+    res.json({ ok: true, message: 'Akun Anda telah dihapus secara permanen.' });
+  });
 });
 
 // Endpoint untuk memperbarui profil pengguna
@@ -5047,7 +5102,7 @@ app.get('/', (req, res) => {
 // dan folder assets/) yang bisa diakses lewat static file serving.
 const PUBLIC_STATIC_FILES = new Set([
   'index.html', 'auth.html', 'landing.html', 'contact.html', 'faq.html',
-  'terms.html', 'refund.html', 'payment-success.html', 'payment-cancel.html',
+  'terms.html', 'refund.html', 'privacy.html', 'payment-success.html', 'payment-cancel.html',
   'reset-password.html', 'robots.txt', 'sitemap.xml',
   'app.js', 'styles.css', 'database.js'
 ]);
