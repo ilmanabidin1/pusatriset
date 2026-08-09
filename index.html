@@ -574,11 +574,15 @@
       .sidebar.collapsed .user-profile-section {
         justify-content: center;
       }
+      /* Dilipat: tombol fold & tombol "+" jadi ikon polos tanpa latar warna,
+         supaya konsisten dengan ikon-ikon grup di bawahnya (bukan kotak/pil
+         yang keliatan menonjol/keluar dari rel sidebar). */
       .sidebar.collapsed .sidebar-collapse-toggle {
         position: absolute;
         top: 1.6rem;
         left: 50%;
         transform: translateX(-50%);
+        background: transparent;
       }
       .sidebar.collapsed #sidebarSearchToggle {
         display: none !important;
@@ -589,11 +593,21 @@
         display: none !important;
       }
       .sidebar.collapsed .research-chat-new-btn {
-        padding: 0.75rem;
-        /* Elemen ini punya inline style="margin: 0 1rem 0.75rem..." dari HTML -
-           override pakai shorthand "margin" juga (bukan cuma margin-top) supaya
-           konsisten menang atas shorthand inline tsb. */
-        margin: 2.75rem 1rem 0.75rem !important;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.75);
+        box-shadow: none;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border-radius: 8px;
+        /* Elemen ini punya inline style="margin-bottom: 0.75rem" dari HTML -
+           override pakai shorthand "margin" supaya konsisten menang atas
+           inline style tsb, sekaligus memusatkan tombol di rel sidebar. */
+        margin: 1.75rem auto 0.75rem !important;
+      }
+      .sidebar.collapsed .research-chat-new-btn:hover {
+        background: var(--bg-sidebar-hover);
+        color: #ffffff;
       }
     }
 
