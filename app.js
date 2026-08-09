@@ -5382,6 +5382,78 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     })();
 
+    // --- Modal "Create Folder" - dipakai bareng oleh tombol "Buat Folder Baru" di
+    // flyout sidebar Koleksi Saya dan tombol "Buat Riset Baru" di halaman tab-nya.
+    // window.openCreateFolderModal(onCreated) dipanggil dari kedua tempat itu
+    // dengan callback berbeda (lihat initMyReferencesTab). ---
+    (function initCreateFolderModal() {
+      const overlay = document.getElementById('createFolderModal');
+      const closeBtn = document.getElementById('closeCreateFolderModalBtn');
+      const cancelBtn = document.getElementById('cancelCreateFolderBtn');
+      const confirmBtn = document.getElementById('confirmCreateFolderBtn');
+      const input = document.getElementById('createFolderInput');
+      const errorEl = document.getElementById('createFolderError');
+      if (!overlay || !input) return;
+
+      let onCreatedCallback = null;
+
+      function closeModal() {
+        overlay.classList.remove('active');
+      }
+
+      window.openCreateFolderModal = function (onCreated) {
+        onCreatedCallback = onCreated || null;
+        input.value = '';
+        if (errorEl) errorEl.style.display = 'none';
+        overlay.classList.add('active');
+        setTimeout(() => input.focus(), 50);
+      };
+
+      async function submitCreateFolder() {
+        const name = input.value.trim();
+        if (!name) {
+          input.focus();
+          return;
+        }
+        if (errorEl) errorEl.style.display = 'none';
+        try {
+          const res = await fetch('/api/my-references/researches', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            if (errorEl) {
+              errorEl.textContent = data.message || 'Gagal membuat folder baru.';
+              errorEl.style.display = 'block';
+            }
+            return;
+          }
+          closeModal();
+          if (onCreatedCallback) onCreatedCallback(data.research);
+        } catch (err) {
+          if (errorEl) {
+            errorEl.textContent = 'Gagal menghubungi server.';
+            errorEl.style.display = 'block';
+          }
+        }
+      }
+
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+      if (confirmBtn) confirmBtn.addEventListener('click', submitCreateFolder);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeModal();
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitCreateFolder();
+        }
+      });
+    })();
+
     // --- Referensi Saya: modal "Simpan ke Riset" dipanggil dari tombol Simpan di
     // popover sitasi (showLitCitePopover, dipakai Lit Review/JurnalHub Intelligence/
     // SLR/Riwayat) maupun kartu hasil Cari Referensi. window.openSaveReferenceModal
@@ -5628,23 +5700,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (backBtn) backBtn.addEventListener('click', backToFolders);
 
       if (createResearchBtn) {
-        createResearchBtn.addEventListener('click', async () => {
-          const name = prompt('Nama riset baru:');
-          if (!name || !name.trim()) return;
-          try {
-            const res = await fetch('/api/my-references/researches', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: name.trim() })
-            });
-            const data = await res.json();
-            if (!data.ok) {
-              alert(data.message || 'Gagal membuat riset baru.');
-              return;
-            }
-            loadMyReferencesFolders();
-          } catch (err) {
-            alert('Gagal menghubungi server.');
+        createResearchBtn.addEventListener('click', () => {
+          if (window.openCreateFolderModal) {
+            window.openCreateFolderModal(() => loadMyReferencesFolders());
           }
         });
       }
@@ -5749,25 +5807,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (flyoutNewBtn) {
-        flyoutNewBtn.addEventListener('click', async () => {
-          const name = prompt('Nama folder koleksi baru:');
-          if (!name || !name.trim()) return;
-          try {
-            const res = await fetch('/api/my-references/researches', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: name.trim() })
+        flyoutNewBtn.addEventListener('click', () => {
+          if (window.openCreateFolderModal) {
+            window.openCreateFolderModal((research) => {
+              loadKoleksiSayaFlyout();
+              if (window.switchTab) window.switchTab('koleksi-saya');
+              openResearchDetail(research.id, research.name);
             });
-            const data = await res.json();
-            if (!data.ok) {
-              alert(data.message || 'Gagal membuat folder baru.');
-              return;
-            }
-            loadKoleksiSayaFlyout();
-            if (window.switchTab) window.switchTab('koleksi-saya');
-            openResearchDetail(data.research.id, data.research.name);
-          } catch (err) {
-            alert('Gagal menghubungi server.');
           }
         });
       }
