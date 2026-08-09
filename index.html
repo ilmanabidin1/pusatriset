@@ -664,6 +664,44 @@
       padding: 0.6rem 0.75rem;
       font-size: 0.85rem;
     }
+    .sidebar-flyout-portal .sidebar-link,
+    .sidebar-flyout-portal button.sidebar-link {
+      font-family: inherit;
+      background: none;
+      color: rgba(255, 255, 255, 0.65);
+    }
+    .sidebar-flyout-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0.3rem 0.2rem;
+    }
+    .sidebar-flyout-folder-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.65);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sidebar-flyout-folder-item:hover {
+      color: #ffffff;
+      background-color: var(--bg-sidebar-hover);
+    }
+    .sidebar-flyout-folder-item .sidebar-flyout-folder-count {
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.35);
+      flex-shrink: 0;
+    }
 
     .sidebar-link {
       display: flex;
@@ -3635,32 +3673,6 @@
       }
     }
 
-    /* Bookmark Button on Card */
-    .bookmark-btn {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      cursor: pointer;
-      font-size: 1.1rem;
-      padding: 0.35rem;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      outline: none;
-    }
-
-    .bookmark-btn:hover {
-      background-color: #f1f5f9;
-      color: #eab308;
-      transform: scale(1.1);
-    }
-
-    .bookmark-btn.active {
-      color: #eab308;
-    }
-
     #avatarUploadTrigger:hover #avatarHoverOverlay {
       opacity: 1 !important;
     }
@@ -3840,6 +3852,9 @@
         <a href="#" class="sidebar-link sidebar-group-trigger" data-group="riset-lanjutan">
           <i class="fa-solid fa-flask"></i> <span>Riset Lanjutan</span> <i class="fa-solid fa-chevron-right sidebar-group-caret"></i>
         </a>
+        <a href="#" class="sidebar-link sidebar-group-trigger" data-group="koleksi-saya">
+          <i class="fa-solid fa-bookmark"></i> <span>Koleksi Saya</span> <i class="fa-solid fa-chevron-right sidebar-group-caret"></i>
+        </a>
       </nav>
 
       <div class="sidebar-divider" style="height: 1px; background: var(--border-light-hover); margin: 0.75rem 1rem 0.75rem 0;"></div>
@@ -3879,9 +3894,6 @@
 
         <!-- Dropup Menu -->
         <div class="profile-dropdown" id="profileDropdown">
-        <a href="#" class="sidebar-link profile-dropdown-item" data-tab="tersimpan">
-          <i class="fa-solid fa-bookmark"></i> <span>Tersimpan</span>
-        </a>
         <a href="#" class="sidebar-link profile-dropdown-item" data-tab="pengaturan">
           <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
         </a>
@@ -3932,9 +3944,19 @@
     <a href="#" class="sidebar-link" data-tab="patent-search">
       <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
     </a>
-    <a href="#" class="sidebar-link" data-tab="referensi-saya">
-      <i class="fa-solid fa-folder-tree"></i> <span>Referensi Saya</span>
-    </a>
+  </div>
+
+  <!-- Flyout "Koleksi Saya" - beda dari flyout grup lain, isinya BUKAN daftar
+       tab statis melainkan daftar folder Riset milik user (dimuat dinamis lewat
+       JS tiap kali flyout ini dibuka) + opsi buat folder baru. Klik salah satu
+       folder langsung membuka tab Koleksi Saya pada folder tsb. -->
+  <div class="sidebar-flyout-portal" id="flyoutKoleksiSaya" data-group="koleksi-saya" style="width: 240px;">
+    <button type="button" class="sidebar-link" id="flyoutKoleksiSayaNewBtn" style="width: 100%; border: none; cursor: pointer;">
+      <i class="fa-solid fa-plus"></i> <span>Buat Folder Baru</span>
+    </button>
+    <div class="sidebar-flyout-divider"></div>
+    <div id="flyoutKoleksiSayaList"></div>
+    <div id="flyoutKoleksiSayaEmpty" style="display: none; padding: 0.6rem 0.75rem; font-size: 0.78rem; color: rgba(255,255,255,0.45);">Belum ada folder koleksi.</div>
   </div>
 
   <!-- Chat Search Modal (ala Claude/ChatGPT) - dipicu dari ikon kaca pembesar
@@ -4701,15 +4723,6 @@
             </div>
             
           </div>
-        </div>
-      </div>
-
-      <!-- TAB 3: SAVED (TERSIMPAN) -->
-      <div id="tabContentTersimpan" class="tab-content">
-        <div class="empty-state" style="padding: 5rem 2rem; text-align: center; background: #ffffff; border-radius: var(--card-radius); border: 1px dashed rgba(8,34,64,0.1);">
-          <div class="empty-icon" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"><i class="fa-solid fa-bookmark"></i></div>
-          <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem;">Belum Ada Jurnal Tersimpan</h3>
-          <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">Fitur penanda / menyimpan rekomendasi jurnal akan segera hadir.</p>
         </div>
       </div>
 
@@ -5566,11 +5579,12 @@
         </div>
       </div>
 
-      <!-- TAB: REFERENSI SAYA - paper individual yang di-save dari Cari Referensi &
+      <!-- TAB: KOLEKSI SAYA - paper individual yang di-save dari Cari Referensi &
            popover sitasi (Lit Review/JurnalHub Intelligence/SLR/Riwayat), dikelompokkan
-           ke dalam folder "Riset" per proyek penelitian. Terpisah dari "Tersimpan"
-           (bookmark entri jurnal dari Database Jurnal). -->
-      <div id="tabContentReferensiSaya" class="tab-content">
+           ke dalam folder "Riset" per proyek penelitian. Grup sidebar-nya sendiri
+           (bukan nested di Riset Lanjutan), flyout-nya menampilkan folder secara
+           dinamis - lihat #flyoutKoleksiSaya di dekat definisi <aside> sidebar. -->
+      <div id="tabContentKoleksiSaya" class="tab-content">
         <!-- View 1: Grid folder Riset -->
         <div id="myRefFoldersView">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
@@ -5781,7 +5795,7 @@
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem; text-transform: uppercase; letter-spacing: 0.03em;">
                 <i class="fa-solid fa-triangle-exclamation"></i> Zona Berbahaya
               </h3>
-              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Menghapus akun bersifat permanen - seluruh profil, riwayat percakapan AI, jurnal tersimpan, dan riwayat transaksi Anda akan dihapus dan tidak dapat dikembalikan. Lihat <a href="/privacy.html" target="_blank" rel="noopener" style="color: var(--brand-blue);">Kebijakan Privasi</a> untuk detail.</p>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Menghapus akun bersifat permanen - seluruh profil, riwayat percakapan AI, koleksi referensi, dan riwayat transaksi Anda akan dihapus dan tidak dapat dikembalikan. Lihat <a href="/privacy.html" target="_blank" rel="noopener" style="color: var(--brand-blue);">Kebijakan Privasi</a> untuk detail.</p>
               <button type="button" id="btnOpenDeleteAccount" style="background: #fff; border: 1px solid #dc2626; color: #dc2626; padding: 0.6rem 1.25rem; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                 <i class="fa-solid fa-trash-can"></i> Hapus Akun
               </button>
@@ -5810,7 +5824,8 @@
       const SIDEBAR_GROUPS = {
         'cari-jelajah': ['database-jurnal', 'cari-referensi', 'citation-graph'],
         'tulis-review': ['ai-research', 'peer-reviewer', 'templates', 'prompt-bank'],
-        'riset-lanjutan': ['slr', 'patent-search', 'referensi-saya']
+        'riset-lanjutan': ['slr', 'patent-search'],
+        'koleksi-saya': ['koleksi-saya']
       };
       const sidebar = document.getElementById('sidebar');
 
@@ -5887,11 +5902,6 @@
           }
         }
 
-        // Call renderBookmarksTab if saved tab is selected
-        if (tabName === 'tersimpan' && window.renderBookmarksTab) {
-          window.renderBookmarksTab();
-        }
-
         // Call renderTemplatesTab if templates tab is selected
         if (tabName === 'templates' && window.renderTemplatesTab) {
           window.renderTemplatesTab();
@@ -5918,8 +5928,8 @@
           }
         }
 
-        // Referensi Saya: muat ulang daftar folder riset tiap kali tab dibuka
-        if (tabName === 'referensi-saya' && window.loadMyReferencesFolders) {
+        // Koleksi Saya: muat ulang daftar folder riset tiap kali tab dibuka
+        if (tabName === 'koleksi-saya' && window.loadMyReferencesFolders) {
           window.loadMyReferencesFolders();
         }
       }
@@ -5955,6 +5965,11 @@
         flyout.style.top = `${rect.top}px`;
         flyout.style.left = `${rect.right + 6}px`;
         flyout.classList.add('open');
+        // Flyout "Koleksi Saya" isinya daftar folder Riset dinamis (bukan tab
+        // statis) - muat ulang tiap kali dibuka supaya folder baru langsung nongol.
+        if (flyout.getAttribute('data-group') === 'koleksi-saya' && window.loadKoleksiSayaFlyout) {
+          window.loadKoleksiSayaFlyout();
+        }
       }
       function scheduleCloseFlyout(flyout) {
         clearTimeout(flyoutCloseTimer);
@@ -6004,7 +6019,7 @@
         }
       });
 
-      // Profile dropup menu (Tersimpan / Riwayat AI / Pengaturan / Keluar)
+      // Profile dropup menu (Pengaturan / Keluar)
       const profileMenuTrigger = document.getElementById('profileMenuTrigger');
       const profileDropdown = document.getElementById('profileDropdown');
       if (profileMenuTrigger && profileDropdown) {
@@ -6815,7 +6830,7 @@
         <ul style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.25rem 1.1rem; line-height: 1.7;">
           <li>Profil dan status langganan Anda</li>
           <li>Seluruh riwayat percakapan JurnalHub Intelligence</li>
-          <li>Jurnal yang tersimpan (bookmark) & Referensi Saya</li>
+          <li>Koleksi referensi (folder & paper tersimpan)</li>
           <li>Riwayat transaksi pembayaran</li>
         </ul>
 

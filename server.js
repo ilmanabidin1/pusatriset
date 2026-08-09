@@ -531,7 +531,6 @@ app.post('/api/register', authLimiter, async (req, res) => {
         faculty: '',
         university: '',
         profilePic: '',
-        savedJournals: [],
         createdAt: new Date().toISOString()
       };
 
@@ -724,7 +723,6 @@ function loginOrCreateGoogleUser(email, googleId, name, picture) {
       faculty: '',
       university: '',
       profilePic: picture || '',
-      savedJournals: [],
       createdAt: new Date().toISOString()
     };
     users.push(user);
@@ -1033,7 +1031,6 @@ app.get('/api/me', (req, res) => {
         faculty: user ? (user.faculty || '') : '',
         university: user ? (user.university || '') : '',
         profilePic: user ? (user.profilePic || '') : '',
-        savedJournals: user ? (user.savedJournals || []) : [],
         isLimitReached: isLimitReached,
         isDraftLimitReached: isDraftLimitReached,
         draftsRemaining: draftsRemaining,
@@ -1071,43 +1068,6 @@ app.get('/api/me', (req, res) => {
   } else {
     res.json({ loggedIn: false });
   }
-});
-
-// Endpoint untuk menambahkan/menghapus bookmark jurnal
-app.post('/api/bookmarks/toggle', requireAccess, (req, res) => {
-  const { journalId } = req.body;
-  if (!journalId) {
-    return res.status(400).json({ ok: false, message: 'Journal ID wajib diisi.' });
-  }
-
-  const users = getUsers();
-  const userIndex = users.findIndex(u => u.id === req.session.userId);
-  if (userIndex === -1) {
-    return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
-  }
-
-  const user = users[userIndex];
-  if (!user.savedJournals) {
-    user.savedJournals = [];
-  }
-
-  const parsedId = Number(journalId);
-  const bookmarkIndex = user.savedJournals.indexOf(parsedId);
-  let isBookmarked = false;
-
-  if (bookmarkIndex > -1) {
-    // Hapus bookmark
-    user.savedJournals.splice(bookmarkIndex, 1);
-  } else {
-    // Tambah bookmark
-    user.savedJournals.push(parsedId);
-    isBookmarked = true;
-  }
-
-  users[userIndex] = user;
-  saveUsers(users);
-
-  res.json({ ok: true, bookmarked: isBookmarked, savedJournals: user.savedJournals });
 });
 
 // Endpoint fungsional untuk ganti password di tab Pengaturan
@@ -1233,8 +1193,7 @@ app.post('/api/update-profile', requireAccess, (req, res) => {
       name: user.name,
       faculty: user.faculty,
       university: user.university,
-      profilePic: user.profilePic,
-      savedJournals: user.savedJournals || []
+      profilePic: user.profilePic
     }
   });
 });
@@ -2578,10 +2537,9 @@ app.post('/api/citation-graph/tldr', requireAccess, citationGraphLimiter, async 
   }
 });
 
-// --- REFERENSI SAYA: paper individual yang di-save user dari Cari Referensi,
+// --- KOLEKSI SAYA: paper individual yang di-save user dari Cari Referensi,
 // popover sitasi Lit Review/JurnalHub Intelligence/SLR/Riwayat, dikelompokkan ke
-// dalam folder "Riset" (per proyek penelitian). Terpisah dari "Tersimpan" (yang
-// menyimpan ENTRI JURNAL dari Database Jurnal, bukan paper/artikel individual). ---
+// dalam folder "Riset" (per proyek penelitian). ---
 const SAVED_RESEARCHES_FILE = path.join(DATA_DIR, 'saved-researches.json');
 const SAVED_REFERENCES_FILE = path.join(DATA_DIR, 'saved-references.json');
 
@@ -5430,7 +5388,6 @@ app.listen(PORT, async () => {
         faculty: 'Demo',
         university: 'JurnalHub',
         profilePic: '',
-        savedJournals: [],
         createdAt: new Date().toISOString()
       });
       saveUsers(users);

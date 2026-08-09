@@ -386,8 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "prompt-bank": "Prompt Bank",
       slr: "Systematic Lit Review",
       "patent-search": "Pencarian Paten",
-      "referensi-saya": "Referensi Saya",
-      tersimpan: "Tersimpan",
+      "koleksi-saya": "Koleksi Saya",
       pengaturan: "Pengaturan",
       sidebar_more: "Lainnya",
       upgrade_pro: "Upgrade ke PRO",
@@ -615,8 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "prompt-bank": "Prompt Bank",
       slr: "Systematic Lit Review",
       "patent-search": "Patent Search",
-      "referensi-saya": "My References",
-      tersimpan: "Bookmarks",
+      "koleksi-saya": "My Collection",
       pengaturan: "Settings",
       sidebar_more: "More",
       upgrade_pro: "Upgrade to PRO",
@@ -1844,7 +1842,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const rankBadgeClass = `rank-${journal.rank.toLowerCase()}`;
       const apcClass = journal.isFree ? 'free' : 'paid';
       const matchBadge = journal.matchScore ? getMatchScoreBadge(journal.matchScore) : '';
-      const isBookmarked = (currentUser.user && currentUser.user.savedJournals && currentUser.user.savedJournals.includes(journal.id));
 
       card.innerHTML = `
         <div>
@@ -1858,9 +1855,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span class="rank-badge ${rankBadgeClass}">${journal.rank}</span>
-              <button class="bookmark-btn ${isBookmarked ? 'active' : ''}" data-id="${journal.id}" title="${isBookmarked ? 'Hapus dari Tersimpan' : 'Simpan Jurnal'}">
-                <i class="${isBookmarked ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
-              </button>
             </div>
           </div>
           
@@ -1904,40 +1898,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       resultsContainer.appendChild(card);
-    });
-
-    // Bind click events to bookmark buttons
-    resultsContainer.querySelectorAll('.bookmark-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const journalId = Number(btn.dataset.id);
-        try {
-          const response = await fetch('/api/bookmarks/toggle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ journalId })
-          });
-          if (response.ok) {
-            const resData = await response.json();
-            currentUser.user.savedJournals = resData.savedJournals;
-            
-            // Toggle local style
-            const icon = btn.querySelector('i');
-            if (resData.bookmarked) {
-              btn.classList.add('active');
-              icon.className = 'fa-solid fa-bookmark';
-              btn.title = 'Hapus dari Tersimpan';
-            } else {
-              btn.classList.remove('active');
-              icon.className = 'fa-regular fa-bookmark';
-              btn.title = 'Simpan Jurnal';
-            }
-          }
-        } catch (error) {
-          console.error('Failed to toggle bookmark:', error);
-        }
-      });
     });
 
     // Tampilkan pesan batasan untuk Free User
@@ -2029,13 +1989,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const rankBadgeClass = `rank-${journal.rank.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
       const apcClass = journal.isFree ? 'free' : 'paid';
       const matchReason = journal.matchReason ? `<p class="match-reason">${journal.matchReason}</p>` : '';
-      // Bookmark hanya untuk jurnal database lokal (ID numerik) - kandidat live
-      // OpenAlex pakai ID string ("oa-...") yang tidak didukung sistem bookmark saat ini.
-      const isBookmarked = !isOpenAlex && (currentUser.user && currentUser.user.savedJournals && currentUser.user.savedJournals.includes(journal.id));
-      const bookmarkBtnHtml = isOpenAlex ? '' : `
-              <button class="bookmark-btn ${isBookmarked ? 'active' : ''}" data-id="${journal.id}" title="${isBookmarked ? 'Hapus dari Tersimpan' : 'Simpan Jurnal'}">
-                <i class="${isBookmarked ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
-              </button>`;
 
       card.innerHTML = `
         <div>
@@ -2049,7 +2002,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span class="rank-badge ${rankBadgeClass}">${journal.rank}</span>
-              ${bookmarkBtnHtml}
             </div>
           </div>
           <div class="card-body">
@@ -2085,43 +2037,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       matchResultsContainer.appendChild(card);
-    });
-
-    // Bind click events to bookmark buttons inside match results
-    matchResultsContainer.querySelectorAll('.bookmark-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const journalId = Number(btn.dataset.id);
-        try {
-          const response = await fetch('/api/bookmarks/toggle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ journalId })
-          });
-          if (response.ok) {
-            const resData = await response.json();
-            currentUser.user.savedJournals = resData.savedJournals;
-            
-            // Toggle local style
-            const icon = btn.querySelector('i');
-            if (resData.bookmarked) {
-              btn.classList.add('active');
-              icon.className = 'fa-solid fa-bookmark';
-              btn.title = 'Hapus dari Tersimpan';
-            } else {
-              btn.classList.remove('active');
-              icon.className = 'fa-regular fa-bookmark';
-              btn.title = 'Simpan Jurnal';
-            }
-            
-            // Re-render main list bookmarks
-            renderCards();
-          }
-        } catch (error) {
-          console.error('Failed to toggle bookmark:', error);
-        }
-      });
     });
 
     matchResultsContainer.style.display = 'grid';
@@ -3304,117 +3219,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Fungsi untuk menampilkan tab Tersimpan
-  function renderBookmarksTab() {
-    const container = document.getElementById('tabContentTersimpan');
-    if (!container) return;
-    
-    const savedIds = (currentUser.user && currentUser.user.savedJournals) ? currentUser.user.savedJournals : [];
-    const savedJournals = JOURNAL_DATABASE.filter(j => savedIds.includes(j.id));
-    
-    if (savedJournals.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state" style="padding: 5rem 2rem; text-align: center; background: #ffffff; border-radius: var(--card-radius); border: 1px dashed rgba(8,34,64,0.1);">
-          <div class="empty-icon" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"><i class="fa-solid fa-bookmark"></i></div>
-          <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem;">Belum Ada Jurnal Tersimpan</h3>
-          <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">Simpan jurnal dengan menekan ikon bookmark pada kartu jurnal untuk melihatnya di sini.</p>
-        </div>
-      `;
-      return;
-    }
-    
-    container.innerHTML = `
-      <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.25rem;">Jurnal Tersimpan (${savedJournals.length})</h3>
-      <div class="results-grid list-view" id="savedResultsContainer"></div>
-    `;
-    
-    const grid = document.getElementById('savedResultsContainer');
-    savedJournals.forEach((journal) => {
-      const card = document.createElement('div');
-      card.className = `journal-card ${journal.type.toLowerCase()}-card`;
-      
-      const typeBadgeClass = journal.type === 'Scopus' ? 'type-scopus' : 'type-sinta';
-      const rankBadgeClass = `rank-${journal.rank.toLowerCase()}`;
-      const apcClass = journal.isFree ? 'free' : 'paid';
-      
-      card.innerHTML = `
-        <div>
-          <div class="card-header">
-            <div class="card-badge-group">
-              <span class="card-type-tag ${typeBadgeClass}">
-                <i class="${journal.type === 'Scopus' ? 'fa-solid fa-globe' : 'fa-solid fa-medal'}"></i>
-                ${journal.type}
-              </span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="rank-badge ${rankBadgeClass}">${journal.rank}</span>
-              <button class="bookmark-btn active" data-id="${journal.id}" title="Hapus dari Tersimpan">
-                <i class="fa-solid fa-bookmark"></i>
-              </button>
-            </div>
-          </div>
-          
-          <div class="card-body">
-            <h3 class="journal-title" title="${journal.title}">${journal.title}</h3>
-            <span class="journal-publisher">
-              <i class="fa-regular fa-building"></i> ${journal.publisher}
-            </span>
-            <p class="journal-desc">${journal.description}</p>
-          </div>
-        </div>
-
-        <div class="card-footer-wrapper">
-          <div class="card-meta-details">
-            <div class="meta-detail-row">
-              <span class="meta-label">Keilmuan:</span>
-              <span class="meta-value">${journal.keilmuan}</span>
-            </div>
-            <div class="meta-detail-row">
-              <span class="meta-label">Rumpun:</span>
-              <span class="meta-value">${journal.subject}</span>
-            </div>
-            <div class="meta-detail-row">
-              <span class="meta-label">Biaya APC:</span>
-              <span class="meta-value meta-apc ${apcClass}">${journal.apc}</span>
-            </div>
-          </div>
-          
-          <div class="card-footer" style="margin-top: 1.25rem;">
-            <a href="${journal.url}" target="_blank" class="journal-link">
-              Kunjungi Jurnal <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            </a>
-          </div>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-    
-    // Bind click events to bookmark buttons inside saved list
-    grid.querySelectorAll('.bookmark-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const journalId = Number(btn.dataset.id);
-        try {
-          const response = await fetch('/api/bookmarks/toggle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ journalId })
-          });
-          if (response.ok) {
-            const resData = await response.json();
-            currentUser.user.savedJournals = resData.savedJournals;
-            // Re-render both lists
-            renderCards();
-            renderBookmarksTab();
-          }
-        } catch (error) {
-          console.error('Failed to toggle bookmark:', error);
-        }
-      });
-    });
-  }
-
   async function renderTemplatesTab() {
     const grid = document.getElementById('templatesGridContainer');
     if (!grid) return;
@@ -3872,7 +3676,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Expose function to window
-  window.renderBookmarksTab = renderBookmarksTab;
   window.renderTemplatesTab = renderTemplatesTab;
 
   // --- 5. INITIALIZATION ---
@@ -5807,6 +5610,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (detailView) detailView.style.display = 'block';
         loadReferencesTable(id);
       }
+      // Dipakai flyout "Koleksi Saya" di sidebar - klik folder di flyout langsung
+      // pindah ke tab ini DAN buka folder tsb, tanpa transit ke grid folder dulu.
+      window.openMyReferenceResearchDetail = openResearchDetail;
 
       function backToFolders() {
         if (foldersView) foldersView.style.display = 'block';
@@ -5899,6 +5705,72 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('Gagal menghubungi server.');
         }
       });
+
+      // --- Flyout sidebar "Koleksi Saya" - daftar folder dinamis + buat folder baru ---
+      const flyoutList = document.getElementById('flyoutKoleksiSayaList');
+      const flyoutEmpty = document.getElementById('flyoutKoleksiSayaEmpty');
+      const flyoutNewBtn = document.getElementById('flyoutKoleksiSayaNewBtn');
+
+      async function loadKoleksiSayaFlyout() {
+        if (!flyoutList) return;
+        try {
+          const res = await fetch('/api/my-references/researches');
+          const data = await res.json();
+          const researches = data.ok ? (data.researches || []) : [];
+          if (researches.length === 0) {
+            flyoutList.innerHTML = '';
+            if (flyoutEmpty) flyoutEmpty.style.display = 'block';
+            return;
+          }
+          if (flyoutEmpty) flyoutEmpty.style.display = 'none';
+          flyoutList.innerHTML = researches.map(r => `
+            <button type="button" class="sidebar-flyout-folder-item" data-research-id="${r.id}" data-research-name="${escapeHtml(r.name)}">
+              <span><i class="fa-solid fa-folder" style="margin-right: 0.5rem; color: var(--brand-blue);"></i>${escapeHtml(r.name)}</span>
+              <span class="sidebar-flyout-folder-count">${r.referenceCount}</span>
+            </button>
+          `).join('');
+        } catch (err) {
+          flyoutList.innerHTML = '';
+          if (flyoutEmpty) {
+            flyoutEmpty.textContent = 'Gagal memuat folder.';
+            flyoutEmpty.style.display = 'block';
+          }
+        }
+      }
+      window.loadKoleksiSayaFlyout = loadKoleksiSayaFlyout;
+
+      if (flyoutList) {
+        flyoutList.addEventListener('click', (e) => {
+          const item = e.target.closest('.sidebar-flyout-folder-item');
+          if (!item) return;
+          if (window.switchTab) window.switchTab('koleksi-saya');
+          openResearchDetail(item.getAttribute('data-research-id'), item.getAttribute('data-research-name'));
+        });
+      }
+
+      if (flyoutNewBtn) {
+        flyoutNewBtn.addEventListener('click', async () => {
+          const name = prompt('Nama folder koleksi baru:');
+          if (!name || !name.trim()) return;
+          try {
+            const res = await fetch('/api/my-references/researches', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: name.trim() })
+            });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || 'Gagal membuat folder baru.');
+              return;
+            }
+            loadKoleksiSayaFlyout();
+            if (window.switchTab) window.switchTab('koleksi-saya');
+            openResearchDetail(data.research.id, data.research.name);
+          } catch (err) {
+            alert('Gagal menghubungi server.');
+          }
+        });
+      }
     })();
 
     function updateResearchChatGreeting() {
