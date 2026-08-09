@@ -5601,6 +5601,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const deleteResearchBtn = document.getElementById('myRefDeleteResearchBtn');
       const tableBody = document.getElementById('myRefTableBody');
       const tableEmpty = document.getElementById('myRefTableEmpty');
+      const chatPanel = document.getElementById('myRefChatPanel');
       if (!foldersGrid || !tableBody) return;
 
       let currentResearchId = null;
@@ -5643,6 +5644,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const res = await fetch(`/api/my-references?researchId=${encodeURIComponent(researchId)}`);
           const data = await res.json();
           const references = data.ok ? (data.references || []) : [];
+          // Chatbot folder cuma masuk akal kalau ada minimal 1 paper buat dijadikan
+          // konteks jawaban - sembunyikan panelnya kalau foldernya masih kosong.
+          if (chatPanel) chatPanel.style.display = references.length > 0 ? 'block' : 'none';
           if (references.length === 0) {
             tableBody.innerHTML = '';
             if (tableEmpty) tableEmpty.style.display = 'block';
@@ -5679,6 +5683,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (foldersView) foldersView.style.display = 'none';
         if (detailView) detailView.style.display = 'block';
         loadReferencesTable(id);
+        loadFolderChat(id);
       }
       // Dipakai flyout "Koleksi Saya" di sidebar - klik folder di flyout langsung
       // pindah ke tab ini DAN buka folder tsb, tanpa transit ke grid folder dulu.
@@ -5813,6 +5818,125 @@ document.addEventListener('DOMContentLoaded', () => {
               openResearchDetail(research.id, research.name);
             });
           }
+        });
+      }
+
+      // --- Chatbot per folder - jawaban AI dibatasi ke paper2 di folder ini saja
+      // (lihat endpoint /api/my-references/researches/:id/chat di server.js).
+      // Sitasi [n] di jawaban dibuat hoverable pakai wrapCitationMarkers/showLitCitePopover
+      // yang sama seperti Lit Review & SLR, supaya konsisten di seluruh app.
+      const chatMessagesEl = document.getElementById('myRefChatMessages');
+      const chatEmptyHint = document.getElementById('myRefChatEmptyHint');
+      const chatInput = document.getElementById('myRefChatInput');
+      const chatSendBtn = document.getElementById('myRefChatSendBtn');
+      let folderChatMessages = [];
+      let folderChatLoading = false;
+
+      function renderFolderChat() {
+        if (!chatMessagesEl) return;
+        if (folderChatMessages.length === 0 && !folderChatLoading) {
+          chatMessagesEl.innerHTML = '';
+          if (chatEmptyHint) chatMessagesEl.appendChild(chatEmptyHint);
+          return;
+        }
+        const messagesHtml = folderChatMessages.map((m, idx) => {
+          if (m.role === 'user') {
+            return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
+          }
+          const hasCitations = Array.isArray(m.citations) && m.citations.length > 0;
+          let bodyHtml = renderMarkdownSafe(m.content);
+          if (hasCitations) bodyHtml = wrapCitationMarkers(bodyHtml, m.citations);
+          return `<div class="research-chat-assistant-block" data-msg-index="${idx}"><div class="research-chat-bubble assistant">${bodyHtml}</div></div>`;
+        }).join('');
+        const loadingHtml = folderChatLoading
+          ? `<div class="research-chat-bubble loading"><i class="fa-solid fa-spinner fa-spin"></i> Berpikir...</div>`
+          : '';
+        chatMessagesEl.innerHTML = messagesHtml + loadingHtml;
+        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+      }
+
+      async function loadFolderChat(researchId) {
+        folderChatMessages = [];
+        folderChatLoading = false;
+        renderFolderChat();
+        try {
+          const res = await fetch(`/api/my-references/researches/${encodeURIComponent(researchId)}/chat`);
+          const data = await res.json();
+          if (data.ok && researchId === currentResearchId) {
+            folderChatMessages = data.messages || [];
+            renderFolderChat();
+          }
+        } catch (err) {
+          // Riwayat gagal dimuat tidak menghalangi user mengirim pesan baru.
+        }
+      }
+
+      async function sendFolderChatMessage() {
+        if (!chatInput || !currentResearchId || folderChatLoading) return;
+        const text = chatInput.value.trim();
+        if (!text) return;
+        const researchId = currentResearchId;
+        chatInput.value = '';
+        folderChatMessages.push({ role: 'user', content: text });
+        folderChatLoading = true;
+        renderFolderChat();
+        try {
+          const res = await fetch(`/api/my-references/researches/${encodeURIComponent(researchId)}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+          });
+          const data = await res.json();
+          folderChatLoading = false;
+          if (researchId !== currentResearchId) return;
+          if (!data.ok) {
+            folderChatMessages.push({ role: 'assistant', content: data.message || 'Gagal mendapat jawaban dari AI.' });
+            renderFolderChat();
+            return;
+          }
+          folderChatMessages.push({ role: 'assistant', content: data.reply, citations: data.citations || [] });
+          renderFolderChat();
+        } catch (err) {
+          folderChatLoading = false;
+          if (researchId !== currentResearchId) return;
+          folderChatMessages.push({ role: 'assistant', content: 'Gagal menghubungi server.' });
+          renderFolderChat();
+        }
+      }
+
+      if (chatSendBtn) chatSendBtn.addEventListener('click', sendFolderChatMessage);
+      if (chatInput) {
+        chatInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') sendFolderChatMessage();
+        });
+      }
+
+      if (chatMessagesEl) {
+        chatMessagesEl.addEventListener('mouseover', (e) => {
+          const marker = e.target.closest('.lit-cite-marker');
+          if (!marker) return;
+          const block = marker.closest('.research-chat-assistant-block');
+          const msgIndex = block ? parseInt(block.getAttribute('data-msg-index'), 10) : NaN;
+          const message = folderChatMessages[msgIndex];
+          const idx = parseInt(marker.getAttribute('data-cite-idx'), 10);
+          if (!message || !message.citations || !message.citations[idx]) return;
+          showLitCitePopover(marker, message.citations[idx]);
+        });
+        chatMessagesEl.addEventListener('focusin', (e) => {
+          const marker = e.target.closest('.lit-cite-marker');
+          if (!marker) return;
+          marker.dispatchEvent(new Event('mouseover', { bubbles: true }));
+        });
+        chatMessagesEl.addEventListener('mouseout', (e) => {
+          const marker = e.target.closest('.lit-cite-marker');
+          if (!marker) return;
+          if (e.relatedTarget && litCitePopoverEl && litCitePopoverEl.contains(e.relatedTarget)) return;
+          scheduleLitCitePopoverHide();
+        });
+        chatMessagesEl.addEventListener('focusout', (e) => {
+          const marker = e.target.closest('.lit-cite-marker');
+          if (!marker) return;
+          scheduleLitCitePopoverHide();
         });
       }
     })();

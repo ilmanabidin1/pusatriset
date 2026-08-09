@@ -5657,6 +5657,25 @@
               Belum ada paper tersimpan di riset ini. Simpan dari Cari Referensi atau popover sitasi.
             </div>
           </div>
+
+          <!-- Chatbot per folder - jawaban AI dibatasi ke paper dalam folder ini saja,
+               baru muncul begitu foldernya sudah punya minimal 1 paper (lihat toggle
+               di loadReferencesTable, app.js). -->
+          <div id="myRefChatPanel" class="filter-box-card" style="display: none; margin-top: 1.5rem; padding: 0; overflow: hidden;">
+            <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-light-hover); display: flex; align-items: center; gap: 0.6rem;">
+              <i class="fa-solid fa-robot" style="color: var(--brand-blue);"></i>
+              <h4 style="margin: 0; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; color: var(--text-main);">Tanya AI tentang Folder Ini</h4>
+            </div>
+            <div id="myRefChatMessages" style="max-height: 380px; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.9rem;">
+              <div id="myRefChatEmptyHint" style="color: var(--text-muted); font-size: 0.85rem;">Tanyakan apa saja tentang paper-paper di folder ini, misalnya "apa perbedaan metode antar paper ini?" atau "buatkan ringkasan gap penelitian dari semua paper ini".</div>
+            </div>
+            <div style="padding: 0.9rem 1.25rem; border-top: 1px solid var(--border-light-hover); display: flex; gap: 0.6rem;">
+              <input type="text" id="myRefChatInput" placeholder="Tulis pertanyaan Anda..." style="flex: 1; padding: 0.7rem 1rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.88rem; outline: none; box-sizing: border-box;">
+              <button type="button" id="myRefChatSendBtn" style="padding: 0.7rem 1.15rem; border-radius: 8px; border: none; background: var(--brand-blue); color: #ffffff; font-weight: 700; cursor: pointer; flex-shrink: 0;">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

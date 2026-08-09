@@ -235,6 +235,17 @@ const savedReferenceLimiter = rateLimit({
   message: { ok: false, message: 'Terlalu banyak referensi disimpan dalam waktu singkat. Tunggu sebentar lalu coba lagi.' }
 });
 
+// Rate limit burst untuk chatbot per folder Koleksi Saya - tiap pesan memicu 1
+// panggilan DeepSeek, dibatasi kecepatannya per menit sama seperti savedReferenceLimiter.
+const folderChatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => (req.session && req.session.userId) || rateLimit.ipKeyGenerator(req.ip),
+  message: { ok: false, message: 'Terlalu banyak pesan dalam waktu singkat. Tunggu sebentar lalu coba lagi.' }
+});
+
 if (!process.env.SESSION_SECRET) {
   if (process.env.NODE_ENV === 'production') {
     console.error('FATAL: SESSION_SECRET belum diset. Set env var SESSION_SECRET di Railway sebelum menjalankan di production.');
@@ -1155,6 +1166,8 @@ app.post('/api/account/delete', requireAccess, async (req, res) => {
     saveSavedResearches(researches);
     const references = getSavedReferences().filter(ref => ref.userId !== user.id);
     saveSavedReferences(references);
+    const folderChats = getFolderChats().filter(c => c.userId !== user.id);
+    saveFolderChats(folderChats);
   } catch (err) {
     console.error('[Account Delete] Gagal membersihkan saved-references.json (diabaikan):', err.message);
   }
@@ -2587,6 +2600,32 @@ function saveSavedReferences(references) {
   }
 }
 
+// Riwayat chatbot per folder Koleksi Saya - satu entri per folder (bukan per
+// pesan), disimpan permanen supaya user bisa buka lagi obrolannya kapan saja.
+const FOLDER_CHATS_FILE = path.join(DATA_DIR, 'folder-chats.json');
+
+function getFolderChats() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(FOLDER_CHATS_FILE)) fs.writeFileSync(FOLDER_CHATS_FILE, '[]');
+    return JSON.parse(fs.readFileSync(FOLDER_CHATS_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca folder-chats.json:', error);
+    return [];
+  }
+}
+
+function saveFolderChats(chats) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(FOLDER_CHATS_FILE, JSON.stringify(chats, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan folder-chats.json:', error);
+    return false;
+  }
+}
+
 // Ekstrak nomor DOI polos dari url manapun (doi.org link atau field doi terpisah) -
 // sumber data kita macam-macam (OpenAlex, Semantic Scholar, popover sitasi) jadi
 // formatnya tidak selalu seragam.
@@ -2653,6 +2692,8 @@ app.delete('/api/my-references/researches/:id', requireAccess, (req, res) => {
   saveSavedResearches(remainingResearches);
   const remainingReferences = getSavedReferences().filter(ref => ref.researchId !== req.params.id);
   saveSavedReferences(remainingReferences);
+  const remainingChats = getFolderChats().filter(c => c.researchId !== req.params.id);
+  saveFolderChats(remainingChats);
   res.json({ ok: true });
 });
 
@@ -2743,6 +2784,122 @@ app.delete('/api/my-references/:id', requireAccess, (req, res) => {
   const remaining = references.filter(ref => ref.id !== req.params.id);
   saveSavedReferences(remaining);
   res.json({ ok: true });
+});
+
+// Riwayat chatbot folder Koleksi Saya - dicek dulu kepemilikan foldernya sebelum
+// mengembalikan pesan (permanen, disimpan di folder-chats.json).
+app.get('/api/my-references/researches/:id/chat', requireAccess, (req, res) => {
+  const research = getSavedResearches().find(r => r.id === req.params.id && r.userId === req.session.userId);
+  if (!research) {
+    return res.status(404).json({ ok: false, message: 'Riset tidak ditemukan.' });
+  }
+  const chat = getFolderChats().find(c => c.researchId === req.params.id && c.userId === req.session.userId);
+  res.json({ ok: true, messages: chat ? chat.messages : [] });
+});
+
+// Chatbot per folder Koleksi Saya - jawabannya dibatasi HANYA ke paper yang
+// tersimpan di folder ini (judul, penulis, abstrak, TL;DR yang sudah ada, bukan
+// full-text), dan wajib mensitasi paper yang dirujuk pakai format [n] supaya
+// bisa dipertanggungjawabkan lewat kartu popover sitasi yang sama seperti
+// Lit Review/SLR di frontend.
+app.post('/api/my-references/researches/:id/chat', requireAccess, folderChatLimiter, async (req, res) => {
+  const researchId = req.params.id;
+  const research = getSavedResearches().find(r => r.id === researchId && r.userId === req.session.userId);
+  if (!research) {
+    return res.status(404).json({ ok: false, message: 'Riset tidak ditemukan.' });
+  }
+
+  const message = String((req.body && req.body.message) || '').trim().slice(0, 2000);
+  if (!message) {
+    return res.status(400).json({ ok: false, message: 'Pertanyaan tidak boleh kosong.' });
+  }
+
+  const papers = getSavedReferences().filter(ref => ref.researchId === researchId && ref.userId === req.session.userId);
+  if (papers.length === 0) {
+    return res.status(400).json({ ok: false, message: 'Folder ini belum punya paper tersimpan.' });
+  }
+
+  const apiKey = getDeepSeekApiKey();
+  if (!apiKey) {
+    return res.status(500).json({ ok: false, message: 'JurnalHub Intelligence belum dikonfigurasi di server.' });
+  }
+
+  const paperListText = papers.map((p, idx) => {
+    return `[${idx + 1}] ${p.title}
+Penulis: ${p.authors || '-'}
+Jurnal: ${p.journal || '-'} (${p.year || '-'})
+Ringkasan: ${p.tldrId || p.tldrEn || p.abstract || '-'}`;
+  }).join('\n\n');
+
+  const systemPrompt = `Kamu adalah asisten riset di JurnalHub yang membantu pengguna memahami kumpulan paper yang mereka simpan di folder "${research.name}". Jawab HANYA berdasarkan daftar paper di bawah ini - jangan mengarang klaim, data, atau paper lain di luar daftar. Kalau pertanyaan pengguna tidak bisa dijawab dari paper-paper ini, katakan terus terang.
+
+Setiap kali menyebut/merujuk klaim dari salah satu paper, tulis sitasi dalam format angka bernomor dalam kurung siku, contoh [2], sesuai nomor urut paper pada daftar di bawah - taruh tepat setelah klausa/kalimat yang didukung paper tersebut. JANGAN pakai format (Penulis, Tahun). Jawab dalam bahasa yang sama dengan bahasa pertanyaan pengguna.
+
+Daftar paper di folder ini:
+${paperListText}`;
+
+  const citations = papers.map(p => ({
+    title: p.title,
+    authors: p.authors,
+    journal: p.journal,
+    year: p.year,
+    url: p.url || (p.doi ? `https://doi.org/${p.doi}` : null),
+    doi: p.doi || null,
+    abstract: p.abstract || ''
+  }));
+
+  try {
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 2000,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message }
+        ]
+      })
+    });
+
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+    }
+
+    const dsData = await dsResponse.json();
+    const reply = dsData?.choices?.[0]?.message?.content?.trim();
+    if (!reply) {
+      throw new Error('Respons AI kosong.');
+    }
+
+    const chats = getFolderChats();
+    let chat = chats.find(c => c.researchId === researchId && c.userId === req.session.userId);
+    const now = new Date().toISOString();
+    const userMsg = { role: 'user', content: message, timestamp: now };
+    const assistantMsg = { role: 'assistant', content: reply, citations, timestamp: now };
+    if (chat) {
+      chat.messages.push(userMsg, assistantMsg);
+      chat.updatedAt = now;
+    } else {
+      chat = { id: uuidv4(), researchId, userId: req.session.userId, messages: [userMsg, assistantMsg], updatedAt: now };
+      chats.push(chat);
+    }
+    saveFolderChats(chats);
+
+    res.json({ ok: true, reply, citations });
+  } catch (error) {
+    console.error('[Koleksi Saya Chat] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal menghubungi AI: ' + error.message });
+  }
 });
 
 // Enrichment best-effort - kalau gagal (rate limit dsb) tidak menggagalkan seluruh request,
