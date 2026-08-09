@@ -7901,6 +7901,81 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentStep = 1;
       let fetchedPapers = [];
       let slrResult = null;
+      let slrCitationLookup = [];
+
+      // Sitasi di Laporan Naratif & Matriks Sintesis ditulis AI sebagai teks bebas
+      // "Nama et al. (Tahun)" (bukan marker angka [n] seperti Lit Review biasa),
+      // jadi wrapping-nya dicocokkan lewat nama+tahun dari kolom authorYear di
+      // matrix, bukan pola [n]. Toleransi variasi "Nama, Tahun" vs "Nama (Tahun)"
+      // karena narasi AI kadang beda format tulisan dari kolom authorYear aslinya.
+      function buildSlrCitationLookup(matrix, papers) {
+        return (matrix || []).map((row, idx) => {
+          const fullPaper = (papers || []).find(p => p.title && row.title &&
+            p.title.trim().toLowerCase() === row.title.trim().toLowerCase());
+          const yearMatch = String(row.authorYear || '').match(/\d{4}/);
+          return {
+            idx,
+            authorYear: row.authorYear || '',
+            title: (fullPaper && fullPaper.title) || row.title,
+            authors: (fullPaper && fullPaper.authors) || row.authorYear,
+            year: (fullPaper && fullPaper.year) || (yearMatch ? yearMatch[0] : '-'),
+            journal: (fullPaper && fullPaper.journal) || '-',
+            url: fullPaper && fullPaper.url,
+            abstract: fullPaper && fullPaper.abstract,
+            citedByCount: fullPaper && fullPaper.citedByCount,
+            isOpenAccess: fullPaper && fullPaper.isOpenAccess
+          };
+        });
+      }
+
+      function wrapSlrCitationMentions(html, lookup) {
+        if (!html || !lookup || lookup.length === 0) return html;
+        const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        let result = html;
+        lookup.forEach((entry) => {
+          const yearMatch = String(entry.authorYear).match(/\d{4}/);
+          if (!yearMatch) return;
+          const year = yearMatch[0];
+          const namePart = String(entry.authorYear).replace(/[,\s]*\(?\d{4}\)?\s*$/, '').trim();
+          if (!namePart) return;
+          const pattern = new RegExp(escapeRegex(namePart) + '[,\\s]*\\(?' + year + '\\)?', 'g');
+          result = result.replace(pattern, (match) =>
+            `<span class="lit-cite-marker" data-slr-cite-idx="${entry.idx}" tabindex="0">${match}</span>`
+          );
+        });
+        return result;
+      }
+
+      // Event delegation di container tab SLR (bukan langsung di slrNarrativeOutput/
+      // slrMatrixTableBody) karena kedua elemen itu innerHTML-nya diganti total tiap
+      // kali renderSynthesisOutput() jalan - delegasi di ancestor yang stabil supaya
+      // listener-nya tetap jalan tanpa perlu di-attach ulang tiap render.
+      const slrTabContainer = document.getElementById('tabContentSlr');
+      if (slrTabContainer) {
+        slrTabContainer.addEventListener('mouseover', (e) => {
+          const marker = e.target.closest('[data-slr-cite-idx]');
+          if (!marker) return;
+          const idx = parseInt(marker.getAttribute('data-slr-cite-idx'), 10);
+          if (!slrCitationLookup[idx]) return;
+          showLitCitePopover(marker, slrCitationLookup[idx]);
+        });
+        slrTabContainer.addEventListener('focusin', (e) => {
+          const marker = e.target.closest('[data-slr-cite-idx]');
+          if (!marker) return;
+          marker.dispatchEvent(new Event('mouseover', { bubbles: true }));
+        });
+        slrTabContainer.addEventListener('mouseout', (e) => {
+          const marker = e.target.closest('[data-slr-cite-idx]');
+          if (!marker) return;
+          if (e.relatedTarget && litCitePopoverEl && litCitePopoverEl.contains(e.relatedTarget)) return;
+          scheduleLitCitePopoverHide();
+        });
+        slrTabContainer.addEventListener('focusout', (e) => {
+          const marker = e.target.closest('[data-slr-cite-idx]');
+          if (!marker) return;
+          scheduleLitCitePopoverHide();
+        });
+      }
 
       const progressLine = document.getElementById('slrProgressLine');
       const prevBtn = document.getElementById('slrPrevBtn');
@@ -8155,12 +8230,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update Matrix Table
         const matrixTableBody = document.getElementById('slrMatrixTableBody');
+        const matrix = slrResult.matrix || [];
+        slrCitationLookup = buildSlrCitationLookup(matrix, fetchedPapers);
         if (matrixTableBody) {
-          const matrix = slrResult.matrix || [];
           if (matrix.length === 0) {
             matrixTableBody.innerHTML = `<tr><td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">Tidak ada matriks sintesis dari AI.</td></tr>`;
           } else {
-            matrixTableBody.innerHTML = matrix.map((row) => {
+            matrixTableBody.innerHTML = matrix.map((row, idx) => {
               const rob = row.riskOfBias || {};
               const rating = rob.rating || 'Moderate Risk';
               let badgeStyle = 'background: #fef9c3; color: #854d0e; border: 1px solid #fde047;';
@@ -8169,7 +8245,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
               return `
                 <tr style="border-bottom: 1px solid rgba(8,34,64,0.04);">
-                  <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--text-main); vertical-align: top;">${escapeHtml(row.authorYear)}<br><span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500; display: block; margin-top: 0.2rem;">${escapeHtml(row.title)}</span></td>
+                  <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--text-main); vertical-align: top;"><span class="lit-cite-marker" data-slr-cite-idx="${idx}" tabindex="0">${escapeHtml(row.authorYear)}</span><br><span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500; display: block; margin-top: 0.2rem;">${escapeHtml(row.title)}</span></td>
                   <td style="padding: 0.85rem 1rem; vertical-align: top;">
                     <span style="display: inline-block; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; ${badgeStyle}">${escapeHtml(rating)}</span>
                     ${rob.reason ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.3;">${escapeHtml(rob.reason)}</div>` : ''}
@@ -8186,7 +8262,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Narrative Output
         const narrativeOutput = document.getElementById('slrNarrativeOutput');
         if (narrativeOutput) {
-          narrativeOutput.innerHTML = slrResult.narrative || '<p style="color: var(--text-muted); text-align: center;">Respons naratif tidak tersedia.</p>';
+          narrativeOutput.innerHTML = slrResult.narrative
+            ? wrapSlrCitationMentions(slrResult.narrative, slrCitationLookup)
+            : '<p style="color: var(--text-muted); text-align: center;">Respons naratif tidak tersedia.</p>';
         }
 
         // Reset internal Step 4 sub-tabs view to "prisma"
