@@ -16,6 +16,54 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;');
   }
 
+  // Cache ringan berisi doi/judul paper yang sudah tersimpan di Koleksi Saya
+  // (folder manapun) - dipakai supaya tombol "Simpan" di kartu Cari Referensi &
+  // popover sitasi otomatis berubah jadi "Tersimpan" (dan tidak bisa diklik lagi)
+  // kalau papernya sudah ada di salah satu folder user. Di-refresh lazy (bukan
+  // di-refetch tiap render) lalu diperbarui langsung tiap kali ada penyimpanan baru.
+  let savedReferenceKeys = null;
+  function normalizeDoiKey(doi) {
+    if (!doi) return null;
+    return 'doi:' + String(doi).replace('https://doi.org/', '').trim().toLowerCase();
+  }
+  function normalizeTitleKey(title) {
+    return 'title:' + String(title || '').trim().toLowerCase();
+  }
+  async function loadSavedReferenceKeys(forceRefresh) {
+    if (savedReferenceKeys && !forceRefresh) return savedReferenceKeys;
+    try {
+      const res = await fetch('/api/my-references');
+      const data = await res.json();
+      const refs = data.ok ? (data.references || []) : [];
+      const keys = new Set();
+      refs.forEach(r => {
+        const doiKey = normalizeDoiKey(r.doi);
+        if (doiKey) keys.add(doiKey);
+        keys.add(normalizeTitleKey(r.title));
+      });
+      savedReferenceKeys = keys;
+    } catch (err) {
+      if (!savedReferenceKeys) savedReferenceKeys = new Set();
+    }
+    return savedReferenceKeys;
+  }
+  function isPaperAlreadySaved(paper) {
+    if (!savedReferenceKeys || !paper) return false;
+    const doiKey = normalizeDoiKey(paper.doi);
+    if (doiKey && savedReferenceKeys.has(doiKey)) return true;
+    return savedReferenceKeys.has(normalizeTitleKey(paper.title));
+  }
+  function markPaperAsSaved(paper) {
+    if (!paper) return;
+    if (!savedReferenceKeys) savedReferenceKeys = new Set();
+    const doiKey = normalizeDoiKey(paper.doi);
+    if (doiKey) savedReferenceKeys.add(doiKey);
+    savedReferenceKeys.add(normalizeTitleKey(paper.title));
+  }
+  // Preload di awal biar tombol-tombol sudah dalam status yang benar begitu user
+  // mulai berinteraksi (bukan cuma dipicu lazy pas render pertama).
+  loadSavedReferenceKeys();
+
   // Efek "reveal perkata" supaya hasil AI yang datang sekaligus (bukan streaming asli
   // dari API, karena outputnya JSON terstruktur / API pihak ketiga tanpa streaming)
   // tetap terasa cepat & hidup seperti balasan JurnalHub Intelligence. Durasi total
@@ -2493,6 +2541,7 @@ document.addEventListener('DOMContentLoaded', () => {
         realtimeResultsCount.dataset.hasResults = '1';
       }
 
+      await loadSavedReferenceKeys();
       works.forEach((work, index) => {
         const card = document.createElement('div');
         card.className = 'journal-card openalex-card';
@@ -2500,6 +2549,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const abstractSnippet = work.abstract
           ? (work.abstract.length > 180 ? work.abstract.slice(0, 180) + '…' : work.abstract)
           : '';
+        const alreadySaved = isPaperAlreadySaved(work);
         card.innerHTML = `
           <div>
             <div class="card-header">
@@ -2521,16 +2571,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="card-footer-wrapper">
             <div class="card-footer" style="margin-top: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
               <a href="${work.url}" target="_blank" class="journal-link">${t.realtime_open_source} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-              <button type="button" class="reset-filter-btn realtime-save-ref-btn" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.78rem;">
-                <i class="fa-regular fa-bookmark"></i> Simpan
+              <button type="button" class="reset-filter-btn realtime-save-ref-btn" ${alreadySaved ? 'disabled' : ''} style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.78rem;">
+                <i class="${alreadySaved ? 'fa-solid fa-check' : 'fa-regular fa-bookmark'}"></i> ${alreadySaved ? 'Tersimpan' : 'Simpan'}
               </button>
             </div>
           </div>
         `;
         const saveBtn = card.querySelector('.realtime-save-ref-btn');
-        if (saveBtn) {
+        if (saveBtn && !alreadySaved) {
           saveBtn.addEventListener('click', () => {
-            if (window.openSaveReferenceModal) window.openSaveReferenceModal(work);
+            if (window.openSaveReferenceModal) window.openSaveReferenceModal(work, saveBtn);
           });
         }
         realtimeResultsContainer.appendChild(card);
@@ -5469,6 +5519,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!overlay || !listEl) return;
 
       let pendingPaper = null;
+      let pendingTriggerBtn = null;
 
       function showMessage(text, isError) {
         if (!messageEl) return;
@@ -5528,14 +5579,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
           showMessage('Tersimpan!', false);
+          markPaperAsSaved(pendingPaper);
+          if (pendingTriggerBtn) {
+            pendingTriggerBtn.disabled = true;
+            pendingTriggerBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersimpan';
+          }
           setTimeout(() => { overlay.classList.remove('active'); }, 700);
         } catch (err) {
           showMessage('Gagal menghubungi server.', true);
         }
       }
 
-      window.openSaveReferenceModal = function (paper) {
+      window.openSaveReferenceModal = function (paper, triggerBtn) {
         pendingPaper = paper;
+        pendingTriggerBtn = triggerBtn || null;
         if (paperTitleEl) paperTitleEl.textContent = (paper && paper.title) || '-';
         if (newResearchInput) newResearchInput.value = '';
         if (messageEl) messageEl.style.display = 'none';
@@ -5619,6 +5676,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return text.length > max ? text.slice(0, max) + '…' : text;
       }
 
+      const TLDR_TRUNCATE_LENGTH = 100;
+      // TL;DR sering lebih panjang dari yang muat di sel tabel - dulu cuma ada
+      // tooltip title="..." pas hover, sekarang ada tombol "Lihat selengkapnya"
+      // yang expand teksnya langsung di dalam sel (lihat delegasi klik di tableBody).
+      function renderTldrCell(text) {
+        if (!text) return '<td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">-</td>';
+        const isLong = text.length > TLDR_TRUNCATE_LENGTH;
+        return `
+          <td class="my-ref-tldr-cell" data-full="${escapeHtml(text)}" data-truncated="${escapeHtml(truncate(text, TLDR_TRUNCATE_LENGTH))}" style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-main); line-height: 1.4;">
+            <span class="my-ref-tldr-text">${escapeHtml(truncate(text, TLDR_TRUNCATE_LENGTH))}</span>
+            ${isLong ? `<button type="button" class="my-ref-tldr-toggle" data-expanded="false">Lihat selengkapnya</button>` : ''}
+          </td>
+        `;
+      }
+
       async function loadMyReferencesFolders() {
         foldersGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">Memuat...</div>';
         try {
@@ -5672,8 +5744,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">${escapeHtml(truncate(ref.journal, 30))}</td>
               <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">${escapeHtml(ref.year || '-')}</td>
               <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted); font-size: 0.78rem;">${ref.doi ? escapeHtml(ref.doi) : '-'}</td>
-              <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-main); line-height: 1.4;" title="${escapeHtml(ref.tldrEn || '')}">${ref.tldrEn ? escapeHtml(truncate(ref.tldrEn, 100)) : '<span style="color: var(--text-muted);">-</span>'}</td>
-              <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-main); line-height: 1.4;" title="${escapeHtml(ref.tldrId || '')}">${ref.tldrId ? escapeHtml(truncate(ref.tldrId, 100)) : '<span style="color: var(--text-muted);">-</span>'}</td>
+              ${renderTldrCell(ref.tldrEn)}
+              ${renderTldrCell(ref.tldrId)}
               <td style="padding: 0.85rem 1rem; vertical-align: top;">
                 <button type="button" class="my-ref-delete-btn" data-ref-id="${ref.id}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.85rem;" title="Hapus dari riset ini">
                   <i class="fa-regular fa-trash-can"></i>
@@ -5763,6 +5835,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       tableBody.addEventListener('click', async (e) => {
+        const toggleBtn = e.target.closest('.my-ref-tldr-toggle');
+        if (toggleBtn) {
+          const cell = toggleBtn.closest('.my-ref-tldr-cell');
+          const textEl = cell.querySelector('.my-ref-tldr-text');
+          const isExpanded = toggleBtn.getAttribute('data-expanded') === 'true';
+          if (isExpanded) {
+            textEl.textContent = cell.getAttribute('data-truncated') || '';
+            toggleBtn.textContent = 'Lihat selengkapnya';
+            toggleBtn.setAttribute('data-expanded', 'false');
+          } else {
+            textEl.textContent = cell.getAttribute('data-full') || '';
+            toggleBtn.textContent = 'Sembunyikan';
+            toggleBtn.setAttribute('data-expanded', 'true');
+          }
+          return;
+        }
+
         const delBtn = e.target.closest('.my-ref-delete-btn');
         if (!delBtn) return;
         if (!confirm('Hapus paper ini dari riset?')) return;
@@ -5771,6 +5860,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = await res.json();
           if (data.ok && currentResearchId) {
             loadReferencesTable(currentResearchId);
+            // Paper yang dihapus mungkin masih ada di folder lain, jadi status
+            // "sudah tersimpan" harus dicek ulang ke server, bukan diasumsikan hilang.
+            loadSavedReferenceKeys(true);
           }
         } catch (err) {
           alert('Gagal menghubungi server.');
@@ -6461,8 +6553,9 @@ document.addEventListener('DOMContentLoaded', () => {
       litCitePopoverEl.addEventListener('mouseenter', cancelLitCitePopoverHide);
       litCitePopoverEl.addEventListener('mouseleave', scheduleLitCitePopoverHide);
       litCitePopoverEl.addEventListener('click', (e) => {
-        if (e.target.closest('.lit-cite-popover-save-btn') && currentPopoverCitation && window.openSaveReferenceModal) {
-          window.openSaveReferenceModal(currentPopoverCitation);
+        const saveBtn = e.target.closest('.lit-cite-popover-save-btn');
+        if (saveBtn && !saveBtn.disabled && currentPopoverCitation && window.openSaveReferenceModal) {
+          window.openSaveReferenceModal(currentPopoverCitation, saveBtn);
         }
       });
       return litCitePopoverEl;
@@ -6491,6 +6584,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const abstractText = citation.abstract
         ? (citation.abstract.length > 200 ? citation.abstract.slice(0, 200) + '…' : citation.abstract)
         : '';
+      const alreadySaved = isPaperAlreadySaved(citation);
       pop.innerHTML = `
         <div class="lit-cite-popover-title">${escapeHtml(citation.title || t.cite_popover_no_title)}</div>
         ${abstractText ? `<div class="lit-cite-popover-abstract">"${escapeHtml(abstractText)}"</div>` : ''}
@@ -6504,7 +6598,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="lit-cite-popover-actions">
           ${citation.url ? `<a href="${citation.url}" target="_blank" rel="noopener" class="lit-cite-popover-link">${t.cite_popover_open_source} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
           ${citation.pdfUrl ? `<a href="${citation.pdfUrl}" target="_blank" rel="noopener" class="lit-cite-popover-pdf" title="${t.cite_popover_pdf_title}"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : ''}
-          <button type="button" class="lit-cite-popover-save-btn"><i class="fa-regular fa-bookmark"></i> Simpan</button>
+          <button type="button" class="lit-cite-popover-save-btn" ${alreadySaved ? 'disabled' : ''}><i class="${alreadySaved ? 'fa-solid fa-check' : 'fa-regular fa-bookmark'}"></i> ${alreadySaved ? 'Tersimpan' : 'Simpan'}</button>
         </div>
       `;
       pop.style.display = 'block';
