@@ -223,6 +223,18 @@ const citationGraphLimiter = rateLimit({
   message: { ok: false, message: 'Terlalu banyak permintaan peta sitasi dalam waktu singkat. Tunggu sebentar lalu coba lagi.' }
 });
 
+// Rate limit burst untuk menyimpan referensi ke Referensi Saya - tiap simpan memicu
+// 1 panggilan DeepSeek (TL;DR), jadi dibatasi kecepatannya per menit (bukan kuota
+// bulanan) supaya tidak disalahgunakan lewat script/automasi.
+const savedReferenceLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => (req.session && req.session.userId) || rateLimit.ipKeyGenerator(req.ip),
+  message: { ok: false, message: 'Terlalu banyak referensi disimpan dalam waktu singkat. Tunggu sebentar lalu coba lagi.' }
+});
+
 if (!process.env.SESSION_SECRET) {
   if (process.env.NODE_ENV === 'production') {
     console.error('FATAL: SESSION_SECRET belum diset. Set env var SESSION_SECRET di Railway sebelum menjalankan di production.');
@@ -1176,6 +1188,15 @@ app.post('/api/account/delete', requireAccess, async (req, res) => {
     saveResearchChatConversations(conversations);
   } catch (err) {
     console.error('[Account Delete] Gagal membersihkan research-chat-conversations.json (diabaikan):', err.message);
+  }
+
+  try {
+    const researches = getSavedResearches().filter(r => r.userId !== user.id);
+    saveSavedResearches(researches);
+    const references = getSavedReferences().filter(ref => ref.userId !== user.id);
+    saveSavedReferences(references);
+  } catch (err) {
+    console.error('[Account Delete] Gagal membersihkan saved-references.json (diabaikan):', err.message);
   }
 
   req.session.destroy(() => {
@@ -2470,25 +2491,29 @@ app.post('/api/citation-graph/expand', requireAccess, citationGraphLimiter, asyn
   }
 });
 
-// TL;DR dwibahasa (EN + ID) untuk paper yang sedang dipilih di peta sitasi - dibuat
-// on-demand dari abstrak asli OpenAlex (bukan dari judul saja) supaya tidak
-// mengarang isi. Sengaja TIDAK dibatasi kuota bulanan seperti /expand - ini cuma
-// 1 pemanggilan DeepSeek super ringan (mirip AI Disclosure Generator), bukan
-// beban utama fitur ini (yang berat & dibatasi kuota adalah panggilan OpenAlex
-// di /expand).
-app.post('/api/citation-graph/tldr', requireAccess, citationGraphLimiter, async (req, res) => {
-  const title = String((req.body && req.body.title) || '').trim().slice(0, 500);
-  const abstract = String((req.body && req.body.abstract) || '').trim().slice(0, 1500);
+// TL;DR dwibahasa (EN + ID) generik dari judul+abstrak asli - dipakai bareng oleh
+// Peta Sitasi dan Referensi Saya, supaya logika pemanggilan DeepSeek-nya tidak
+// dobel. Selalu dari abstrak asli (bukan cuma judul) supaya tidak mengarang isi.
+class TldrError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function generateBilingualTldr(rawTitle, rawAbstract) {
+  const title = String(rawTitle || '').trim().slice(0, 500);
+  const abstract = String(rawAbstract || '').trim().slice(0, 1500);
   if (!title) {
-    return res.status(400).json({ ok: false, message: 'title wajib diisi.' });
+    throw new TldrError('title wajib diisi.', 400);
   }
   if (!abstract) {
-    return res.status(422).json({ ok: false, message: 'Paper ini tidak memiliki abstrak di OpenAlex, TL;DR tidak dapat dibuat tanpa mengarang isi.' });
+    throw new TldrError('Paper ini tidak memiliki abstrak, TL;DR tidak dapat dibuat tanpa mengarang isi.', 422);
   }
 
   const deepSeekKey = getDeepSeekApiKey();
   if (!deepSeekKey) {
-    return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di server.' });
+    throw new TldrError('DeepSeek API Key belum dikonfigurasi di server.', 500);
   }
 
   const fetchFn = globalThis.fetch || require('node-fetch');
@@ -2496,49 +2521,270 @@ app.post('/api/citation-graph/tldr', requireAccess, citationGraphLimiter, async 
   const systemPrompt = 'You are an academic assistant that writes an extremely concise TL;DR (1-2 sentences) of what a research paper is about, strictly based ONLY on the title and abstract given - never add claims, numbers, or findings that are not stated in the text. Respond with ONLY valid JSON, no markdown, in this exact shape: {"en": "TL;DR in English", "id": "TL;DR dalam Bahasa Indonesia"}.';
   const userPrompt = `Title: ${title}\n\nAbstract: ${abstract}`;
 
+  const dsResponse = await fetchFn(deepSeekUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${deepSeekKey}`
+    },
+    body: JSON.stringify({
+      model: 'deepseek-v4-flash',
+      max_tokens: 400,
+      stream: false,
+      thinking: { type: 'disabled' },
+      extra_body: { thinking: { type: 'disabled' } },
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]
+    })
+  });
+
+  if (!dsResponse.ok) {
+    const errText = await dsResponse.text();
+    throw new TldrError(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`, 500);
+  }
+
+  const dsData = await dsResponse.json();
+  const choice = dsData?.choices?.[0];
+  let content = choice?.message?.content?.trim();
+  if (!content && choice?.message?.reasoning_content) {
+    content = String(choice.message.reasoning_content).trim();
+  }
+  if (!content) throw new TldrError('Respons AI kosong.', 500);
+
+  const parsed = cleanAndParseAIResponse(content, true);
+  if (!parsed || !parsed.en || !parsed.id) {
+    throw new TldrError('Format TL;DR dari AI tidak sesuai.', 500);
+  }
+  return { en: parsed.en, id: parsed.id };
+}
+
+// TL;DR dwibahasa (EN + ID) untuk paper yang sedang dipilih di peta sitasi - dibuat
+// on-demand dari abstrak asli OpenAlex (bukan dari judul saja) supaya tidak
+// mengarang isi. Sengaja TIDAK dibatasi kuota bulanan seperti /expand - ini cuma
+// 1 pemanggilan DeepSeek super ringan (mirip AI Disclosure Generator), bukan
+// beban utama fitur ini (yang berat & dibatasi kuota adalah panggilan OpenAlex
+// di /expand).
+app.post('/api/citation-graph/tldr', requireAccess, citationGraphLimiter, async (req, res) => {
   try {
-    const dsResponse = await fetchFn(deepSeekUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${deepSeekKey}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-v4-flash',
-        max_tokens: 400,
-        stream: false,
-        thinking: { type: 'disabled' },
-        extra_body: { thinking: { type: 'disabled' } },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ]
-      })
-    });
-
-    if (!dsResponse.ok) {
-      const errText = await dsResponse.text();
-      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
-    }
-
-    const dsData = await dsResponse.json();
-    const choice = dsData?.choices?.[0];
-    let content = choice?.message?.content?.trim();
-    if (!content && choice?.message?.reasoning_content) {
-      content = String(choice.message.reasoning_content).trim();
-    }
-    if (!content) throw new Error('Respons AI kosong.');
-
-    const parsed = cleanAndParseAIResponse(content, true);
-    if (!parsed || !parsed.en || !parsed.id) {
-      throw new Error('Format TL;DR dari AI tidak sesuai.');
-    }
-
-    res.json({ ok: true, en: parsed.en, id: parsed.id });
+    const result = await generateBilingualTldr(req.body && req.body.title, req.body && req.body.abstract);
+    res.json({ ok: true, en: result.en, id: result.id });
   } catch (error) {
     console.error('[Citation Graph TLDR] Error:', error.message);
-    res.status(500).json({ ok: false, message: 'Gagal membuat TL;DR: ' + error.message });
+    const status = error instanceof TldrError ? error.status : 500;
+    const message = error instanceof TldrError ? error.message : ('Gagal membuat TL;DR: ' + error.message);
+    res.status(status).json({ ok: false, message });
   }
+});
+
+// --- REFERENSI SAYA: paper individual yang di-save user dari Cari Referensi,
+// popover sitasi Lit Review/JurnalHub Intelligence/SLR/Riwayat, dikelompokkan ke
+// dalam folder "Riset" (per proyek penelitian). Terpisah dari "Tersimpan" (yang
+// menyimpan ENTRI JURNAL dari Database Jurnal, bukan paper/artikel individual). ---
+const SAVED_RESEARCHES_FILE = path.join(DATA_DIR, 'saved-researches.json');
+const SAVED_REFERENCES_FILE = path.join(DATA_DIR, 'saved-references.json');
+
+function getSavedResearches() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(SAVED_RESEARCHES_FILE)) fs.writeFileSync(SAVED_RESEARCHES_FILE, '[]');
+    return JSON.parse(fs.readFileSync(SAVED_RESEARCHES_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca saved-researches.json:', error);
+    return [];
+  }
+}
+
+function saveSavedResearches(researches) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(SAVED_RESEARCHES_FILE, JSON.stringify(researches, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan saved-researches.json:', error);
+    return false;
+  }
+}
+
+function getSavedReferences() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(SAVED_REFERENCES_FILE)) fs.writeFileSync(SAVED_REFERENCES_FILE, '[]');
+    return JSON.parse(fs.readFileSync(SAVED_REFERENCES_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca saved-references.json:', error);
+    return [];
+  }
+}
+
+function saveSavedReferences(references) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(SAVED_REFERENCES_FILE, JSON.stringify(references, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan saved-references.json:', error);
+    return false;
+  }
+}
+
+// Ekstrak nomor DOI polos dari url manapun (doi.org link atau field doi terpisah) -
+// sumber data kita macam-macam (OpenAlex, Semantic Scholar, popover sitasi) jadi
+// formatnya tidak selalu seragam.
+function extractDoiFromUrlOrDoi(doi, url) {
+  if (doi) return String(doi).replace('https://doi.org/', '').trim();
+  const match = String(url || '').match(/doi\.org\/(.+)$/i);
+  return match ? match[1].trim() : null;
+}
+
+// Daftar folder "Riset" milik user yang login, terbaru dulu, masing-masing disertai
+// jumlah referensi di dalamnya (buat ditampilkan sebagai kartu folder).
+app.get('/api/my-references/researches', requireAccess, (req, res) => {
+  const researches = getSavedResearches().filter(r => r.userId === req.session.userId);
+  const references = getSavedReferences();
+  const result = researches
+    .map(r => ({
+      id: r.id,
+      name: r.name,
+      createdAt: r.createdAt,
+      referenceCount: references.filter(ref => ref.researchId === r.id).length
+    }))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json({ ok: true, researches: result });
+});
+
+app.post('/api/my-references/researches', requireAccess, (req, res) => {
+  const name = String((req.body && req.body.name) || '').trim().slice(0, 100);
+  if (!name) {
+    return res.status(400).json({ ok: false, message: 'Nama riset wajib diisi.' });
+  }
+  const researches = getSavedResearches();
+  const duplicate = researches.find(r => r.userId === req.session.userId && r.name.toLowerCase() === name.toLowerCase());
+  if (duplicate) {
+    return res.status(409).json({ ok: false, message: 'Sudah ada riset dengan nama ini.' });
+  }
+  const newResearch = { id: uuidv4(), userId: req.session.userId, name, createdAt: new Date().toISOString() };
+  researches.push(newResearch);
+  saveSavedResearches(researches);
+  res.json({ ok: true, research: { ...newResearch, referenceCount: 0 } });
+});
+
+app.patch('/api/my-references/researches/:id', requireAccess, (req, res) => {
+  const name = String((req.body && req.body.name) || '').trim().slice(0, 100);
+  if (!name) {
+    return res.status(400).json({ ok: false, message: 'Nama riset wajib diisi.' });
+  }
+  const researches = getSavedResearches();
+  const research = researches.find(r => r.id === req.params.id && r.userId === req.session.userId);
+  if (!research) {
+    return res.status(404).json({ ok: false, message: 'Riset tidak ditemukan.' });
+  }
+  research.name = name;
+  saveSavedResearches(researches);
+  res.json({ ok: true });
+});
+
+app.delete('/api/my-references/researches/:id', requireAccess, (req, res) => {
+  const researches = getSavedResearches();
+  const research = researches.find(r => r.id === req.params.id && r.userId === req.session.userId);
+  if (!research) {
+    return res.status(404).json({ ok: false, message: 'Riset tidak ditemukan.' });
+  }
+  const remainingResearches = researches.filter(r => r.id !== req.params.id);
+  saveSavedResearches(remainingResearches);
+  const remainingReferences = getSavedReferences().filter(ref => ref.researchId !== req.params.id);
+  saveSavedReferences(remainingReferences);
+  res.json({ ok: true });
+});
+
+// Daftar referensi tersimpan milik user, opsional difilter per riset (?researchId=).
+app.get('/api/my-references', requireAccess, (req, res) => {
+  const { researchId } = req.query;
+  let references = getSavedReferences().filter(ref => ref.userId === req.session.userId);
+  if (researchId) {
+    references = references.filter(ref => ref.researchId === researchId);
+  }
+  references.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+  res.json({ ok: true, references });
+});
+
+// Simpan 1 paper ke folder riset tertentu + generate TL;DR dwibahasa sekaligus
+// (kalau ada abstrak). Sumbernya bisa dari Cari Referensi, atau popover sitasi
+// (Lit Review/JurnalHub Intelligence/SLR/Riwayat) - makanya field abstract/doi/dll
+// semua opsional, bergantung data apa yang tersedia di sumbernya.
+app.post('/api/my-references', requireAccess, savedReferenceLimiter, async (req, res) => {
+  const body = req.body || {};
+  const researchId = String(body.researchId || '').trim();
+  const title = String(body.title || '').trim().slice(0, 500);
+  if (!researchId) {
+    return res.status(400).json({ ok: false, message: 'Pilih folder riset terlebih dahulu.' });
+  }
+  if (!title) {
+    return res.status(400).json({ ok: false, message: 'Paper ini tidak punya judul, tidak bisa disimpan.' });
+  }
+
+  const researches = getSavedResearches();
+  const research = researches.find(r => r.id === researchId && r.userId === req.session.userId);
+  if (!research) {
+    return res.status(404).json({ ok: false, message: 'Folder riset tidak ditemukan.' });
+  }
+
+  const doi = extractDoiFromUrlOrDoi(body.doi, body.url);
+  const references = getSavedReferences();
+
+  const duplicate = references.find(ref => ref.researchId === researchId && ref.userId === req.session.userId && (
+    (doi && ref.doi === doi) || (!doi && ref.title.trim().toLowerCase() === title.toLowerCase())
+  ));
+  if (duplicate) {
+    return res.status(409).json({ ok: false, message: 'Paper ini sudah ada di riset tersebut.' });
+  }
+
+  const abstract = String(body.abstract || '').trim().slice(0, 1500);
+  let tldrEn = null;
+  let tldrId = null;
+  if (abstract) {
+    try {
+      const tldr = await generateBilingualTldr(title, abstract);
+      tldrEn = tldr.en;
+      tldrId = tldr.id;
+    } catch (error) {
+      // TL;DR gagal (mis. DeepSeek down) tidak menggagalkan penyimpanan paper-nya -
+      // papernya tetap tersimpan, kolom TL;DR cukup kosong dan bisa dicoba lagi nanti.
+      console.error('[My References] Gagal membuat TL;DR saat menyimpan:', error.message);
+    }
+  }
+
+  const newReference = {
+    id: uuidv4(),
+    userId: req.session.userId,
+    researchId,
+    title,
+    type: String(body.type || 'article').trim().slice(0, 50),
+    authors: String(body.authors || '').trim().slice(0, 500),
+    journal: String(body.journal || '').trim().slice(0, 300),
+    year: String(body.year || '').trim().slice(0, 10),
+    doi,
+    url: String(body.url || '').trim().slice(0, 1000),
+    abstract,
+    tldrEn,
+    tldrId,
+    savedAt: new Date().toISOString()
+  };
+  references.push(newReference);
+  saveSavedReferences(references);
+  res.json({ ok: true, reference: newReference });
+});
+
+app.delete('/api/my-references/:id', requireAccess, (req, res) => {
+  const references = getSavedReferences();
+  const reference = references.find(ref => ref.id === req.params.id && ref.userId === req.session.userId);
+  if (!reference) {
+    return res.status(404).json({ ok: false, message: 'Referensi tidak ditemukan.' });
+  }
+  const remaining = references.filter(ref => ref.id !== req.params.id);
+  saveSavedReferences(remaining);
+  res.json({ ok: true });
 });
 
 // Enrichment best-effort - kalau gagal (rate limit dsb) tidak menggagalkan seluruh request,

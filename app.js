@@ -386,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "prompt-bank": "Prompt Bank",
       slr: "Systematic Lit Review",
       "patent-search": "Pencarian Paten",
+      "referensi-saya": "Referensi Saya",
       tersimpan: "Tersimpan",
       pengaturan: "Pengaturan",
       sidebar_more: "Lainnya",
@@ -614,6 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "prompt-bank": "Prompt Bank",
       slr: "Systematic Lit Review",
       "patent-search": "Patent Search",
+      "referensi-saya": "My References",
       tersimpan: "Bookmarks",
       pengaturan: "Settings",
       sidebar_more: "More",
@@ -2604,11 +2606,20 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div class="card-footer-wrapper">
-            <div class="card-footer" style="margin-top: 1.25rem;">
+            <div class="card-footer" style="margin-top: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
               <a href="${work.url}" target="_blank" class="journal-link">${t.realtime_open_source} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+              <button type="button" class="reset-filter-btn realtime-save-ref-btn" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.78rem;">
+                <i class="fa-regular fa-bookmark"></i> Simpan
+              </button>
             </div>
           </div>
         `;
+        const saveBtn = card.querySelector('.realtime-save-ref-btn');
+        if (saveBtn) {
+          saveBtn.addEventListener('click', () => {
+            if (window.openSaveReferenceModal) window.openSaveReferenceModal(work);
+          });
+        }
         realtimeResultsContainer.appendChild(card);
       });
     } catch (err) {
@@ -5568,6 +5579,328 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     })();
 
+    // --- Referensi Saya: modal "Simpan ke Riset" dipanggil dari tombol Simpan di
+    // popover sitasi (showLitCitePopover, dipakai Lit Review/JurnalHub Intelligence/
+    // SLR/Riwayat) maupun kartu hasil Cari Referensi. window.openSaveReferenceModal
+    // dipanggil dari sana dengan data paper mentah (title/authors/journal/year/doi/
+    // url/abstract/citedByCount/isOpenAccess - field mana pun yang tersedia). ---
+    (function initSaveReferenceModal() {
+      const overlay = document.getElementById('saveReferenceModal');
+      const closeBtn = document.getElementById('closeSaveReferenceModalBtn');
+      const paperTitleEl = document.getElementById('saveReferenceModalPaperTitle');
+      const newResearchInput = document.getElementById('saveReferenceNewResearchInput');
+      const createBtn = document.getElementById('saveReferenceCreateBtn');
+      const listEl = document.getElementById('saveReferenceResearchList');
+      const emptyHintEl = document.getElementById('saveReferenceEmptyHint');
+      const messageEl = document.getElementById('saveReferenceMessage');
+      if (!overlay || !listEl) return;
+
+      let pendingPaper = null;
+
+      function showMessage(text, isError) {
+        if (!messageEl) return;
+        messageEl.textContent = text;
+        messageEl.style.color = isError ? '#dc2626' : '#059669';
+        messageEl.style.display = 'block';
+      }
+
+      function renderResearchList(researches) {
+        if (researches.length === 0) {
+          listEl.innerHTML = '';
+          if (emptyHintEl) emptyHintEl.style.display = 'block';
+          return;
+        }
+        if (emptyHintEl) emptyHintEl.style.display = 'none';
+        listEl.innerHTML = researches.map(r => `
+          <button type="button" class="save-reference-research-item" data-research-id="${r.id}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; width: 100%; padding: 0.7rem 0.9rem; border: 1px solid var(--border-light-hover); background: var(--bg-card, #fff); border-radius: 8px; cursor: pointer; text-align: left; font-family: inherit; transition: all 0.15s;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-main);"><i class="fa-solid fa-folder" style="color: var(--brand-blue); margin-right: 0.4rem;"></i>${escapeHtml(r.name)}</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">${r.referenceCount} paper</span>
+          </button>
+        `).join('');
+      }
+
+      async function loadResearches() {
+        listEl.innerHTML = '<div style="text-align:center; padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">Memuat...</div>';
+        try {
+          const res = await fetch('/api/my-references/researches');
+          const data = await res.json();
+          if (data.ok) renderResearchList(data.researches || []);
+        } catch (err) {
+          listEl.innerHTML = '<div style="text-align:center; padding: 1rem; color: #dc2626; font-size: 0.85rem;">Gagal memuat daftar riset.</div>';
+        }
+      }
+
+      async function saveToResearch(researchId) {
+        if (!pendingPaper) return;
+        showMessage('Menyimpan & membuat ringkasan TL;DR...', false);
+        try {
+          const res = await fetch('/api/my-references', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              researchId,
+              title: pendingPaper.title,
+              authors: pendingPaper.authors,
+              journal: pendingPaper.journal,
+              year: pendingPaper.year,
+              doi: pendingPaper.doi,
+              url: pendingPaper.url,
+              abstract: pendingPaper.abstract
+            })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            showMessage(data.message || 'Gagal menyimpan referensi.', true);
+            return;
+          }
+          showMessage('Tersimpan!', false);
+          setTimeout(() => { overlay.classList.remove('active'); }, 700);
+        } catch (err) {
+          showMessage('Gagal menghubungi server.', true);
+        }
+      }
+
+      window.openSaveReferenceModal = function (paper) {
+        pendingPaper = paper;
+        if (paperTitleEl) paperTitleEl.textContent = (paper && paper.title) || '-';
+        if (newResearchInput) newResearchInput.value = '';
+        if (messageEl) messageEl.style.display = 'none';
+        overlay.classList.add('active');
+        loadResearches();
+      };
+
+      if (closeBtn) closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+
+      listEl.addEventListener('click', (e) => {
+        const item = e.target.closest('.save-reference-research-item');
+        if (item) saveToResearch(item.getAttribute('data-research-id'));
+      });
+
+      async function createResearchAndSave() {
+        const name = (newResearchInput.value || '').trim();
+        if (!name) {
+          newResearchInput.focus();
+          return;
+        }
+        try {
+          const res = await fetch('/api/my-references/researches', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            showMessage(data.message || 'Gagal membuat riset baru.', true);
+            return;
+          }
+          newResearchInput.value = '';
+          await loadResearches();
+          if (pendingPaper) saveToResearch(data.research.id);
+        } catch (err) {
+          showMessage('Gagal menghubungi server.', true);
+        }
+      }
+
+      if (createBtn) createBtn.addEventListener('click', createResearchAndSave);
+      if (newResearchInput) {
+        newResearchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            createResearchAndSave();
+          }
+        });
+      }
+    })();
+
+    // --- Referensi Saya (tab): grid folder Riset -> tabel paper di dalamnya ---
+    (function initMyReferencesTab() {
+      const foldersView = document.getElementById('myRefFoldersView');
+      const detailView = document.getElementById('myRefDetailView');
+      const foldersGrid = document.getElementById('myRefFoldersGrid');
+      const foldersEmpty = document.getElementById('myRefFoldersEmpty');
+      const createResearchBtn = document.getElementById('myRefCreateResearchBtn');
+      const backBtn = document.getElementById('myRefBackBtn');
+      const detailTitle = document.getElementById('myRefDetailTitle');
+      const renameBtn = document.getElementById('myRefRenameResearchBtn');
+      const deleteResearchBtn = document.getElementById('myRefDeleteResearchBtn');
+      const tableBody = document.getElementById('myRefTableBody');
+      const tableEmpty = document.getElementById('myRefTableEmpty');
+      if (!foldersGrid || !tableBody) return;
+
+      let currentResearchId = null;
+      let currentResearchName = '';
+
+      function truncate(text, max) {
+        if (!text) return '-';
+        return text.length > max ? text.slice(0, max) + '…' : text;
+      }
+
+      async function loadMyReferencesFolders() {
+        foldersGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">Memuat...</div>';
+        try {
+          const res = await fetch('/api/my-references/researches');
+          const data = await res.json();
+          const researches = data.ok ? (data.researches || []) : [];
+          if (researches.length === 0) {
+            foldersGrid.innerHTML = '';
+            if (foldersEmpty) foldersEmpty.style.display = 'block';
+            return;
+          }
+          if (foldersEmpty) foldersEmpty.style.display = 'none';
+          foldersGrid.innerHTML = researches.map(r => `
+            <button type="button" class="my-ref-folder-card filter-box-card" data-research-id="${r.id}" data-research-name="${escapeHtml(r.name)}" style="text-align: left; cursor: pointer; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; font-family: inherit; border: 1px solid var(--border-light-hover);">
+              <i class="fa-solid fa-folder" style="font-size: 1.5rem; color: var(--brand-blue);"></i>
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; color: var(--text-main); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(r.name)}</h4>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">${r.referenceCount} paper</span>
+            </button>
+          `).join('');
+        } catch (err) {
+          foldersGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #dc2626;">Gagal memuat daftar riset.</div>';
+        }
+      }
+      window.loadMyReferencesFolders = loadMyReferencesFolders;
+
+      async function loadReferencesTable(researchId) {
+        tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-muted);">Memuat...</td></tr>`;
+        if (tableEmpty) tableEmpty.style.display = 'none';
+        try {
+          const res = await fetch(`/api/my-references?researchId=${encodeURIComponent(researchId)}`);
+          const data = await res.json();
+          const references = data.ok ? (data.references || []) : [];
+          if (references.length === 0) {
+            tableBody.innerHTML = '';
+            if (tableEmpty) tableEmpty.style.display = 'block';
+            return;
+          }
+          tableBody.innerHTML = references.map(ref => `
+            <tr data-ref-id="${ref.id}" style="border-bottom: 1px solid rgba(8,34,64,0.04);">
+              <td style="padding: 0.85rem 1rem; vertical-align: top; max-width: 260px;">
+                ${ref.url ? `<a href="${ref.url}" target="_blank" rel="noopener" style="font-weight: 700; color: var(--text-main); text-decoration: none;" title="${escapeHtml(ref.title)}">${escapeHtml(truncate(ref.title, 70))}</a>` : `<span style="font-weight: 700; color: var(--text-main);" title="${escapeHtml(ref.title)}">${escapeHtml(truncate(ref.title, 70))}</span>`}
+              </td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top; white-space: nowrap;"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); margin-right: 0.3rem;"></i>Journal Article</td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">${escapeHtml(truncate(ref.authors, 40))}</td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">${escapeHtml(truncate(ref.journal, 30))}</td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">${escapeHtml(ref.year || '-')}</td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted); font-size: 0.78rem;">${ref.doi ? escapeHtml(ref.doi) : '-'}</td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-main); line-height: 1.4;" title="${escapeHtml(ref.tldrEn || '')}">${ref.tldrEn ? escapeHtml(truncate(ref.tldrEn, 100)) : '<span style="color: var(--text-muted);">-</span>'}</td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-main); line-height: 1.4;" title="${escapeHtml(ref.tldrId || '')}">${ref.tldrId ? escapeHtml(truncate(ref.tldrId, 100)) : '<span style="color: var(--text-muted);">-</span>'}</td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top;">
+                <button type="button" class="my-ref-delete-btn" data-ref-id="${ref.id}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.85rem;" title="Hapus dari riset ini">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        } catch (err) {
+          tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: #dc2626;">Gagal memuat referensi.</td></tr>`;
+        }
+      }
+
+      function openResearchDetail(id, name) {
+        currentResearchId = id;
+        currentResearchName = name;
+        if (detailTitle) detailTitle.textContent = name;
+        if (foldersView) foldersView.style.display = 'none';
+        if (detailView) detailView.style.display = 'block';
+        loadReferencesTable(id);
+      }
+
+      function backToFolders() {
+        if (foldersView) foldersView.style.display = 'block';
+        if (detailView) detailView.style.display = 'none';
+        loadMyReferencesFolders();
+      }
+
+      foldersGrid.addEventListener('click', (e) => {
+        const card = e.target.closest('.my-ref-folder-card');
+        if (card) openResearchDetail(card.getAttribute('data-research-id'), card.getAttribute('data-research-name'));
+      });
+
+      if (backBtn) backBtn.addEventListener('click', backToFolders);
+
+      if (createResearchBtn) {
+        createResearchBtn.addEventListener('click', async () => {
+          const name = prompt('Nama riset baru:');
+          if (!name || !name.trim()) return;
+          try {
+            const res = await fetch('/api/my-references/researches', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: name.trim() })
+            });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || 'Gagal membuat riset baru.');
+              return;
+            }
+            loadMyReferencesFolders();
+          } catch (err) {
+            alert('Gagal menghubungi server.');
+          }
+        });
+      }
+
+      if (renameBtn) {
+        renameBtn.addEventListener('click', async () => {
+          if (!currentResearchId) return;
+          const newName = prompt('Nama baru untuk riset ini:', currentResearchName);
+          if (!newName || !newName.trim() || newName.trim() === currentResearchName) return;
+          try {
+            const res = await fetch(`/api/my-references/researches/${encodeURIComponent(currentResearchId)}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: newName.trim() })
+            });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || 'Gagal mengganti nama riset.');
+              return;
+            }
+            currentResearchName = newName.trim();
+            if (detailTitle) detailTitle.textContent = currentResearchName;
+          } catch (err) {
+            alert('Gagal menghubungi server.');
+          }
+        });
+      }
+
+      if (deleteResearchBtn) {
+        deleteResearchBtn.addEventListener('click', async () => {
+          if (!currentResearchId) return;
+          if (!confirm(`Hapus riset "${currentResearchName}" beserta seluruh referensi di dalamnya? Tindakan ini tidak dapat dibatalkan.`)) return;
+          try {
+            const res = await fetch(`/api/my-references/researches/${encodeURIComponent(currentResearchId)}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || 'Gagal menghapus riset.');
+              return;
+            }
+            backToFolders();
+          } catch (err) {
+            alert('Gagal menghubungi server.');
+          }
+        });
+      }
+
+      tableBody.addEventListener('click', async (e) => {
+        const delBtn = e.target.closest('.my-ref-delete-btn');
+        if (!delBtn) return;
+        if (!confirm('Hapus paper ini dari riset?')) return;
+        try {
+          const res = await fetch(`/api/my-references/${encodeURIComponent(delBtn.getAttribute('data-ref-id'))}`, { method: 'DELETE' });
+          const data = await res.json();
+          if (data.ok && currentResearchId) {
+            loadReferencesTable(currentResearchId);
+          }
+        } catch (err) {
+          alert('Gagal menghubungi server.');
+        }
+      });
+    })();
+
     function updateResearchChatGreeting() {
       const greetingEl = document.getElementById('researchChatGreeting');
       if (!greetingEl) return;
@@ -6046,6 +6379,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // saat hover/focus ke marker [n], mirip Consensus/Elicit.
     let litCitePopoverEl = null;
     let litCitePopoverHideTimer = null;
+    let currentPopoverCitation = null;
     function ensureLitCitePopover() {
       if (litCitePopoverEl) return litCitePopoverEl;
       litCitePopoverEl = document.createElement('div');
@@ -6058,6 +6392,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // batalkan timer tutup saat mouse ada di dalam kartu, jadwalkan lagi saat keluar.
       litCitePopoverEl.addEventListener('mouseenter', cancelLitCitePopoverHide);
       litCitePopoverEl.addEventListener('mouseleave', scheduleLitCitePopoverHide);
+      litCitePopoverEl.addEventListener('click', (e) => {
+        if (e.target.closest('.lit-cite-popover-save-btn') && currentPopoverCitation && window.openSaveReferenceModal) {
+          window.openSaveReferenceModal(currentPopoverCitation);
+        }
+      });
       return litCitePopoverEl;
     }
 
@@ -6078,6 +6417,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLitCitePopover(markerEl, citation) {
       cancelLitCitePopoverHide();
+      currentPopoverCitation = citation;
       const pop = ensureLitCitePopover();
       const t = TRANSLATIONS[window.currentLanguage || 'id'];
       const abstractText = citation.abstract
@@ -6096,6 +6436,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="lit-cite-popover-actions">
           ${citation.url ? `<a href="${citation.url}" target="_blank" rel="noopener" class="lit-cite-popover-link">${t.cite_popover_open_source} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
           ${citation.pdfUrl ? `<a href="${citation.pdfUrl}" target="_blank" rel="noopener" class="lit-cite-popover-pdf" title="${t.cite_popover_pdf_title}"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : ''}
+          <button type="button" class="lit-cite-popover-save-btn"><i class="fa-regular fa-bookmark"></i> Simpan</button>
         </div>
       `;
       pop.style.display = 'block';

@@ -2175,6 +2175,25 @@
     .lit-cite-popover-pdf:hover {
       background: #b91c1c;
     }
+    .lit-cite-popover-save-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.74rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .lit-cite-popover-save-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+    }
 
     /* Elemen hasil render Markdown di dalam bubble asisten */
     .chat-md-p {
@@ -3305,6 +3324,13 @@
       padding: 1.5rem;
     }
 
+    /* Modal Simpan Referensi bisa dipicu dari tombol di dalam popover sitasi yang
+       hidup DI DALAM modal lain (mis. modal Detail Riwayat Lit Review) - z-index
+       lebih tinggi supaya selalu tampil & bisa diklik di atas modal manapun. */
+    #saveReferenceModal {
+      z-index: 1500;
+    }
+
     .modal-overlay.active {
       display: flex;
       animation: fadeInOverlay 0.25s ease-out;
@@ -3906,6 +3932,9 @@
     <a href="#" class="sidebar-link" data-tab="patent-search">
       <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
     </a>
+    <a href="#" class="sidebar-link" data-tab="referensi-saya">
+      <i class="fa-solid fa-folder-tree"></i> <span>Referensi Saya</span>
+    </a>
   </div>
 
   <!-- Chat Search Modal (ala Claude/ChatGPT) - dipicu dari ikon kaca pembesar
@@ -3919,6 +3948,36 @@
         <button type="button" class="chat-search-close-btn" id="chatSearchCloseBtn"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="chat-search-results" id="chatSearchResults"></div>
+    </div>
+  </div>
+
+  <!-- Modal Simpan ke Referensi Saya - dipicu dari tombol "Simpan" di popover
+       sitasi (Lit Review/JurnalHub Intelligence/SLR/Riwayat) maupun kartu hasil
+       di tab Cari Referensi. Data paper yang mau disimpan ditaruh sementara di
+       window.__pendingSaveReference oleh pemicunya sebelum modal ini dibuka. -->
+  <div class="modal-overlay" id="saveReferenceModal">
+    <div class="modal-card" style="max-width: 440px;">
+      <button class="modal-close-btn" id="closeSaveReferenceModalBtn">&times;</button>
+      <div class="modal-header">
+        <div class="modal-crown-circle" style="background: rgba(7,135,220,0.1); color: var(--brand-blue);">
+          <i class="fa-solid fa-folder-plus"></i>
+        </div>
+        <h3>Simpan ke Referensi Saya</h3>
+        <p id="saveReferenceModalPaperTitle" style="font-weight: 700; color: var(--text-main); font-size: 0.85rem;">-</p>
+      </div>
+      <div class="modal-body" style="padding-top: 0.5rem;">
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <input type="text" id="saveReferenceNewResearchInput" placeholder="Nama riset baru..." style="flex: 1; padding: 0.65rem 0.85rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; outline: none;">
+          <button type="button" id="saveReferenceCreateBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1rem;">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+        <div id="saveReferenceResearchList" style="display: flex; flex-direction: column; gap: 0.4rem; max-height: 260px; overflow-y: auto;"></div>
+        <div id="saveReferenceEmptyHint" style="display: none; text-align: center; padding: 1.5rem 1rem; color: var(--text-muted); font-size: 0.85rem;">
+          Belum ada riset. Buat satu di atas untuk mulai menyimpan.
+        </div>
+        <div id="saveReferenceMessage" style="font-size: 0.82rem; font-weight: 600; margin-top: 1rem; display: none;"></div>
+      </div>
     </div>
   </div>
 
@@ -5507,6 +5566,65 @@
         </div>
       </div>
 
+      <!-- TAB: REFERENSI SAYA - paper individual yang di-save dari Cari Referensi &
+           popover sitasi (Lit Review/JurnalHub Intelligence/SLR/Riwayat), dikelompokkan
+           ke dalam folder "Riset" per proyek penelitian. Terpisah dari "Tersimpan"
+           (bookmark entri jurnal dari Database Jurnal). -->
+      <div id="tabContentReferensiSaya" class="tab-content">
+        <!-- View 1: Grid folder Riset -->
+        <div id="myRefFoldersView">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+            <p id="myRefFoldersIntro" style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Kelompokkan paper yang Anda simpan ke dalam folder per proyek riset.</p>
+            <button type="button" id="myRefCreateResearchBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.25rem;">
+              <i class="fa-solid fa-plus"></i> <span id="myRefCreateResearchBtnText">Buat Riset Baru</span>
+            </button>
+          </div>
+          <div id="myRefFoldersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;"></div>
+          <div id="myRefFoldersEmpty" style="display: none; text-align: center; padding: 4rem 2rem; background: var(--bg-card); border: 1px dashed var(--border-light-hover); border-radius: 16px;">
+            <i class="fa-solid fa-folder-open" style="font-size: 2.25rem; color: var(--text-muted); margin-bottom: 1rem; display: block;"></i>
+            <h4 id="myRefFoldersEmptyTitle" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.4rem;">Belum ada riset</h4>
+            <p id="myRefFoldersEmptyDesc" style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Buat folder riset pertama Anda, lalu simpan paper dari Cari Referensi atau popover sitasi ke dalamnya.</p>
+          </div>
+        </div>
+
+        <!-- View 2: Tabel referensi di dalam 1 folder Riset -->
+        <div id="myRefDetailView" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+            <button type="button" id="myRefBackBtn" class="reset-filter-btn" style="width: auto;">
+              <i class="fa-solid fa-arrow-left"></i> <span id="myRefBackBtnText">Kembali</span>
+            </button>
+            <h3 id="myRefDetailTitle" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; color: var(--text-main); margin: 0; flex: 1; min-width: 200px;">-</h3>
+            <button type="button" id="myRefRenameResearchBtn" class="reset-filter-btn" style="width: auto;" title="Ganti nama riset">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button type="button" id="myRefDeleteResearchBtn" class="reset-filter-btn" style="width: auto; border-color: rgba(239,68,68,0.3); color: #ef4444;" title="Hapus riset ini">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+          <div class="filter-box-card" style="padding: 0; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <thead>
+                <tr style="background: #f8fafc; border-bottom: 1px solid var(--border-light-hover);">
+                  <th style="padding: 0.85rem 1rem; text-align: left; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; white-space: nowrap;">Judul</th>
+                  <th style="padding: 0.85rem 1rem; text-align: left; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; white-space: nowrap;">Tipe</th>
+                  <th style="padding: 0.85rem 1rem; text-align: left; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; white-space: nowrap;">Penulis</th>
+                  <th style="padding: 0.85rem 1rem; text-align: left; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; white-space: nowrap;">Jurnal</th>
+                  <th style="padding: 0.85rem 1rem; text-align: left; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; white-space: nowrap;">Tahun</th>
+                  <th style="padding: 0.85rem 1rem; text-align: left; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; white-space: nowrap;">DOI</th>
+                  <th style="padding: 0.85rem 1rem; text-align: left; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; white-space: nowrap; min-width: 220px;">TL;DR (English)</th>
+                  <th style="padding: 0.85rem 1rem; text-align: left; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; white-space: nowrap; min-width: 220px;">TL;DR (Indonesia)</th>
+                  <th style="padding: 0.85rem 1rem;"></th>
+                </tr>
+              </thead>
+              <tbody id="myRefTableBody"></tbody>
+            </table>
+            <div id="myRefTableEmpty" style="display: none; text-align: center; padding: 3rem 2rem; color: var(--text-muted); font-size: 0.85rem;">
+              Belum ada paper tersimpan di riset ini. Simpan dari Cari Referensi atau popover sitasi.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB 4: SETTINGS (PENGATURAN) -->
       <div id="tabContentPengaturan" class="tab-content">
         <div class="settings-container" style="max-width: 800px; margin: 0 auto;">
@@ -5692,7 +5810,7 @@
       const SIDEBAR_GROUPS = {
         'cari-jelajah': ['database-jurnal', 'cari-referensi', 'citation-graph'],
         'tulis-review': ['ai-research', 'peer-reviewer', 'templates', 'prompt-bank'],
-        'riset-lanjutan': ['slr', 'patent-search']
+        'riset-lanjutan': ['slr', 'patent-search', 'referensi-saya']
       };
       const sidebar = document.getElementById('sidebar');
 
@@ -5798,6 +5916,11 @@
           if (window.updatePatentSearchAccess && currentUserVal?.user) {
             window.updatePatentSearchAccess(currentUserVal.user);
           }
+        }
+
+        // Referensi Saya: muat ulang daftar folder riset tiap kali tab dibuka
+        if (tabName === 'referensi-saya' && window.loadMyReferencesFolders) {
+          window.loadMyReferencesFolders();
         }
       }
       window.switchTab = switchTab;
@@ -6692,7 +6815,7 @@
         <ul style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.25rem 1.1rem; line-height: 1.7;">
           <li>Profil dan status langganan Anda</li>
           <li>Seluruh riwayat percakapan JurnalHub Intelligence</li>
-          <li>Jurnal yang tersimpan (bookmark)</li>
+          <li>Jurnal yang tersimpan (bookmark) & Referensi Saya</li>
           <li>Riwayat transaksi pembayaran</li>
         </ul>
 
