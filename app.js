@@ -7135,7 +7135,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
             <div id="historyLitReviewTextWrapper" style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1.25rem; font-size: 0.85rem; background: #ffffff; line-height: 1.6; max-height: 300px; overflow-y: auto; color: var(--text-main);">
-              ${item.output.review}
+              ${wrapCitationMarkers(item.output.review, citations)}
             </div>
           </div>
           <div>
@@ -7160,6 +7160,36 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         setTimeout(() => {
+          // Sama seperti popover sitasi [n] di JurnalHub Intelligence chat - hover/fokus
+          // ke marker menampilkan kartu preview paper, biar konsisten dengan tampilan
+          // lit review "biasa" (bukan cuma dump teks HTML mentah tanpa marker interaktif).
+          const litReviewTextWrapper = document.getElementById('historyLitReviewTextWrapper');
+          if (litReviewTextWrapper) {
+            litReviewTextWrapper.addEventListener('mouseover', (e) => {
+              const marker = e.target.closest('.lit-cite-marker');
+              if (!marker) return;
+              const idx = parseInt(marker.getAttribute('data-cite-idx'), 10);
+              if (!citations[idx]) return;
+              showLitCitePopover(marker, citations[idx]);
+            });
+            litReviewTextWrapper.addEventListener('focusin', (e) => {
+              const marker = e.target.closest('.lit-cite-marker');
+              if (!marker) return;
+              marker.dispatchEvent(new Event('mouseover', { bubbles: true }));
+            });
+            litReviewTextWrapper.addEventListener('mouseout', (e) => {
+              const marker = e.target.closest('.lit-cite-marker');
+              if (!marker) return;
+              if (e.relatedTarget && litCitePopoverEl && litCitePopoverEl.contains(e.relatedTarget)) return;
+              scheduleLitCitePopoverHide();
+            });
+            litReviewTextWrapper.addEventListener('focusout', (e) => {
+              const marker = e.target.closest('.lit-cite-marker');
+              if (!marker) return;
+              scheduleLitCitePopoverHide();
+            });
+          }
+
           const copyBtn = document.getElementById('copyHistoryLitReviewBtn');
           if (copyBtn) {
             copyBtn.addEventListener('click', () => {
