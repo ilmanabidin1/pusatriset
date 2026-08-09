@@ -1980,6 +1980,7 @@ async function searchOpenAlexWorks(query, perPage, extraFilter) {
         url: w.doi || w.primary_location?.landing_page_url || '#',
         citedByCount: w.cited_by_count || 0,
         isOpenAccess: !!w.open_access?.is_oa,
+        pdfUrl: w.open_access?.oa_url || null,
         abstract: abstract.slice(0, 800)
       };
     })
@@ -2765,6 +2766,7 @@ app.post('/api/my-references', requireAccess, savedReferenceLimiter, async (req,
     year: String(body.year || '').trim().slice(0, 10),
     doi,
     url: String(body.url || '').trim().slice(0, 1000),
+    pdfUrl: String(body.pdfUrl || '').trim().slice(0, 1000) || null,
     abstract,
     tldrEn,
     tldrId,
@@ -2786,9 +2788,22 @@ app.delete('/api/my-references/:id', requireAccess, (req, res) => {
   res.json({ ok: true });
 });
 
+// JurnalHub Intelligence for Folder khusus akun Premium & Ultimate (unlimited) -
+// Free tidak dapat akses sama sekali (dikunci di UI juga, tapi tetap dicek
+// server-side supaya tidak bisa dilewati lewat panggilan API langsung).
+function requireFolderChatAccess(req, res, next) {
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const userType = (user && user.type) || 'free';
+  if (userType !== 'premium' && userType !== 'ultimate') {
+    return res.status(403).json({ ok: false, message: 'JurnalHub Intelligence for Folder khusus akun Premium & Ultimate. Upgrade untuk akses tanpa batas.' });
+  }
+  next();
+}
+
 // Riwayat chatbot folder Koleksi Saya - dicek dulu kepemilikan foldernya sebelum
 // mengembalikan pesan (permanen, disimpan di folder-chats.json).
-app.get('/api/my-references/researches/:id/chat', requireAccess, (req, res) => {
+app.get('/api/my-references/researches/:id/chat', requireAccess, requireFolderChatAccess, (req, res) => {
   const research = getSavedResearches().find(r => r.id === req.params.id && r.userId === req.session.userId);
   if (!research) {
     return res.status(404).json({ ok: false, message: 'Riset tidak ditemukan.' });
@@ -2797,12 +2812,54 @@ app.get('/api/my-references/researches/:id/chat', requireAccess, (req, res) => {
   res.json({ ok: true, messages: chat ? chat.messages : [] });
 });
 
+// Hapus seluruh riwayat obrolan folder ("Clear Chat") - foldernya sendiri &
+// papernya tidak ikut terhapus, cuma riwayat chat-nya.
+app.delete('/api/my-references/researches/:id/chat', requireAccess, requireFolderChatAccess, (req, res) => {
+  const research = getSavedResearches().find(r => r.id === req.params.id && r.userId === req.session.userId);
+  if (!research) {
+    return res.status(404).json({ ok: false, message: 'Riset tidak ditemukan.' });
+  }
+  const chats = getFolderChats().filter(c => !(c.researchId === req.params.id && c.userId === req.session.userId));
+  saveFolderChats(chats);
+  res.json({ ok: true });
+});
+
+// Ambil teks lengkap paper dari PDF open-access (best-effort) supaya JurnalHub
+// Intelligence for Folder bisa menjawab berdasarkan isi penuh paper, bukan cuma
+// abstrak/TL;DR - hanya berhasil kalau papernya open-access dan linknya memang
+// mengarah ke file PDF yang bisa diakses publik. Dipotong ke beberapa ribu kata
+// pertama supaya biaya token DeepSeek tetap terkendali per paper.
+const FULL_TEXT_MAX_WORDS = 4000;
+async function fetchFullTextFromPdfUrl(pdfUrl) {
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetchFn(pdfUrl, { signal: controller.signal, headers: { 'User-Agent': 'Mozilla/5.0 (compatible; JurnalHubBot/1.0)' } });
+    if (!response.ok) return null;
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    if (contentType && !contentType.includes('pdf') && !contentType.includes('octet-stream')) return null;
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    if (buffer.length > 20 * 1024 * 1024) return null; // batas 20MB, hindari file raksasa
+    const rawText = (await parsePdfBuffer(buffer) || '').trim();
+    if (!rawText) return null;
+    const words = rawText.split(/\s+/).filter(Boolean);
+    return words.slice(0, FULL_TEXT_MAX_WORDS).join(' ');
+  } catch (error) {
+    console.warn('[Full Text Fetch] Gagal ambil/parse PDF:', error.message);
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // Chatbot per folder Koleksi Saya - jawabannya dibatasi HANYA ke paper yang
-// tersimpan di folder ini (judul, penulis, abstrak, TL;DR yang sudah ada, bukan
-// full-text), dan wajib mensitasi paper yang dirujuk pakai format [n] supaya
-// bisa dipertanggungjawabkan lewat kartu popover sitasi yang sama seperti
-// Lit Review/SLR di frontend.
-app.post('/api/my-references/researches/:id/chat', requireAccess, folderChatLimiter, async (req, res) => {
+// tersimpan di folder ini (full-text PDF open-access kalau berhasil diambil,
+// fallback ke abstrak/TL;DR), dan wajib mensitasi paper yang dirujuk pakai
+// format [n] supaya bisa dipertanggungjawabkan lewat kartu popover sitasi yang
+// sama seperti Lit Review/SLR di frontend.
+app.post('/api/my-references/researches/:id/chat', requireAccess, requireFolderChatAccess, folderChatLimiter, async (req, res) => {
   const researchId = req.params.id;
   const research = getSavedResearches().find(r => r.id === researchId && r.userId === req.session.userId);
   if (!research) {
@@ -2824,14 +2881,44 @@ app.post('/api/my-references/researches/:id/chat', requireAccess, folderChatLimi
     return res.status(500).json({ ok: false, message: 'JurnalHub Intelligence belum dikonfigurasi di server.' });
   }
 
+  // Coba ambil full-text PDF untuk paper open-access yang belum pernah dicoba
+  // sebelumnya - dibatasi jumlah percobaan per request biar tidak memperlambat
+  // respons chat kalau foldernya besar. Hasilnya (berhasil/gagal) di-cache
+  // permanen ke saved-references.json supaya tidak diulang tiap kali chat.
+  const MAX_FULLTEXT_ATTEMPTS_PER_REQUEST = 3;
+  let attemptsLeft = MAX_FULLTEXT_ATTEMPTS_PER_REQUEST;
+  let papersUpdated = false;
+  for (const p of papers) {
+    if (p.fullTextStatus || !p.pdfUrl || attemptsLeft <= 0) continue;
+    attemptsLeft--;
+    const text = await fetchFullTextFromPdfUrl(p.pdfUrl);
+    p.fullText = text || null;
+    p.fullTextStatus = text ? 'ok' : 'failed';
+    papersUpdated = true;
+  }
+  if (papersUpdated) {
+    const allRefs = getSavedReferences();
+    for (const p of papers) {
+      const idx = allRefs.findIndex(r => r.id === p.id);
+      if (idx !== -1) {
+        allRefs[idx].fullText = p.fullText;
+        allRefs[idx].fullTextStatus = p.fullTextStatus;
+      }
+    }
+    saveSavedReferences(allRefs);
+  }
+
   const paperListText = papers.map((p, idx) => {
+    const content = (p.fullTextStatus === 'ok' && p.fullText)
+      ? `Isi Lengkap Paper (dipotong ${FULL_TEXT_MAX_WORDS} kata pertama):\n${p.fullText}`
+      : `Ringkasan: ${p.tldrId || p.tldrEn || p.abstract || '-'}`;
     return `[${idx + 1}] ${p.title}
 Penulis: ${p.authors || '-'}
 Jurnal: ${p.journal || '-'} (${p.year || '-'})
-Ringkasan: ${p.tldrId || p.tldrEn || p.abstract || '-'}`;
+${content}`;
   }).join('\n\n');
 
-  const systemPrompt = `Kamu adalah asisten riset di JurnalHub yang membantu pengguna memahami kumpulan paper yang mereka simpan di folder "${research.name}". Jawab HANYA berdasarkan daftar paper di bawah ini - jangan mengarang klaim, data, atau paper lain di luar daftar. Kalau pertanyaan pengguna tidak bisa dijawab dari paper-paper ini, katakan terus terang.
+  const systemPrompt = `Kamu adalah asisten riset di JurnalHub yang membantu pengguna memahami kumpulan paper yang mereka simpan di folder "${research.name}". Jawab HANYA berdasarkan daftar paper di bawah ini - jangan mengarang klaim, data, atau paper lain di luar daftar. Sebagian paper disertai isi lengkap (full-text), sebagian lain hanya ringkasan/abstrak - kalau isi lengkapnya tidak tersedia, jangan berpura-pura tahu detail yang tidak disebutkan di ringkasan. Kalau pertanyaan pengguna tidak bisa dijawab dari paper-paper ini, katakan terus terang.
 
 Setiap kali menyebut/merujuk klaim dari salah satu paper, tulis sitasi dalam format angka bernomor dalam kurung siku, contoh [2], sesuai nomor urut paper pada daftar di bawah - taruh tepat setelah klausa/kalimat yang didukung paper tersebut. JANGAN pakai format (Penulis, Tahun). Jawab dalam bahasa yang sama dengan bahasa pertanyaan pengguna.
 

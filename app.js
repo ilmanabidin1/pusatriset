@@ -5518,7 +5518,8 @@ document.addEventListener('DOMContentLoaded', () => {
               year: pendingPaper.year,
               doi: pendingPaper.doi,
               url: pendingPaper.url,
-              abstract: pendingPaper.abstract
+              abstract: pendingPaper.abstract,
+              pdfUrl: pendingPaper.pdfUrl || null
             })
           });
           const data = await res.json();
@@ -5602,7 +5603,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const tableBody = document.getElementById('myRefTableBody');
       const tableEmpty = document.getElementById('myRefTableEmpty');
       const chatPanel = document.getElementById('myRefChatPanel');
+      const chatLockCard = document.getElementById('myRefChatLockCard');
       if (!foldersGrid || !tableBody) return;
+
+      function isPremiumOrUltimate() {
+        const type = currentUser && currentUser.user && currentUser.user.type;
+        return type === 'premium' || type === 'ultimate';
+      }
 
       let currentResearchId = null;
       let currentResearchName = '';
@@ -5646,7 +5653,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const references = data.ok ? (data.references || []) : [];
           // Chatbot folder cuma masuk akal kalau ada minimal 1 paper buat dijadikan
           // konteks jawaban - sembunyikan panelnya kalau foldernya masih kosong.
-          if (chatPanel) chatPanel.style.display = references.length > 0 ? 'block' : 'none';
+          // Khusus Premium/Ultimate - Free lihat kartu terkunci sebagai gantinya.
+          const hasPapers = references.length > 0;
+          if (chatPanel) chatPanel.style.display = (hasPapers && isPremiumOrUltimate()) ? 'block' : 'none';
+          if (chatLockCard) chatLockCard.style.display = (hasPapers && !isPremiumOrUltimate()) ? 'block' : 'none';
           if (references.length === 0) {
             tableBody.innerHTML = '';
             if (tableEmpty) tableEmpty.style.display = 'block';
@@ -5683,7 +5693,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (foldersView) foldersView.style.display = 'none';
         if (detailView) detailView.style.display = 'block';
         loadReferencesTable(id);
-        loadFolderChat(id);
+        if (isPremiumOrUltimate()) loadFolderChat(id);
       }
       // Dipakai flyout "Koleksi Saya" di sidebar - klik folder di flyout langsung
       // pindah ke tab ini DAN buka folder tsb, tanpa transit ke grid folder dulu.
@@ -5908,6 +5918,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if (chatInput) {
         chatInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') sendFolderChatMessage();
+        });
+      }
+
+      const chatClearBtn = document.getElementById('myRefChatClearBtn');
+      if (chatClearBtn) {
+        chatClearBtn.addEventListener('click', async () => {
+          if (!currentResearchId || folderChatMessages.length === 0) return;
+          if (!confirm('Hapus seluruh riwayat obrolan JurnalHub Intelligence for Folder ini? Tindakan ini tidak dapat dibatalkan.')) return;
+          try {
+            const res = await fetch(`/api/my-references/researches/${encodeURIComponent(currentResearchId)}/chat`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.ok) {
+              folderChatMessages = [];
+              renderFolderChat();
+            }
+          } catch (err) {
+            alert('Gagal menghubungi server.');
+          }
         });
       }
 

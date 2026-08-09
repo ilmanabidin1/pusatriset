@@ -5658,13 +5658,18 @@
             </div>
           </div>
 
-          <!-- Chatbot per folder - jawaban AI dibatasi ke paper dalam folder ini saja,
-               baru muncul begitu foldernya sudah punya minimal 1 paper (lihat toggle
-               di loadReferencesTable, app.js). -->
+          <!-- JurnalHub Intelligence for Folder - chatbot per folder, jawaban AI
+               dibatasi ke paper dalam folder ini saja (abstrak/TL;DR, dan full-text
+               PDF open-access kalau tersedia). Baru muncul begitu foldernya sudah
+               punya minimal 1 paper (lihat toggle di loadReferencesTable, app.js).
+               Khusus akun Premium & Ultimate - Free lihat kartu terkunci. -->
           <div id="myRefChatPanel" class="filter-box-card" style="display: none; margin-top: 1.5rem; padding: 0; overflow: hidden;">
             <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-light-hover); display: flex; align-items: center; gap: 0.6rem;">
               <i class="fa-solid fa-robot" style="color: var(--brand-blue);"></i>
-              <h4 style="margin: 0; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; color: var(--text-main);">Tanya AI tentang Folder Ini</h4>
+              <h4 style="margin: 0; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; color: var(--text-main); flex: 1;">JurnalHub Intelligence for Folder</h4>
+              <button type="button" id="myRefChatClearBtn" class="reset-filter-btn" style="width: auto; padding: 0.4rem 0.7rem; font-size: 0.78rem;" title="Hapus riwayat obrolan folder ini">
+                <i class="fa-regular fa-trash-can"></i> <span>Clear Chat</span>
+              </button>
             </div>
             <div id="myRefChatMessages" style="max-height: 380px; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.9rem;">
               <div id="myRefChatEmptyHint" style="color: var(--text-muted); font-size: 0.85rem;">Tanyakan apa saja tentang paper-paper di folder ini, misalnya "apa perbedaan metode antar paper ini?" atau "buatkan ringkasan gap penelitian dari semua paper ini".</div>
@@ -5675,6 +5680,14 @@
                 <i class="fa-solid fa-paper-plane"></i>
               </button>
             </div>
+          </div>
+
+          <!-- Kartu terkunci untuk akun Free - tampil sebagai pengganti myRefChatPanel. -->
+          <div id="myRefChatLockCard" class="filter-box-card" style="display: none; margin-top: 1.5rem; padding: 2.5rem 2rem; text-align: center;">
+            <i class="fa-solid fa-lock" style="font-size: 2rem; color: #fbbf24; margin-bottom: 1rem; display: block;"></i>
+            <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-main); margin-bottom: 0.5rem;">JurnalHub Intelligence for Folder</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem; max-width: 420px; margin-left: auto; margin-right: auto;">Tanya jawab dengan AI berdasarkan paper di folder ini khusus akun Premium & Ultimate. Upgrade untuk akses tanpa batas.</p>
+            <button type="button" class="upgrade-btn btn-upgrade-trigger" style="width: auto; padding: 0.65rem 1.5rem;">Upgrade Sekarang</button>
           </div>
         </div>
       </div>
