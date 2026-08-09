@@ -379,6 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
     id: {
       beranda: "Beranda",
       "database-jurnal": "Database Jurnal",
+      "cari-referensi": "Cari Referensi",
       "ai-research": "Paraphraser & Humanizer",
       "research-chat": "JurnalHub Intelligence",
       templates: "Template Jurnal",
@@ -556,7 +557,6 @@ document.addEventListener('DOMContentLoaded', () => {
       patent_search_generic_error: "Gagal menghubungi server untuk mencari paten.",
       // Database Jurnal sub-tabs
       db_subtab_main: "Database Utama",
-      db_subtab_realtime: "Realtime Database",
       db_subtab_noapc: "No APC Database",
       realtime_filter_type_label: "TIPE DOKUMEN",
       realtime_filter_all: "Semua Tipe",
@@ -608,6 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     en: {
       beranda: "Home",
       "database-jurnal": "Journal Database",
+      "cari-referensi": "Search References",
       "ai-research": "Paraphraser & Humanizer",
       "research-chat": "JurnalHub Intelligence",
       templates: "Journal Templates",
@@ -786,7 +787,6 @@ document.addEventListener('DOMContentLoaded', () => {
       patent_search_generic_error: "Failed to contact the server to search for patents.",
       // Journal Database sub-tabs
       db_subtab_main: "Main Database",
-      db_subtab_realtime: "Realtime Database",
       db_subtab_noapc: "No APC Database",
       realtime_filter_type_label: "DOCUMENT TYPE",
       realtime_filter_all: "All Types",
@@ -957,13 +957,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.querySelector('.main-content');
     const toggleBtn = document.getElementById('sidebarCollapseToggle');
-    const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
     if (!sidebar || !toggleBtn) return;
 
     function applyCollapsed(collapsed) {
       sidebar.classList.toggle('collapsed', collapsed);
       if (mainContent) mainContent.classList.toggle('sidebar-collapsed', collapsed);
-      if (icon) icon.className = collapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left';
       toggleBtn.title = collapsed ? 'Buka sidebar' : 'Lipat sidebar';
       localStorage.setItem('jurnalhub_sidebar_collapsed', collapsed ? '1' : '0');
 
@@ -2495,24 +2493,18 @@ document.addEventListener('DOMContentLoaded', () => {
     filterJournals();
   });
 
-  // --- Sub-tab Database Jurnal: Database Utama / Realtime Database / No APC Database ---
-  // "Database Utama" dan "No APC Database" sama-sama menampilkan grid 756 database
-  // lokal (dbSubtabMainWrap) - bedanya cuma checkbox "Hanya Gratis" langsung dicentang
-  // otomatis untuk No APC, jadi tidak perlu duplikasi seluruh pipeline render/filter.
-  // "Realtime Database" adalah tampilan terpisah (pencarian live ke OpenAlex).
+  // --- Sub-tab Database Jurnal: Database Utama / No APC Database ---
+  // Keduanya sama-sama menampilkan grid 756 database lokal (dbSubtabMainWrap) -
+  // bedanya cuma checkbox "Hanya Gratis" langsung dicentang otomatis untuk No APC,
+  // jadi tidak perlu duplikasi seluruh pipeline render/filter.
   const dbSubtabMainBtn = document.getElementById('dbSubtabMainBtn');
-  const dbSubtabRealtimeBtn = document.getElementById('dbSubtabRealtimeBtn');
   const dbSubtabNoApcBtn = document.getElementById('dbSubtabNoApcBtn');
-  const dbSubtabMainWrap = document.getElementById('dbSubtabMainWrap');
-  const dbSubtabRealtimeWrap = document.getElementById('dbSubtabRealtimeWrap');
   const checkFreeOnlyEl = document.getElementById('checkFreeOnly');
 
   function setActiveDbSubtab(tab) {
-    [dbSubtabMainBtn, dbSubtabRealtimeBtn, dbSubtabNoApcBtn].forEach(btn => {
+    [dbSubtabMainBtn, dbSubtabNoApcBtn].forEach(btn => {
       if (btn) btn.classList.toggle('active', btn.getAttribute('data-dbtab') === tab);
     });
-    if (dbSubtabMainWrap) dbSubtabMainWrap.style.display = tab === 'realtime' ? 'none' : 'block';
-    if (dbSubtabRealtimeWrap) dbSubtabRealtimeWrap.style.display = tab === 'realtime' ? 'block' : 'none';
 
     if (tab === 'noapc' && checkFreeOnlyEl && !checkFreeOnlyEl.checked) {
       checkFreeOnlyEl.checked = true;
@@ -2525,9 +2517,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (dbSubtabMainBtn) dbSubtabMainBtn.addEventListener('click', () => setActiveDbSubtab('main'));
   if (dbSubtabNoApcBtn) dbSubtabNoApcBtn.addEventListener('click', () => setActiveDbSubtab('noapc'));
-  if (dbSubtabRealtimeBtn) dbSubtabRealtimeBtn.addEventListener('click', () => setActiveDbSubtab('realtime'));
 
-  // --- Realtime Database: miniatur pencarian live OpenAlex ---
+  // --- Cari Referensi: miniatur pencarian live OpenAlex ---
   const realtimeSearchInput = document.getElementById('realtimeSearchInput');
   const realtimeClearSearch = document.getElementById('realtimeClearSearch');
   const realtimeFilterType = document.getElementById('realtimeFilterType');
@@ -5424,6 +5415,115 @@ document.addEventListener('DOMContentLoaded', () => {
       pinnedListEl.addEventListener('click', handleHistoryListClick);
     }
 
+    // --- Chat Search Modal (ala Claude/ChatGPT) - dipicu dari ikon kaca
+    // pembesar di sidebar, mencari di seluruh riwayat percakapan lewat judul. ---
+    (function initChatSearchModal() {
+      const overlay = document.getElementById('chatSearchOverlay');
+      const searchToggleBtn = document.getElementById('sidebarSearchToggle');
+      const closeBtn = document.getElementById('chatSearchCloseBtn');
+      const input = document.getElementById('chatSearchInput');
+      const resultsEl = document.getElementById('chatSearchResults');
+      if (!overlay || !searchToggleBtn || !input || !resultsEl) return;
+
+      let allConversations = [];
+      let highlightedIndex = -1;
+
+      function renderResults(list) {
+        if (list.length === 0) {
+          resultsEl.innerHTML = '<div class="chat-search-empty">Tidak ada percakapan yang cocok.</div>';
+          highlightedIndex = -1;
+          return;
+        }
+        resultsEl.innerHTML = list.map((c, i) => `
+          <button type="button" class="chat-search-result-item${i === 0 ? ' highlighted' : ''}" data-conv-id="${c.id}">
+            <i class="fa-regular fa-comment"></i>
+            <span class="chat-search-result-title">${escapeHtml(c.title)}</span>
+            <span class="chat-search-result-time">${formatResearchChatRelativeTime(c.updatedAt)}</span>
+          </button>
+        `).join('');
+        highlightedIndex = 0;
+      }
+
+      function filterAndRender() {
+        const q = input.value.trim().toLowerCase();
+        const filtered = q ? allConversations.filter(c => c.title.toLowerCase().includes(q)) : allConversations;
+        renderResults(filtered);
+      }
+
+      function setHighlighted(index) {
+        const items = resultsEl.querySelectorAll('.chat-search-result-item');
+        if (items.length === 0) return;
+        highlightedIndex = Math.max(0, Math.min(index, items.length - 1));
+        items.forEach((it, i) => it.classList.toggle('highlighted', i === highlightedIndex));
+        items[highlightedIndex].scrollIntoView({ block: 'nearest' });
+      }
+
+      function openModal() {
+        overlay.classList.add('active');
+        input.value = '';
+        input.focus();
+        resultsEl.innerHTML = '<div class="chat-search-empty">Memuat...</div>';
+        fetch('/api/research-chat/conversations')
+          .then(r => r.json())
+          .then(data => {
+            if (data.ok) {
+              allConversations = data.conversations || [];
+              filterAndRender();
+            } else {
+              resultsEl.innerHTML = '<div class="chat-search-empty">Gagal memuat percakapan.</div>';
+            }
+          })
+          .catch(() => {
+            resultsEl.innerHTML = '<div class="chat-search-empty">Gagal memuat percakapan.</div>';
+          });
+      }
+
+      function closeModal() {
+        overlay.classList.remove('active');
+      }
+
+      function openConversation(id) {
+        closeModal();
+        if (window.switchTab) window.switchTab('research-chat');
+        if (id !== currentResearchChatId) loadResearchChatConversation(id);
+      }
+
+      searchToggleBtn.addEventListener('click', openModal);
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeModal();
+      });
+      input.addEventListener('input', filterAndRender);
+      resultsEl.addEventListener('click', (e) => {
+        const item = e.target.closest('.chat-search-result-item');
+        if (item) openConversation(item.getAttribute('data-conv-id'));
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          if (overlay.classList.contains('active')) closeModal();
+          else openModal();
+          return;
+        }
+        if (!overlay.classList.contains('active')) return;
+        if (e.key === 'Escape') {
+          closeModal();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setHighlighted(highlightedIndex + 1);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setHighlighted(highlightedIndex - 1);
+        } else if (e.key === 'Enter') {
+          const items = resultsEl.querySelectorAll('.chat-search-result-item');
+          if (highlightedIndex >= 0 && items[highlightedIndex]) {
+            openConversation(items[highlightedIndex].getAttribute('data-conv-id'));
+          }
+        }
+      });
+    })();
+
     function updateResearchChatGreeting() {
       const greetingEl = document.getElementById('researchChatGreeting');
       if (!greetingEl) return;
@@ -7780,11 +7880,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (patentSearchHintEl) patentSearchHintEl.textContent = TRANSLATIONS[lang].patent_search_hint_default;
       }
 
-      // 9k. Translate Database Jurnal sub-tabs (Database Utama / Realtime / No APC)
+      // 9k. Translate Database Jurnal sub-tabs (Database Utama / No APC)
       const dbSubtabMainBtnTextEl = document.getElementById('dbSubtabMainBtnText');
       if (dbSubtabMainBtnTextEl) dbSubtabMainBtnTextEl.textContent = TRANSLATIONS[lang].db_subtab_main;
-      const dbSubtabRealtimeBtnTextEl = document.getElementById('dbSubtabRealtimeBtnText');
-      if (dbSubtabRealtimeBtnTextEl) dbSubtabRealtimeBtnTextEl.textContent = TRANSLATIONS[lang].db_subtab_realtime;
       const dbSubtabNoApcBtnTextEl = document.getElementById('dbSubtabNoApcBtnText');
       if (dbSubtabNoApcBtnTextEl) dbSubtabNoApcBtnTextEl.textContent = TRANSLATIONS[lang].db_subtab_noapc;
 
