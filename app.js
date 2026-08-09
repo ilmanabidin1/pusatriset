@@ -7902,16 +7902,36 @@ document.addEventListener('DOMContentLoaded', () => {
       let fetchedPapers = [];
       let slrResult = null;
       let slrCitationLookup = [];
+      // Paper yang benar-benar dikirim ke /api/slr/synthesize (subset tercentang dari
+      // fetchedPapers) - urutannya inilah yang jadi acuan [Paper N]/paperIndex dari AI,
+      // BUKAN fetchedPapers (yang berisi semua hasil pencarian, termasuk yang tidak dicentang).
+      let lastSynthesizedPapers = [];
 
       // Sitasi di Laporan Naratif & Matriks Sintesis ditulis AI sebagai teks bebas
       // "Nama et al. (Tahun)" (bukan marker angka [n] seperti Lit Review biasa),
       // jadi wrapping-nya dicocokkan lewat nama+tahun dari kolom authorYear di
       // matrix, bukan pola [n]. Toleransi variasi "Nama, Tahun" vs "Nama (Tahun)"
       // karena narasi AI kadang beda format tulisan dari kolom authorYear aslinya.
+      function findFullSlrPaper(row, papers) {
+        // Cocokkan lewat paperIndex (nomor urut [Paper N] yang dikirim ke AI) dulu -
+        // 100% akurat, tidak tergantung AI menyalin ulang judul persis sama. Kalau
+        // riwayat lama belum punya paperIndex (dibuat sebelum field ini ada), fallback
+        // ke pencocokan judul yang lebih toleran (bukan exact match) supaya tetap
+        // dapat menemukan datanya selama judulnya cukup mirip.
+        if (!papers || papers.length === 0) return null;
+        if (row.paperIndex && papers[row.paperIndex - 1]) return papers[row.paperIndex - 1];
+        if (!row.title) return null;
+        const rowTitle = row.title.trim().toLowerCase();
+        const exact = papers.find(p => p.title && p.title.trim().toLowerCase() === rowTitle);
+        if (exact) return exact;
+        return papers.find(p => p.title && (
+          p.title.trim().toLowerCase().includes(rowTitle) || rowTitle.includes(p.title.trim().toLowerCase())
+        )) || null;
+      }
+
       function buildSlrCitationLookup(matrix, papers) {
         return (matrix || []).map((row, idx) => {
-          const fullPaper = (papers || []).find(p => p.title && row.title &&
-            p.title.trim().toLowerCase() === row.title.trim().toLowerCase());
+          const fullPaper = findFullSlrPaper(row, papers);
           const yearMatch = String(row.authorYear || '').match(/\d{4}/);
           return {
             idx,
@@ -8152,6 +8172,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const inclusionCriteria = document.getElementById('slrInclusion').value.trim();
         const exclusionCriteria = document.getElementById('slrExclusion').value.trim();
 
+        lastSynthesizedPapers = selectedPapers;
+
         if (loader) {
           loaderText.textContent = 'Menyusun ulasan sistematis dengan AI...';
           loader.style.display = 'flex';
@@ -8231,7 +8253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Matrix Table
         const matrixTableBody = document.getElementById('slrMatrixTableBody');
         const matrix = slrResult.matrix || [];
-        slrCitationLookup = buildSlrCitationLookup(matrix, fetchedPapers);
+        slrCitationLookup = buildSlrCitationLookup(matrix, lastSynthesizedPapers);
         if (matrixTableBody) {
           if (matrix.length === 0) {
             matrixTableBody.innerHTML = `<tr><td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">Tidak ada matriks sintesis dari AI.</td></tr>`;

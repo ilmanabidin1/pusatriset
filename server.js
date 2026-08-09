@@ -2972,7 +2972,8 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
   },
   "matrix": [
     {
-      "title": "Judul paper",
+      "paperIndex": nomor urut paper ini sesuai label [Paper N] pada daftar yang diberikan (integer, misal 1 untuk [Paper 1]),
+      "title": "Judul paper - salin PERSIS sama seperti judul aslinya pada daftar, jangan diringkas/diparafrase",
       "authorYear": "Nama Penulis & Tahun (misal: Smith et al., 2023)",
       "methodology": "Metode penelitian yang digunakan (misal: Kuantitatif Survei, Kualitatif Wawancara, Eksperimen)",
       "findings": "Temuan atau hasil utama penelitian",
