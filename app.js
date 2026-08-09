@@ -387,7 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
       slr: "Systematic Lit Review",
       "patent-search": "Pencarian Paten",
       tersimpan: "Tersimpan",
-      riwayat: "Riwayat AI",
       pengaturan: "Pengaturan",
       sidebar_more: "Lainnya",
       upgrade_pro: "Upgrade ke PRO",
@@ -616,7 +615,6 @@ document.addEventListener('DOMContentLoaded', () => {
       slr: "Systematic Lit Review",
       "patent-search": "Patent Search",
       tersimpan: "Bookmarks",
-      riwayat: "AI History",
       pengaturan: "Settings",
       sidebar_more: "More",
       upgrade_pro: "Upgrade to PRO",
@@ -1427,14 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
       container.querySelectorAll('.beranda-recent-activity-item').forEach(btn => {
         btn.addEventListener('click', () => {
           const id = btn.getAttribute('data-history-id');
-          if (window.switchTab) window.switchTab('riwayat');
-          setTimeout(() => {
-            if (window.renderHistoryTab) {
-              window.renderHistoryTab().then(() => {
-                if (window.showHistoryDetailsById) window.showHistoryDetailsById(id);
-              });
-            }
-          }, 50);
+          if (window.openHistoryDetail) window.openHistoryDetail(id);
         });
       });
     } catch (err) {
@@ -5219,11 +5210,35 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Ikon+warna pembeda untuk item riwayat AI tools (Journal Matcher/Outline
+    // Generator/Lit Review/Humanizer/SLR) yang digabung ke Riwayat Percakapan,
+    // supaya beda dari chat JurnalHub Intelligence biasa (fa-comment abu-abu).
+    function historyKindIconMeta(kind) {
+      switch (kind) {
+        case 'match': return { icon: 'fa-solid fa-magnifying-glass-chart', color: '#38bdf8' };
+        case 'draft': return { icon: 'fa-regular fa-file-lines', color: '#34d399' };
+        case 'lit-review': return { icon: 'fa-solid fa-book-open-reader', color: '#a78bfa' };
+        case 'humanizer': return { icon: 'fa-solid fa-wand-magic-sparkles', color: '#fbbf24' };
+        case 'slr': return { icon: 'fa-solid fa-book-bookmark', color: '#f472b6' };
+        default: return { icon: 'fa-regular fa-comment', color: 'rgba(255,255,255,0.6)' };
+      }
+    }
+
     function renderHistoryItemHtml(c) {
+      const kind = c.kind || 'chat';
+      if (kind !== 'chat') {
+        const meta = historyKindIconMeta(kind);
+        return `
+          <button type="button" class="research-chat-history-item" data-conv-id="${c.id}" data-kind="${kind}">
+            <i class="${meta.icon}" style="font-size: 0.85rem; color: ${meta.color}; flex-shrink: 0;"></i>
+            <span class="research-chat-history-item-title">${escapeHtml(c.title)}</span>
+          </button>
+        `;
+      }
       const isPinned = !!c.pinned;
       const isActive = c.id === currentResearchChatId;
       return `
-        <button type="button" class="research-chat-history-item ${isActive ? 'active' : ''} ${isPinned ? 'is-pinned' : ''}" data-conv-id="${c.id}">
+        <button type="button" class="research-chat-history-item ${isActive ? 'active' : ''} ${isPinned ? 'is-pinned' : ''}" data-conv-id="${c.id}" data-kind="chat">
           <i class="fa-regular fa-comment" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); flex-shrink: 0;"></i>
           <span class="research-chat-history-item-title">${escapeHtml(c.title)}</span>
           <div class="research-chat-history-item-actions">
@@ -5238,18 +5253,40 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
+    // Gabungkan percakapan JurnalHub Intelligence dengan riwayat AI tools
+    // (Journal Matcher/Outline Generator/Lit Review/Humanizer/SLR) jadi satu
+    // daftar terurut - dipakai bareng oleh sidebar "Riwayat Percakapan" dan
+    // chat search modal supaya keduanya konsisten menampilkan hal yang sama.
+    async function fetchMergedSidebarHistory() {
+      const [convData, histData] = await Promise.all([
+        fetch('/api/research-chat/conversations').then(r => r.json()).catch(() => ({ ok: false })),
+        fetch('/api/history').then(r => r.json()).catch(() => ({ ok: false }))
+      ]);
+
+      const conversations = convData.ok ? (convData.conversations || []) : [];
+      const historyRaw = histData.ok ? (histData.history || []) : [];
+      allHistory = historyRaw; // cache supaya showHistoryDetails(id) bisa langsung dipakai
+
+      const chatItems = conversations.map(c => ({ id: c.id, title: c.title, pinned: !!c.pinned, updatedAt: c.updatedAt, kind: 'chat' }));
+      const historyItems = historyRaw.map(h => ({
+        id: h.id,
+        title: berandaHistoryItemTitle(h, window.currentLanguage || 'id'),
+        pinned: false,
+        updatedAt: h.timestamp,
+        kind: h.type
+      }));
+
+      return [...chatItems, ...historyItems].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    }
+
     async function renderResearchChatHistoryList() {
       const pinnedSectionEl = document.getElementById('researchChatPinnedSection');
       const pinnedListEl = document.getElementById('researchChatPinnedList');
       if (!researchChatHistoryListEl) return;
       try {
-        const response = await fetch('/api/research-chat/conversations');
-        const data = await response.json();
-        if (!data.ok) return;
-
-        const conversations = data.conversations || [];
-        const pinnedConvs = conversations.filter(c => c.pinned);
-        const unpinnedConvs = conversations.filter(c => !c.pinned);
+        const merged = await fetchMergedSidebarHistory();
+        const pinnedConvs = merged.filter(c => c.pinned);
+        const unpinnedConvs = merged.filter(c => !c.pinned);
 
         if (pinnedSectionEl && pinnedListEl) {
           if (pinnedConvs.length > 0) {
@@ -5402,6 +5439,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const item = e.target.closest('.research-chat-history-item');
       if (item) {
         const id = item.getAttribute('data-conv-id');
+        const kind = item.getAttribute('data-kind') || 'chat';
+        if (kind !== 'chat') {
+          if (window.openHistoryDetail) window.openHistoryDetail(id);
+          return;
+        }
         if (id !== currentResearchChatId) loadResearchChatConversation(id);
         if (window.switchTab) window.switchTab('research-chat');
       }
@@ -5425,28 +5467,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const resultsEl = document.getElementById('chatSearchResults');
       if (!overlay || !searchToggleBtn || !input || !resultsEl) return;
 
-      let allConversations = [];
+      let allItems = [];
       let highlightedIndex = -1;
 
       function renderResults(list) {
         if (list.length === 0) {
-          resultsEl.innerHTML = '<div class="chat-search-empty">Tidak ada percakapan yang cocok.</div>';
+          resultsEl.innerHTML = '<div class="chat-search-empty">Tidak ada percakapan atau riwayat yang cocok.</div>';
           highlightedIndex = -1;
           return;
         }
-        resultsEl.innerHTML = list.map((c, i) => `
-          <button type="button" class="chat-search-result-item${i === 0 ? ' highlighted' : ''}" data-conv-id="${c.id}">
-            <i class="fa-regular fa-comment"></i>
-            <span class="chat-search-result-title">${escapeHtml(c.title)}</span>
-            <span class="chat-search-result-time">${formatResearchChatRelativeTime(c.updatedAt)}</span>
-          </button>
-        `).join('');
+        resultsEl.innerHTML = list.map((c, i) => {
+          const meta = historyKindIconMeta(c.kind);
+          return `
+            <button type="button" class="chat-search-result-item${i === 0 ? ' highlighted' : ''}" data-conv-id="${c.id}" data-kind="${c.kind}">
+              <i class="${meta.icon}" style="color: ${c.kind === 'chat' ? '' : meta.color};"></i>
+              <span class="chat-search-result-title">${escapeHtml(c.title)}</span>
+              <span class="chat-search-result-time">${formatResearchChatRelativeTime(c.updatedAt)}</span>
+            </button>
+          `;
+        }).join('');
         highlightedIndex = 0;
       }
 
       function filterAndRender() {
         const q = input.value.trim().toLowerCase();
-        const filtered = q ? allConversations.filter(c => c.title.toLowerCase().includes(q)) : allConversations;
+        const filtered = q ? allItems.filter(c => c.title.toLowerCase().includes(q)) : allItems;
         renderResults(filtered);
       }
 
@@ -5463,15 +5508,10 @@ document.addEventListener('DOMContentLoaded', () => {
         input.value = '';
         input.focus();
         resultsEl.innerHTML = '<div class="chat-search-empty">Memuat...</div>';
-        fetch('/api/research-chat/conversations')
-          .then(r => r.json())
-          .then(data => {
-            if (data.ok) {
-              allConversations = data.conversations || [];
-              filterAndRender();
-            } else {
-              resultsEl.innerHTML = '<div class="chat-search-empty">Gagal memuat percakapan.</div>';
-            }
+        fetchMergedSidebarHistory()
+          .then(merged => {
+            allItems = merged;
+            filterAndRender();
           })
           .catch(() => {
             resultsEl.innerHTML = '<div class="chat-search-empty">Gagal memuat percakapan.</div>';
@@ -5482,8 +5522,12 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.classList.remove('active');
       }
 
-      function openConversation(id) {
+      function openResultItem(id, kind) {
         closeModal();
+        if (kind !== 'chat') {
+          if (window.openHistoryDetail) window.openHistoryDetail(id);
+          return;
+        }
         if (window.switchTab) window.switchTab('research-chat');
         if (id !== currentResearchChatId) loadResearchChatConversation(id);
       }
@@ -5496,7 +5540,7 @@ document.addEventListener('DOMContentLoaded', () => {
       input.addEventListener('input', filterAndRender);
       resultsEl.addEventListener('click', (e) => {
         const item = e.target.closest('.chat-search-result-item');
-        if (item) openConversation(item.getAttribute('data-conv-id'));
+        if (item) openResultItem(item.getAttribute('data-conv-id'), item.getAttribute('data-kind'));
       });
 
       document.addEventListener('keydown', (e) => {
@@ -5518,7 +5562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.key === 'Enter') {
           const items = resultsEl.querySelectorAll('.chat-search-result-item');
           if (highlightedIndex >= 0 && items[highlightedIndex]) {
-            openConversation(items[highlightedIndex].getAttribute('data-conv-id'));
+            openResultItem(items[highlightedIndex].getAttribute('data-conv-id'), items[highlightedIndex].getAttribute('data-kind'));
           }
         }
       });
@@ -6862,13 +6906,32 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // --- RIWAYAT AI (HISTORY) TAB ---
+    // --- RIWAYAT AI TOOLS (Journal Matcher/Outline Generator/Lit Review/
+    // Humanizer/SLR) - tab "Riwayat AI" terpisah sudah dihapus, item-itemnya
+    // sekarang digabung ke dalam "Riwayat Percakapan" di sidebar (lihat
+    // renderResearchChatHistoryList) dan chat search (initChatSearchModal),
+    // dibedakan lewat ikon per jenis. allHistory tetap dipakai sebagai cache
+    // supaya showHistoryDetails(id) bisa menampilkan modal detail aslinya. ---
     let allHistory = [];
-    let activeHistoryFilter = 'all';
 
-    const historyListContainer = document.getElementById('historyListContainer');
-    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    const historyFilterButtons = document.querySelectorAll('#historyFilterButtons .filter-badge');
+    async function loadAllHistoryCache() {
+      try {
+        const response = await fetch('/api/history');
+        const data = await response.json();
+        if (data.ok) allHistory = data.history || [];
+      } catch (err) {
+        console.error('Gagal memuat riwayat AI tools:', err);
+      }
+      return allHistory;
+    }
+
+    async function openHistoryDetail(id) {
+      if (!allHistory.find(h => h.id === id)) {
+        await loadAllHistoryCache();
+      }
+      showHistoryDetails(id);
+    }
+    window.openHistoryDetail = openHistoryDetail;
 
     const historyDetailModal = document.getElementById('historyDetailModal');
     const closeHistoryDetailModalBtn = document.getElementById('closeHistoryDetailModalBtn');
@@ -6888,222 +6951,6 @@ document.addEventListener('DOMContentLoaded', () => {
       historyDetailModal.addEventListener('click', (e) => {
         if (e.target === historyDetailModal) {
           historyDetailModal.classList.remove('active');
-        }
-      });
-    }
-
-    // Function to render the history tab
-    async function renderHistoryTab() {
-      if (!historyListContainer) return;
-
-      const t = TRANSLATIONS[currentLanguage] || TRANSLATIONS.id;
-
-      historyListContainer.innerHTML = `
-        <div style="text-align: center; padding: 4rem 2rem; background: rgba(255,255,255,0.6); border: 1px dashed var(--border-light-hover); border-radius: 16px;">
-          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--brand-blue); margin-bottom: 1rem;"></i>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">${t.hist_loading}</p>
-        </div>
-      `;
-
-      try {
-        const response = await fetch('/api/history');
-        const data = await response.json();
-
-        if (data.ok) {
-          allHistory = data.history || [];
-          displayHistoryList();
-        } else {
-          historyListContainer.innerHTML = `
-            <div style="text-align: center; padding: 4rem 2rem; background: #fff; border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 16px;">
-              <i class="fa-solid fa-circle-xmark" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 1rem;"></i>
-              <p style="color: #ef4444; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">${t.hist_load_error_title}</p>
-              <p style="color: var(--text-muted); font-size: 0.85rem;">${data.message || t.hist_load_error_generic}</p>
-            </div>
-          `;
-        }
-      } catch (err) {
-        console.error('Fetch history error:', err);
-        historyListContainer.innerHTML = `
-          <div style="text-align: center; padding: 4rem 2rem; background: #fff; border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 16px;">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 1rem;"></i>
-            <p style="color: #ef4444; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">${t.hist_conn_error_title}</p>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">${t.hist_conn_error_desc}</p>
-          </div>
-        `;
-      }
-    }
-    window.renderHistoryTab = renderHistoryTab;
-    window.showHistoryDetailsById = showHistoryDetails;
-
-    // Display history items
-    function displayHistoryList() {
-      if (!historyListContainer) return;
-
-      const filtered = activeHistoryFilter === 'all' 
-        ? allHistory 
-        : allHistory.filter(item => item.type === activeHistoryFilter);
-
-      const t = TRANSLATIONS[currentLanguage] || TRANSLATIONS.id;
-
-      if (filtered.length === 0) {
-        historyListContainer.innerHTML = `
-          <div style="text-align: center; padding: 5rem 2rem; background: #ffffff; border: 1px solid var(--border-light-hover); border-radius: 16px; box-shadow: 0 4px 20px rgba(8,34,64,0.02);">
-            <div style="width: 64px; height: 64px; border-radius: 50%; background: #f8fafc; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--text-muted); font-size: 1.75rem;">
-              <i class="fa-regular fa-clock"></i>
-            </div>
-            <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.5rem;">${t.history_empty}</h4>
-            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 400px; margin: 0 auto;">${t.history_empty_desc}</p>
-          </div>
-        `;
-        return;
-      }
-
-      historyListContainer.innerHTML = '';
-      filtered.forEach(item => {
-        const dateStr = new Date(item.timestamp).toLocaleString(currentLanguage === 'en' ? 'en-US' : 'id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-
-        let typeLabel = t.hist_type_generic;
-        let typeIcon = 'fa-solid fa-robot';
-        let iconBg = 'rgba(7, 135, 220, 0.08)';
-        let iconColor = 'var(--brand-blue)';
-        let titleText = t.hist_fallback_generic;
-        let descText = '';
-
-        if (item.type === 'match') {
-          typeLabel = t.hist_type_match;
-          typeIcon = 'fa-solid fa-magnifying-glass-chart';
-          iconBg = 'rgba(7, 135, 220, 0.08)';
-          iconColor = 'var(--brand-blue)';
-          titleText = item.input.title || t.hist_fallback_match;
-          descText = `${t.hist_desc_keywords}: ${item.input.keywords || '-'} | ${t.hist_desc_recommendations}: ${item.output.recommendations ? item.output.recommendations.length : 0} ${t.hist_desc_journals}`;
-        } else if (item.type === 'draft') {
-          typeLabel = t.hist_type_draft;
-          typeIcon = 'fa-regular fa-file-lines';
-          iconBg = 'rgba(16, 185, 129, 0.08)';
-          iconColor = '#10b981';
-          titleText = item.input.title || t.hist_fallback_draft;
-          descText = `${t.hist_desc_abstract}: ${item.input.abstract ? item.input.abstract.slice(0, 100) + '...' : '-'}`;
-        } else if (item.type === 'lit-review') {
-          typeLabel = t.hist_type_litreview;
-          typeIcon = 'fa-solid fa-book-open-reader';
-          iconBg = 'rgba(139, 92, 246, 0.08)';
-          iconColor = '#8b5cf6';
-          titleText = item.input.title || t.hist_fallback_litreview;
-          descText = `${t.hist_desc_references}: ${item.output.citations ? item.output.citations.length : 0} ${t.hist_desc_papers}`;
-        } else if (item.type === 'humanizer') {
-          typeLabel = t.hist_type_humanizer;
-          typeIcon = 'fa-solid fa-wand-magic-sparkles';
-          iconBg = 'rgba(245, 158, 11, 0.08)';
-          iconColor = '#f59e0b';
-          titleText = item.input.text ? item.input.text.slice(0, 80) + '...' : t.hist_fallback_humanizer;
-          descText = `${t.hist_desc_mode}: ${item.input.mode === 'academic' ? t.hist_desc_mode_academic : t.hist_desc_mode_standard} | ${t.hist_desc_originality}: ${item.output.originalityScore}% | ${t.hist_desc_cost}: ${item.output.actualCost} ${t.hist_desc_words}`;
-        } else if (item.type === 'slr') {
-          typeLabel = t.hist_type_slr || "Systematic Lit Review";
-          typeIcon = 'fa-solid fa-book-bookmark';
-          iconBg = 'rgba(236, 72, 153, 0.08)';
-          iconColor = '#ec4899';
-          titleText = item.input.query || t.hist_fallback_slr || "Systematic Literature Review";
-          descText = `${item.output.prisma ? item.output.prisma.included : 0} paper disintesis | Kriteria: ${item.input.criteria ? item.input.criteria.inclusion.slice(0, 50) + '...' : '-'}`;
-        }
-
-        const card = document.createElement('div');
-        card.className = 'filter-box-card';
-        card.style.padding = '1.25rem 1.5rem';
-        card.style.display = 'flex';
-        card.style.alignItems = 'center';
-        card.style.justifyContent = 'space-between';
-        card.style.gap = '1.5rem';
-        card.style.flexWrap = 'wrap';
-
-        card.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 1.25rem; flex: 1; min-width: 280px; text-align: left;">
-            <div style="width: 48px; height: 48px; border-radius: 12px; background: ${iconBg}; color: ${iconColor}; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
-              <i class="${typeIcon}"></i>
-            </div>
-            <div style="overflow: hidden; flex: 1;">
-              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
-                <span style="font-size: 0.72rem; font-weight: 700; color: ${iconColor}; text-transform: uppercase; background: ${iconBg}; padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block;">${typeLabel}</span>
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;"><i class="fa-regular fa-clock" style="margin-right: 0.15rem;"></i> ${dateStr}</span>
-              </div>
-              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-main); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(titleText)}">${escapeHtml(titleText)}</h4>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(descText)}</p>
-            </div>
-          </div>
-          
-          <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
-            <button class="upgrade-btn show-history-detail-btn" data-id="${item.id}" style="width: auto; padding: 0.5rem 1.25rem; font-size: 0.8rem; background: var(--brand-blue); color: #ffffff;" type="button">
-              <i class="fa-regular fa-eye"></i> ${t.hist_btn_detail}
-            </button>
-            <button class="upgrade-btn delete-history-item-btn" data-id="${item.id}" style="width: auto; padding: 0.5rem; font-size: 0.8rem; background: transparent; border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;" type="button" title="${t.hist_btn_delete_title}">
-              <i class="fa-regular fa-trash-can"></i>
-            </button>
-          </div>
-        `;
-
-        historyListContainer.appendChild(card);
-      });
-
-      // Bind button events dynamically
-      const detailBtns = historyListContainer.querySelectorAll('.show-history-detail-btn');
-      detailBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const histId = btn.getAttribute('data-id');
-          showHistoryDetails(histId);
-        });
-      });
-
-      const deleteBtns = historyListContainer.querySelectorAll('.delete-history-item-btn');
-      deleteBtns.forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const histId = btn.getAttribute('data-id');
-          if (confirm('Apakah Anda yakin ingin menghapus item riwayat ini?')) {
-            try {
-              const res = await fetch(`/api/history/${histId}`, { method: 'DELETE' });
-              const result = await res.json();
-              if (result.ok) {
-                renderHistoryTab();
-              } else {
-                alert(result.message);
-              }
-            } catch (err) {
-              alert('Gagal menghapus item riwayat.');
-            }
-          }
-        });
-      });
-    }
-
-    // Filter Buttons click handler
-    historyFilterButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        historyFilterButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeHistoryFilter = btn.getAttribute('data-type');
-        displayHistoryList();
-      });
-    });
-
-    // Clear All History click handler
-    if (clearHistoryBtn) {
-      clearHistoryBtn.addEventListener('click', async () => {
-        if (confirm('Apakah Anda yakin ingin menghapus SELURUH riwayat penggunaan AI Anda? Tindakan ini tidak dapat dibatalkan.')) {
-          try {
-            const res = await fetch('/api/history', { method: 'DELETE' });
-            const result = await res.json();
-            if (result.ok) {
-              renderHistoryTab();
-            } else {
-              alert(result.message);
-            }
-          } catch (err) {
-            alert('Gagal membersihkan seluruh riwayat.');
-          }
         }
       });
     }
@@ -7930,26 +7777,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.setActiveQuickTool(activeQuickTool);
       }
 
-      // 10. Translate History Tab static elements
-      const historyTitleEl = document.querySelector('#tabContentRiwayat h3');
-      const clearHistoryBtnEl = document.getElementById('clearHistoryBtn');
-      if (historyTitleEl) historyTitleEl.textContent = TRANSLATIONS[lang].history_title;
-      if (clearHistoryBtnEl) {
-        clearHistoryBtnEl.innerHTML = `<i class="fa-regular fa-trash-can"></i> ${TRANSLATIONS[lang].history_clear_btn}`;
-      }
-
-      // Translate history filter badges
-      const histBadges = document.querySelectorAll('#historyFilterButtons .filter-badge');
-      histBadges.forEach(badge => {
-        const type = badge.getAttribute('data-type');
-        if (type === 'all') badge.textContent = lang === 'id' ? 'Semua' : 'All';
-        else if (type === 'match') badge.textContent = lang === 'id' ? 'Journal Matcher' : 'Journal Matcher';
-        else if (type === 'draft') badge.textContent = lang === 'id' ? 'Outline Generator' : 'Outline Generator';
-        else if (type === 'lit-review') badge.textContent = lang === 'id' ? 'Literature Review' : 'Literature Review';
-        else if (type === 'humanizer') badge.textContent = lang === 'id' ? 'Humanizer Engine' : 'Humanizer Engine';
-        else if (type === 'slr') badge.textContent = lang === 'id' ? 'Systematic Lit Review' : 'Systematic Lit Review';
-      });
-
       // Translate Quota Tracker Card static items
       const lblQuotaTitle = document.getElementById('lblQuotaTitle');
       const lblMatchDraftLimitNote = document.getElementById('lblMatchDraftLimitNote');
@@ -7994,11 +7821,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Re-trigger history list rendering if currently on history tab to update cards
       const activeTabLink = document.querySelector('.sidebar-link.active');
-      if (activeTabLink && activeTabLink.getAttribute('data-tab') === 'riwayat') {
-        displayHistoryList();
-      }
 
       // Re-fetch & re-render Prompt Bank in the new language if currently on that tab
       if (activeTabLink && activeTabLink.getAttribute('data-tab') === 'prompt-bank' && window.initPromptBankTab) {
