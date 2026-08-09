@@ -4010,19 +4010,19 @@
   <div class="modal-overlay" id="createFolderModal">
     <div class="modal-card" style="max-width: 420px; text-align: left;">
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 1.5rem 1.1rem;">
-        <h3 style="margin: 0; font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; color: var(--text-main);">Create Folder</h3>
+        <h3 style="margin: 0; font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; color: var(--text-main);">Buat Folder Baru</h3>
         <button type="button" class="modal-close-btn" id="closeCreateFolderModalBtn" style="position: static; margin: 0;">&times;</button>
       </div>
       <div style="border-top: 1px solid var(--border-light-hover);"></div>
       <div style="padding: 1.5rem;">
-        <label for="createFolderInput" style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Enter Folder Name</label>
-        <input type="text" id="createFolderInput" placeholder="Folder name" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.95rem; outline: none; box-sizing: border-box;">
+        <label for="createFolderInput" style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Masukkan Nama Folder Baru</label>
+        <input type="text" id="createFolderInput" placeholder="Nama folder" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.95rem; outline: none; box-sizing: border-box;">
         <div id="createFolderError" style="display: none; font-size: 0.8rem; color: #dc2626; font-weight: 600; margin-top: 0.6rem;"></div>
       </div>
       <div style="border-top: 1px solid var(--border-light-hover);"></div>
       <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1.1rem 1.5rem;">
-        <button type="button" id="cancelCreateFolderBtn" style="padding: 0.65rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-light-hover); background: transparent; color: var(--text-main); font-family: inherit; font-weight: 700; font-size: 0.88rem; cursor: pointer;">Cancel</button>
-        <button type="button" id="confirmCreateFolderBtn" style="padding: 0.65rem 1.25rem; border-radius: 8px; border: none; background: #f2600c; color: #ffffff; font-family: inherit; font-weight: 700; font-size: 0.88rem; cursor: pointer;">Create</button>
+        <button type="button" id="cancelCreateFolderBtn" style="padding: 0.65rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-light-hover); background: transparent; color: var(--text-main); font-family: inherit; font-weight: 700; font-size: 0.88rem; cursor: pointer;">Batal</button>
+        <button type="button" id="confirmCreateFolderBtn" style="padding: 0.65rem 1.25rem; border-radius: 8px; border: none; background: var(--brand-blue); color: #ffffff; font-family: inherit; font-weight: 700; font-size: 0.88rem; cursor: pointer;">Buat</button>
       </div>
     </div>
   </div>
@@ -5099,13 +5099,10 @@
                   <i class="fa-solid fa-paper-plane"></i>
                 </button>
               </div>
-              <!-- Quick actions: integrasi Outline Generator & Lit Review & Peer Reviewer langsung dari chat -->
+              <!-- Quick actions: integrasi Outline Generator & Lit Review langsung dari chat -->
               <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap;">
                 <button type="button" id="researchChatToolOutlineBtn" class="research-chat-quick-tool-btn" data-tool="outline">
                   <i class="fa-solid fa-wand-magic-sparkles"></i> Outline Generator
-                </button>
-                <button type="button" id="researchChatToolPeerReviewerBtn" class="research-chat-quick-tool-btn" data-tool="peer-reviewer">
-                  <i class="fa-solid fa-user-check"></i> AI Peer Reviewer
                 </button>
                 <button type="button" id="researchChatToolLitReviewBtn" class="research-chat-quick-tool-btn" data-tool="lit-review">
                   <i class="fa-solid fa-book-open"></i> Lit Review
