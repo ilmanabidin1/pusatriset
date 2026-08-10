@@ -2516,6 +2516,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ['TN', 'Tunisia'], ['ET', 'Ethiopia'], ['GH', 'Ghana'], ['LK', 'Sri Lanka'],
     ['NP', 'Nepal'], ['MM', 'Myanmar'], ['KH', 'Kamboja'], ['BN', 'Brunei Darussalam']
   ];
+  // Flag emoji dari kode ISO 3166-1 alpha-2 (dihitung, bukan lookup tabel) -
+  // dipakai untuk badge "negara afiliasi penulis" di kartu hasil Cari Referensi.
+  function countryCodeToFlagEmoji(code) {
+    if (!code || code.length !== 2) return '';
+    const codePoints = code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+  }
+
   if (realtimeFilterCountry) {
     REALTIME_COUNTRY_LIST
       .slice()
@@ -2682,9 +2690,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <div class="card-header">
               <div class="card-badge-group">
-                <span class="card-type-tag type-openalex" title="OpenAlex (real-time data)">
-                  <i class="fa-solid fa-globe"></i> OpenAlex
+                <span class="card-type-tag" title="Tahun terbit" style="background: rgba(8,34,64,0.05); color: var(--text-muted); border-color: rgba(8,34,64,0.08);">
+                  <i class="fa-regular fa-calendar"></i> ${escapeHtml(work.year)}
                 </span>
+                ${work.authorCountry ? `<span class="card-type-tag" title="Negara afiliasi penulis" style="background: rgba(8,34,64,0.05); color: var(--text-muted); border-color: rgba(8,34,64,0.08);">${countryCodeToFlagEmoji(work.authorCountry)} ${escapeHtml(work.authorCountry)}</span>` : ''}
                 ${work.isOpenAccess ? '<span class="card-type-tag" style="background: rgba(16,185,129,0.1); color:#10b981; border-color: rgba(16,185,129,0.2);">Open Access</span>' : ''}
                 ${work.journalQuartile ? `<span class="card-type-tag" title="Peringkat jurnal (SCImago Journal Rank)" style="background: rgba(37,99,235,0.1); color:#2563eb; border-color: rgba(37,99,235,0.2);"><i class="fa-solid fa-ranking-star"></i> ${escapeHtml(work.journalQuartile)}</span>` : ''}
               </div>

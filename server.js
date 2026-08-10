@@ -1961,6 +1961,17 @@ function lookupJournalQuartile(source) {
   return null;
 }
 
+// Ambil kode negara (ISO 3166-1 alpha-2) afiliasi penulis pertama yang punya
+// data institusi - dipakai untuk badge "negara afiliasi penulis" di kartu hasil.
+function extractAuthorCountryCode(authorships) {
+  if (!Array.isArray(authorships)) return null;
+  for (const a of authorships) {
+    const inst = Array.isArray(a.institutions) ? a.institutions.find(i => i.country_code) : null;
+    if (inst) return inst.country_code;
+  }
+  return null;
+}
+
 async function searchOpenAlexWorks(query, perPage, extraFilter) {
   const fetchFn = globalThis.fetch || require('node-fetch');
   // "?" dan "*" dianggap wildcard oleh OpenAlex full-text search dan bikin request
@@ -2009,6 +2020,7 @@ async function searchOpenAlexWorks(query, perPage, extraFilter) {
         citedByCount: w.cited_by_count || 0,
         isOpenAccess: !!w.open_access?.is_oa,
         journalQuartile: scimago ? scimago.quartile : null,
+        authorCountry: extractAuthorCountryCode(w.authorships),
         pdfUrl: w.open_access?.oa_url || null,
         abstract: abstract.slice(0, 800)
       };
