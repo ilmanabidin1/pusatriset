@@ -3166,6 +3166,80 @@
       color: #ef4444;
     }
 
+    /* Panel filter "Cari Referensi" (peringkat jurnal, tahun, sitasi, dll) */
+    .filter-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: #ffffff;
+      border: 1px solid var(--border-light-hover);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-toggle-btn:hover, .filter-toggle-btn.active {
+      border-color: var(--brand-blue);
+      color: var(--brand-blue);
+    }
+    .filter-toggle-btn .filter-active-badge {
+      display: none;
+      background: var(--brand-blue);
+      color: #ffffff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      border-radius: 10px;
+      line-height: 1.3;
+    }
+    [data-theme="dark"] .filter-toggle-btn {
+      background-color: transparent;
+    }
+
+    .year-preset-btn {
+      background: none;
+      border: 1px solid var(--border-light-hover);
+      border-radius: 20px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .year-preset-btn:hover {
+      border-color: var(--brand-blue);
+    }
+    .year-preset-btn.active {
+      background: var(--brand-blue);
+      border-color: var(--brand-blue);
+      color: #ffffff;
+    }
+
+    .filter-dropdown-item input[type="number"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background-color: #ffffff;
+      border: 1px solid var(--border-light-hover);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .filter-dropdown-item input[type="number"]:focus {
+      border-color: var(--brand-blue);
+      box-shadow: 0 0 0 3px var(--brand-blue-glow);
+    }
+    [data-theme="dark"] .filter-dropdown-item input[type="number"] {
+      background-color: var(--bg-card);
+      color: var(--text-main);
+    }
+
     /* Meta bar results counts & controls */
     .results-meta-header {
       display: flex;
@@ -4458,41 +4532,96 @@
             <input type="search" id="realtimeSearchInput" placeholder="Cari 480 juta+ karya ilmiah dari OpenAlex... (bisa pakai AND / OR / NOT)">
             <button id="realtimeClearSearch" style="position: absolute; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; display: none;"><i class="fa-solid fa-xmark"></i></button>
           </div>
-          <div class="filter-dropdowns" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="filter-dropdown-item">
-              <label id="realtimeFilterTypeLabel">TIPE DOKUMEN</label>
-              <select id="realtimeFilterType">
-                <option value="" id="realtimeFilterTypeAll">Semua Tipe</option>
-                <option value="article" id="realtimeFilterTypeArticle">Artikel</option>
-                <option value="review">Review</option>
-                <option value="book-chapter">Book Chapter</option>
-                <option value="dissertation" id="realtimeFilterTypeDissertation">Disertasi/Tesis</option>
-                <option value="preprint">Preprint</option>
-                <option value="report">Report</option>
-              </select>
-            </div>
-            <div class="filter-dropdown-item">
-              <label id="realtimeFilterQuartileLabel">PERINGKAT JURNAL (SJR)</label>
-              <select id="realtimeFilterQuartile">
-                <option value="">Semua Peringkat</option>
-                <option value="Q1">Q1 saja</option>
-                <option value="Q1,Q2">Q1 - Q2</option>
-                <option value="Q1,Q2,Q3">Q1 - Q3</option>
-                <option value="Q1,Q2,Q3,Q4">Q1 - Q4 (punya SJR)</option>
-              </select>
-            </div>
-            <div class="filter-dropdown-item">
-              <label id="realtimeModeLabel">MODE PENCARIAN</label>
-              <div class="custom-toggle-switch-wrapper" style="display: flex; align-items: center; gap: 0.6rem; height: 100%; padding-top: 0.35rem;">
-                <label class="toggle-switch">
-                  <input type="checkbox" id="realtimeBooleanToggle">
-                  <span class="toggle-slider"></span>
-                </label>
-                <span id="realtimeBooleanToggleLabel" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Mode Boolean (AND/OR/NOT)</span>
-              </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+            <button type="button" id="realtimeFilterToggleBtn" class="filter-toggle-btn">
+              <i class="fa-solid fa-sliders"></i> <span id="realtimeFilterToggleLabel">Filter</span>
+              <span class="filter-active-badge" id="realtimeFilterActiveBadge">0</span>
+            </button>
+            <div class="custom-toggle-switch-wrapper" style="display: flex; align-items: center; gap: 0.6rem;">
+              <label class="toggle-switch">
+                <input type="checkbox" id="realtimeBooleanToggle">
+                <span class="toggle-slider"></span>
+              </label>
+              <span id="realtimeBooleanToggleLabel" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Mode Boolean (AND/OR/NOT)</span>
             </div>
           </div>
-          <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+
+          <div id="realtimeFilterPanel" style="display: none; border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.25rem; background-color: var(--bg-card);">
+            <div class="filter-dropdowns" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 1.5rem;">
+              <div class="filter-dropdown-item">
+                <label id="realtimeFilterTypeLabel">TIPE DOKUMEN</label>
+                <select id="realtimeFilterType">
+                  <option value="" id="realtimeFilterTypeAll">Semua Tipe</option>
+                  <option value="article" id="realtimeFilterTypeArticle">Artikel</option>
+                  <option value="review">Review</option>
+                  <option value="book-chapter">Book Chapter</option>
+                  <option value="dissertation" id="realtimeFilterTypeDissertation">Disertasi/Tesis</option>
+                  <option value="preprint">Preprint</option>
+                  <option value="report">Report</option>
+                </select>
+              </div>
+              <div class="filter-dropdown-item">
+                <label id="realtimeFilterQuartileLabel">PERINGKAT JURNAL (SJR)</label>
+                <select id="realtimeFilterQuartile">
+                  <option value="">Semua Peringkat</option>
+                  <option value="Q1">Q1 saja</option>
+                  <option value="Q1,Q2">Q1 - Q2</option>
+                  <option value="Q1,Q2,Q3">Q1 - Q3</option>
+                  <option value="Q1,Q2,Q3,Q4">Q1 - Q4 (punya SJR)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.7rem;">TAHUN TERBIT</label>
+              <div id="realtimeYearPresetGroup" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
+                <button type="button" class="year-preset-btn active" data-years="0">Semua</button>
+                <button type="button" class="year-preset-btn" data-years="2">2 Tahun Terakhir</button>
+                <button type="button" class="year-preset-btn" data-years="5">5 Tahun Terakhir</button>
+                <button type="button" class="year-preset-btn" data-years="10">10 Tahun Terakhir</button>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.6rem; max-width: 320px;">
+                <input type="number" id="realtimeYearMin" placeholder="Dari" min="1900" max="2100">
+                <span style="color: var(--text-muted);">&mdash;</span>
+                <input type="number" id="realtimeYearMax" placeholder="Sampai" min="1900" max="2100">
+              </div>
+            </div>
+
+            <div class="filter-dropdowns" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 1.5rem;">
+              <div class="filter-dropdown-item">
+                <label>MINIMAL SITASI</label>
+                <input type="number" id="realtimeMinCitations" min="0" placeholder="0">
+              </div>
+              <div class="filter-dropdown-item">
+                <label>NEGARA (AFILIASI PENULIS)</label>
+                <select id="realtimeFilterCountry">
+                  <option value="">Semua Negara</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; padding-top: 1.25rem; border-top: 1px solid var(--border-light);">
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="realtimeExcludePreprints">
+                  <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Exclude Preprint</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="realtimeOpenAccessOnly">
+                  <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Open Access Saja</span>
+              </div>
+              <button type="button" id="realtimeFilterResetBtn" style="margin-left: auto; background: none; border: none; color: var(--brand-blue); font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                Reset Filter
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
             <button type="button" id="realtimeSearchBtn" class="reset-filter-btn" style="background: var(--brand-blue); color: #ffffff; border: none;">
               <i class="fa-solid fa-magnifying-glass"></i> <span id="realtimeSearchBtnText">Cari</span>
             </button>

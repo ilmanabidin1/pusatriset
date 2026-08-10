@@ -2477,10 +2477,125 @@ document.addEventListener('DOMContentLoaded', () => {
   const realtimeClearSearch = document.getElementById('realtimeClearSearch');
   const realtimeFilterType = document.getElementById('realtimeFilterType');
   const realtimeFilterQuartile = document.getElementById('realtimeFilterQuartile');
+  const realtimeFilterCountry = document.getElementById('realtimeFilterCountry');
+  const realtimeYearMin = document.getElementById('realtimeYearMin');
+  const realtimeYearMax = document.getElementById('realtimeYearMax');
+  const realtimeYearPresetGroup = document.getElementById('realtimeYearPresetGroup');
+  const realtimeMinCitations = document.getElementById('realtimeMinCitations');
+  const realtimeExcludePreprints = document.getElementById('realtimeExcludePreprints');
+  const realtimeOpenAccessOnly = document.getElementById('realtimeOpenAccessOnly');
+  const realtimeFilterToggleBtn = document.getElementById('realtimeFilterToggleBtn');
+  const realtimeFilterPanel = document.getElementById('realtimeFilterPanel');
+  const realtimeFilterActiveBadge = document.getElementById('realtimeFilterActiveBadge');
+  const realtimeFilterResetBtn = document.getElementById('realtimeFilterResetBtn');
   const realtimeBooleanToggle = document.getElementById('realtimeBooleanToggle');
   const realtimeSearchBtn = document.getElementById('realtimeSearchBtn');
   const realtimeResultsContainer = document.getElementById('realtimeResultsContainer');
   const realtimeResultsCount = document.getElementById('realtimeResultsCount');
+
+  // Daftar negara populer untuk filter "Negara (Afiliasi Penulis)" - kode ISO
+  // 3166-1 alpha-2, dipakai langsung sebagai filter institutions.country_code
+  // OpenAlex. Bukan daftar lengkap 195+ negara (supaya tidak salah kode),
+  // fokus ke negara-negara dengan output riset terbanyak.
+  const REALTIME_COUNTRY_LIST = [
+    ['ID', 'Indonesia'], ['US', 'Amerika Serikat'], ['GB', 'Inggris (Britania Raya)'],
+    ['CN', 'Tiongkok'], ['JP', 'Jepang'], ['DE', 'Jerman'], ['FR', 'Prancis'],
+    ['IN', 'India'], ['AU', 'Australia'], ['CA', 'Kanada'], ['BR', 'Brasil'],
+    ['IT', 'Italia'], ['ES', 'Spanyol'], ['NL', 'Belanda'], ['KR', 'Korea Selatan'],
+    ['RU', 'Rusia'], ['TR', 'Turki'], ['MX', 'Meksiko'], ['SE', 'Swedia'],
+    ['CH', 'Swiss'], ['PL', 'Polandia'], ['BE', 'Belgia'], ['MY', 'Malaysia'],
+    ['SG', 'Singapura'], ['TH', 'Thailand'], ['VN', 'Vietnam'], ['PH', 'Filipina'],
+    ['ZA', 'Afrika Selatan'], ['NG', 'Nigeria'], ['EG', 'Mesir'], ['SA', 'Arab Saudi'],
+    ['AE', 'Uni Emirat Arab'], ['IR', 'Iran'], ['PK', 'Pakistan'], ['BD', 'Bangladesh'],
+    ['NZ', 'Selandia Baru'], ['NO', 'Norwegia'], ['DK', 'Denmark'], ['FI', 'Finlandia'],
+    ['AT', 'Austria'], ['PT', 'Portugal'], ['GR', 'Yunani'], ['IE', 'Irlandia'],
+    ['IL', 'Israel'], ['TW', 'Taiwan'], ['HK', 'Hong Kong'], ['UA', 'Ukraina'],
+    ['CZ', 'Ceko'], ['RO', 'Rumania'], ['HU', 'Hungaria'], ['CL', 'Chili'],
+    ['AR', 'Argentina'], ['CO', 'Kolombia'], ['PE', 'Peru'], ['IQ', 'Irak'],
+    ['JO', 'Yordania'], ['KE', 'Kenya'], ['MA', 'Maroko'], ['DZ', 'Aljazair'],
+    ['TN', 'Tunisia'], ['ET', 'Ethiopia'], ['GH', 'Ghana'], ['LK', 'Sri Lanka'],
+    ['NP', 'Nepal'], ['MM', 'Myanmar'], ['KH', 'Kamboja'], ['BN', 'Brunei Darussalam']
+  ];
+  if (realtimeFilterCountry) {
+    REALTIME_COUNTRY_LIST
+      .slice()
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .forEach(([code, name]) => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = name;
+        realtimeFilterCountry.appendChild(opt);
+      });
+  }
+
+  function updateRealtimeFilterActiveCount() {
+    if (!realtimeFilterActiveBadge) return;
+    let count = 0;
+    if (realtimeFilterType && realtimeFilterType.value) count++;
+    if (realtimeFilterQuartile && realtimeFilterQuartile.value) count++;
+    if (realtimeFilterCountry && realtimeFilterCountry.value) count++;
+    if (realtimeYearMin && realtimeYearMin.value) count++;
+    if (realtimeYearMax && realtimeYearMax.value) count++;
+    if (realtimeMinCitations && parseInt(realtimeMinCitations.value, 10) > 0) count++;
+    if (realtimeExcludePreprints && realtimeExcludePreprints.checked) count++;
+    if (realtimeOpenAccessOnly && realtimeOpenAccessOnly.checked) count++;
+    realtimeFilterActiveBadge.textContent = String(count);
+    realtimeFilterActiveBadge.style.display = count > 0 ? 'inline-block' : 'none';
+    if (realtimeFilterToggleBtn) realtimeFilterToggleBtn.classList.toggle('active', count > 0);
+  }
+  [realtimeFilterType, realtimeFilterQuartile, realtimeFilterCountry, realtimeYearMin, realtimeYearMax, realtimeMinCitations, realtimeExcludePreprints, realtimeOpenAccessOnly]
+    .forEach(el => { if (el) el.addEventListener('input', updateRealtimeFilterActiveCount); });
+
+  if (realtimeFilterToggleBtn && realtimeFilterPanel) {
+    realtimeFilterToggleBtn.addEventListener('click', () => {
+      const isOpen = realtimeFilterPanel.style.display !== 'none';
+      realtimeFilterPanel.style.display = isOpen ? 'none' : 'block';
+    });
+  }
+
+  if (realtimeYearPresetGroup && realtimeYearMin && realtimeYearMax) {
+    realtimeYearPresetGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.year-preset-btn');
+      if (!btn) return;
+      realtimeYearPresetGroup.querySelectorAll('.year-preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const years = parseInt(btn.dataset.years, 10);
+      if (years > 0) {
+        realtimeYearMax.value = new Date().getFullYear();
+        realtimeYearMin.value = new Date().getFullYear() - years;
+      } else {
+        realtimeYearMin.value = '';
+        realtimeYearMax.value = '';
+      }
+      updateRealtimeFilterActiveCount();
+    });
+    [realtimeYearMin, realtimeYearMax].forEach(input => {
+      input.addEventListener('input', () => {
+        realtimeYearPresetGroup.querySelectorAll('.year-preset-btn').forEach(b => b.classList.remove('active'));
+        if (!realtimeYearMin.value && !realtimeYearMax.value) {
+          realtimeYearPresetGroup.querySelector('.year-preset-btn[data-years="0"]').classList.add('active');
+        }
+      });
+    });
+  }
+
+  if (realtimeFilterResetBtn) {
+    realtimeFilterResetBtn.addEventListener('click', () => {
+      if (realtimeFilterType) realtimeFilterType.value = '';
+      if (realtimeFilterQuartile) realtimeFilterQuartile.value = '';
+      if (realtimeFilterCountry) realtimeFilterCountry.value = '';
+      if (realtimeYearMin) realtimeYearMin.value = '';
+      if (realtimeYearMax) realtimeYearMax.value = '';
+      if (realtimeMinCitations) realtimeMinCitations.value = '';
+      if (realtimeExcludePreprints) realtimeExcludePreprints.checked = false;
+      if (realtimeOpenAccessOnly) realtimeOpenAccessOnly.checked = false;
+      if (realtimeYearPresetGroup) {
+        realtimeYearPresetGroup.querySelectorAll('.year-preset-btn').forEach(b => b.classList.remove('active'));
+        realtimeYearPresetGroup.querySelector('.year-preset-btn[data-years="0"]').classList.add('active');
+      }
+      updateRealtimeFilterActiveCount();
+    });
+  }
 
   if (realtimeSearchInput && realtimeClearSearch) {
     realtimeSearchInput.addEventListener('input', () => {
@@ -2524,6 +2639,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeVal) params.set('type', typeVal);
       const quartileVal = realtimeFilterQuartile ? realtimeFilterQuartile.value : '';
       if (quartileVal) params.set('quartile', quartileVal);
+      const countryVal = realtimeFilterCountry ? realtimeFilterCountry.value : '';
+      if (countryVal) params.set('country', countryVal);
+      const yearMinVal = realtimeYearMin ? realtimeYearMin.value.trim() : '';
+      if (yearMinVal) params.set('yearMin', yearMinVal);
+      const yearMaxVal = realtimeYearMax ? realtimeYearMax.value.trim() : '';
+      if (yearMaxVal) params.set('yearMax', yearMaxVal);
+      const minCitationsVal = realtimeMinCitations ? realtimeMinCitations.value.trim() : '';
+      if (minCitationsVal && parseInt(minCitationsVal, 10) > 0) params.set('minCitations', minCitationsVal);
+      if (realtimeExcludePreprints && realtimeExcludePreprints.checked) params.set('excludePreprints', '1');
+      if (realtimeOpenAccessOnly && realtimeOpenAccessOnly.checked) params.set('openAccessOnly', '1');
 
       const res = await fetch(`/api/works/search-live?${params.toString()}`);
       const data = await res.json();

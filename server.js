@@ -2029,12 +2029,47 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Kata kunci pencarian minimal 3 karakter.' });
   }
   const workType = String(req.query.type || '').trim();
-  const extraFilter = REALTIME_WORK_TYPES.includes(workType) ? `,type:${workType}` : '';
+  let extraFilter = REALTIME_WORK_TYPES.includes(workType) ? `,type:${workType}` : '';
 
   const quartiles = String(req.query.quartile || '')
     .split(',')
     .map(q => q.trim().toUpperCase())
     .filter(q => ['Q1', 'Q2', 'Q3', 'Q4'].includes(q));
+
+  // Filter tahun terbit, minimal sitasi, exclude preprint, open access, dan
+  // negara afiliasi penulis - semuanya native didukung OpenAlex filter param
+  // (beda dengan kuartil SJR yang harus di-postfilter dari data SCImago).
+  const currentYear = new Date().getFullYear();
+  const yearMin = parseInt(req.query.yearMin, 10);
+  if (Number.isInteger(yearMin) && yearMin >= 1900 && yearMin <= currentYear) {
+    extraFilter += `,from_publication_date:${yearMin}-01-01`;
+  }
+  const yearMax = parseInt(req.query.yearMax, 10);
+  if (Number.isInteger(yearMax) && yearMax >= 1900 && yearMax <= currentYear + 1) {
+    extraFilter += `,to_publication_date:${yearMax}-12-31`;
+  }
+
+  const minCitations = parseInt(req.query.minCitations, 10);
+  if (Number.isInteger(minCitations) && minCitations > 0) {
+    extraFilter += `,cited_by_count:>${minCitations - 1}`;
+  }
+
+  if (req.query.excludePreprints === '1' && !workType) {
+    extraFilter += ',type:!preprint';
+  }
+
+  if (req.query.openAccessOnly === '1') {
+    extraFilter += ',open_access.is_oa:true';
+  }
+
+  const countryCodes = String(req.query.country || '')
+    .split(',')
+    .map(c => c.trim().toUpperCase())
+    .filter(c => /^[A-Z]{2}$/.test(c))
+    .slice(0, 20);
+  if (countryCodes.length) {
+    extraFilter += `,institutions.country_code:${countryCodes.join('|')}`;
+  }
 
   try {
     // Kuartil SJR (dari SCImago) bukan field OpenAlex, jadi difilter setelah
