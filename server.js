@@ -1935,6 +1935,32 @@ function reconstructAbstractFromInvertedIndex(invertedIndex) {
   return positions.filter(Boolean).join(' ');
 }
 
+// Index peringkat jurnal SCImago (SJR quartile Q1-Q4), dibangun dari CSV resmi
+// scimagojr.com lewat scripts/build-scimago-index.js. OpenAlex sendiri tidak
+// punya field quartile, jadi di-lookup dari ISSN yang OpenAlex kembalikan.
+let scimagoIndexCache = null;
+function getScimagoIndex() {
+  if (!scimagoIndexCache) {
+    try {
+      scimagoIndexCache = require(path.join(__dirname, 'data-static', 'scimago-quartiles.json'));
+    } catch (e) {
+      scimagoIndexCache = {};
+    }
+  }
+  return scimagoIndexCache;
+}
+
+function lookupJournalQuartile(source) {
+  if (!source) return null;
+  const index = getScimagoIndex();
+  const candidates = [source.issn_l, ...(Array.isArray(source.issn) ? source.issn : [])];
+  for (const raw of candidates) {
+    const key = String(raw || '').replace(/[^0-9Xx]/g, '').toUpperCase();
+    if (key && index[key]) return index[key];
+  }
+  return null;
+}
+
 async function searchOpenAlexWorks(query, perPage, extraFilter) {
   const fetchFn = globalThis.fetch || require('node-fetch');
   // "?" dan "*" dianggap wildcard oleh OpenAlex full-text search dan bikin request
@@ -1954,7 +1980,8 @@ async function searchOpenAlexWorks(query, perPage, extraFilter) {
   const mailto = process.env.OPENALEX_MAILTO;
   if (mailto) params.set('mailto', mailto);
 
-  const response = await fetchFn(`https://api.openalex.org/works?${params.toString()}`);
+  const openAlexBase = process.env.OPENALEX_API_BASE || 'https://api.openalex.org';
+  const response = await fetchFn(`${openAlexBase}/works?${params.toString()}`);
   if (!response.ok) {
     const errText = await response.text();
     throw new Error(`OpenAlex API Error: ${response.status} - ${errText}`);
@@ -1971,6 +1998,7 @@ async function searchOpenAlexWorks(query, perPage, extraFilter) {
         ? `${authorNames.slice(0, 3).join(', ')}, et al.`
         : authorNames.join(', ') || 'Tidak diketahui';
       const doi = w.doi ? String(w.doi).replace('https://doi.org/', '') : null;
+      const scimago = lookupJournalQuartile(w.primary_location?.source);
       return {
         title: w.title || 'Tanpa judul',
         authors,
@@ -1980,6 +2008,7 @@ async function searchOpenAlexWorks(query, perPage, extraFilter) {
         url: w.doi || w.primary_location?.landing_page_url || '#',
         citedByCount: w.cited_by_count || 0,
         isOpenAccess: !!w.open_access?.is_oa,
+        journalQuartile: scimago ? scimago.quartile : null,
         pdfUrl: w.open_access?.oa_url || null,
         abstract: abstract.slice(0, 800)
       };
@@ -2002,8 +2031,21 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
   const workType = String(req.query.type || '').trim();
   const extraFilter = REALTIME_WORK_TYPES.includes(workType) ? `,type:${workType}` : '';
 
+  const quartiles = String(req.query.quartile || '')
+    .split(',')
+    .map(q => q.trim().toUpperCase())
+    .filter(q => ['Q1', 'Q2', 'Q3', 'Q4'].includes(q));
+
   try {
-    const works = await searchOpenAlexWorks(query, 50, extraFilter);
+    // Kuartil SJR (dari SCImago) bukan field OpenAlex, jadi difilter setelah
+    // fetch - saat filter kuartil aktif ambil lebih banyak kandidat (maks
+    // per_page OpenAlex) supaya tetap kebagian ~50 hasil usai difilter.
+    const fetchCount = quartiles.length ? 200 : 50;
+    let works = await searchOpenAlexWorks(query, fetchCount, extraFilter);
+    if (quartiles.length) {
+      works = works.filter(w => w.journalQuartile && quartiles.includes(w.journalQuartile));
+    }
+    works = works.slice(0, 50);
     res.json({ ok: true, works });
   } catch (error) {
     console.error('[Works Search Live] Error:', error.message);

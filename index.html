@@ -4458,7 +4458,7 @@
             <input type="search" id="realtimeSearchInput" placeholder="Cari 480 juta+ karya ilmiah dari OpenAlex... (bisa pakai AND / OR / NOT)">
             <button id="realtimeClearSearch" style="position: absolute; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; display: none;"><i class="fa-solid fa-xmark"></i></button>
           </div>
-          <div class="filter-dropdowns" style="grid-template-columns: repeat(2, 1fr);">
+          <div class="filter-dropdowns" style="grid-template-columns: repeat(3, 1fr);">
             <div class="filter-dropdown-item">
               <label id="realtimeFilterTypeLabel">TIPE DOKUMEN</label>
               <select id="realtimeFilterType">
@@ -4469,6 +4469,16 @@
                 <option value="dissertation" id="realtimeFilterTypeDissertation">Disertasi/Tesis</option>
                 <option value="preprint">Preprint</option>
                 <option value="report">Report</option>
+              </select>
+            </div>
+            <div class="filter-dropdown-item">
+              <label id="realtimeFilterQuartileLabel">PERINGKAT JURNAL (SJR)</label>
+              <select id="realtimeFilterQuartile">
+                <option value="">Semua Peringkat</option>
+                <option value="Q1">Q1 saja</option>
+                <option value="Q1,Q2">Q1 - Q2</option>
+                <option value="Q1,Q2,Q3">Q1 - Q3</option>
+                <option value="Q1,Q2,Q3,Q4">Q1 - Q4 (punya SJR)</option>
               </select>
             </div>
             <div class="filter-dropdown-item">

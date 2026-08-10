@@ -2476,6 +2476,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const realtimeSearchInput = document.getElementById('realtimeSearchInput');
   const realtimeClearSearch = document.getElementById('realtimeClearSearch');
   const realtimeFilterType = document.getElementById('realtimeFilterType');
+  const realtimeFilterQuartile = document.getElementById('realtimeFilterQuartile');
   const realtimeBooleanToggle = document.getElementById('realtimeBooleanToggle');
   const realtimeSearchBtn = document.getElementById('realtimeSearchBtn');
   const realtimeResultsContainer = document.getElementById('realtimeResultsContainer');
@@ -2521,6 +2522,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams({ q: query });
       const typeVal = realtimeFilterType ? realtimeFilterType.value : '';
       if (typeVal) params.set('type', typeVal);
+      const quartileVal = realtimeFilterQuartile ? realtimeFilterQuartile.value : '';
+      if (quartileVal) params.set('quartile', quartileVal);
 
       const res = await fetch(`/api/works/search-live?${params.toString()}`);
       const data = await res.json();
@@ -2558,6 +2561,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <i class="fa-solid fa-globe"></i> OpenAlex
                 </span>
                 ${work.isOpenAccess ? '<span class="card-type-tag" style="background: rgba(16,185,129,0.1); color:#10b981; border-color: rgba(16,185,129,0.2);">Open Access</span>' : ''}
+                ${work.journalQuartile ? `<span class="card-type-tag" title="Peringkat jurnal (SCImago Journal Rank)" style="background: rgba(37,99,235,0.1); color:#2563eb; border-color: rgba(37,99,235,0.2);"><i class="fa-solid fa-ranking-star"></i> ${escapeHtml(work.journalQuartile)}</span>` : ''}
               </div>
               <span class="rank-badge" style="background: rgba(139,92,246,0.1); color: #7c3aed; border: 1px solid rgba(139,92,246,0.2);">${work.citedByCount}${t.realtime_cited_suffix}</span>
             </div>
