@@ -917,6 +917,9 @@ app.get('/api/me', (req, res) => {
     let patentSearchRemaining = 1;
     let isPeerReviewLimitReached = false;
     let peerReviewRemaining = 2;
+    // Cari Referensi - Free dijatah 5x/bulan, Premium & Ultimate unlimited
+    let isCariReferensiLimitReached = false;
+    let cariReferensiRemaining = 5;
     let isCitationGraphLimitReached = false;
     let citationGraphRemaining = 5;
 
@@ -955,6 +958,9 @@ app.get('/api/me', (req, res) => {
 
       isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 5);
       citationGraphRemaining = Math.max(0, 5 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
+
+      isCariReferensiLimitReached = (user.lastCariReferensiMonth === currentMonth) && (user.cariReferensiCountThisMonth >= 5);
+      cariReferensiRemaining = Math.max(0, 5 - (user.lastCariReferensiMonth === currentMonth ? user.cariReferensiCountThisMonth : 0));
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -991,6 +997,9 @@ app.get('/api/me', (req, res) => {
 
       isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 20);
       citationGraphRemaining = Math.max(0, 20 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
+
+      isCariReferensiLimitReached = false;
+      cariReferensiRemaining = 999;
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
@@ -1004,6 +1013,8 @@ app.get('/api/me', (req, res) => {
       slrRemaining = 999;
       isPatentSearchLimitReached = false;
       patentSearchRemaining = 20;
+      isCariReferensiLimitReached = false;
+      cariReferensiRemaining = 999;
       isPeerReviewLimitReached = false;
       peerReviewRemaining = 999;
       isCitationGraphLimitReached = false;
@@ -1067,6 +1078,9 @@ app.get('/api/me', (req, res) => {
         citationGraphCountThisMonth: user ? (user.citationGraphCountThisMonth || 0) : 0,
         isCitationGraphLimitReached: isCitationGraphLimitReached,
         citationGraphRemaining: citationGraphRemaining,
+        cariReferensiCountThisMonth: user ? (user.cariReferensiCountThisMonth || 0) : 0,
+        isCariReferensiLimitReached: isCariReferensiLimitReached,
+        cariReferensiRemaining: cariReferensiRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
@@ -2029,6 +2043,7 @@ async function searchOpenAlexWorks(query, perPage, extraFilter) {
 }
 
 const REALTIME_WORK_TYPES = ['article', 'review', 'book-chapter', 'dissertation', 'preprint', 'report'];
+const CARI_REFERENSI_FREE_MONTHLY_LIMIT = 5; // Premium & Ultimate unlimited, tidak dijatah
 
 // "Realtime Database" - miniatur pencarian live OpenAlex di tab Database Jurnal
 // (search bar + filter tipe dokumen). Query sudah bisa pakai sintaks boolean
@@ -2083,6 +2098,18 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
     extraFilter += `,institutions.country_code:${countryCodes.join('|')}`;
   }
 
+  // Cari Referensi - Free dijatah 5x/bulan, Premium & Ultimate unlimited.
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const planType = user ? (user.type || 'free') : 'free';
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  if (planType === 'free' && user) {
+    const usedThisMonth = user.lastCariReferensiMonth === currentMonth ? (user.cariReferensiCountThisMonth || 0) : 0;
+    if (usedThisMonth >= CARI_REFERENSI_FREE_MONTHLY_LIMIT) {
+      return res.status(403).json({ ok: false, message: `Limit bulanan tercapai. Akun Free dibatasi ${CARI_REFERENSI_FREE_MONTHLY_LIMIT}x pencarian Cari Referensi per bulan. Upgrade ke Premium/Ultimate untuk pencarian tanpa batas.` });
+    }
+  }
+
   try {
     // Kuartil SJR (dari SCImago) bukan field OpenAlex, jadi difilter setelah
     // fetch - saat filter kuartil aktif ambil lebih banyak kandidat (maks
@@ -2093,6 +2120,16 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
       works = works.filter(w => w.journalQuartile && quartiles.includes(w.journalQuartile));
     }
     works = works.slice(0, 50);
+
+    if (planType === 'free' && user) {
+      if (user.lastCariReferensiMonth !== currentMonth) {
+        user.lastCariReferensiMonth = currentMonth;
+        user.cariReferensiCountThisMonth = 0;
+      }
+      user.cariReferensiCountThisMonth += 1;
+      saveUsers(users);
+    }
+
     res.json({ ok: true, works });
   } catch (error) {
     console.error('[Works Search Live] Error:', error.message);

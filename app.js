@@ -1346,6 +1346,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updatePatentSearchAccess(currentUser.user);
           updatePeerReviewerAccess(currentUser.user);
           updateCitationGraphAccess(currentUser.user);
+          updateCariReferensiAccess(currentUser.user);
         }
 
         // Logout handler
@@ -1638,6 +1639,26 @@ document.addEventListener('DOMContentLoaded', () => {
       badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> Sisa ${remaining !== null ? remaining : '-'}x eksplorasi bulan ini (akun ${user.type}, limit ${limitLabel}/bulan).`;
     }
   }
+  function updateCariReferensiAccess(user) {
+    const badgeEl = document.getElementById('cariReferensiQuotaBadge');
+    if (!badgeEl || !user) return;
+
+    window.cariReferensiLimitReached = !!user.isCariReferensiLimitReached;
+    badgeEl.style.display = 'block';
+
+    if (user.type === 'premium' || user.type === 'ultimate') {
+      badgeEl.innerHTML = `<i class="fa-solid fa-infinity" style="color: #059669;"></i> Pencarian Cari Referensi tanpa batas (akun ${user.type}).`;
+      return;
+    }
+
+    const remaining = typeof user.cariReferensiRemaining === 'number' ? user.cariReferensiRemaining : null;
+    if (user.isCariReferensiLimitReached) {
+      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> Limit 5x/bulan pencarian Cari Referensi tercapai. <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">Upgrade</a> untuk pencarian tanpa batas.`;
+    } else {
+      badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> Sisa ${remaining !== null ? remaining : '-'}x pencarian bulan ini (akun free, limit 5x/bulan).`;
+    }
+  }
+  window.updateCariReferensiAccess = updateCariReferensiAccess;
   window.updateCitationGraphAccess = updateCitationGraphAccess;
   window.updatePeerReviewerAccess = updatePeerReviewerAccess;
   window.updatePatentSearchAccess = updatePatentSearchAccess;
@@ -2631,6 +2652,10 @@ document.addEventListener('DOMContentLoaded', () => {
       realtimeSearchInput.focus();
       return;
     }
+    if (window.cariReferensiLimitReached) {
+      alert('Limit 5x/bulan pencarian Cari Referensi akun Free Anda sudah tercapai. Upgrade ke Premium/Ultimate untuk pencarian tanpa batas.');
+      return;
+    }
 
     const originalHtml = realtimeSearchBtn.innerHTML;
     realtimeSearchBtn.disabled = true;
@@ -2663,6 +2688,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!res.ok || !data.ok) {
         if (realtimeResultsCount) realtimeResultsCount.textContent = data.message || t.realtime_generic_error;
+        if (res.status === 403) {
+          window.cariReferensiLimitReached = true;
+          if (window.updateCariReferensiAccess && window.currentUser?.user) {
+            window.updateCariReferensiAccess(Object.assign({}, window.currentUser.user, { isCariReferensiLimitReached: true, cariReferensiRemaining: 0 }));
+          }
+        }
         return;
       }
 
@@ -2723,6 +2754,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         realtimeResultsContainer.appendChild(card);
       });
+
+      // Refresh badge kuota Cari Referensi (Free) setelah pencarian terpakai
+      fetch('/api/me').then(r => r.json()).then(meData => {
+        if (meData.loggedIn && meData.user) {
+          window.currentUser = meData;
+          if (window.updateCariReferensiAccess) window.updateCariReferensiAccess(meData.user);
+        }
+      }).catch(() => {});
     } catch (err) {
       console.error('[Realtime Database Search]', err);
       if (realtimeResultsCount) realtimeResultsCount.textContent = t.realtime_conn_error;
@@ -8347,6 +8386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePatentSearchAccess(currentUser.user);
         updatePeerReviewerAccess(currentUser.user);
         updateCitationGraphAccess(currentUser.user);
+        updateCariReferensiAccess(currentUser.user);
       }
       // Re-render chat bubbles so export button tooltips (PDF/DOCX/.ris/.bib) pick up the new language
       if (typeof renderResearchChatMessages === 'function' && typeof researchChatMessages !== 'undefined' && researchChatMessages.length > 0) {
