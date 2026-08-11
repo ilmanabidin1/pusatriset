@@ -113,11 +113,6 @@
       background-color: rgba(251,191,36,0.18);
     }
 
-    /* Bell icon */
-    [data-theme="dark"] .bell-icon-btn:hover {
-      background-color: rgba(255,255,255,0.06);
-    }
-
     /* Stat cards */
     [data-theme="dark"] .stats-row-container .stat-card {
       background-color: var(--bg-card);
@@ -240,16 +235,6 @@
     }
     [data-theme="dark"] .journal-card:hover {
       border-color: rgba(7,135,220,0.35) !important;
-    }
-
-    /* Lang switcher */
-    [data-theme="dark"] .lang-switcher {
-      background: rgba(255,255,255,0.05) !important;
-      border-color: rgba(255,255,255,0.1) !important;
-    }
-    [data-theme="dark"] #langBtnId.active,
-    [data-theme="dark"] #langBtnEn.active {
-      background: #21262d !important;
     }
 
     /* Humanizer / lit review textarea panels */
@@ -1214,6 +1199,60 @@
     button.profile-dropdown-item.profile-dropdown-logout:hover {
       color: #ef4444;
       background-color: rgba(239, 68, 68, 0.08);
+    }
+
+    /* Baris utilitas (bahasa/bantuan/notifikasi/dark mode) di atas "Pengaturan"
+       dalam dropdown profil - pindahan dari header, sidebar-nya selalu berlatar
+       gelap jadi warna ikon/tombol perlu di-override (bukan pakai warna header
+       yang diasumsikan berlatar terang). */
+    .profile-dropdown-utility-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.25rem 0.25rem 0.5rem;
+    }
+    .profile-dropdown .lang-switcher {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 2px;
+    }
+    .profile-dropdown .lang-btn {
+      border: none;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      transition: all 0.2s ease;
+    }
+    .profile-dropdown .lang-btn.active {
+      background: var(--brand-blue);
+      color: #ffffff;
+    }
+    .profile-dropdown .bell-icon-btn,
+    .profile-dropdown .dark-mode-toggle-btn {
+      width: 32px;
+      height: 32px;
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.55);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .profile-dropdown .bell-icon-btn:hover {
+      background-color: rgba(255,255,255,0.08);
+      color: #ffffff;
+    }
+    .profile-dropdown .dark-mode-toggle-btn:hover {
+      background-color: rgba(251,191,36,0.12);
+      border-color: #fbbf24;
+      color: #fbbf24;
     }
 
     /* Media query for small laptop screen heights */
@@ -4034,6 +4073,20 @@
 
         <!-- Dropup Menu -->
         <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dropdown-utility-row">
+          <div class="lang-switcher">
+            <button id="langBtnId" class="lang-btn active" type="button">ID</button>
+            <button id="langBtnEn" class="lang-btn" type="button">EN</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.15rem;">
+            <a href="/help-center.html" target="_blank" rel="noopener" class="bell-icon-btn" id="helpGuideBtn" title="Pusat Bantuan"><i class="fa-regular fa-circle-question"></i></a>
+            <button class="bell-icon-btn" title="Notifikasi"><i class="fa-regular fa-bell"></i></button>
+            <button class="dark-mode-toggle-btn" id="darkModeToggleBtn" title="Toggle Dark/Light Mode">
+              <i class="fa-solid fa-moon" id="darkModeIcon"></i>
+            </button>
+          </div>
+        </div>
+        <div class="profile-dropdown-divider"></div>
         <a href="#" class="sidebar-link profile-dropdown-item" data-tab="pengaturan">
           <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
         </a>
@@ -4179,16 +4232,6 @@
       <div class="header-center">
       </div>
       <div class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
-        <!-- Language Switcher -->
-        <div class="lang-switcher" style="display: flex; background: rgba(8,34,64,0.04); border: 1px solid rgba(8,34,64,0.06); border-radius: 8px; padding: 2px; align-items: center; gap: 2px;">
-          <button id="langBtnId" class="lang-btn active" style="border: none; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; background: var(--brand-navy); color: #ffffff; transition: all 0.2s;" type="button">ID</button>
-          <button id="langBtnEn" class="lang-btn" style="border: none; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-muted); transition: all 0.2s;" type="button">EN</button>
-        </div>
-        <a href="/help-center.html" target="_blank" rel="noopener" class="bell-icon-btn" id="helpGuideBtn" title="Pusat Bantuan"><i class="fa-regular fa-circle-question"></i></a>
-        <button class="bell-icon-btn" title="Notifikasi"><i class="fa-regular fa-bell"></i></button>
-        <button class="dark-mode-toggle-btn" id="darkModeToggleBtn" title="Toggle Dark/Light Mode">
-          <i class="fa-solid fa-moon" id="darkModeIcon"></i>
-        </button>
         <button class="upgrade-header-btn btn-upgrade-trigger" id="headerUpgradeBtn">
           <i class="fa-solid fa-crown"></i> Upgrade
         </button>

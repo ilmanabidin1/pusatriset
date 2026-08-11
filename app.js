@@ -8255,25 +8255,14 @@ document.addEventListener('DOMContentLoaded', () => {
       window.currentLanguage = lang;
       localStorage.setItem('jurnalhub_lang', lang);
 
-      // 1. Language switcher buttons styling
+      // 1. Language switcher buttons styling (murni via class .active - lihat
+      // CSS .profile-dropdown .lang-btn.active, dropdown profil sekarang
+      // berlatar gelap jadi tidak bisa pakai warna hardcode terang seperti dulu)
       const btnId = document.getElementById('langBtnId');
       const btnEn = document.getElementById('langBtnEn');
       if (btnId && btnEn) {
-        if (lang === 'id') {
-          btnId.style.background = 'var(--brand-navy)';
-          btnId.style.color = '#ffffff';
-          btnId.classList.add('active');
-          btnEn.style.background = 'transparent';
-          btnEn.style.color = 'var(--text-muted)';
-          btnEn.classList.remove('active');
-        } else {
-          btnEn.style.background = 'var(--brand-navy)';
-          btnEn.style.color = '#ffffff';
-          btnEn.classList.add('active');
-          btnId.style.background = 'transparent';
-          btnId.style.color = 'var(--text-muted)';
-          btnId.classList.remove('active');
-        }
+        btnId.classList.toggle('active', lang === 'id');
+        btnEn.classList.toggle('active', lang !== 'id');
       }
 
       // Translate Home Banner Statistics Row Card labels
