@@ -949,20 +949,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const html = document.documentElement;
     const toggleBtn = document.getElementById('darkModeToggleBtn');
     const icon = document.getElementById('darkModeIcon');
+    const label = document.getElementById('darkModeLabel');
     const savedTheme = localStorage.getItem('jurnalhub_theme') || 'light';
 
     function applyTheme(theme) {
+      const isEn = window.currentLanguage === 'en';
       if (theme === 'dark') {
         html.setAttribute('data-theme', 'dark');
         if (icon) { icon.className = 'fa-solid fa-sun'; }
-        if (toggleBtn) toggleBtn.title = 'Beralih ke Mode Terang';
+        if (toggleBtn) toggleBtn.title = isEn ? 'Switch to Light Mode' : 'Beralih ke Mode Terang';
+        if (label) label.textContent = isEn ? 'Light Mode' : 'Mode Terang';
       } else {
         html.removeAttribute('data-theme');
         if (icon) { icon.className = 'fa-solid fa-moon'; }
-        if (toggleBtn) toggleBtn.title = 'Beralih ke Mode Gelap';
+        if (toggleBtn) toggleBtn.title = isEn ? 'Switch to Dark Mode' : 'Beralih ke Mode Gelap';
+        if (label) label.textContent = isEn ? 'Dark Mode' : 'Mode Gelap';
       }
       localStorage.setItem('jurnalhub_theme', theme);
     }
+    // Dipanggil ulang dari handler ganti bahasa (lihat applyLanguage di app.js)
+    // supaya label & title toggle ikut ganti bahasa tanpa perlu toggle ulang.
+    window.refreshDarkModeLabel = () => {
+      applyTheme(html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+    };
 
     applyTheme(savedTheme);
 
@@ -8710,16 +8719,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBillingHistory();
       }
 
-      // Update dark mode toggle tooltip for current language
-      const darkModeBtn = document.getElementById('darkModeToggleBtn');
-      if (darkModeBtn) {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        if (lang === 'en') {
-          darkModeBtn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
-        } else {
-          darkModeBtn.title = isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap';
-        }
-      }
+      // Update dark mode toggle label & tooltip for current language
+      if (window.refreshDarkModeLabel) window.refreshDarkModeLabel();
 
       const activeTabLink = document.querySelector('.sidebar-link.active');
 
