@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pusat Bantuan - JurnalHub</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <meta name="description" content="Pusat Bantuan JurnalHub: panduan penggunaan tiap fitur dan jawaban pertanyaan umum seputar akun, kuota, dan pembayaran.">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --brand-blue: #0787dc;
+      --brand-dark: #0b1a30;
+      --bg-gradient: linear-gradient(135deg, #0b1a30 0%, #082240 100%);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-light: rgba(8, 34, 64, 0.08);
+      --font-outfit: 'Outfit', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+      background: #f8fafc;
+      line-height: 1.65;
+    }
+    header {
+      background: var(--bg-gradient);
+      color: #ffffff;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .header-content { max-width: 800px; margin: 0 auto; }
+    .header-content h1 {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .header-content p { color: rgba(255, 255, 255, 0.7); font-size: 0.95rem; }
+    .container { max-width: 820px; margin: 2rem auto; padding: 0 1.5rem 4rem; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--brand-blue);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s;
+    }
+    .back-link:hover { transform: translateX(-4px); }
+
+    .toc-nav {
+      position: sticky;
+      top: 1rem;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(8,34,64,0.04);
+    }
+    .toc-nav a {
+      background: rgba(7,135,220,0.08);
+      border: 1px solid rgba(7,135,220,0.15);
+      border-radius: 20px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--brand-blue);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .toc-nav a:hover { background: var(--brand-blue); color: #ffffff; }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(8,34,64,0.02);
+      margin-bottom: 1.5rem;
+      scroll-margin-top: 5.5rem;
+    }
+    .card h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--brand-dark);
+      margin-bottom: 1rem;
+    }
+    .card h2 i { color: var(--brand-blue); }
+    .card p { color: var(--text-muted); font-size: 0.92rem; }
+    .steps, .feature-list {
+      padding-left: 1.25rem;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .steps b, .feature-list b { color: var(--text-main); }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border-light);
+      padding: 1.25rem 0;
+    }
+    .faq-item:first-of-type { padding-top: 0; }
+    .faq-item:last-of-type { border-bottom: none; padding-bottom: 0; }
+    .faq-question {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.02rem;
+      color: var(--brand-dark);
+      margin-bottom: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .faq-question i { color: var(--brand-blue); margin-top: 0.2rem; }
+    .faq-answer { color: var(--text-muted); font-size: 0.9rem; padding-left: 1.6rem; }
+
+    .contact-box {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .contact-box a { color: var(--brand-blue); font-weight: 700; text-decoration: none; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-light);
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>👋 Pusat Bantuan JurnalHub</h1>
+      <p>Panduan cara pakai tiap fitur, sekaligus jawaban pertanyaan umum seputar akun & pembayaran.</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <a href="/auth.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Login</a>
+
+    <nav class="toc-nav">
+      <a href="#mulai-cepat">Mulai Cepat</a>
+      <a href="#intelligence">JurnalHub Intelligence</a>
+      <a href="#cari-jelajah">Cari & Jelajah</a>
+      <a href="#tulis-review">Tulis & Review</a>
+      <a href="#riset-lanjutan">Riset Lanjutan</a>
+      <a href="#koleksi-saya">Koleksi Saya</a>
+      <a href="#paket">Free vs Premium vs Ultimate</a>
+      <a href="#faq">Pertanyaan Umum</a>
+    </nav>
+
+    <div class="card" id="mulai-cepat">
+      <h2><i class="fa-solid fa-rocket"></i> Mulai Cepat</h2>
+      <p style="margin-bottom: 0.75rem;">Belum tahu mulai dari mana? Coba 3 langkah ini:</p>
+      <ol class="steps">
+        <li><b>Ngobrol bebas dulu</b> — klik "Percakapan Baru" di pojok kiri atas, tanya apa saja seputar riset Anda ke JurnalHub Intelligence.</li>
+        <li><b>Cari referensi jurnal</b> — buka menu <b>Cari &amp; Jelajah</b> di sidebar, pilih <b>Cari Referensi</b> untuk pencarian real-time ke 480 juta+ karya ilmiah, atau <b>Database Jurnal</b> untuk cek kecocokan naskah Anda dengan AI Match Score.</li>
+        <li><b>Simpan yang penting</b> — klik "Simpan" pada paper yang relevan, kumpulkan di <b>Koleksi Saya</b>, lalu tanya JurnalHub Intelligence for Folder khusus soal paper-paper di folder itu.</li>
+      </ol>
+    </div>
+
+    <div class="card" id="intelligence">
+      <h2><i class="fa-solid fa-comments"></i> JurnalHub Intelligence</h2>
+      <p>Chatbot AI utama JurnalHub — halaman yang langsung terbuka begitu Anda login. Tanya apa saja seputar riset, tempel/upload dokumen untuk dianalisis, atau minta bantuan menjelaskan sebuah konsep. Setiap percakapan otomatis tersimpan di riwayat sisi kiri, dan Anda bisa mulai percakapan baru kapan saja lewat tombol "Percakapan Baru".</p>
+    </div>
+
+    <div class="card" id="cari-jelajah">
+      <h2><i class="fa-solid fa-compass"></i> Cari &amp; Jelajah</h2>
+      <ul class="feature-list">
+        <li><b>Database Jurnal</b> — 756+ database jurnal Scopus/Sinta terkurasi, lengkap dengan AI Match Score untuk mengecek seberapa cocok naskah Anda dengan tiap jurnal.</li>
+        <li><b>Cari Referensi</b> — pencarian real-time ke 480 juta+ karya ilmiah (OpenAlex). Klik tombol <b>Filter</b> untuk menyaring berdasarkan tahun terbit, minimal sitasi, peringkat jurnal (SJR Q1-Q4), open access, exclude preprint, dan negara afiliasi penulis. Akun Free dibatasi 5x pencarian/bulan, Premium & Ultimate tanpa batas.</li>
+        <li><b>Peta Sitasi</b> — visualisasi jaringan sitasi antar-paper: cari 1 paper awal, lalu klik node mana pun untuk melihat referensinya, siapa yang mengutipnya, dan paper terkait lainnya.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="tulis-review">
+      <h2><i class="fa-solid fa-pen-nib"></i> Tulis &amp; Review</h2>
+      <ul class="feature-list">
+        <li><b>Notebook</b> — editor teks kaya untuk menulis naskah, catatan, atau draf apa pun, tersimpan otomatis dan bisa diekspor jadi .docx kapan saja.</li>
+        <li><b>Outline Generator, Literature Review &amp; Paraphraser/Humanizer</b> — buka "Paraphraser & Humanizer" dari sidebar, lalu pakai pilihan mode di bagian atas untuk pindah antar-3 alat ini: susun kerangka naskah, buat tinjauan pustaka otomatis, atau paraphrase teks akademis agar lolos deteksi AI.</li>
+        <li><b>AI Peer Reviewer</b> — tempel draf naskah Anda, dapatkan review otomatis ala reviewer jurnal sebelum submit.</li>
+        <li><b>Template Jurnal</b> — unduh template resmi (.docx) berbagai jurnal internasional.</li>
+        <li><b>Prompt Bank</b> — kumpulan prompt siap pakai untuk berbagai kebutuhan penulisan ilmiah.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="riset-lanjutan">
+      <h2><i class="fa-solid fa-flask"></i> Riset Lanjutan</h2>
+      <ul class="feature-list">
+        <li><b>Systematic Lit Review (SLR)</b> — screening, penilaian risiko bias, dan sintesis paper otomatis mengikuti standar PRISMA 2020.</li>
+        <li><b>Pencarian Paten</b> — cari paten terkait ide riset atau inovasi Anda.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="koleksi-saya">
+      <h2><i class="fa-solid fa-bookmark"></i> Koleksi Saya</h2>
+      <p>Buat folder untuk mengelompokkan referensi riset Anda (klik "Buat Folder Baru" di sidebar). Simpan paper dari Cari Referensi, Database Jurnal, atau sitasi mana pun langsung ke folder pilihan — tiap paper tersimpan lengkap dengan TL;DR Bahasa Inggris &amp; Indonesia (klik "Lihat selengkapnya" kalau terpotong). Di setiap folder juga ada <b>JurnalHub Intelligence for Folder</b>: chatbot AI yang menjawab hanya berdasarkan paper-paper di folder itu, lengkap dengan sitasi [n] yang bisa di-hover untuk lihat sumbernya — khusus akun Premium &amp; Ultimate, pemakaian tanpa batas.</p>
+    </div>
+
+    <div class="card" id="paket">
+      <h2><i class="fa-solid fa-crown"></i> Free vs Premium vs Ultimate</h2>
+      <p>Akun Free bisa mencoba hampir semua fitur dengan kuota bulanan terbatas (mis. Cari Referensi 5x/bulan, SLR 1x/bulan). Premium melonggarkan sebagian besar kuota, sementara Ultimate membuka akses tanpa batas ke semua fitur, termasuk JurnalHub Intelligence for Folder. Cek kuota tersisa Anda di badge kecil pada tiap fitur di dalam aplikasi, atau klik tombol Upgrade di header untuk lihat detail paket.</p>
+    </div>
+
+    <div class="card" id="faq">
+      <h2><i class="fa-solid fa-circle-question"></i> Pertanyaan Umum (FAQ)</h2>
+
+      <div class="faq-item">
+        <div class="faq-question"><i class="fa-solid fa-circle-question"></i><h4>Apa itu JurnalHub?</h4></div>
+        <div class="faq-answer"><p>JurnalHub adalah platform riset akademik berbasis AI untuk dosen, mahasiswa, dan peneliti — mulai dari mencari referensi jurnal (Scopus/Sinta) yang paling cocok dengan naskah Anda, sampai menulis, mereview, dan mengelola koleksi riset, semuanya ditenagai AI.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question"><i class="fa-solid fa-circle-question"></i><h4>Bagaimana cara kerja Match Score AI?</h4></div>
+        <div class="faq-answer"><p>Tempelkan Judul, Keyword, dan Abstrak artikel riset Anda di tab Database Jurnal. Sistem AI kami menganalisis kecocokan semantik manuskrip Anda dengan profil, rumpun ilmu, dan riwayat penerbitan ratusan jurnal di database kami, lalu menampilkan persentase kecocokan secara real-time.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question"><i class="fa-solid fa-circle-question"></i><h4>Apa perbedaan akun Free, Premium, dan Ultimate?</h4></div>
+        <div class="faq-answer"><p>Akun Free bisa mencoba hampir semua fitur, tapi dengan kuota bulanan terbatas (mis. 5x pencarian Cari Referensi, 1x Systematic Literature Review). Premium melonggarkan sebagian besar kuota itu jadi jauh lebih besar. Ultimate membuka akses tanpa batas ke semua fitur, termasuk fitur eksklusif seperti JurnalHub Intelligence for Folder dan ekspor template panduan draf ke .docx.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question"><i class="fa-solid fa-circle-question"></i><h4>Apa itu JurnalHub Intelligence for Folder?</h4></div>
+        <div class="faq-answer"><p>Chatbot AI di dalam tiap folder Koleksi Saya yang jawabannya dibatasi hanya berdasarkan paper-paper yang Anda simpan di folder itu (bukan pengetahuan umum), lengkap dengan sitasi [n] yang bisa di-hover untuk melihat sumbernya. Fitur ini khusus akun Premium & Ultimate, dengan pemakaian tanpa batas.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question"><i class="fa-solid fa-circle-question"></i><h4>Bagaimana cara mengaktifkan Akun Premium/Ultimate?</h4></div>
+        <div class="faq-answer"><p>Klik tombol "Upgrade" di dalam aplikasi, pilih paket tahunan atau bulanan, lalu selesaikan pembayaran. Begitu pembayaran terverifikasi oleh sistem, akun Anda otomatis ter-upgrade tanpa perlu langkah tambahan.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question"><i class="fa-solid fa-circle-question"></i><h4>Saya sudah membayar, mengapa akun belum ter-upgrade?</h4></div>
+        <div class="faq-answer"><p>Upgrade biasanya aktif otomatis begitu pembayaran terverifikasi oleh sistem. Jika sudah lebih dari beberapa menit dan akun Anda belum berubah status, hubungi dukungan admin kami di admin@jurnalhub.id dengan menyertakan bukti pembayaran.</p></div>
+      </div>
+    </div>
+
+    <div class="card contact-box">
+      Masih bingung juga? Hubungi kami di <a href="mailto:admin@jurnalhub.id">admin@jurnalhub.id</a>.
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 JurnalHub. All rights reserved.</p>
+  </footer>
+</body>
+</html>

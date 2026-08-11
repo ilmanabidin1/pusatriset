@@ -1347,13 +1347,6 @@ document.addEventListener('DOMContentLoaded', () => {
           updatePeerReviewerAccess(currentUser.user);
           updateCitationGraphAccess(currentUser.user);
           updateCariReferensiAccess(currentUser.user);
-
-          // Modal Panduan (initPanduanModal) di-setup belakangan dalam init(), jadi
-          // window.openPanduanModal belum tentu ada di titik ini - pakai flag,
-          // dicek balik oleh initPanduanModal begitu dia selesai setup.
-          if (!currentUser.user.hasSeenOnboarding) {
-            window.pendingOnboardingModal = true;
-          }
         }
 
         // Logout handler
@@ -5684,51 +5677,6 @@ document.addEventListener('DOMContentLoaded', () => {
           submitCreateFolder();
         }
       });
-    })();
-
-    // --- Modal "Panduan Penggunaan" - dibuka manual lewat tombol "?" di header,
-    // dan otomatis SEKALI untuk user yang belum pernah lihat (hasSeenOnboarding
-    // dari /api/me). window.openPanduanModal() dipanggil dari sini maupun dari
-    // handler login-time di bawah. ---
-    (function initPanduanModal() {
-      const overlay = document.getElementById('panduanModal');
-      const closeBtn = document.getElementById('closePanduanModalBtn');
-      const helpBtn = document.getElementById('helpGuideBtn');
-      const tocRow = document.getElementById('panduanTocRow');
-      if (!overlay) return;
-
-      function markOnboardingSeen() {
-        fetch('/api/onboarding/complete', { method: 'POST' }).catch(() => {});
-        if (window.currentUser?.user) window.currentUser.user.hasSeenOnboarding = true;
-      }
-
-      function closeModal() {
-        overlay.classList.remove('active');
-        markOnboardingSeen();
-      }
-
-      window.openPanduanModal = function () {
-        overlay.classList.add('active');
-      };
-
-      if (window.pendingOnboardingModal) {
-        window.pendingOnboardingModal = false;
-        setTimeout(() => window.openPanduanModal(), 900);
-      }
-
-      if (closeBtn) closeBtn.addEventListener('click', closeModal);
-      if (helpBtn) helpBtn.addEventListener('click', () => window.openPanduanModal());
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeModal();
-      });
-      if (tocRow) {
-        tocRow.addEventListener('click', (e) => {
-          const chip = e.target.closest('.panduan-toc-chip');
-          if (!chip) return;
-          const target = document.getElementById(chip.dataset.jump);
-          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
     })();
 
     // --- Referensi Saya: modal "Simpan ke Riset" dipanggil dari tombol Simpan di

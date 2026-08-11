@@ -1087,26 +1087,12 @@ app.get('/api/me', (req, res) => {
         researchChatCountThisMonth: user ? (user.researchChatCountThisMonth || 0) : 0,
         planId: user ? (user.planId || null) : null,
         paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null,
-        hasPassword: user ? !!user.password : false,
-        hasSeenOnboarding: user ? !!user.hasSeenOnboarding : true
+        hasPassword: user ? !!user.password : false
       }
     });
   } else {
     res.json({ loggedIn: false });
   }
-});
-
-// Menandai user sudah melihat tur onboarding "Panduan Penggunaan" pertama kali,
-// supaya modalnya tidak otomatis muncul lagi tiap login (tetap bisa dibuka
-// manual lewat tombol bantuan "?" di header kapan saja).
-app.post('/api/onboarding/complete', requireAccess, (req, res) => {
-  const users = getUsers();
-  const user = users.find(u => u.id === req.session.userId);
-  if (user && !user.hasSeenOnboarding) {
-    user.hasSeenOnboarding = true;
-    saveUsers(users);
-  }
-  res.json({ ok: true });
 });
 
 // Endpoint fungsional untuk ganti password di tab Pengaturan
@@ -5495,7 +5481,7 @@ app.use((req, res, next) => {
   // File statis yang diizinkan tanpa login (terutama untuk halaman auth dan informasi)
   const publicFiles = [
     '/auth.html', '/landing.html', '/styles.css', '/app.js', '/database.js',
-    '/terms.html', '/refund.html', '/faq.html', '/contact.html',
+    '/terms.html', '/refund.html', '/faq.html', '/help-center.html', '/contact.html',
     '/reset-password.html'
   ];
 
@@ -5936,7 +5922,7 @@ app.get('/', (req, res) => {
 // yang memang dipakai frontend (halaman .html, app.js, styles.css, database.js,
 // dan folder assets/) yang bisa diakses lewat static file serving.
 const PUBLIC_STATIC_FILES = new Set([
-  'index.html', 'auth.html', 'landing.html', 'contact.html', 'faq.html',
+  'index.html', 'auth.html', 'landing.html', 'contact.html', 'faq.html', 'help-center.html',
   'terms.html', 'refund.html', 'privacy.html', 'payment-success.html', 'payment-cancel.html',
   'reset-password.html', 'robots.txt', 'sitemap.xml',
   'app.js', 'styles.css', 'database.js'
