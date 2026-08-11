@@ -1997,11 +1997,14 @@ async function searchOpenAlexWorks(query, perPage, extraFilter, sort) {
   // secara native lewat parameter "search" OpenAlex - tidak perlu parser tambahan.
   const cleanQuery = String(query || '').replace(/[?*]/g, ' ').replace(/\s+/g, ' ').trim();
   const params = new URLSearchParams({
-    search: cleanQuery,
     per_page: String(perPage),
     filter: `has_abstract:true${extraFilter || ''}`,
     select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access'
   });
+  // Query kosong (mis. mode pencarian author, yang query utamanya sudah
+  // dipindah ke filter raw_author_name.search) - jangan kirim param "search"
+  // sama sekali, biar tidak match-all/salah relevance di OpenAlex.
+  if (cleanQuery) params.set('search', cleanQuery);
   // Tanpa sort, OpenAlex urutkan berdasarkan relevance_score (default saat ada
   // parameter "search") - itu sudah pas untuk opsi "Relevansi", jadi cukup
   // set param sort kalau user pilih opsi lain (Terbaru/Sitasi/Abjad).
@@ -2057,9 +2060,13 @@ const CARI_REFERENSI_FREE_MONTHLY_LIMIT = 5; // Premium & Ultimate unlimited, ti
 // mendukungnya secara native - tidak perlu parser tambahan di sini. Dibatasi
 // maksimal 50 hasil sesuai permintaan (bukan replika penuh openalex.org).
 app.get('/api/works/search-live', requireAccess, async (req, res) => {
+  // Mode "author" pakai kolom pencarian yang SAMA dengan mode "keyword" (satu
+  // input, bukan 2 field terpisah) - bedanya cuma diperlakukan sebagai filter
+  // raw_author_name.search, bukan search judul/abstrak/fulltext biasa.
+  const searchMode = req.query.mode === 'author' ? 'author' : 'keyword';
   const query = String(req.query.q || '').trim().slice(0, 300);
   if (!query || query.length < 3) {
-    return res.status(400).json({ ok: false, message: 'Kata kunci pencarian minimal 3 karakter.' });
+    return res.status(400).json({ ok: false, message: searchMode === 'author' ? 'Nama penulis minimal 3 karakter.' : 'Kata kunci pencarian minimal 3 karakter.' });
   }
   const workType = String(req.query.type || '').trim();
   let extraFilter = REALTIME_WORK_TYPES.includes(workType) ? `,type:${workType}` : '';
@@ -2104,12 +2111,15 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
     extraFilter += `,institutions.country_code:${countryCodes.join('|')}`;
   }
 
-  // Cari berdasarkan nama penulis - raw_author_name.search cocok tanpa perlu
-  // resolve ke Author ID dulu. Koma/pipe dibuang karena keduanya pemisah
-  // filter di sintaks OpenAlex, bisa bikin filter-nya salah parse kalau lolos.
-  const authorQuery = String(req.query.author || '').trim().replace(/[,|]/g, '').slice(0, 200);
-  if (authorQuery) {
+  // Mode "author": pindahkan query utama dari parameter "search" (judul/
+  // abstrak/fulltext) ke filter raw_author_name.search - cocok berdasarkan
+  // nama penulis tanpa perlu resolve ke Author ID dulu. Koma/pipe dibuang
+  // karena keduanya pemisah filter di sintaks OpenAlex, bisa bikin salah parse.
+  let mainQuery = query;
+  if (searchMode === 'author') {
+    const authorQuery = query.replace(/[,|]/g, '');
     extraFilter += `,raw_author_name.search:${authorQuery}`;
+    mainQuery = '';
   }
 
   const ALLOWED_SORTS = ['publication_date:desc', 'cited_by_count:desc', 'display_name:asc'];
@@ -2132,7 +2142,7 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
     // fetch - saat filter kuartil aktif ambil lebih banyak kandidat (maks
     // per_page OpenAlex) supaya tetap kebagian ~50 hasil usai difilter.
     const fetchCount = quartiles.length ? 200 : 50;
-    let works = await searchOpenAlexWorks(query, fetchCount, extraFilter, sort);
+    let works = await searchOpenAlexWorks(mainQuery, fetchCount, extraFilter, sort);
     if (quartiles.length) {
       works = works.filter(w => w.journalQuartile && quartiles.includes(w.journalQuartile));
     }

@@ -2508,7 +2508,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const realtimeFilterType = document.getElementById('realtimeFilterType');
   const realtimeFilterQuartile = document.getElementById('realtimeFilterQuartile');
   const realtimeFilterCountry = document.getElementById('realtimeFilterCountry');
-  const realtimeFilterAuthor = document.getElementById('realtimeFilterAuthor');
+  const realtimeSearchModeGroup = document.getElementById('realtimeSearchModeGroup');
   const realtimeSortSelect = document.getElementById('realtimeSortSelect');
   const realtimeSortWrapper = document.getElementById('realtimeSortWrapper');
   const realtimeYearMin = document.getElementById('realtimeYearMin');
@@ -2575,7 +2575,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (realtimeFilterType && realtimeFilterType.value) count++;
     if (realtimeFilterQuartile && realtimeFilterQuartile.value) count++;
     if (realtimeFilterCountry && realtimeFilterCountry.value) count++;
-    if (realtimeFilterAuthor && realtimeFilterAuthor.value.trim()) count++;
     if (realtimeYearMin && realtimeYearMin.value) count++;
     if (realtimeYearMax && realtimeYearMax.value) count++;
     if (realtimeMinCitations && parseInt(realtimeMinCitations.value, 10) > 0) count++;
@@ -2585,7 +2584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     realtimeFilterActiveBadge.style.display = count > 0 ? 'inline-block' : 'none';
     if (realtimeFilterToggleBtn) realtimeFilterToggleBtn.classList.toggle('active', count > 0);
   }
-  [realtimeFilterType, realtimeFilterQuartile, realtimeFilterCountry, realtimeFilterAuthor, realtimeYearMin, realtimeYearMax, realtimeMinCitations, realtimeExcludePreprints, realtimeOpenAccessOnly]
+  [realtimeFilterType, realtimeFilterQuartile, realtimeFilterCountry, realtimeYearMin, realtimeYearMax, realtimeMinCitations, realtimeExcludePreprints, realtimeOpenAccessOnly]
     .forEach(el => { if (el) el.addEventListener('input', updateRealtimeFilterActiveCount); });
 
   if (realtimeFilterToggleBtn && realtimeFilterPanel) {
@@ -2626,7 +2625,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (realtimeFilterType) realtimeFilterType.value = '';
       if (realtimeFilterQuartile) realtimeFilterQuartile.value = '';
       if (realtimeFilterCountry) realtimeFilterCountry.value = '';
-      if (realtimeFilterAuthor) realtimeFilterAuthor.value = '';
       if (realtimeYearMin) realtimeYearMin.value = '';
       if (realtimeYearMax) realtimeYearMax.value = '';
       if (realtimeMinCitations) realtimeMinCitations.value = '';
@@ -2657,12 +2655,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Mode pencarian utama - satu kolom input yang sama, tinggal pilih apakah
+  // isinya diperlakukan sebagai judul/kata kunci (default) atau nama penulis,
+  // supaya user tidak perlu isi 2 kolom terpisah untuk cari berdasarkan author.
+  let realtimeSearchMode = 'keyword';
+  if (realtimeSearchModeGroup) {
+    realtimeSearchModeGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.year-preset-btn');
+      if (!btn) return;
+      realtimeSearchModeGroup.querySelectorAll('.year-preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      realtimeSearchMode = btn.dataset.mode;
+      if (realtimeSearchInput) {
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        if (realtimeSearchMode === 'author') {
+          realtimeSearchInput.placeholder = 'Cari berdasarkan nama penulis... (contoh: John Smith)';
+        } else {
+          realtimeSearchInput.placeholder = (realtimeBooleanToggle && realtimeBooleanToggle.checked)
+            ? t.realtime_search_placeholder_example
+            : t.realtime_search_placeholder_normal;
+        }
+      }
+    });
+  }
+
   async function runRealtimeSearch() {
     if (!realtimeSearchInput || !realtimeResultsContainer) return;
     const t = TRANSLATIONS[window.currentLanguage || 'id'];
     const query = realtimeSearchInput.value.trim();
     if (!query || query.length < 3) {
-      alert(t.realtime_min_chars_alert);
+      alert(realtimeSearchMode === 'author' ? 'Nama penulis minimal 3 karakter.' : t.realtime_min_chars_alert);
       realtimeSearchInput.focus();
       return;
     }
@@ -2681,15 +2703,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const params = new URLSearchParams({ q: query });
+      const params = new URLSearchParams({ q: query, mode: realtimeSearchMode });
       const typeVal = realtimeFilterType ? realtimeFilterType.value : '';
       if (typeVal) params.set('type', typeVal);
       const quartileVal = realtimeFilterQuartile ? realtimeFilterQuartile.value : '';
       if (quartileVal) params.set('quartile', quartileVal);
       const countryVal = realtimeFilterCountry ? realtimeFilterCountry.value : '';
       if (countryVal) params.set('country', countryVal);
-      const authorVal = realtimeFilterAuthor ? realtimeFilterAuthor.value.trim() : '';
-      if (authorVal) params.set('author', authorVal);
       const sortVal = realtimeSortSelect ? realtimeSortSelect.value : '';
       if (sortVal) params.set('sort', sortVal);
       const yearMinVal = realtimeYearMin ? realtimeYearMin.value.trim() : '';
@@ -3361,6 +3381,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (realtimeBooleanToggle) {
     realtimeBooleanToggle.addEventListener('change', () => {
       if (!realtimeSearchInput) return;
+      if (realtimeSearchMode === 'author') return; // placeholder mode-penulis tidak relevan dengan toggle Boolean
       const t = TRANSLATIONS[window.currentLanguage || 'id'];
       realtimeSearchInput.placeholder = realtimeBooleanToggle.checked
         ? t.realtime_search_placeholder_example
