@@ -3301,7 +3301,8 @@
       color: var(--text-muted);
     }
 
-    .filter-dropdown-item input[type="number"] {
+    .filter-dropdown-item input[type="number"],
+    .filter-dropdown-item input[type="text"] {
       width: 100%;
       padding: 0.75rem 1rem;
       background-color: #ffffff;
@@ -3313,11 +3314,13 @@
       outline: none;
       transition: all 0.2s ease;
     }
-    .filter-dropdown-item input[type="number"]:focus {
+    .filter-dropdown-item input[type="number"]:focus,
+    .filter-dropdown-item input[type="text"]:focus {
       border-color: var(--brand-blue);
       box-shadow: 0 0 0 3px var(--brand-blue-glow);
     }
-    [data-theme="dark"] .filter-dropdown-item input[type="number"] {
+    [data-theme="dark"] .filter-dropdown-item input[type="number"],
+    [data-theme="dark"] .filter-dropdown-item input[type="text"] {
       background-color: var(--bg-card);
       color: var(--text-main);
     }
@@ -3328,6 +3331,32 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1.25rem;
+    }
+
+    .realtime-sort-select {
+      padding: 0.45rem 2rem 0.45rem 0.75rem;
+      background-color: #ffffff;
+      border: 1px solid var(--border-light-hover);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.82rem;
+      font-family: inherit;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      background-size: 0.9rem;
+    }
+    .realtime-sort-select:focus {
+      border-color: var(--brand-blue);
+    }
+    [data-theme="dark"] .realtime-sort-select {
+      background-color: #0d1117;
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text-main);
     }
 
     .results-count-text {
@@ -4666,6 +4695,11 @@
               </div>
             </div>
 
+            <div class="filter-dropdown-item" style="margin-bottom: 1.5rem;">
+              <label>PENULIS (AUTHOR)</label>
+              <input type="text" id="realtimeFilterAuthor" placeholder="Contoh: John Smith">
+            </div>
+
             <div style="margin-bottom: 1.5rem;">
               <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.7rem;">TAHUN TERBIT</label>
               <div id="realtimeYearPresetGroup" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
@@ -4724,6 +4758,15 @@
 
         <div class="results-meta-header">
           <span class="results-count-text" id="realtimeResultsCount">Ketik kata kunci lalu klik Cari untuk menampilkan hasil (maks. 50).</span>
+          <div id="realtimeSortWrapper" style="display: none; align-items: center; gap: 0.5rem;">
+            <label for="realtimeSortSelect" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Urutkan:</label>
+            <select id="realtimeSortSelect" class="realtime-sort-select">
+              <option value="">Relevansi</option>
+              <option value="publication_date:desc">Terbaru</option>
+              <option value="cited_by_count:desc">Sitasi Terbanyak</option>
+              <option value="display_name:asc">Abjad (A-Z)</option>
+            </select>
+          </div>
         </div>
         <div class="results-grid" id="realtimeResultsContainer"></div>
       </div>

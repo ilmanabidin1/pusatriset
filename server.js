@@ -1988,7 +1988,7 @@ function extractAuthorCountryCode(authorships) {
   return null;
 }
 
-async function searchOpenAlexWorks(query, perPage, extraFilter) {
+async function searchOpenAlexWorks(query, perPage, extraFilter, sort) {
   const fetchFn = globalThis.fetch || require('node-fetch');
   // "?" dan "*" dianggap wildcard oleh OpenAlex full-text search dan bikin request
   // 400 kalau dipakai di luar mode search.exact - buang dulu supaya pertanyaan user
@@ -2002,6 +2002,10 @@ async function searchOpenAlexWorks(query, perPage, extraFilter) {
     filter: `has_abstract:true${extraFilter || ''}`,
     select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access'
   });
+  // Tanpa sort, OpenAlex urutkan berdasarkan relevance_score (default saat ada
+  // parameter "search") - itu sudah pas untuk opsi "Relevansi", jadi cukup
+  // set param sort kalau user pilih opsi lain (Terbaru/Sitasi/Abjad).
+  if (sort) params.set('sort', sort);
   const apiKey = process.env.OPENALEX_API_KEY;
   if (apiKey) params.set('api_key', apiKey);
   const mailto = process.env.OPENALEX_MAILTO;
@@ -2100,6 +2104,17 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
     extraFilter += `,institutions.country_code:${countryCodes.join('|')}`;
   }
 
+  // Cari berdasarkan nama penulis - raw_author_name.search cocok tanpa perlu
+  // resolve ke Author ID dulu. Koma/pipe dibuang karena keduanya pemisah
+  // filter di sintaks OpenAlex, bisa bikin filter-nya salah parse kalau lolos.
+  const authorQuery = String(req.query.author || '').trim().replace(/[,|]/g, '').slice(0, 200);
+  if (authorQuery) {
+    extraFilter += `,raw_author_name.search:${authorQuery}`;
+  }
+
+  const ALLOWED_SORTS = ['publication_date:desc', 'cited_by_count:desc', 'display_name:asc'];
+  const sort = ALLOWED_SORTS.includes(req.query.sort) ? req.query.sort : null;
+
   // Cari Referensi - Free dijatah 5x/bulan, Premium & Ultimate unlimited.
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
@@ -2117,7 +2132,7 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
     // fetch - saat filter kuartil aktif ambil lebih banyak kandidat (maks
     // per_page OpenAlex) supaya tetap kebagian ~50 hasil usai difilter.
     const fetchCount = quartiles.length ? 200 : 50;
-    let works = await searchOpenAlexWorks(query, fetchCount, extraFilter);
+    let works = await searchOpenAlexWorks(query, fetchCount, extraFilter, sort);
     if (quartiles.length) {
       works = works.filter(w => w.journalQuartile && quartiles.includes(w.journalQuartile));
     }

@@ -2508,6 +2508,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const realtimeFilterType = document.getElementById('realtimeFilterType');
   const realtimeFilterQuartile = document.getElementById('realtimeFilterQuartile');
   const realtimeFilterCountry = document.getElementById('realtimeFilterCountry');
+  const realtimeFilterAuthor = document.getElementById('realtimeFilterAuthor');
+  const realtimeSortSelect = document.getElementById('realtimeSortSelect');
+  const realtimeSortWrapper = document.getElementById('realtimeSortWrapper');
   const realtimeYearMin = document.getElementById('realtimeYearMin');
   const realtimeYearMax = document.getElementById('realtimeYearMax');
   const realtimeYearPresetGroup = document.getElementById('realtimeYearPresetGroup');
@@ -2572,6 +2575,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (realtimeFilterType && realtimeFilterType.value) count++;
     if (realtimeFilterQuartile && realtimeFilterQuartile.value) count++;
     if (realtimeFilterCountry && realtimeFilterCountry.value) count++;
+    if (realtimeFilterAuthor && realtimeFilterAuthor.value.trim()) count++;
     if (realtimeYearMin && realtimeYearMin.value) count++;
     if (realtimeYearMax && realtimeYearMax.value) count++;
     if (realtimeMinCitations && parseInt(realtimeMinCitations.value, 10) > 0) count++;
@@ -2581,7 +2585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     realtimeFilterActiveBadge.style.display = count > 0 ? 'inline-block' : 'none';
     if (realtimeFilterToggleBtn) realtimeFilterToggleBtn.classList.toggle('active', count > 0);
   }
-  [realtimeFilterType, realtimeFilterQuartile, realtimeFilterCountry, realtimeYearMin, realtimeYearMax, realtimeMinCitations, realtimeExcludePreprints, realtimeOpenAccessOnly]
+  [realtimeFilterType, realtimeFilterQuartile, realtimeFilterCountry, realtimeFilterAuthor, realtimeYearMin, realtimeYearMax, realtimeMinCitations, realtimeExcludePreprints, realtimeOpenAccessOnly]
     .forEach(el => { if (el) el.addEventListener('input', updateRealtimeFilterActiveCount); });
 
   if (realtimeFilterToggleBtn && realtimeFilterPanel) {
@@ -2622,6 +2626,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (realtimeFilterType) realtimeFilterType.value = '';
       if (realtimeFilterQuartile) realtimeFilterQuartile.value = '';
       if (realtimeFilterCountry) realtimeFilterCountry.value = '';
+      if (realtimeFilterAuthor) realtimeFilterAuthor.value = '';
       if (realtimeYearMin) realtimeYearMin.value = '';
       if (realtimeYearMax) realtimeYearMax.value = '';
       if (realtimeMinCitations) realtimeMinCitations.value = '';
@@ -2683,6 +2688,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (quartileVal) params.set('quartile', quartileVal);
       const countryVal = realtimeFilterCountry ? realtimeFilterCountry.value : '';
       if (countryVal) params.set('country', countryVal);
+      const authorVal = realtimeFilterAuthor ? realtimeFilterAuthor.value.trim() : '';
+      if (authorVal) params.set('author', authorVal);
+      const sortVal = realtimeSortSelect ? realtimeSortSelect.value : '';
+      if (sortVal) params.set('sort', sortVal);
       const yearMinVal = realtimeYearMin ? realtimeYearMin.value.trim() : '';
       if (yearMinVal) params.set('yearMin', yearMinVal);
       const yearMaxVal = realtimeYearMax ? realtimeYearMax.value.trim() : '';
@@ -2697,6 +2706,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!res.ok || !data.ok) {
         if (realtimeResultsCount) realtimeResultsCount.textContent = data.message || t.realtime_generic_error;
+        if (realtimeSortWrapper) realtimeSortWrapper.style.display = 'none';
         if (res.status === 403) {
           window.cariReferensiLimitReached = true;
           if (window.updateCariReferensiAccess && window.currentUser?.user) {
@@ -2709,6 +2719,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const works = data.works || [];
       if (works.length === 0) {
         if (realtimeResultsCount) realtimeResultsCount.textContent = t.realtime_no_results;
+        if (realtimeSortWrapper) realtimeSortWrapper.style.display = 'none';
         return;
       }
 
@@ -2716,6 +2727,7 @@ document.addEventListener('DOMContentLoaded', () => {
         realtimeResultsCount.textContent = t.realtime_showing_results.replace('{n}', works.length);
         realtimeResultsCount.dataset.hasResults = '1';
       }
+      if (realtimeSortWrapper) realtimeSortWrapper.style.display = 'flex';
 
       await loadSavedReferenceKeys();
       works.forEach((work, index) => {
@@ -3341,6 +3353,11 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   if (realtimeSearchBtn) realtimeSearchBtn.addEventListener('click', runRealtimeSearch);
+  if (realtimeSortSelect) {
+    realtimeSortSelect.addEventListener('change', () => {
+      if (realtimeSearchInput && realtimeSearchInput.value.trim().length >= 3) runRealtimeSearch();
+    });
+  }
   if (realtimeBooleanToggle) {
     realtimeBooleanToggle.addEventListener('change', () => {
       if (!realtimeSearchInput) return;
