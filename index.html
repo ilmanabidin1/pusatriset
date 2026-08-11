@@ -18,7 +18,11 @@
   
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
+  <!-- Quill.js - editor teks kaya untuk tab Notebook (AI Writer Phase 1) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+
   <!-- Core styles (we will override specific layout styles below) -->
   <link rel="stylesheet" href="styles.css">
 
@@ -3235,6 +3239,39 @@
       text-decoration: underline;
     }
 
+    /* Notebook - editor Quill.js dibungkus supaya menyatu dengan .filter-box-card
+       (border/radius sendiri dimatikan, dipakai punya wrapper-nya saja). */
+    #notebookToolbar.ql-toolbar.ql-snow {
+      border: none;
+      border-top: 1px solid var(--border-light-hover);
+      border-bottom: 1px solid var(--border-light-hover);
+      padding: 0.75rem 1.5rem;
+      font-family: inherit;
+    }
+    #notebookEditor.ql-container.ql-snow {
+      border: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.95rem;
+    }
+    #notebookEditor .ql-editor {
+      min-height: 60vh;
+      padding: 1.75rem;
+      color: var(--text-main);
+    }
+    #notebookEditor .ql-editor.ql-blank::before {
+      color: var(--text-muted);
+      font-style: normal;
+    }
+    [data-theme="dark"] #notebookToolbar.ql-toolbar.ql-snow .ql-stroke {
+      stroke: var(--text-muted);
+    }
+    [data-theme="dark"] #notebookToolbar.ql-toolbar.ql-snow .ql-fill {
+      fill: var(--text-muted);
+    }
+    [data-theme="dark"] #notebookToolbar.ql-toolbar.ql-snow .ql-picker-label {
+      color: var(--text-muted);
+    }
+
     /* Modal Panduan Penggunaan */
     .panduan-toc-chip {
       background: rgba(7,135,220,0.08);
@@ -4079,6 +4116,9 @@
     </a>
   </div>
   <div class="sidebar-flyout-portal" id="flyoutTulisReview" data-group="tulis-review">
+    <a href="#" class="sidebar-link" data-tab="notebook">
+      <i class="fa-solid fa-file-lines"></i> <span>Notebook</span> <span class="new-badge">Baru</span>
+    </a>
     <a href="#" class="sidebar-link" data-tab="ai-research">
       <i class="fa-solid fa-user-check"></i> <span>Paraphraser &amp; Humanizer</span>
     </a>
@@ -5187,6 +5227,80 @@
         </div>
       </div>
 
+      <!-- TAB: NOTEBOOK (AI Writer Phase 1 - editor teks kaya berbasis Quill.js +
+           autosave + ekspor .docx. Belum ada "Ask AI"/"Cite" menyatu di editor,
+           itu Phase 2/3. Dua sub-view sama seperti Koleksi Saya: daftar dokumen
+           (grid) & editor 1 dokumen. -->
+      <div id="tabContentNotebook" class="tab-content">
+        <!-- View 1: Daftar Notebook -->
+        <div id="notebookListView">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Tulis naskah, catatan riset, atau draf apa pun dengan editor teks kaya - tersimpan otomatis.</p>
+            <button type="button" id="notebookCreateBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.25rem;">
+              <i class="fa-solid fa-plus"></i> Dokumen Baru
+            </button>
+          </div>
+          <div id="notebookGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;"></div>
+          <div id="notebookEmpty" style="display: none; text-align: center; padding: 4rem 2rem; background: var(--bg-card); border: 1px dashed var(--border-light-hover); border-radius: 16px;">
+            <i class="fa-solid fa-file-lines" style="font-size: 2.25rem; color: var(--text-muted); margin-bottom: 1rem; display: block;"></i>
+            <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.4rem;">Belum ada dokumen</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Klik "Dokumen Baru" untuk mulai menulis.</p>
+          </div>
+        </div>
+
+        <!-- View 2: Editor 1 dokumen -->
+        <div id="notebookEditorView" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <button type="button" id="notebookBackBtn" class="reset-filter-btn" style="width: auto;">
+              <i class="fa-solid fa-arrow-left"></i> Kembali
+            </button>
+            <span id="notebookSaveStatus" style="font-size: 0.78rem; color: var(--text-muted); margin-left: auto;"></span>
+            <button type="button" id="notebookExportBtn" class="reset-filter-btn" style="width: auto;">
+              <i class="fa-solid fa-download"></i> Export .docx
+            </button>
+            <button type="button" id="notebookDeleteBtn" class="reset-filter-btn" style="width: auto; border-color: rgba(239,68,68,0.3); color: #ef4444;" title="Hapus dokumen ini">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+
+          <div class="filter-box-card" style="padding: 0; overflow: hidden;">
+            <input type="text" id="notebookTitleInput" placeholder="Untitled" style="width: 100%; box-sizing: border-box; border: none; outline: none; padding: 1.5rem 1.75rem 0.5rem; font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main); background: transparent;">
+            <div id="notebookToolbar">
+              <span class="ql-formats">
+                <select class="ql-header" defaultValue="">
+                  <option value="1"></option>
+                  <option value="2"></option>
+                  <option value="3"></option>
+                  <option value=""></option>
+                </select>
+              </span>
+              <span class="ql-formats">
+                <button class="ql-bold"></button>
+                <button class="ql-italic"></button>
+                <button class="ql-underline"></button>
+                <button class="ql-strike"></button>
+              </span>
+              <span class="ql-formats">
+                <button class="ql-link"></button>
+                <button class="ql-code-block"></button>
+              </span>
+              <span class="ql-formats">
+                <button class="ql-list" value="bullet"></button>
+                <button class="ql-list" value="ordered"></button>
+                <button class="ql-list" value="check"></button>
+              </span>
+              <span class="ql-formats">
+                <button class="ql-align" value=""></button>
+                <button class="ql-align" value="center"></button>
+                <button class="ql-align" value="right"></button>
+                <button class="ql-align" value="justify"></button>
+              </span>
+            </div>
+            <div id="notebookEditor"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB: AI PEER REVIEWER & PRE-SUBMISSION EVALUATOR -->
       <div id="tabContentPeerReviewer" class="tab-content">
         <div class="match-score-main-container">
@@ -6185,7 +6299,7 @@
       // untuk highlight trigger yang relevan saat salah satu tab di dalamnya aktif.
       const SIDEBAR_GROUPS = {
         'cari-jelajah': ['database-jurnal', 'cari-referensi', 'citation-graph'],
-        'tulis-review': ['ai-research', 'peer-reviewer', 'templates', 'prompt-bank'],
+        'tulis-review': ['notebook', 'ai-research', 'peer-reviewer', 'templates', 'prompt-bank'],
         'riset-lanjutan': ['slr', 'patent-search'],
         'koleksi-saya': ['koleksi-saya']
       };
@@ -6272,6 +6386,12 @@
         // Call initPromptBankTab if prompt-bank tab is selected
         if (tabName === 'prompt-bank' && window.initPromptBankTab) {
           window.initPromptBankTab();
+        }
+
+        // Show the Notebook list view (not whichever doc was last open) each
+        // time the tab is (re-)entered from the sidebar
+        if (tabName === 'notebook' && window.showNotebookListView) {
+          window.showNotebookListView();
         }
 
         // SLR access update on tab switch

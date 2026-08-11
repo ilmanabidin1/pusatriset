@@ -1196,6 +1196,8 @@ app.post('/api/account/delete', requireAccess, async (req, res) => {
     saveSavedReferences(references);
     const folderChats = getFolderChats().filter(c => c.userId !== user.id);
     saveFolderChats(folderChats);
+    const documents = getDocuments().filter(d => d.userId !== user.id);
+    saveDocuments(documents);
   } catch (err) {
     console.error('[Account Delete] Gagal membersihkan saved-references.json (diabaikan):', err.message);
   }
@@ -2766,6 +2768,250 @@ function saveFolderChats(chats) {
     return false;
   }
 }
+
+// --- Notebook (AI Writer Phase 1: editor teks kaya + autosave + ekspor .docx,
+// belum ada AI menyatu - lihat POST /api/documents/:id/export-docx untuk
+// konversi HTML hasil Quill.js jadi dokumen .docx). ---
+const DOCUMENTS_FILE = path.join(DATA_DIR, 'documents.json');
+
+function getDocuments() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(DOCUMENTS_FILE)) fs.writeFileSync(DOCUMENTS_FILE, '[]');
+    return JSON.parse(fs.readFileSync(DOCUMENTS_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca documents.json:', error);
+    return [];
+  }
+}
+
+function saveDocuments(docs) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(DOCUMENTS_FILE, JSON.stringify(docs, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan documents.json:', error);
+    return false;
+  }
+}
+
+// Rate limit burst untuk autosave Notebook - murni tulis ke JSON lokal (tanpa
+// panggilan AI), tapi tetap dibatasi kecepatannya per menit untuk jaga-jaga
+// dari penyalahgunaan lewat script/automasi, konsisten dengan limiter lain.
+const documentSaveLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => (req.session && req.session.userId) || rateLimit.ipKeyGenerator(req.ip),
+  message: { ok: false, message: 'Terlalu banyak permintaan simpan dokumen dalam waktu singkat. Tunggu sebentar lalu coba lagi.' }
+});
+
+app.get('/api/documents', requireAccess, (req, res) => {
+  const docs = getDocuments()
+    .filter(d => d.userId === req.session.userId)
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .map(d => ({ id: d.id, title: d.title, updatedAt: d.updatedAt, createdAt: d.createdAt }));
+  res.json({ ok: true, documents: docs });
+});
+
+app.post('/api/documents', requireAccess, (req, res) => {
+  const docs = getDocuments();
+  const now = new Date().toISOString();
+  const newDoc = {
+    id: uuidv4(),
+    userId: req.session.userId,
+    title: String((req.body && req.body.title) || 'Untitled').trim().slice(0, 200) || 'Untitled',
+    contentHtml: '',
+    createdAt: now,
+    updatedAt: now
+  };
+  docs.push(newDoc);
+  saveDocuments(docs);
+  res.json({ ok: true, document: newDoc });
+});
+
+app.get('/api/documents/:id', requireAccess, (req, res) => {
+  const doc = getDocuments().find(d => d.id === req.params.id && d.userId === req.session.userId);
+  if (!doc) return res.status(404).json({ ok: false, message: 'Dokumen tidak ditemukan.' });
+  res.json({ ok: true, document: doc });
+});
+
+app.put('/api/documents/:id', requireAccess, documentSaveLimiter, (req, res) => {
+  const docs = getDocuments();
+  const idx = docs.findIndex(d => d.id === req.params.id && d.userId === req.session.userId);
+  if (idx === -1) return res.status(404).json({ ok: false, message: 'Dokumen tidak ditemukan.' });
+  if (typeof req.body.title === 'string') {
+    docs[idx].title = req.body.title.trim().slice(0, 200) || 'Untitled';
+  }
+  if (typeof req.body.contentHtml === 'string') {
+    docs[idx].contentHtml = req.body.contentHtml.slice(0, 500000); // batas wajar ~500KB per dokumen
+  }
+  docs[idx].updatedAt = new Date().toISOString();
+  saveDocuments(docs);
+  res.json({ ok: true, document: docs[idx] });
+});
+
+app.delete('/api/documents/:id', requireAccess, (req, res) => {
+  const docs = getDocuments();
+  const idx = docs.findIndex(d => d.id === req.params.id && d.userId === req.session.userId);
+  if (idx === -1) return res.status(404).json({ ok: false, message: 'Dokumen tidak ditemukan.' });
+  docs.splice(idx, 1);
+  saveDocuments(docs);
+  res.json({ ok: true });
+});
+
+// Decode entity HTML dasar yang dipakai Quill (bukan parser HTML umum - cukup
+// untuk output Quill sendiri, bukan untuk sanitasi HTML sembarang).
+function decodeHtmlEntities(str) {
+  return String(str || '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+// Pecah HTML inline (dari dalam 1 blok <p>/<li>/dst.) jadi rangkaian run teks
+// dengan formatting (bold/italic/underline/strike) - tracking state pakai stack
+// supaya tag bersarang (mis. <strong><em>) tetap ditangani benar.
+function htmlInlineToRuns(html, forceItalic) {
+  const runs = [];
+  const stack = forceItalic ? ['i'] : [];
+  const tagRegex = /<(\/?)([a-z0-9]+)[^>]*>/gi;
+  let lastIndex = 0;
+  let match;
+  function flushText(text) {
+    const decoded = decodeHtmlEntities(text);
+    if (!decoded) return;
+    runs.push({
+      text: decoded,
+      bold: stack.includes('b'),
+      italics: stack.includes('i'),
+      underline: stack.includes('u'),
+      strike: stack.includes('s')
+    });
+  }
+  while ((match = tagRegex.exec(html))) {
+    const closing = match[1] === '/';
+    const tagName = match[2].toLowerCase();
+    flushText(html.slice(lastIndex, match.index));
+    lastIndex = tagRegex.lastIndex;
+    if (tagName === 'br') {
+      runs.push({ text: '', isBreak: true });
+      continue;
+    }
+    const code = tagName === 'strong' ? 'b' : tagName === 'em' ? 'i' : (tagName === 'strike' || tagName === 'del') ? 's' : tagName;
+    if (!['b', 'i', 'u', 's'].includes(code)) continue; // tag lain (span/a/dst) - abaikan tag-nya saja
+    if (closing) {
+      const stackIdx = stack.lastIndexOf(code);
+      if (stackIdx !== -1) stack.splice(stackIdx, 1);
+    } else {
+      stack.push(code);
+    }
+  }
+  flushText(html.slice(lastIndex));
+  return runs;
+}
+
+function runsToTextRuns(runs) {
+  if (!runs.length) return [new TextRun({ text: '' })];
+  return runs.map(r => r.isBreak
+    ? new TextRun({ text: '', break: 1 })
+    : new TextRun({ text: r.text, bold: r.bold, italics: r.italics, underline: r.underline ? {} : undefined, strike: r.strike }));
+}
+
+const QUILL_HEADING_MAP = {
+  h1: HeadingLevel.HEADING_1, h2: HeadingLevel.HEADING_2, h3: HeadingLevel.HEADING_3,
+  h4: HeadingLevel.HEADING_4, h5: HeadingLevel.HEADING_5, h6: HeadingLevel.HEADING_6
+};
+
+// Konversi HTML hasil Quill.js (bukan HTML sembarang - format outputnya sudah
+// konsisten/terbatas) jadi array Paragraph docx untuk ekspor .docx Notebook.
+function convertQuillHtmlToDocxChildren(html) {
+  const children = [];
+  const cleanHtml = String(html || '').trim();
+  if (!cleanHtml) {
+    children.push(new Paragraph({ text: '' }));
+    return children;
+  }
+
+  const blockRegex = /<(h1|h2|h3|h4|h5|h6|p|blockquote|pre|ul|ol)\b[^>]*>([\s\S]*?)<\/\1>/gi;
+  let match;
+  let matchedAny = false;
+
+  while ((match = blockRegex.exec(cleanHtml))) {
+    matchedAny = true;
+    const tag = match[1].toLowerCase();
+    const inner = match[2];
+
+    if (tag === 'ul' || tag === 'ol') {
+      const liRegex = /<li\b([^>]*)>([\s\S]*?)<\/li>/gi;
+      let liMatch;
+      let orderedIndex = 1;
+      while ((liMatch = liRegex.exec(inner))) {
+        const liAttrs = liMatch[1];
+        const liInner = liMatch[2];
+        const runs = runsToTextRuns(htmlInlineToRuns(liInner));
+        const indentMatch = liAttrs.match(/ql-indent-(\d)/);
+        const level = indentMatch ? parseInt(indentMatch[1], 10) : 0;
+        if (/data-list="checked"/.test(liAttrs)) {
+          children.push(new Paragraph({ children: [new TextRun({ text: '☑ ' }), ...runs], indent: { left: level * 360 } }));
+        } else if (/data-list="unchecked"/.test(liAttrs)) {
+          children.push(new Paragraph({ children: [new TextRun({ text: '☐ ' }), ...runs], indent: { left: level * 360 } }));
+        } else if (tag === 'ol') {
+          children.push(new Paragraph({ children: [new TextRun({ text: `${orderedIndex}. ` }), ...runs], indent: { left: level * 360 } }));
+          orderedIndex++;
+        } else {
+          children.push(new Paragraph({ children: runs, bullet: { level } }));
+        }
+      }
+    } else if (tag === 'pre') {
+      const text = decodeHtmlEntities(inner.replace(/<[^>]+>/g, ''));
+      children.push(new Paragraph({ children: [new TextRun({ text, font: 'Courier New' })], shading: { fill: 'F1F5F9' } }));
+    } else if (tag === 'blockquote') {
+      children.push(new Paragraph({ children: runsToTextRuns(htmlInlineToRuns(inner, true)), indent: { left: 360 } }));
+    } else {
+      const runs = runsToTextRuns(htmlInlineToRuns(inner));
+      if (QUILL_HEADING_MAP[tag]) {
+        children.push(new Paragraph({ children: runs, heading: QUILL_HEADING_MAP[tag], spacing: { before: 200 } }));
+      } else {
+        children.push(new Paragraph({ children: runs }));
+      }
+    }
+  }
+
+  if (!matchedAny) {
+    const text = decodeHtmlEntities(cleanHtml.replace(/<[^>]+>/g, ' ')).trim();
+    children.push(new Paragraph({ text }));
+  }
+
+  return children;
+}
+
+app.post('/api/documents/:id/export-docx', requireAccess, async (req, res) => {
+  const doc = getDocuments().find(d => d.id === req.params.id && d.userId === req.session.userId);
+  if (!doc) return res.status(404).json({ ok: false, message: 'Dokumen tidak ditemukan.' });
+
+  try {
+    const children = [
+      new Paragraph({ text: doc.title || 'Untitled', heading: HeadingLevel.TITLE }),
+      ...convertQuillHtmlToDocxChildren(doc.contentHtml)
+    ];
+    const wordDoc = new Document({ sections: [{ children }] });
+    const buffer = await Packer.toBuffer(wordDoc);
+
+    const safeFileName = String(doc.title || 'Untitled').slice(0, 60).replace(/[^a-zA-Z0-9]/g, '_') || 'Notebook';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.docx"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('[Notebook Export DOCX] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal membuat file .docx.' });
+  }
+});
 
 // Ekstrak nomor DOI polos dari url manapun (doi.org link atau field doi terpisah) -
 // sumber data kita macam-macam (OpenAlex, Semantic Scholar, popover sitasi) jadi

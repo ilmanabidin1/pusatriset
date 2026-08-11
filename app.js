@@ -6290,6 +6290,234 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })();
 
+    // --- Notebook (AI Writer Phase 1): editor teks kaya berbasis Quill.js +
+    // autosave + ekspor .docx. Belum ada "Ask AI"/"Cite" menyatu di editor -
+    // itu Phase 2/3 sesuai rencana bertahap yang disepakati. Dua sub-view sama
+    // seperti Koleksi Saya: grid daftar dokumen & editor 1 dokumen. Instance
+    // Quill di-init sekali (lazy, pas dokumen pertama dibuka) lalu dipakai
+    // ulang untuk dokumen lain - bukan bikin instance baru tiap buka dokumen. ---
+    (function initNotebookTab() {
+      const listView = document.getElementById('notebookListView');
+      const editorView = document.getElementById('notebookEditorView');
+      const grid = document.getElementById('notebookGrid');
+      const emptyHint = document.getElementById('notebookEmpty');
+      const createBtn = document.getElementById('notebookCreateBtn');
+      const backBtn = document.getElementById('notebookBackBtn');
+      const deleteBtn = document.getElementById('notebookDeleteBtn');
+      const exportBtn = document.getElementById('notebookExportBtn');
+      const titleInput = document.getElementById('notebookTitleInput');
+      const saveStatusEl = document.getElementById('notebookSaveStatus');
+      const editorEl = document.getElementById('notebookEditor');
+      if (!listView || !editorEl) return;
+
+      let quill = null;
+      let currentDocId = null;
+      let saveTimer = null;
+      let suppressChange = false;
+
+      function ensureQuill() {
+        if (quill || typeof Quill === 'undefined') return quill;
+        quill = new Quill('#notebookEditor', {
+          theme: 'snow',
+          modules: { toolbar: '#notebookToolbar' },
+          placeholder: 'Mulai menulis di sini...'
+        });
+        quill.on('text-change', () => {
+          if (suppressChange) return;
+          scheduleSave();
+        });
+        return quill;
+      }
+
+      function setSaveStatus(text) {
+        if (saveStatusEl) saveStatusEl.textContent = text;
+      }
+
+      function scheduleSave() {
+        setSaveStatus('Menyimpan...');
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveCurrentDocument, 1200);
+      }
+
+      async function saveCurrentDocument() {
+        if (!currentDocId || !quill) return;
+        try {
+          const res = await fetch(`/api/documents/${currentDocId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: titleInput.value.trim() || 'Untitled',
+              contentHtml: quill.root.innerHTML
+            })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            setSaveStatus('Gagal menyimpan.');
+            return;
+          }
+          const now = new Date();
+          setSaveStatus(`Tersimpan pukul ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`);
+        } catch (err) {
+          setSaveStatus('Gagal menghubungi server.');
+        }
+      }
+
+      function formatUpdatedAt(iso) {
+        try {
+          return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+          return '';
+        }
+      }
+
+      async function loadNotebookList() {
+        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">Memuat...</div>';
+        try {
+          const res = await fetch('/api/documents');
+          const data = await res.json();
+          const docs = data.ok ? (data.documents || []) : [];
+          if (docs.length === 0) {
+            grid.innerHTML = '';
+            if (emptyHint) emptyHint.style.display = 'block';
+            return;
+          }
+          if (emptyHint) emptyHint.style.display = 'none';
+          grid.innerHTML = docs.map(d => `
+            <button type="button" class="notebook-doc-card filter-box-card" data-doc-id="${d.id}" style="text-align: left; cursor: pointer; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; font-family: inherit; border: 1px solid var(--border-light-hover);">
+              <i class="fa-solid fa-file-lines" style="font-size: 1.5rem; color: var(--brand-blue);"></i>
+              <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; color: var(--text-main); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(d.title || 'Untitled')}</h4>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">Diubah ${formatUpdatedAt(d.updatedAt)}</span>
+            </button>
+          `).join('');
+        } catch (err) {
+          grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #dc2626;">Gagal memuat daftar dokumen.</div>';
+        }
+      }
+
+      function showListView() {
+        clearTimeout(saveTimer);
+        if (currentDocId) saveCurrentDocument();
+        currentDocId = null;
+        editorView.style.display = 'none';
+        listView.style.display = 'block';
+        loadNotebookList();
+      }
+      window.showNotebookListView = showListView;
+
+      async function openDocument(id) {
+        try {
+          const res = await fetch(`/api/documents/${id}`);
+          const data = await res.json();
+          if (!data.ok) {
+            alert(data.message || 'Gagal membuka dokumen.');
+            return;
+          }
+          currentDocId = data.document.id;
+          titleInput.value = data.document.title || '';
+          listView.style.display = 'none';
+          editorView.style.display = 'block';
+          setSaveStatus('');
+
+          const editor = ensureQuill();
+          if (editor) {
+            suppressChange = true;
+            editor.root.innerHTML = data.document.contentHtml || '';
+            suppressChange = false;
+          }
+        } catch (err) {
+          alert('Gagal menghubungi server.');
+        }
+      }
+
+      if (createBtn) {
+        createBtn.addEventListener('click', async () => {
+          try {
+            const res = await fetch('/api/documents', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title: 'Untitled' })
+            });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || 'Gagal membuat dokumen baru.');
+              return;
+            }
+            openDocument(data.document.id);
+          } catch (err) {
+            alert('Gagal menghubungi server.');
+          }
+        });
+      }
+
+      if (grid) {
+        grid.addEventListener('click', (e) => {
+          const card = e.target.closest('.notebook-doc-card');
+          if (card) openDocument(card.getAttribute('data-doc-id'));
+        });
+      }
+
+      if (backBtn) backBtn.addEventListener('click', showListView);
+
+      if (titleInput) {
+        titleInput.addEventListener('input', scheduleSave);
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+          if (!currentDocId) return;
+          if (!confirm('Hapus dokumen ini? Tindakan ini tidak bisa dibatalkan.')) return;
+          clearTimeout(saveTimer);
+          try {
+            const res = await fetch(`/api/documents/${currentDocId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || 'Gagal menghapus dokumen.');
+              return;
+            }
+            currentDocId = null;
+            showListView();
+          } catch (err) {
+            alert('Gagal menghubungi server.');
+          }
+        });
+      }
+
+      if (exportBtn) {
+        exportBtn.addEventListener('click', async () => {
+          if (!currentDocId) return;
+          const originalHtml = exportBtn.innerHTML;
+          exportBtn.disabled = true;
+          exportBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membuat .docx...';
+          try {
+            // Simpan dulu perubahan terbaru sebelum export supaya file yang
+            // diunduh selalu mencerminkan isi editor saat ini
+            clearTimeout(saveTimer);
+            await saveCurrentDocument();
+
+            const res = await fetch(`/api/documents/${currentDocId}/export-docx`, { method: 'POST' });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              alert(data.message || 'Gagal membuat file .docx.');
+              return;
+            }
+            const blob = await res.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${(titleInput.value.trim() || 'Untitled').slice(0, 60).replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+          } catch (err) {
+            alert('Gagal menghubungi server untuk membuat file .docx.');
+          } finally {
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = originalHtml;
+          }
+        });
+      }
+    })();
+
     function updateResearchChatGreeting() {
       const greetingEl = document.getElementById('researchChatGreeting');
       if (!greetingEl) return;
