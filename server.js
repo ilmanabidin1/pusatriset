@@ -1087,12 +1087,26 @@ app.get('/api/me', (req, res) => {
         researchChatCountThisMonth: user ? (user.researchChatCountThisMonth || 0) : 0,
         planId: user ? (user.planId || null) : null,
         paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null,
-        hasPassword: user ? !!user.password : false
+        hasPassword: user ? !!user.password : false,
+        hasSeenOnboarding: user ? !!user.hasSeenOnboarding : true
       }
     });
   } else {
     res.json({ loggedIn: false });
   }
+});
+
+// Menandai user sudah melihat tur onboarding "Panduan Penggunaan" pertama kali,
+// supaya modalnya tidak otomatis muncul lagi tiap login (tetap bisa dibuka
+// manual lewat tombol bantuan "?" di header kapan saja).
+app.post('/api/onboarding/complete', requireAccess, (req, res) => {
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  if (user && !user.hasSeenOnboarding) {
+    user.hasSeenOnboarding = true;
+    saveUsers(users);
+  }
+  res.json({ ok: true });
 });
 
 // Endpoint fungsional untuk ganti password di tab Pengaturan

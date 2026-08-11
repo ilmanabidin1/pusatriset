@@ -3219,6 +3219,58 @@
       color: #ffffff;
     }
 
+    /* Modal Panduan Penggunaan */
+    .panduan-toc-chip {
+      background: rgba(7,135,220,0.08);
+      border: 1px solid rgba(7,135,220,0.15);
+      border-radius: 20px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--brand-blue);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .panduan-toc-chip:hover {
+      background: var(--brand-blue);
+      color: #ffffff;
+    }
+    .panduan-section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--text-main);
+      margin: 0 0 0.6rem;
+    }
+    .panduan-section-title i {
+      color: var(--brand-blue);
+    }
+    .panduan-section-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin: 0;
+    }
+    .panduan-steps, .panduan-feature-list {
+      margin: 0;
+      padding-left: 1.25rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .panduan-steps b, .panduan-feature-list b {
+      color: var(--text-main);
+    }
+    [data-theme="dark"] .panduan-toc-chip {
+      background: rgba(7,135,220,0.15);
+    }
+
     .filter-dropdown-item input[type="number"] {
       width: 100%;
       padding: 0.75rem 1rem;
@@ -4114,6 +4166,93 @@
     </div>
   </div>
 
+  <!-- Modal "Panduan Penggunaan" - dibuka manual lewat tombol "?" di header
+       (kapan saja), dan otomatis SEKALI saja untuk user yang baru pertama kali
+       login (ditandai lewat flag hasSeenOnboarding di server, lihat
+       initOnboardingGuide() di app.js). Isinya ringkasan cara pakai tiap grup
+       fitur di sidebar, ditulis merujuk label & nama tab yang sungguhan dipakai
+       di UI supaya tidak basi begitu ada fitur baru. -->
+  <div class="modal-overlay" id="panduanModal">
+    <div class="modal-card" style="max-width: 760px; text-align: left;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 1.75rem 1.1rem; background: linear-gradient(135deg, #0f2b5c 0%, #0787dc 100%); border-radius: 24px 24px 0 0; color: #ffffff;">
+        <div>
+          <h3 style="margin: 0; font-family: var(--font-outfit); font-weight: 800; font-size: 1.3rem;">👋 Panduan Penggunaan JurnalHub</h3>
+          <p style="margin: 0.35rem 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.75);">Ringkasan cepat semua fitur utama, biar tidak bingung mulai dari mana.</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="closePanduanModalBtn" style="position: static; margin: 0; flex-shrink: 0;">&times;</button>
+      </div>
+
+      <div id="panduanTocRow" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 1.1rem 1.75rem; border-bottom: 1px solid var(--border-light-hover);">
+        <button type="button" class="panduan-toc-chip" data-jump="panduanSectionMulai">Mulai Cepat</button>
+        <button type="button" class="panduan-toc-chip" data-jump="panduanSectionIntelligence">JurnalHub Intelligence</button>
+        <button type="button" class="panduan-toc-chip" data-jump="panduanSectionCari">Cari &amp; Jelajah</button>
+        <button type="button" class="panduan-toc-chip" data-jump="panduanSectionTulis">Tulis &amp; Review</button>
+        <button type="button" class="panduan-toc-chip" data-jump="panduanSectionLanjutan">Riset Lanjutan</button>
+        <button type="button" class="panduan-toc-chip" data-jump="panduanSectionKoleksi">Koleksi Saya</button>
+        <button type="button" class="panduan-toc-chip" data-jump="panduanSectionPaket">Free vs Premium vs Ultimate</button>
+      </div>
+
+      <div style="padding: 1.5rem 1.75rem; display: flex; flex-direction: column; gap: 1.75rem;">
+
+        <section id="panduanSectionMulai">
+          <h4 class="panduan-section-title"><i class="fa-solid fa-rocket"></i> Mulai Cepat</h4>
+          <p class="panduan-section-desc">Belum tahu mulai dari mana? Coba 3 langkah ini:</p>
+          <ol class="panduan-steps">
+            <li><b>Ngobrol bebas dulu</b> — klik "Percakapan Baru" di pojok kiri atas, tanya apa saja seputar riset Anda ke JurnalHub Intelligence.</li>
+            <li><b>Cari referensi jurnal</b> — buka menu <b>Cari &amp; Jelajah</b> di sidebar, pilih <b>Cari Referensi</b> untuk pencarian real-time ke 480 juta+ karya ilmiah, atau <b>Database Jurnal</b> untuk cek kecocokan naskah Anda dengan AI Match Score.</li>
+            <li><b>Simpan yang penting</b> — klik "Simpan" pada paper yang relevan, kumpulkan di <b>Koleksi Saya</b>, lalu tanya JurnalHub Intelligence for Folder khusus soal paper-paper di folder itu.</li>
+          </ol>
+        </section>
+
+        <section id="panduanSectionIntelligence">
+          <h4 class="panduan-section-title"><i class="fa-solid fa-comments"></i> JurnalHub Intelligence</h4>
+          <p class="panduan-section-desc">Chatbot AI utama JurnalHub — halaman yang langsung terbuka begitu Anda login. Tanya apa saja seputar riset, tempel/upload dokumen untuk dianalisis, atau minta bantuan menjelaskan sebuah konsep. Setiap percakapan otomatis tersimpan di riwayat sisi kiri, dan Anda bisa mulai percakapan baru kapan saja lewat tombol "Percakapan Baru".</p>
+        </section>
+
+        <section id="panduanSectionCari">
+          <h4 class="panduan-section-title"><i class="fa-solid fa-compass"></i> Cari &amp; Jelajah</h4>
+          <ul class="panduan-feature-list">
+            <li><b>Database Jurnal</b> — 756+ database jurnal Scopus/Sinta terkurasi, lengkap dengan AI Match Score untuk mengecek seberapa cocok naskah Anda dengan tiap jurnal.</li>
+            <li><b>Cari Referensi</b> — pencarian real-time ke 480 juta+ karya ilmiah (OpenAlex). Klik tombol <b>Filter</b> untuk menyaring berdasarkan tahun terbit, minimal sitasi, peringkat jurnal (SJR Q1-Q4), open access, exclude preprint, dan negara afiliasi penulis.</li>
+            <li><b>Peta Sitasi</b> — visualisasi jaringan sitasi antar-paper: cari 1 paper awal, lalu klik node mana pun untuk melihat referensinya, siapa yang mengutipnya, dan paper terkait lainnya.</li>
+          </ul>
+        </section>
+
+        <section id="panduanSectionTulis">
+          <h4 class="panduan-section-title"><i class="fa-solid fa-pen-nib"></i> Tulis &amp; Review</h4>
+          <ul class="panduan-feature-list">
+            <li><b>Outline Generator, Literature Review &amp; Paraphraser/Humanizer</b> — buka "Paraphraser & Humanizer" dari sidebar, lalu pakai pilihan mode di bagian atas untuk pindah antar-3 alat ini: susun kerangka naskah, buat tinjauan pustaka otomatis, atau paraphrase teks akademis agar lolos deteksi AI.</li>
+            <li><b>AI Peer Reviewer</b> — tempel draf naskah Anda, dapatkan review otomatis ala reviewer jurnal sebelum submit.</li>
+            <li><b>Template Jurnal</b> — unduh template resmi (.docx) berbagai jurnal internasional.</li>
+            <li><b>Prompt Bank</b> — kumpulan prompt siap pakai untuk berbagai kebutuhan penulisan ilmiah.</li>
+          </ul>
+        </section>
+
+        <section id="panduanSectionLanjutan">
+          <h4 class="panduan-section-title"><i class="fa-solid fa-flask"></i> Riset Lanjutan</h4>
+          <ul class="panduan-feature-list">
+            <li><b>Systematic Lit Review (SLR)</b> — screening, penilaian risiko bias, dan sintesis paper otomatis mengikuti standar PRISMA 2020.</li>
+            <li><b>Pencarian Paten</b> — cari paten terkait ide riset atau inovasi Anda.</li>
+          </ul>
+        </section>
+
+        <section id="panduanSectionKoleksi">
+          <h4 class="panduan-section-title"><i class="fa-solid fa-bookmark"></i> Koleksi Saya</h4>
+          <p class="panduan-section-desc">Buat folder untuk mengelompokkan referensi riset Anda (klik "Buat Folder Baru" di sidebar). Simpan paper dari Cari Referensi, Database Jurnal, atau sitasi mana pun langsung ke folder pilihan — tiap paper tersimpan lengkap dengan TL;DR Bahasa Inggris &amp; Indonesia (klik "Lihat selengkapnya" kalau terpotong). Di setiap folder juga ada <b>JurnalHub Intelligence for Folder</b>: chatbot AI yang menjawab hanya berdasarkan paper-paper di folder itu, lengkap dengan sitasi [n] yang bisa di-hover untuk lihat sumbernya — khusus akun Premium &amp; Ultimate, pemakaian tanpa batas.</p>
+        </section>
+
+        <section id="panduanSectionPaket">
+          <h4 class="panduan-section-title"><i class="fa-solid fa-crown"></i> Free vs Premium vs Ultimate</h4>
+          <p class="panduan-section-desc">Akun Free bisa mencoba hampir semua fitur dengan kuota bulanan terbatas (mis. Cari Referensi 5x/bulan, SLR 1x/bulan). Premium melonggarkan sebagian besar kuota, sementara Ultimate membuka akses tanpa batas ke semua fitur, termasuk JurnalHub Intelligence for Folder. Cek kuota tersisa Anda di badge kecil pada tiap fitur, atau klik tombol <b>Upgrade</b> di header untuk lihat detail paket.</p>
+        </section>
+
+        <div style="border-top: 1px solid var(--border-light-hover); padding-top: 1.25rem; text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+          Masih bingung? Lihat <a href="/faq.html" target="_blank" style="color: var(--brand-blue); font-weight: 700;">FAQ</a> atau hubungi <a href="mailto:admin@jurnalhub.id" style="color: var(--brand-blue); font-weight: 700;">admin@jurnalhub.id</a>.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Right Main Content Panel -->
   <main class="main-content">
     <header class="dashboard-header">
@@ -4128,6 +4267,7 @@
           <button id="langBtnId" class="lang-btn active" style="border: none; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; background: var(--brand-navy); color: #ffffff; transition: all 0.2s;" type="button">ID</button>
           <button id="langBtnEn" class="lang-btn" style="border: none; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-muted); transition: all 0.2s;" type="button">EN</button>
         </div>
+        <button class="bell-icon-btn" id="helpGuideBtn" title="Panduan Penggunaan"><i class="fa-regular fa-circle-question"></i></button>
         <button class="bell-icon-btn" title="Notifikasi"><i class="fa-regular fa-bell"></i></button>
         <button class="dark-mode-toggle-btn" id="darkModeToggleBtn" title="Toggle Dark/Light Mode">
           <i class="fa-solid fa-moon" id="darkModeIcon"></i>
