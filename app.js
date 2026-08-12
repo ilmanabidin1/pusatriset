@@ -570,7 +570,6 @@ document.addEventListener('DOMContentLoaded', () => {
       research_chat_badge: "JurnalHub Intelligence",
       research_chat_title: "Diskusi dengan JurnalHub Intelligence",
       research_chat_desc: "<strong>Bukan LLM biasa.</strong> JurnalHub Intelligence dikurasi khusus untuk selalu menjawab jujur, kritis, dan tidak asal mengiyakan (no yes-man) - layaknya profesor pembimbing sungguhan.",
-      research_chat_empty: "Mulai diskusi dengan mengetik pertanyaan riset Anda di bawah ini.",
       research_chat_input_placeholder: "Tulis pertanyaan riset Anda...",
       research_chat_clear: "Mulai percakapan baru",
       research_chat_disclaimer: "Asisten AI bisa saja keliru - selalu verifikasi informasi penting secara mandiri.",
@@ -913,7 +912,6 @@ document.addEventListener('DOMContentLoaded', () => {
       research_chat_badge: "JurnalHub Intelligence",
       research_chat_title: "Discuss with JurnalHub Intelligence",
       research_chat_desc: "<strong>Not just another LLM.</strong> JurnalHub Intelligence is specifically curated to always answer honestly, critically, and without being a yes-man - like a real supervising professor.",
-      research_chat_empty: "Start a discussion by typing your research question below.",
       research_chat_input_placeholder: "Type your research question...",
       research_chat_clear: "Start a new conversation",
       research_chat_disclaimer: "The AI assistant can make mistakes - always verify important information independently.",
@@ -9201,8 +9199,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // 9h. Translate JurnalHub Intelligence tab
       const researchChatDescEl = document.getElementById('researchChatDesc');
       if (researchChatDescEl) researchChatDescEl.innerHTML = TRANSLATIONS[lang].research_chat_desc;
-      const researchChatEmptyTextEl = document.getElementById('researchChatEmptyText');
-      if (researchChatEmptyTextEl) researchChatEmptyTextEl.textContent = TRANSLATIONS[lang].research_chat_empty;
       const researchChatInputEl = document.getElementById('researchChatInput');
       if (researchChatInputEl) researchChatInputEl.placeholder = TRANSLATIONS[lang].research_chat_input_placeholder;
       const researchChatClearTextEl = document.getElementById('researchChatClearText');
