@@ -3445,42 +3445,43 @@
     .notebook-slash-menu-item.active i {
       color: var(--brand-blue);
     }
-    .notebook-slash-menu-item-custom {
+    /* Baris input "Tanya AI" - INPUT SUNGGUHAN (bukan sekadar teks display di
+       dalam daftar) supaya bisa langsung diklik & diketik langsung di situ,
+       terpisah dari mengetik di dalam dokumen Quill. Elemen ini sengaja tidak
+       pernah di-innerHTML-replace ulang (cuma #notebookSlashMenuList di
+       bawahnya yang di-render ulang), supaya fokus & isi ketikan user di
+       dalamnya tidak hilang tiap kali daftar command difilter ulang. */
+    .notebook-slash-menu-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.7rem;
       margin-bottom: 0.35rem;
-      padding-bottom: 0.65rem;
       border-bottom: 1px solid var(--border-light-hover);
-      border-radius: 8px 8px 0 0;
     }
-    .notebook-slash-menu-item-custom i {
+    .notebook-slash-menu-input-row i {
       color: #7c3aed;
+      font-size: 0.85rem;
+      flex-shrink: 0;
     }
-    .notebook-slash-menu-item-custom:hover,
-    .notebook-slash-menu-item-custom.active {
-      background: rgba(139,92,246,0.1);
+    .notebook-slash-menu-input-row input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-main);
     }
-    .notebook-slash-menu-item-custom.active i {
-      color: #7c3aed;
-    }
-    .notebook-slash-menu-item-custom span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .notebook-slash-menu-item-disabled {
-      cursor: text;
-    }
-    .notebook-slash-menu-item-disabled span {
+    .notebook-slash-menu-input-row input::placeholder {
       color: var(--text-muted);
       font-weight: 500;
       font-style: italic;
     }
-    .notebook-slash-menu-item-disabled:hover,
-    .notebook-slash-menu-item-disabled.active {
-      background: transparent;
-    }
-    .notebook-slash-menu-item-disabled i {
-      color: #7c3aed;
-      opacity: 0.55;
+    .notebook-slash-menu-input-row input:disabled {
+      opacity: 0.6;
     }
     .notebook-slash-menu-empty {
       padding: 0.75rem 0.6rem;
@@ -5453,7 +5454,13 @@
 
           <div class="notebook-page-canvas">
             <div class="filter-box-card notebook-page-sheet">
-              <div id="notebookSlashMenu" class="notebook-slash-menu"></div>
+              <div id="notebookSlashMenu" class="notebook-slash-menu">
+                <div class="notebook-slash-menu-input-row">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  <input type="text" id="notebookSlashCustomInput" autocomplete="off">
+                </div>
+                <div id="notebookSlashMenuList"></div>
+              </div>
               <input type="text" id="notebookTitleInput" name="notebook-doc-title" placeholder="Untitled" autocomplete="off" style="width: 100%; box-sizing: border-box; border: none; outline: none; font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main); background: transparent;">
               <div id="notebookEditor"></div>
             </div>

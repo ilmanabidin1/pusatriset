@@ -763,9 +763,8 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_conclusion: "Tulis Kesimpulan",
       notebook_slash_opposing: "Tulis Argumen Tandingan",
       notebook_slash_critique: "Kritik Seperti Reviewer",
-      notebook_slash_custom_prefix: "Tanya AI:",
       notebook_slash_custom_placeholder: "Tanya AI untuk menulis apa saja...",
-      notebook_slash_no_results: "Tidak ada perintah yang cocok",
+      notebook_slash_press_enter_hint: "Tekan Enter untuk tanya AI",
       notebook_slash_generating: "Menulis...",
       notebook_slash_empty_doc_alert: "Tulis judul atau beberapa kalimat dulu sebelum minta AI membantu.",
       notebook_slash_error: "Gagal menghubungi AI.",
@@ -1107,9 +1106,8 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_conclusion: "Write Conclusion",
       notebook_slash_opposing: "Write Opposing Arguments",
       notebook_slash_critique: "Critique Like a Reviewer",
-      notebook_slash_custom_prefix: "Ask AI:",
       notebook_slash_custom_placeholder: "Ask AI to write anything...",
-      notebook_slash_no_results: "No matching commands",
+      notebook_slash_press_enter_hint: "Press Enter to ask AI",
       notebook_slash_generating: "Writing...",
       notebook_slash_empty_doc_alert: "Write a title or a few sentences first before asking AI to help.",
       notebook_slash_error: "Failed to contact AI.",
@@ -6674,6 +6672,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const deleteBtn = document.getElementById('notebookDeleteBtn');
       const exportBtn = document.getElementById('notebookExportBtn');
       const slashMenuEl = document.getElementById('notebookSlashMenu');
+      const slashMenuListEl = document.getElementById('notebookSlashMenuList');
+      const slashCustomInputEl = document.getElementById('notebookSlashCustomInput');
       const slashHintTextEl = document.getElementById('notebookSlashHintText');
       const titleInput = document.getElementById('notebookTitleInput');
       const saveStatusEl = document.getElementById('notebookSaveStatus');
@@ -6697,52 +6697,22 @@ document.addEventListener('DOMContentLoaded', () => {
           if (suppressChange) return;
           scheduleSave();
           updateLineHint(quill);
-          if (source !== 'user' || slashBusy) return;
+          // Begitu menu "/" kebuka, fokus langsung pindah ke input di dalam
+          // menu (lihat openSlashMenu) - jadi text-change lanjutan dari Quill
+          // selama slashActive seharusnya tidak lagi terjadi dari ketikan user
+          // (mengetik query-nya sekarang terjadi di notebookSlashCustomInput,
+          // BUKAN di dokumen), makanya cukup deteksi trigger "/" awal saja di sini.
+          if (source !== 'user' || slashBusy || slashActive) return;
 
           const sel = quill.getSelection();
-          if (!sel) { closeSlashMenu(); return; }
+          if (!sel) return;
 
-          if (!slashActive) {
-            const typedSlash = delta.ops && delta.ops.some(op => op.insert === '/');
-            if (typedSlash && sel.index > 0 && quill.getText(sel.index - 1, 1) === '/') {
-              openSlashMenu(quill, sel.index - 1);
-            }
-            return;
+          const typedSlash = delta.ops && delta.ops.some(op => op.insert === '/');
+          if (typedSlash && sel.index > 0 && quill.getText(sel.index - 1, 1) === '/') {
+            openSlashMenu(quill, sel.index - 1);
           }
-
-          if (sel.index <= slashStartIndex || quill.getText(slashStartIndex, 1) !== '/') {
-            closeSlashMenu();
-            return;
-          }
-          slashQuery = quill.getText(slashStartIndex + 1, sel.index - slashStartIndex - 1);
-          // Newline (Enter selalu di-preventDefault selagi menu aktif, jadi ini
-          // cuma jaga-jaga) memutus menu - tapi spasi TIDAK, supaya user bisa
-          // mengetik kalimat prompt bebas penuh ("/tulis pendahuluan tentang...")
-          // seperti kotak "Ask AI to write anything" di SciSpace.
-          if (/\n/.test(slashQuery)) { closeSlashMenu(); return; }
-          slashHighlightIndex = 0;
-          renderSlashMenu();
-          positionSlashMenu(quill);
         });
         quill.on('selection-change', () => updateLineHint(quill));
-        quill.root.addEventListener('keydown', (e) => {
-          if (!slashActive) return;
-          if (e.key === 'ArrowDown') {
-            e.preventDefault(); e.stopPropagation();
-            slashHighlightIndex = Math.min(slashHighlightIndex + 1, slashFilteredItems.length - 1);
-            renderSlashMenu();
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault(); e.stopPropagation();
-            slashHighlightIndex = Math.max(slashHighlightIndex - 1, 0);
-            renderSlashMenu();
-          } else if (e.key === 'Enter' || e.key === 'Tab') {
-            e.preventDefault(); e.stopPropagation();
-            selectSlashItem(quill, slashHighlightIndex);
-          } else if (e.key === 'Escape') {
-            e.preventDefault(); e.stopPropagation();
-            closeSlashMenu();
-          }
-        }, true);
         return quill;
       }
 
@@ -6988,15 +6958,14 @@ document.addEventListener('DOMContentLoaded', () => {
       let slashBusy = false;
       let slashStartIndex = -1;
       let slashQuery = '';
-      let slashHighlightIndex = 0;
+      let slashHighlightIndex = -1;
       let slashFilteredItems = [];
 
       function closeSlashMenu() {
         slashActive = false;
-        if (slashMenuEl) {
-          slashMenuEl.classList.remove('active');
-          slashMenuEl.innerHTML = '';
-        }
+        if (slashMenuEl) slashMenuEl.classList.remove('active');
+        if (slashMenuListEl) slashMenuListEl.innerHTML = '';
+        if (slashCustomInputEl) slashCustomInputEl.value = '';
       }
 
       // Hint "/" ala Notion di baris kosong tempat kursor berada - beda dari
@@ -7024,56 +6993,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawQuery = slashQuery.trim();
         const q = rawQuery.toLowerCase();
         const hasSpace = /\s/.test(rawQuery);
-        // Query dengan spasi = user jelas sedang mengetik kalimat prompt bebas,
-        // bukan mencari nama command - jangan cocokkan ke command manapun lagi.
-        const commandItems = !q
-          ? SLASH_MENU_ITEMS.slice()
-          : (hasSpace ? [] : SLASH_MENU_ITEMS.filter(item => t[item.labelKey].toLowerCase().includes(q)));
-
-        const items = commandItems.map(item => ({ kind: 'command', id: item.id, section: item.section, icon: item.icon, label: t[item.labelKey] }));
-
-        // Baris "Tanya AI" ala kotak "Ask AI to write anything" SciSpace - SELALU
-        // ada di paling atas dari saat menu dibuka (bukan baru muncul setelah user
-        // kebetulan mulai mengetik), supaya user langsung tahu fitur ini ada.
-        // Placeholder abu-abu kalau belum ada yang diketik (belum bisa dipilih),
-        // ganti jadi teks hidup + aktif begitu user mulai mengetik sesuatu.
-        items.unshift({
-          kind: 'custom',
-          id: 'custom-prompt',
-          section: 'custom',
-          icon: 'fa-solid fa-wand-magic-sparkles',
-          label: rawQuery ? (t.notebook_slash_custom_prefix + ' "' + rawQuery + '"') : t.notebook_slash_custom_placeholder,
-          disabled: !rawQuery
-        });
-        return items;
+        // Query dengan spasi = user jelas sedang mengetik kalimat prompt bebas di
+        // kotak "Tanya AI" (notebookSlashCustomInput), bukan mencari nama command -
+        // jangan cocokkan ke command manapun lagi, biar daftar di bawah tidak
+        // menyesatkan (user tinggal tekan Enter untuk kirim prompt bebasnya).
+        if (!q) return SLASH_MENU_ITEMS.slice();
+        if (hasSpace) return [];
+        return SLASH_MENU_ITEMS.filter(item => t[item.labelKey].toLowerCase().includes(q));
       }
 
+      // Render ULANG cuma daftar command (#notebookSlashMenuList) - kotak input
+      // "Tanya AI" di atasnya (notebookSlashCustomInput) SENGAJA tidak pernah
+      // di-innerHTML-replace di sini, supaya fokus & isi ketikan user di
+      // dalamnya tidak hilang tiap kali daftar difilter ulang per keystroke.
       function renderSlashMenu() {
-        if (!slashMenuEl) return;
+        if (!slashMenuListEl) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
         slashFilteredItems = getFilteredSlashItems();
-        // Highlight default mendarat di command pertama (bukan di baris placeholder
-        // "Tanya AI" yang belum bisa dipilih) begitu menu baru dibuka/di-reset.
-        if (slashHighlightIndex >= slashFilteredItems.length) slashHighlightIndex = 0;
-        if (slashFilteredItems[slashHighlightIndex] && slashFilteredItems[slashHighlightIndex].disabled) {
-          slashHighlightIndex = slashFilteredItems.length > 1 ? 1 : 0;
+        // slashHighlightIndex: -1 = belum ada command yang di-highlight (mode
+        // default - tekan Enter kirim isi kotak "Tanya AI"), 0..N-1 = index
+        // command yang sedang di-highlight lewat panah atas/bawah.
+        if (!slashFilteredItems.length) {
+          slashHighlightIndex = -1;
+        } else if (slashHighlightIndex >= slashFilteredItems.length) {
+          slashHighlightIndex = slashFilteredItems.length - 1;
         }
         if (!slashFilteredItems.length) {
-          slashMenuEl.innerHTML = `<div class="notebook-slash-menu-empty">${t.notebook_slash_no_results}</div>`;
+          const hint = slashQuery.trim() ? t.notebook_slash_press_enter_hint : '';
+          slashMenuListEl.innerHTML = hint ? `<div class="notebook-slash-menu-empty">${hint}</div>` : '';
           return;
         }
         let html = '';
         let lastSection = null;
         slashFilteredItems.forEach((item, i) => {
-          if (item.kind !== 'custom' && item.section !== lastSection) {
+          if (item.section !== lastSection) {
             html += `<div class="notebook-slash-menu-section">${t[SLASH_SECTION_LABEL_KEYS[item.section]]}</div>`;
+            lastSection = item.section;
           }
-          lastSection = item.section;
-          const itemClass = (item.kind === 'custom' ? ' notebook-slash-menu-item-custom' : '') + (item.disabled ? ' notebook-slash-menu-item-disabled' : '');
-          html += `<div class="notebook-slash-menu-item${itemClass}${i === slashHighlightIndex ? ' active' : ''}" data-idx="${i}"><i class="${item.icon}"></i><span>${escapeHtml(item.label)}</span></div>`;
+          html += `<div class="notebook-slash-menu-item${i === slashHighlightIndex ? ' active' : ''}" data-idx="${i}"><i class="${item.icon}"></i><span>${t[item.labelKey]}</span></div>`;
         });
         html += renderSlashQuotaFooter(t);
-        slashMenuEl.innerHTML = html;
+        slashMenuListEl.innerHTML = html;
       }
 
       function renderSlashQuotaFooter(t) {
@@ -7104,10 +7064,19 @@ document.addEventListener('DOMContentLoaded', () => {
         slashActive = true;
         slashStartIndex = index;
         slashQuery = '';
-        slashHighlightIndex = 0;
+        slashHighlightIndex = -1;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        if (slashCustomInputEl) {
+          slashCustomInputEl.value = '';
+          slashCustomInputEl.placeholder = t.notebook_slash_custom_placeholder;
+        }
         renderSlashMenu();
         positionSlashMenu(editor);
         if (slashMenuEl) slashMenuEl.classList.add('active');
+        // Fokus langsung pindah ke kotak "Tanya AI" begitu menu kebuka - dari
+        // sini user bisa langsung klik/ketik di situ (bukan di dokumen lagi),
+        // sesuai ekspektasi normal user terhadap kotak yang terlihat seperti input.
+        if (slashCustomInputEl) slashCustomInputEl.focus();
       }
 
       async function runSlashAction(editor, actionId, insertIndex, t, customInstruction) {
@@ -7177,34 +7146,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      // "/" pemicu di dokumen selalu tepat 1 karakter yang dihapus di sini - typo-nya
+      // query (kalimat command/prompt) tidak lagi ikut ditulis ke dokumen sama sekali
+      // sejak fokus dipindah ke notebookSlashCustomInput, jadi tidak perlu dihitung
+      // panjang selection segala seperti sebelumnya.
       async function selectSlashItem(editor, idx) {
         const item = slashFilteredItems[idx];
-        if (!item || item.disabled || slashBusy) return;
+        if (!item || slashBusy) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
         const insertIndex = slashStartIndex;
-        const currentSel = editor.getSelection();
-        const removeLength = currentSel ? Math.max(1, currentSel.index - slashStartIndex) : 1;
-        const customInstruction = item.kind === 'custom' ? slashQuery.trim() : null;
 
-        slashActive = false; // stop text-change dari melacak query "/" yang sebentar lagi dihapus
+        slashActive = false;
         slashBusy = true;
-        editor.deleteText(insertIndex, removeLength, 'user');
+        editor.deleteText(insertIndex, 1, 'user');
         editor.setSelection(insertIndex, 0);
-        if (slashMenuEl) {
-          slashMenuEl.innerHTML = `<div class="notebook-slash-menu-loading"><i class="fa-solid fa-spinner fa-spin"></i> ${t.notebook_slash_generating}</div>`;
+        if (slashMenuListEl) {
+          slashMenuListEl.innerHTML = `<div class="notebook-slash-menu-loading"><i class="fa-solid fa-spinner fa-spin"></i> ${t.notebook_slash_generating}</div>`;
         }
+        if (slashCustomInputEl) slashCustomInputEl.disabled = true;
 
         try {
-          await runSlashAction(editor, item.id, insertIndex, t, customInstruction);
+          await runSlashAction(editor, item.id, insertIndex, t, null);
         } finally {
           slashBusy = false;
+          if (slashCustomInputEl) slashCustomInputEl.disabled = false;
+          closeSlashMenu();
+        }
+      }
+
+      // Kirim isi kotak "Tanya AI" (notebookSlashCustomInput) sebagai instruksi
+      // bebas - dipanggil saat Enter ditekan di kotak itu selagi tidak ada
+      // command yang sedang di-highlight (slashHighlightIndex === -1, mode default).
+      async function submitCustomPrompt(editor) {
+        const instruction = slashCustomInputEl ? slashCustomInputEl.value.trim() : '';
+        if (!instruction || slashBusy) return;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        const insertIndex = slashStartIndex;
+
+        slashActive = false;
+        slashBusy = true;
+        editor.deleteText(insertIndex, 1, 'user');
+        editor.setSelection(insertIndex, 0);
+        if (slashMenuListEl) {
+          slashMenuListEl.innerHTML = `<div class="notebook-slash-menu-loading"><i class="fa-solid fa-spinner fa-spin"></i> ${t.notebook_slash_generating}</div>`;
+        }
+        if (slashCustomInputEl) slashCustomInputEl.disabled = true;
+
+        try {
+          await runSlashAction(editor, 'custom-prompt', insertIndex, t, instruction);
+        } finally {
+          slashBusy = false;
+          if (slashCustomInputEl) slashCustomInputEl.disabled = false;
           closeSlashMenu();
         }
       }
 
       if (slashMenuEl) {
         slashMenuEl.addEventListener('mousedown', (e) => {
-          // mousedown (bukan click) supaya menu tidak keburu blur/hilang duluan sebelum terpilih
+          // mousedown (bukan click) supaya menu tidak keburu blur/hilang duluan sebelum terpilih.
+          // Klik di area input (notebookSlashCustomInput) SENGAJA dibiarkan lolos
+          // tanpa preventDefault, supaya browser tetap menempatkan kursor ketik
+          // di posisi yang diklik seperti input pada umumnya.
           const itemEl = e.target.closest('.notebook-slash-menu-item');
           if (!itemEl) return;
           e.preventDefault();
@@ -7214,6 +7216,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.addEventListener('click', (e) => {
           if (slashActive && !slashMenuEl.contains(e.target)) closeSlashMenu();
+        });
+      }
+
+      if (slashCustomInputEl) {
+        slashCustomInputEl.addEventListener('input', () => {
+          slashQuery = slashCustomInputEl.value;
+          slashHighlightIndex = -1; // balik ke mode "Tanya AI" default tiap kali user mengetik ulang
+          renderSlashMenu();
+        });
+        slashCustomInputEl.addEventListener('keydown', (e) => {
+          if (!slashActive) return;
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            slashHighlightIndex = slashFilteredItems.length
+              ? Math.min(slashHighlightIndex + 1, slashFilteredItems.length - 1)
+              : -1;
+            renderSlashMenu();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            slashHighlightIndex = Math.max(slashHighlightIndex - 1, -1);
+            renderSlashMenu();
+          } else if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault();
+            const editor = ensureQuill();
+            if (!editor) return;
+            if (slashHighlightIndex === -1) {
+              submitCustomPrompt(editor);
+            } else {
+              selectSlashItem(editor, slashHighlightIndex);
+            }
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            const editor = ensureQuill();
+            const returnIndex = slashStartIndex + 1;
+            closeSlashMenu();
+            if (editor) {
+              editor.setSelection(returnIndex, 0);
+              editor.focus();
+            }
+          }
         });
       }
     })();
