@@ -323,8 +323,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const htmlParts = [];
     let listBuffer = [];
     let listType = null;
+    // Sub-bullet ("- ...") langsung di bawah item list bernomor ditempel sebagai
+    // <ul> nested di dalam <li> terakhir (lihat penanganan ulMatch di bawah),
+    // bukan memutus <ol> lalu membukanya lagi - kalau di-flush & dibuka ulang,
+    // <ol> baru selalu mulai dari 1 lagi secara default di HTML walau sumbernya
+    // menulis "5.", "6.", dst, jadi nomornya keliatan "balik ke 1" tiap ada bullet.
+    let nestedUlOpen = false;
+
+    function closeNestedUl() {
+      if (nestedUlOpen && listBuffer.length > 0) {
+        listBuffer[listBuffer.length - 1] += '</ul>';
+      }
+      nestedUlOpen = false;
+    }
 
     function flushList() {
+      closeNestedUl();
       if (listBuffer.length > 0 && listType) {
         htmlParts.push(`<${listType} class="chat-md-list">` + listBuffer.map(li => `<li>${li}</li>`).join('') + `</${listType}>`);
       }
@@ -426,6 +440,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const ulMatch = trimmed.match(/^[-*]\s+(.*)$/);
       if (ulMatch) {
+        if (listType === 'ol' && listBuffer.length > 0) {
+          // Sub-bullet di bawah item ol yang sedang berjalan - tempel sebagai
+          // <ul> nested di <li> terakhir, JANGAN flush (lihat catatan di
+          // deklarasi nestedUlOpen di atas).
+          const last = listBuffer.length - 1;
+          if (!nestedUlOpen) {
+            listBuffer[last] += '<ul class="chat-md-list chat-md-nested-list">';
+            nestedUlOpen = true;
+          }
+          listBuffer[last] += `<li>${inline(ulMatch[1])}</li>`;
+          i++;
+          continue;
+        }
         if (listType !== 'ul') { flushList(); listType = 'ul'; }
         listBuffer.push(inline(ulMatch[1]));
         i++;
@@ -433,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const olMatch = trimmed.match(/^\d+\.\s+(.*)$/);
       if (olMatch) {
+        closeNestedUl();
         if (listType !== 'ol') { flushList(); listType = 'ol'; }
         listBuffer.push(inline(olMatch[1]));
         i++;
@@ -442,6 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Paragraf polos tepat setelah item list - anggap lanjutan/penjelasan
         // item TERAKHIR, bukan paragraf baru yang memutus list (lihat catatan
         // di blok baris-kosong di atas soal kenapa ini penting untuk penomoran).
+        closeNestedUl();
         listBuffer[listBuffer.length - 1] += `<br><br>${inline(trimmed)}`;
         i++;
         continue;
