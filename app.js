@@ -7054,29 +7054,26 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })();
 
-    // Sapaan berubah sesuai jam saat ini (pagi/siang/sore/malam), supaya sapaan
+    // Sapaan berubah sesuai jam saat ini (pagi/siang/malam), supaya sapaan
     // di layar utama JurnalHub Intelligence terasa hidup, bukan teks statis.
     function getTimeOfDayGreeting(lang, name) {
       const hour = new Date().getHours();
-      // 04-10 pagi, 11-14 siang, 15-18 sore, 19-03 malam
+      // 04-10 pagi, 11-17 siang, 18-03 malam
       let bucket;
       if (hour >= 4 && hour < 11) bucket = 'morning';
-      else if (hour >= 11 && hour < 15) bucket = 'afternoon';
-      else if (hour >= 15 && hour < 19) bucket = 'evening';
+      else if (hour >= 11 && hour < 18) bucket = 'day';
       else bucket = 'night';
 
       const phrases = {
         id: {
-          morning: `Selamat pagi, ${name}. Mau nulis apa hari ini?`,
-          afternoon: `Selamat siang, ${name}. Mau nulis apa hari ini?`,
-          evening: `Selamat sore, ${name}. Mau nulis apa hari ini?`,
-          night: `Selamat malam, ${name}. Mau nulis apa malam ini?`
+          morning: `Semangat Pagi ${name}, Nulis apa nih?`,
+          day: `Tetep Semangat ${name} dan tetap produktif!`,
+          night: `Udah Malem tetep semangat ya ${name}, hebat!`
         },
         en: {
-          morning: `Good morning, ${name}. What do you want to write today?`,
-          afternoon: `Good afternoon, ${name}. What do you want to write today?`,
-          evening: `Good evening, ${name}. What do you want to write today?`,
-          night: `Good night, ${name}. What do you want to write tonight?`
+          morning: `Good morning ${name}, what are we writing today?`,
+          day: `Keep going ${name} - stay productive!`,
+          night: `Still up late, ${name}? You're doing great!`
         }
       };
       return (phrases[lang] || phrases.id)[bucket];
