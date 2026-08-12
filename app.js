@@ -709,6 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_error: "Gagal menghubungi AI.",
       notebook_slash_conn_error: "Gagal menghubungi server.",
       notebook_slash_critique_heading: "Kritik AI (seperti Reviewer):",
+      notebook_slash_line_hint: "Ketik \"/\" untuk bantuan AI",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -1051,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_error: "Failed to contact AI.",
       notebook_slash_conn_error: "Failed to contact the server.",
       notebook_slash_critique_heading: "AI Critique (like a Reviewer):",
+      notebook_slash_line_hint: "Type \"/\" for AI help",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -6576,6 +6578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         quill.on('text-change', (delta, oldDelta, source) => {
           if (suppressChange) return;
           scheduleSave();
+          updateLineHint(quill);
           if (source !== 'user' || slashBusy) return;
 
           const sel = quill.getSelection();
@@ -6599,6 +6602,7 @@ document.addEventListener('DOMContentLoaded', () => {
           renderSlashMenu();
           positionSlashMenu(quill);
         });
+        quill.on('selection-change', () => updateLineHint(quill));
         quill.root.addEventListener('keydown', (e) => {
           if (!slashActive) return;
           if (e.key === 'ArrowDown') {
@@ -6871,6 +6875,26 @@ document.addEventListener('DOMContentLoaded', () => {
           slashMenuEl.classList.remove('active');
           slashMenuEl.innerHTML = '';
         }
+      }
+
+      // Hint "/" ala Notion di baris kosong tempat kursor berada - beda dari
+      // placeholder bawaan Quill (notebook_editor_placeholder) yang cuma
+      // tampil kalau SELURUH dokumen kosong. Ini supaya user tetap diingatkan
+      // fitur AI ada walau sedang menulis di tengah dokumen yang sudah berisi.
+      function updateLineHint(editor) {
+        const prev = editor.root.querySelector('.notebook-slash-line-hint');
+        if (prev) prev.classList.remove('notebook-slash-line-hint');
+
+        if (slashActive || editor.getLength() <= 1) return;
+
+        const sel = editor.getSelection();
+        if (!sel || sel.length > 0) return;
+
+        const [line] = editor.getLine(sel.index);
+        if (!line || !line.domNode || line.length() !== 1) return;
+
+        line.domNode.classList.add('notebook-slash-line-hint');
+        line.domNode.setAttribute('data-slash-hint', TRANSLATIONS[window.currentLanguage || 'id'].notebook_slash_line_hint);
       }
 
       function getFilteredSlashItems() {

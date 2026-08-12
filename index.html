@@ -3291,6 +3291,16 @@
       color: var(--text-muted);
       font-style: normal;
     }
+    /* Hint "/" per-baris ala Notion - hanya muncul di baris kosong tempat
+       kursor sedang berada (bukan whole-doc placeholder Quill di atas, yang
+       cuma aktif kalau SELURUH dokumen kosong), supaya user tetap diingatkan
+       fitur AI ada tanpa mengganggu baris lain yang sudah berisi teks. */
+    #notebookEditor .ql-editor .notebook-slash-line-hint::before {
+      content: attr(data-slash-hint);
+      color: var(--text-muted);
+      opacity: 0.6;
+      pointer-events: none;
+    }
     [data-theme="dark"] #notebookToolbar.ql-toolbar.ql-snow .ql-stroke {
       stroke: var(--text-muted);
     }
