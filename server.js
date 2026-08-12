@@ -3127,16 +3127,34 @@ ATURAN:
   }
 };
 
+// Aksi "custom" (ala kotak "Ask AI to write anything" SciSpace) - instruksi
+// bebas dari penulis sendiri, bukan salah satu dari 5 command tetap di atas.
+// systemPrompt-nya generik (cuma bilang "ikuti instruksi user"), instruksi
+// sesungguhnya dikirim lewat userPrompt (lihat field `instruction` di bawah).
+const CUSTOM_ACTION_SYSTEM_PROMPT = `Anda adalah asisten penulisan akademis yang menjalankan instruksi spesifik dari penulis untuk konten yang akan disisipkan ke naskahnya.
+
+ATURAN:
+- Ikuti instruksi pengguna dengan tepat dan tulis konten yang diminta.
+- Gunakan BAHASA YANG SAMA dengan judul/isi naskah yang diberikan (atau bahasa instruksi kalau naskah masih kosong).
+- Format output WAJIB HTML sederhana memakai HANYA tag berikut: <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>.
+- JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML, JANGAN menyebut bahwa Anda adalah AI.
+- Kembalikan HANYA HTML kontennya.`;
+
 app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
   const action = String((req.body && req.body.action) || '');
   const title = String((req.body && req.body.title) || '').trim().slice(0, 300);
   const context = String((req.body && req.body.context) || '').trim().slice(0, 6000);
-  const actionConfig = NOTEBOOK_DRAFT_ACTIONS[action];
+  const isCustom = action === 'custom';
+  const instruction = isCustom ? String((req.body && req.body.instruction) || '').trim().slice(0, 500) : '';
+  const actionConfig = isCustom ? { systemPrompt: CUSTOM_ACTION_SYSTEM_PROMPT, isHtml: true } : NOTEBOOK_DRAFT_ACTIONS[action];
 
   if (!actionConfig) {
     return res.status(400).json({ ok: false, message: 'Aksi AI tidak dikenali.' });
   }
-  if (!title && !context) {
+  if (isCustom && !instruction) {
+    return res.status(400).json({ ok: false, message: 'Tulis dulu permintaan untuk AI setelah "/".' });
+  }
+  if (!isCustom && !title && !context) {
     return res.status(400).json({ ok: false, message: 'Tulis judul atau beberapa kalimat dulu sebelum minta AI membantu.' });
   }
 
@@ -3163,7 +3181,9 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
   const fetchFn = globalThis.fetch || require('node-fetch');
   const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
 
-  const userPrompt = `Judul naskah: "${title || '(tidak ada judul)'}"\n\nIsi naskah yang sudah ditulis sejauh ini:\n"""\n${context || '(belum ada isi)'}\n"""`;
+  const userPrompt = isCustom
+    ? `Judul naskah: "${title || '(tidak ada judul)'}"\n\nIsi naskah yang sudah ditulis sejauh ini:\n"""\n${context || '(belum ada isi)'}\n"""\n\nInstruksi dari penulis: "${instruction}"`
+    : `Judul naskah: "${title || '(tidak ada judul)'}"\n\nIsi naskah yang sudah ditulis sejauh ini:\n"""\n${context || '(belum ada isi)'}\n"""`;
 
   try {
     const dsResponse = await fetchFn(deepSeekUrl, {

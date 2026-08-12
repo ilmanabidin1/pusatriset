@@ -763,6 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_conclusion: "Tulis Kesimpulan",
       notebook_slash_opposing: "Tulis Argumen Tandingan",
       notebook_slash_critique: "Kritik Seperti Reviewer",
+      notebook_slash_custom_prefix: "Tanya AI:",
       notebook_slash_no_results: "Tidak ada perintah yang cocok",
       notebook_slash_generating: "Menulis...",
       notebook_slash_empty_doc_alert: "Tulis judul atau beberapa kalimat dulu sebelum minta AI membantu.",
@@ -1105,6 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_conclusion: "Write Conclusion",
       notebook_slash_opposing: "Write Opposing Arguments",
       notebook_slash_critique: "Critique Like a Reviewer",
+      notebook_slash_custom_prefix: "Ask AI:",
       notebook_slash_no_results: "No matching commands",
       notebook_slash_generating: "Writing...",
       notebook_slash_empty_doc_alert: "Write a title or a few sentences first before asking AI to help.",
@@ -6711,7 +6713,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
           slashQuery = quill.getText(slashStartIndex + 1, sel.index - slashStartIndex - 1);
-          if (/\s/.test(slashQuery)) { closeSlashMenu(); return; }
+          // Newline (Enter selalu di-preventDefault selagi menu aktif, jadi ini
+          // cuma jaga-jaga) memutus menu - tapi spasi TIDAK, supaya user bisa
+          // mengetik kalimat prompt bebas penuh ("/tulis pendahuluan tentang...")
+          // seperti kotak "Ask AI to write anything" di SciSpace.
+          if (/\n/.test(slashQuery)) { closeSlashMenu(); return; }
           slashHighlightIndex = 0;
           renderSlashMenu();
           positionSlashMenu(quill);
@@ -7013,9 +7019,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
       function getFilteredSlashItems() {
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
-        const q = slashQuery.trim().toLowerCase();
-        if (!q) return SLASH_MENU_ITEMS.slice();
-        return SLASH_MENU_ITEMS.filter(item => t[item.labelKey].toLowerCase().includes(q));
+        const rawQuery = slashQuery.trim();
+        const q = rawQuery.toLowerCase();
+        const hasSpace = /\s/.test(rawQuery);
+        // Query dengan spasi = user jelas sedang mengetik kalimat prompt bebas,
+        // bukan mencari nama command - jangan cocokkan ke command manapun lagi.
+        const commandItems = !q
+          ? SLASH_MENU_ITEMS.slice()
+          : (hasSpace ? [] : SLASH_MENU_ITEMS.filter(item => t[item.labelKey].toLowerCase().includes(q)));
+
+        const items = commandItems.map(item => ({ kind: 'command', id: item.id, section: item.section, icon: item.icon, label: t[item.labelKey] }));
+
+        // Opsi "Tanya AI apa saja" ala SciSpace - selalu muncul paling atas begitu
+        // user mulai mengetik apapun setelah "/", terlepas ada command yang cocok
+        // atau tidak, supaya prompt bebas selalu bisa dikirim.
+        if (rawQuery) {
+          items.unshift({
+            kind: 'custom',
+            id: 'custom-prompt',
+            section: 'custom',
+            icon: 'fa-solid fa-wand-magic-sparkles',
+            label: t.notebook_slash_custom_prefix + ' "' + rawQuery + '"'
+          });
+        }
+        return items;
       }
 
       function renderSlashMenu() {
@@ -7030,11 +7057,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = '';
         let lastSection = null;
         slashFilteredItems.forEach((item, i) => {
-          if (item.section !== lastSection) {
+          if (item.kind !== 'custom' && item.section !== lastSection) {
             html += `<div class="notebook-slash-menu-section">${t[SLASH_SECTION_LABEL_KEYS[item.section]]}</div>`;
-            lastSection = item.section;
           }
-          html += `<div class="notebook-slash-menu-item${i === slashHighlightIndex ? ' active' : ''}" data-idx="${i}"><i class="${item.icon}"></i><span>${t[item.labelKey]}</span></div>`;
+          lastSection = item.section;
+          const itemClass = item.kind === 'custom' ? ' notebook-slash-menu-item-custom' : '';
+          html += `<div class="notebook-slash-menu-item${itemClass}${i === slashHighlightIndex ? ' active' : ''}" data-idx="${i}"><i class="${item.icon}"></i><span>${escapeHtml(item.label)}</span></div>`;
         });
         html += renderSlashQuotaFooter(t);
         slashMenuEl.innerHTML = html;
@@ -7074,9 +7102,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (slashMenuEl) slashMenuEl.classList.add('active');
       }
 
-      async function runSlashAction(editor, actionId, insertIndex, t) {
+      async function runSlashAction(editor, actionId, insertIndex, t, customInstruction) {
         try {
-          if (actionId === 'continue') {
+          if (actionId === 'custom-prompt') {
+            const fullText = editor.getText().trim();
+            const res = await fetch('/api/documents/ai-draft-action', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'custom', title: titleInput.value.trim(), context: fullText, instruction: customInstruction })
+            });
+            const data = await res.json();
+            if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
+            const lengthBefore = editor.getLength();
+            editor.clipboard.dangerouslyPasteHTML(insertIndex, data.html, 'user');
+            const inserted = editor.getLength() - lengthBefore;
+            editor.setSelection(insertIndex + Math.max(0, inserted), 0);
+          } else if (actionId === 'continue') {
             const contextText = editor.getText(0, insertIndex).trim();
             if (!contextText) { alert(t.notebook_continue_empty_alert); return; }
             const res = await fetch('/api/documents/continue-writing', {
@@ -7135,6 +7176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const insertIndex = slashStartIndex;
         const currentSel = editor.getSelection();
         const removeLength = currentSel ? Math.max(1, currentSel.index - slashStartIndex) : 1;
+        const customInstruction = item.kind === 'custom' ? slashQuery.trim() : null;
 
         slashActive = false; // stop text-change dari melacak query "/" yang sebentar lagi dihapus
         slashBusy = true;
@@ -7145,7 +7187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-          await runSlashAction(editor, item.id, insertIndex, t);
+          await runSlashAction(editor, item.id, insertIndex, t, customInstruction);
         } finally {
           slashBusy = false;
           closeSlashMenu();
