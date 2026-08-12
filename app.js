@@ -764,6 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_opposing: "Tulis Argumen Tandingan",
       notebook_slash_critique: "Kritik Seperti Reviewer",
       notebook_slash_custom_prefix: "Tanya AI:",
+      notebook_slash_custom_placeholder: "Tanya AI untuk menulis apa saja...",
       notebook_slash_no_results: "Tidak ada perintah yang cocok",
       notebook_slash_generating: "Menulis...",
       notebook_slash_empty_doc_alert: "Tulis judul atau beberapa kalimat dulu sebelum minta AI membantu.",
@@ -1107,6 +1108,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_opposing: "Write Opposing Arguments",
       notebook_slash_critique: "Critique Like a Reviewer",
       notebook_slash_custom_prefix: "Ask AI:",
+      notebook_slash_custom_placeholder: "Ask AI to write anything...",
       notebook_slash_no_results: "No matching commands",
       notebook_slash_generating: "Writing...",
       notebook_slash_empty_doc_alert: "Write a title or a few sentences first before asking AI to help.",
@@ -7030,18 +7032,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const items = commandItems.map(item => ({ kind: 'command', id: item.id, section: item.section, icon: item.icon, label: t[item.labelKey] }));
 
-        // Opsi "Tanya AI apa saja" ala SciSpace - selalu muncul paling atas begitu
-        // user mulai mengetik apapun setelah "/", terlepas ada command yang cocok
-        // atau tidak, supaya prompt bebas selalu bisa dikirim.
-        if (rawQuery) {
-          items.unshift({
-            kind: 'custom',
-            id: 'custom-prompt',
-            section: 'custom',
-            icon: 'fa-solid fa-wand-magic-sparkles',
-            label: t.notebook_slash_custom_prefix + ' "' + rawQuery + '"'
-          });
-        }
+        // Baris "Tanya AI" ala kotak "Ask AI to write anything" SciSpace - SELALU
+        // ada di paling atas dari saat menu dibuka (bukan baru muncul setelah user
+        // kebetulan mulai mengetik), supaya user langsung tahu fitur ini ada.
+        // Placeholder abu-abu kalau belum ada yang diketik (belum bisa dipilih),
+        // ganti jadi teks hidup + aktif begitu user mulai mengetik sesuatu.
+        items.unshift({
+          kind: 'custom',
+          id: 'custom-prompt',
+          section: 'custom',
+          icon: 'fa-solid fa-wand-magic-sparkles',
+          label: rawQuery ? (t.notebook_slash_custom_prefix + ' "' + rawQuery + '"') : t.notebook_slash_custom_placeholder,
+          disabled: !rawQuery
+        });
         return items;
       }
 
@@ -7049,7 +7052,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!slashMenuEl) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
         slashFilteredItems = getFilteredSlashItems();
+        // Highlight default mendarat di command pertama (bukan di baris placeholder
+        // "Tanya AI" yang belum bisa dipilih) begitu menu baru dibuka/di-reset.
         if (slashHighlightIndex >= slashFilteredItems.length) slashHighlightIndex = 0;
+        if (slashFilteredItems[slashHighlightIndex] && slashFilteredItems[slashHighlightIndex].disabled) {
+          slashHighlightIndex = slashFilteredItems.length > 1 ? 1 : 0;
+        }
         if (!slashFilteredItems.length) {
           slashMenuEl.innerHTML = `<div class="notebook-slash-menu-empty">${t.notebook_slash_no_results}</div>`;
           return;
@@ -7061,7 +7069,7 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `<div class="notebook-slash-menu-section">${t[SLASH_SECTION_LABEL_KEYS[item.section]]}</div>`;
           }
           lastSection = item.section;
-          const itemClass = item.kind === 'custom' ? ' notebook-slash-menu-item-custom' : '';
+          const itemClass = (item.kind === 'custom' ? ' notebook-slash-menu-item-custom' : '') + (item.disabled ? ' notebook-slash-menu-item-disabled' : '');
           html += `<div class="notebook-slash-menu-item${itemClass}${i === slashHighlightIndex ? ' active' : ''}" data-idx="${i}"><i class="${item.icon}"></i><span>${escapeHtml(item.label)}</span></div>`;
         });
         html += renderSlashQuotaFooter(t);
@@ -7171,7 +7179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       async function selectSlashItem(editor, idx) {
         const item = slashFilteredItems[idx];
-        if (!item || slashBusy) return;
+        if (!item || item.disabled || slashBusy) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
         const insertIndex = slashStartIndex;
         const currentSel = editor.getSelection();
