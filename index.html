@@ -3291,6 +3291,38 @@
       color: var(--text-muted);
       font-style: normal;
     }
+    /* Sapaan JurnalHub Intelligence (empty state) - ikon logo di sebelah teks,
+       muter kalau diklik (ala logo Claude), sekadar easter egg iseng. */
+    .research-chat-greeting-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+    }
+    .research-chat-greeting-icon {
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-drag: none;
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+    .research-chat-greeting-icon:hover {
+      transform: scale(1.1);
+    }
+    .research-chat-greeting-icon.spinning {
+      animation: researchChatGreetingIconSpin 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+    @keyframes researchChatGreetingIconSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .research-chat-greeting-icon.spinning {
+        animation: none;
+      }
+    }
     /* Hint "/" per-baris ala Notion - hanya muncul di baris kosong tempat
        kursor sedang berada (bukan whole-doc placeholder Quill di atas, yang
        cuma aktif kalau SELURUH dokumen kosong), supaya user tetap diingatkan
@@ -5453,7 +5485,10 @@
             <!-- Chat Messages (mengisi seluruh sisa tinggi layar) -->
             <div id="researchChatMessages" class="research-chat-messages">
               <div id="researchChatEmptyState" style="text-align: center; padding: 1rem; max-width: 640px; margin: auto; width: 100%;">
-                <h2 id="researchChatGreeting" style="font-family: var(--font-outfit); font-weight: 800; font-size: 2rem; color: var(--text-main); margin: 0 0 0.5rem;">Mau nulis apa hari ini, Peneliti?</h2>
+                <div class="research-chat-greeting-row" style="margin-bottom: 0.5rem;">
+                  <img src="assets/favicon.png" alt="JurnalHub" id="researchChatGreetingIcon" class="research-chat-greeting-icon" title="Klik saya!">
+                  <h2 id="researchChatGreeting" style="font-family: var(--font-outfit); font-weight: 800; font-size: 2rem; color: var(--text-main); margin: 0;">Mau nulis apa hari ini, Peneliti?</h2>
+                </div>
                 <p id="researchChatEmptyText" style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Bukan LLM biasa - JurnalHub Intelligence menjawab jujur, kritis, dan tidak asal mengiyakan (no yes-man), layaknya dosen pembimbing sungguhan.</p>
               </div>
             </div>
