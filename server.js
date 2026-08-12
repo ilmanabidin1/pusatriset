@@ -168,14 +168,21 @@ function getVertexModel(modelName = GEMINI_MODEL) {
 // Threshold kecil (1KB) supaya asset teks (JS/CSS/HTML/JSON) ikut terkompresi,
 // sedangkan file yang sudah terkompresi (video mp4, gambar) otomatis dilewati
 // middleware ini berdasarkan Content-Type.
-// PENGECUALIAN: /api/research-chat di-stream chunk-per-chunk (lihat res.write
-// di route-nya) - middleware compression menahan/buffer output di internal
-// zlib-nya sampai buffer penuh atau response selesai, jadi kalau tidak
-// dikecualikan di sini, efeknya SAMA SEPERTI TIDAK STREAMING SAMA SEKALI
-// (client baru terima semua teks sekaligus di akhir, bukan per token/kata).
+// PENGECUALIAN: route di STREAMING_ROUTES di-stream chunk-per-chunk (lihat
+// res.write / streamDeepSeekCompletion di masing-masing route) - middleware
+// compression menahan/buffer output di internal zlib-nya sampai buffer penuh
+// atau response selesai, jadi kalau tidak dikecualikan di sini, efeknya SAMA
+// SEPERTI TIDAK STREAMING SAMA SEKALI (client baru terima semua teks
+// sekaligus di akhir, bukan per token/kata).
+const STREAMING_ROUTES = new Set([
+  '/api/research-chat',
+  '/api/lit-review',
+  '/api/peer-review',
+  '/api/generate-ai-disclosure'
+]);
 app.use(compression({
   filter: (req, res) => {
-    if (req.path === '/api/research-chat') return false;
+    if (STREAMING_ROUTES.has(req.path)) return false;
     return compression.filter(req, res);
   }
 }));
@@ -3825,7 +3832,6 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   }
 
   try {
-    const fetchFn = globalThis.fetch || require('node-fetch');
     const targetCount = isDeepTier ? 18 : 10;
 
     // 1. Retrieval - cari paper asli dari OpenAlex (gratis, DOI/URL terverifikasi).
@@ -3872,44 +3878,27 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
 
     const userPrompt = `Judul penelitian: ${title}\nKeyword/Bidang: ${keywords || '-'}\nAbstrak: ${abstract || '-'}\n\nDaftar paper ilmiah hasil pencarian (gunakan ini sebagai satu-satunya sumber):\n${paperListText}\n\n${depthInstructions}\n\nTulis tinjauan pustakanya sekarang (HTML mentah saja):`;
 
-    const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
-    const dsResponse = await fetchFn(deepSeekUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${deepSeekKey}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-v4-flash',
-        max_tokens: 3000,
-        stream: false,
-        thinking: { type: 'disabled' },
-        extra_body: { thinking: { type: 'disabled' } },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ]
-      })
-    });
+    const review = (await streamDeepSeekCompletion(res, deepSeekKey, {
+      model: 'deepseek-v4-flash',
+      max_tokens: 3000,
+      thinking: { type: 'disabled' },
+      extra_body: { thinking: { type: 'disabled' } },
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]
+    })).trim();
 
-    if (!dsResponse.ok) {
-      const errText = await dsResponse.text();
-      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
-    }
-
-    const dsData = await dsResponse.json();
-    const choice = dsData?.choices?.[0];
-    let review = choice?.message?.content?.trim();
-    if (!review && choice?.message?.reasoning_content) {
-      review = String(choice.message.reasoning_content).trim();
-    }
     if (!review) {
-      console.error('[Lit Review DeepSeek] Respons kosong, raw response:', JSON.stringify(dsData).slice(0, 1500));
-      throw new Error('Respons AI kosong saat menulis tinjauan pustaka.');
+      console.error('[Lit Review DeepSeek] Respons kosong dari DeepSeek.');
+      res.end();
+      return;
     }
 
     // Citations dibangun langsung dari data OpenAlex/Semantic Scholar (bukan dari LLM) -
-    // jadi selalu valid & tidak mungkin "kepotong" seperti pendekatan lama.
+    // jadi selalu valid & tidak mungkin "kepotong" seperti pendekatan lama. Dikirim
+    // sebagai chunk terakhir setelah teks selesai di-stream (lihat pola yang sama
+    // di /api/research-chat).
     const citations = papers.map(p => ({
       title: p.title,
       authors: p.authors,
@@ -3925,6 +3914,8 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
         ? p.tldr
         : `Dikutip ${p.citedByCount}x, relevan dengan topik penelitian berdasarkan abstrak.${p.isOpenAccess ? ' (Open Access)' : ''}`
     }));
+    res.write(JSON.stringify({ type: 'citations', citations }) + '\n');
+    res.end();
 
     // Update usage for Free & Premium users
     if (user && (user.type === 'free' || user.type === 'premium')) {
@@ -3937,11 +3928,13 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
     }
 
     addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review, citations });
-
-    res.json({ ok: true, source: 'openalex', review, citations, mode: requestedMode });
   } catch (error) {
     console.error('[Lit Review] Error:', error);
-    res.status(500).json({ ok: false, message: 'Gagal mencari referensi & membuat literature review: ' + error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ ok: false, message: 'Gagal mencari referensi & membuat literature review: ' + error.message });
+    } else {
+      res.end();
+    }
   }
 });
 
@@ -4464,9 +4457,6 @@ app.post('/api/peer-review', requireAccess, async (req, res) => {
     return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di server.' });
   }
 
-  const fetchFn = globalThis.fetch || require('node-fetch');
-  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
-
   const systemPrompt = `Anda adalah Tim Reviewer Jurnal Senior (Reviewer 1 & Reviewer 2) dan Editor-in-Chief untuk jurnal ilmiah bereputasi (SINTA / Scopus).
 Tugas Anda adalah memberikan evaluasi pre-submission yang sangat objektif, kritis, profesional, dan konstruktif terhadap draf naskah/abstrak ilmiah yang dikirimkan.
 
@@ -4495,39 +4485,22 @@ ${contentToReview.slice(0, 45000)}
 """`;
 
   try {
-    const dsResponse = await fetchFn(deepSeekUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${deepSeekKey}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-v4-flash',
-        max_tokens: 3500,
-        stream: false,
-        thinking: { type: 'disabled' },
-        extra_body: { thinking: { type: 'disabled' } },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ]
-      })
-    });
+    const reviewContent = (await streamDeepSeekCompletion(res, deepSeekKey, {
+      model: 'deepseek-v4-flash',
+      max_tokens: 3500,
+      thinking: { type: 'disabled' },
+      extra_body: { thinking: { type: 'disabled' } },
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]
+    })).trim();
 
-    if (!dsResponse.ok) {
-      const errText = await dsResponse.text();
-      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
-    }
-
-    const dsData = await dsResponse.json();
-    const choice = dsData?.choices?.[0];
-    let reviewContent = choice?.message?.content?.trim();
-    if (!reviewContent && choice?.message?.reasoning_content) {
-      reviewContent = String(choice.message.reasoning_content).trim();
-    }
+    res.end();
 
     if (!reviewContent) {
-      throw new Error('Respons evaluasi dari DeepSeek AI kosong.');
+      console.error('[AI Peer Reviewer] Respons kosong dari DeepSeek.');
+      return;
     }
 
     // Update usage for Free & Premium users (Ultimate unlimited, tidak dihitung)
@@ -4539,15 +4512,13 @@ ${contentToReview.slice(0, 45000)}
       user.peerReviewCountThisMonth += 1;
       saveUsers(users);
     }
-
-    res.json({
-      ok: true,
-      review: reviewContent,
-      targetJournal: targetJournal || 'Umum'
-    });
   } catch (error) {
     console.error('[AI Peer Reviewer] Error:', error);
-    res.status(500).json({ ok: false, message: 'Gagal melakukan evaluasi peer reviewer: ' + error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ ok: false, message: 'Gagal melakukan evaluasi peer reviewer: ' + error.message });
+    } else {
+      res.end();
+    }
   }
 });
 
@@ -4760,6 +4731,68 @@ function getDeepSeekApiKey() {
   return process.env.DEEPSEEK_API_KEY;
 }
 
+// Helper streaming DeepSeek yang dipakai bareng oleh beberapa fitur teks-bebas
+// (Lit Review, Peer Reviewer, AI Disclosure, dst) - pola sama persis dengan
+// /api/research-chat: relay tiap potongan SSE ke client via res.write() begitu
+// diterima, BUKAN nunggu respons lengkap dulu baru dikirim sekaligus. Caller
+// tetap yang set header res & panggil res.end() sendiri (supaya caller yang
+// perlu kirim chunk tambahan setelah teks, mis. citations, masih bisa).
+async function streamDeepSeekCompletion(res, apiKey, bodyPayload) {
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+  const dsResponse = await fetchFn(deepSeekUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(Object.assign({}, bodyPayload, { stream: true }))
+  });
+
+  if (!dsResponse.ok) {
+    const errText = await dsResponse.text();
+    throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+  }
+
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('X-Accel-Buffering', 'no');
+
+  let sseBuffer = '';
+  let fullContent = '';
+  const reader = dsResponse.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    sseBuffer += decoder.decode(value, { stream: true });
+    const lines = sseBuffer.split('\n');
+    sseBuffer = lines.pop();
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) continue;
+      const payload = trimmed.slice(5).trim();
+      if (payload === '[DONE]') continue;
+      try {
+        const parsed = JSON.parse(payload);
+        const delta = parsed?.choices?.[0]?.delta?.content;
+        if (delta) {
+          fullContent += delta;
+          res.write(JSON.stringify({ type: 'content', content: delta }) + '\n');
+        }
+      } catch (e) {
+        // Baris SSE parsial/tidak valid - abaikan
+      }
+    }
+  }
+
+  return fullContent;
+}
+
 // --- AI Disclosure Statement Generator ---
 // Hero feature pembeda: setiap fitur AI di JurnalHub bisa generate pernyataan
 // disclosure penggunaan AI untuk submission jurnal/buku, mengikuti norma
@@ -4801,64 +4834,34 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
   }
 
   try {
-    const fetchFn = globalThis.fetch || require('node-fetch');
-    const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
-
     const includeSearchString = searchTerms.length > 0;
     const userContent = includeSearchString
       ? `Tool used: ${toolName}\nHow it was used: ${usageContext}\nResearch title/keywords to derive the Core Search String from: ${searchTerms}\n\nGenerate the AI disclosure statement followed by the Core Search String:`
       : `Tool used: ${toolName}\nHow it was used: ${usageContext}\n\nGenerate the AI disclosure statement:`;
 
-    const response = await fetchFn(deepSeekUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-v4-flash',
-        max_tokens: 2000,
-        stream: false,
-        thinking: {
-          type: 'disabled'
-        },
-        extra_body: {
-          thinking: {
-            type: 'disabled'
-          }
-        },
-        messages: [
-          { role: 'system', content: includeSearchString ? AI_DISCLOSURE_SYSTEM_PROMPT_WITH_SEARCH_STRING : AI_DISCLOSURE_SYSTEM_PROMPT },
-          { role: 'user', content: userContent }
-        ]
-      })
-    });
+    const statement = (await streamDeepSeekCompletion(res, apiKey, {
+      model: 'deepseek-v4-flash',
+      max_tokens: 2000,
+      thinking: { type: 'disabled' },
+      extra_body: { thinking: { type: 'disabled' } },
+      messages: [
+        { role: 'system', content: includeSearchString ? AI_DISCLOSURE_SYSTEM_PROMPT_WITH_SEARCH_STRING : AI_DISCLOSURE_SYSTEM_PROMPT },
+        { role: 'user', content: userContent }
+      ]
+    })).trim();
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`DeepSeek API Error Status: ${response.status} - ${errText}`);
-    }
-
-    const resData = await response.json();
-    const choice = resData?.choices?.[0];
-    let statement = choice?.message?.content?.trim();
-
-    // Fallback: kalau field "content" kosong (mis. token habis di tengah proses
-    // reasoning sebelum sempat menulis jawaban final), coba pakai reasoning_content
-    // sebagai pengganti daripada gagal total.
-    if (!statement && choice?.message?.reasoning_content) {
-      statement = String(choice.message.reasoning_content).trim();
-    }
+    res.end();
 
     if (!statement) {
-      console.error('[AI Disclosure Generator] Respons kosong, raw response:', JSON.stringify(resData).slice(0, 1500));
-      throw new Error(`Respons AI kosong (finish_reason: ${choice?.finish_reason || 'unknown'}).`);
+      console.error('[AI Disclosure Generator] Respons kosong dari DeepSeek.');
     }
-
-    res.json({ ok: true, statement });
   } catch (error) {
     console.error('[AI Disclosure Generator] Error:', error.message);
-    res.status(500).json({ ok: false, message: 'Gagal membuat AI Disclosure Statement: ' + error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ ok: false, message: 'Gagal membuat AI Disclosure Statement: ' + error.message });
+    } else {
+      res.end();
+    }
   }
 });
 

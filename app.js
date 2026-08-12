@@ -189,18 +189,50 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ toolName, usageContext, searchTerms })
         });
-        const data = await res.json();
 
-        if (!res.ok || !data.ok) {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
           alert(data.message || 'Gagal membuat AI Disclosure Statement.');
           return;
         }
+        if (!res.body || typeof res.body.getReader !== 'function') {
+          throw new Error('Browser tidak mendukung streaming respons.');
+        }
 
-        if (textarea) textarea.value = data.statement;
         if (resultWrapper) {
           resultWrapper.style.display = 'block';
           resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+        if (textarea) textarea.value = '';
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let statementText = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            try {
+              const chunk = JSON.parse(trimmed);
+              if (chunk.type === 'content') statementText += chunk.content;
+            } catch (e) {}
+          }
+          if (textarea) textarea.value = statementText;
+        }
+
+        if (!statementText.trim()) {
+          alert('AI Disclosure Generator tidak memberikan jawaban. Coba lagi.');
+          if (resultWrapper) resultWrapper.style.display = 'none';
+          return;
+        }
+        if (textarea) textarea.value = statementText.trim();
       } catch (err) {
         console.error('[AI Disclosure]', err);
         alert('Gagal menghubungi server untuk membuat AI Disclosure Statement.');
@@ -4952,26 +4984,54 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ title, keywords, abstract, mode: litReviewMode })
           });
 
-          const data = await response.json();
-
           if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
             alert(data.message || 'Terjadi kesalahan saat memproses data.');
             return;
           }
+          if (!response.body || typeof response.body.getReader !== 'function') {
+            throw new Error('Browser tidak mendukung streaming respons.');
+          }
+
+          if (resultsPanel) {
+            resultsPanel.style.display = 'block';
+            resultsPanel.scrollIntoView({ behavior: 'smooth' });
+          }
+          if (textContainer) textContainer.innerHTML = '';
+
+          let reviewText = '';
+          let citations = [];
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed) continue;
+              try {
+                const chunk = JSON.parse(trimmed);
+                if (chunk.type === 'content') reviewText += chunk.content;
+                else if (chunk.type === 'citations') citations = chunk.citations || [];
+              } catch (e) {}
+            }
+            if (textContainer) textContainer.innerHTML = reviewText || '<p>Tidak ada draf yang dihasilkan.</p>';
+          }
 
           // Update UI
-          currentCitations = data.citations || [];
+          currentCitations = citations;
           if (textContainer) {
-            const truncatedNote = data.truncated
-              ? '<p style="background:#fef3c7; border:1px solid rgba(217,119,6,0.3); color:#92400e; padding:0.75rem 1rem; border-radius:8px; font-size:0.82rem; margin-bottom:1rem;"><i class="fa-solid fa-triangle-exclamation"></i> Respons AI terpotong sebelum selesai (output terlalu panjang). Bagian di bawah adalah hasil yang sempat didapat - coba generate ulang jika perlu hasil yang lebih lengkap.</p>'
-              : '';
-            textContainer.innerHTML = truncatedNote + (data.review || '<p>Tidak ada draf yang dihasilkan.</p>');
+            textContainer.innerHTML = reviewText || '<p>Tidak ada draf yang dihasilkan.</p>';
           }
 
           if (citationsContainer) {
             citationsContainer.innerHTML = '';
-            if (data.citations && data.citations.length > 0) {
-              data.citations.forEach(cit => {
+            if (citations && citations.length > 0) {
+              citations.forEach(cit => {
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid rgba(8,34,64,0.04)';
                 tr.innerHTML = `
@@ -4991,12 +5051,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
 
-          if (resultsPanel) {
-            resultsPanel.style.display = 'block';
-            resultsPanel.scrollIntoView({ behavior: 'smooth' });
-          }
-
-          revealWordsInElement(textContainer);
           revealWordsInElement(citationsContainer);
 
           // Sinkronisasi status limit terbaru
@@ -5105,15 +5159,48 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, abstract: text, text, targetJournal })
           });
-          const data = await res.json();
-          if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal melakukan evaluasi.');
-
-          if (peerReviewContentEl) {
-            peerReviewContentEl.innerHTML = renderPeerReviewReportHtml(data.review);
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.message || 'Gagal melakukan evaluasi.');
           }
+          if (!res.body || typeof res.body.getReader !== 'function') {
+            throw new Error('Browser tidak mendukung streaming respons.');
+          }
+
+          if (peerReviewContentEl) peerReviewContentEl.innerHTML = '';
           if (peerReviewResultsPanel) {
             peerReviewResultsPanel.style.display = 'block';
             peerReviewResultsPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let reviewText = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed) continue;
+              try {
+                const chunk = JSON.parse(trimmed);
+                if (chunk.type === 'content') reviewText += chunk.content;
+              } catch (e) {}
+            }
+            // Selagi masih streaming, render markdown mentah biar user lihat
+            // teksnya "mengetik" - versi kartu rapi (renderPeerReviewReportHtml)
+            // baru diterapkan sekali di akhir karena butuh struktur ### lengkap.
+            if (peerReviewContentEl) peerReviewContentEl.innerHTML = renderMarkdownSafe(reviewText);
+          }
+
+          if (!reviewText.trim()) throw new Error('AI Peer Reviewer tidak memberikan jawaban. Coba lagi.');
+
+          if (peerReviewContentEl) {
+            peerReviewContentEl.innerHTML = renderPeerReviewReportHtml(reviewText);
           }
 
           fetch('/api/me').then(r => r.json()).then(meData => {
@@ -7347,13 +7434,45 @@ document.addEventListener('DOMContentLoaded', () => {
               usageContext: 'to receive critical academic feedback and guidance on the manuscript\'s novelty, methodology, and overall quality during the research and writing process'
             })
           });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
             alert(data.message || 'Gagal membuat AI Disclosure Statement.');
             return;
           }
-          textarea.value = data.statement;
+          if (!res.body || typeof res.body.getReader !== 'function') {
+            throw new Error('Browser tidak mendukung streaming respons.');
+          }
+
+          textarea.value = '';
           modal.classList.add('active');
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let statementText = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed) continue;
+              try {
+                const chunk = JSON.parse(trimmed);
+                if (chunk.type === 'content') statementText += chunk.content;
+              } catch (e) {}
+            }
+            textarea.value = statementText;
+          }
+
+          if (!statementText.trim()) {
+            modal.classList.remove('active');
+            alert('AI Disclosure Generator tidak memberikan jawaban. Coba lagi.');
+            return;
+          }
+          textarea.value = statementText.trim();
         } catch (err) {
           console.error('[AI Disclosure Chat]', err);
           alert('Gagal menghubungi server untuk membuat AI Disclosure Statement.');
@@ -7794,11 +7913,38 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: fullPayloadText.slice(0, 150), keywords: '', abstract: fullPayloadText, mode: isDeep ? 'pro' : 'standard' })
           });
-          const data = await res.json();
-          if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal membuat literature review.');
-          const citationsList = data.citations || [];
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.message || 'Gagal membuat literature review.');
+          }
+          if (!res.body || typeof res.body.getReader !== 'function') {
+            throw new Error('Browser tidak mendukung streaming respons.');
+          }
+
+          let reviewHtml = '';
+          let citationsList = [];
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let streamBuffer = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            streamBuffer += decoder.decode(value, { stream: true });
+            const lines = streamBuffer.split('\n');
+            streamBuffer = lines.pop();
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed) continue;
+              try {
+                const chunk = JSON.parse(trimmed);
+                if (chunk.type === 'content') reviewHtml += chunk.content;
+                else if (chunk.type === 'citations') citationsList = chunk.citations || [];
+              } catch (e) {}
+            }
+          }
+
           const citations = citationsList.map((c, i) => `${i + 1}. **${c.title}** - ${c.authors} (${c.year}). ${c.url}`).join('\n');
-          resultMarkdown = `### ${isDeep ? 'Deep Lit Review' : 'Literature Review'}\n\n${convertResultHtmlToMarkdown(data.review)}` + (citations ? `\n\n#### Referensi\n${citations}` : '');
+          resultMarkdown = `### ${isDeep ? 'Deep Lit Review' : 'Literature Review'}\n\n${convertResultHtmlToMarkdown(reviewHtml)}` + (citations ? `\n\n#### Referensi\n${citations}` : '');
           litReviewCitations = citationsList;
         }
 
