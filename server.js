@@ -168,7 +168,17 @@ function getVertexModel(modelName = GEMINI_MODEL) {
 // Threshold kecil (1KB) supaya asset teks (JS/CSS/HTML/JSON) ikut terkompresi,
 // sedangkan file yang sudah terkompresi (video mp4, gambar) otomatis dilewati
 // middleware ini berdasarkan Content-Type.
-app.use(compression());
+// PENGECUALIAN: /api/research-chat di-stream chunk-per-chunk (lihat res.write
+// di route-nya) - middleware compression menahan/buffer output di internal
+// zlib-nya sampai buffer penuh atau response selesai, jadi kalau tidak
+// dikecualikan di sini, efeknya SAMA SEPERTI TIDAK STREAMING SAMA SEKALI
+// (client baru terima semua teks sekaligus di akhir, bukan per token/kata).
+app.use(compression({
+  filter: (req, res) => {
+    if (req.path === '/api/research-chat') return false;
+    return compression.filter(req, res);
+  }
+}));
 
 app.use(helmet({
   contentSecurityPolicy: false,
