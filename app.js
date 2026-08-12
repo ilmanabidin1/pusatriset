@@ -623,6 +623,99 @@ document.addEventListener('DOMContentLoaded', () => {
       realtime_open_source: "Buka Sumber",
       realtime_generic_error: "Gagal mencari data dari OpenAlex.",
       realtime_conn_error: "Gagal menghubungi server untuk mencari data.",
+      // Cari Referensi - filter lanjutan & sort (ditambahkan setelah realtime_* di atas)
+      realtime_mode_keyword: "Judul / Kata Kunci",
+      realtime_mode_author: "Penulis (Author)",
+      realtime_search_placeholder_author: "Cari berdasarkan nama penulis... (contoh: John Smith)",
+      realtime_author_min_chars_alert: "Nama penulis minimal 3 karakter.",
+      realtime_filter_quartile_label: "PERINGKAT JURNAL (SJR)",
+      realtime_filter_quartile_all: "Semua Peringkat",
+      realtime_filter_quartile_q1: "Q1 saja",
+      realtime_filter_quartile_q1q2: "Q1 - Q2",
+      realtime_filter_quartile_q1q3: "Q1 - Q3",
+      realtime_filter_quartile_q1q4: "Q1 - Q4 (punya SJR)",
+      realtime_filter_year_label: "TAHUN TERBIT",
+      realtime_year_preset_all: "Semua",
+      realtime_year_preset_2y: "2 Tahun Terakhir",
+      realtime_year_preset_5y: "5 Tahun Terakhir",
+      realtime_year_preset_10y: "10 Tahun Terakhir",
+      realtime_year_from_placeholder: "Dari",
+      realtime_year_to_placeholder: "Sampai",
+      realtime_filter_citations_label: "MINIMAL SITASI",
+      realtime_filter_country_label: "NEGARA (AFILIASI PENULIS)",
+      realtime_filter_country_all: "Semua Negara",
+      realtime_filter_exclude_preprint: "Exclude Preprint",
+      realtime_filter_open_access: "Open Access Saja",
+      realtime_filter_reset_btn: "Reset Filter",
+      realtime_sort_label: "Urutkan:",
+      realtime_sort_relevance: "Relevansi",
+      realtime_sort_newest: "Terbaru",
+      realtime_sort_most_cited: "Sitasi Terbanyak",
+      realtime_sort_alpha: "Abjad (A-Z)",
+      realtime_badge_year_title: "Tahun terbit",
+      realtime_badge_country_title: "Negara afiliasi penulis",
+      realtime_badge_quartile_title: "Peringkat jurnal (SCImago Journal Rank)",
+      realtime_save_btn: "Simpan",
+      realtime_saved_btn: "Tersimpan",
+      cari_referensi_quota_unlimited: "Pencarian Cari Referensi tanpa batas (akun {type}).",
+      cari_referensi_quota_limit_reached: "Limit 5x/bulan pencarian Cari Referensi tercapai.",
+      cari_referensi_quota_upgrade_suffix: "untuk pencarian tanpa batas.",
+      cari_referensi_quota_remaining: "Sisa {n}x pencarian bulan ini (akun free, limit 5x/bulan).",
+      citation_graph_quota_limit_reached: "Limit {limit}/bulan eksplorasi peta sitasi tercapai.",
+      citation_graph_quota_upgrade_suffix: "untuk kuota lebih besar.",
+      citation_graph_quota_remaining: "Sisa {n}x eksplorasi bulan ini (akun {type}, limit {limit}/bulan).",
+      // Notebook (AI Writer Phase 1)
+      notebook_intro: "Tulis naskah, catatan riset, atau draf apa pun dengan editor teks kaya - tersimpan otomatis.",
+      notebook_create_btn: "Dokumen Baru",
+      notebook_empty_title: "Belum ada dokumen",
+      notebook_empty_desc: "Klik \"Dokumen Baru\" untuk mulai menulis.",
+      notebook_back_btn: "Kembali",
+      notebook_export_btn: "Export .docx",
+      notebook_delete_tooltip: "Hapus dokumen ini",
+      notebook_editor_placeholder: "Mulai menulis di sini...",
+      notebook_saving: "Menyimpan...",
+      notebook_saved_at: "Tersimpan pukul {time}",
+      notebook_save_failed: "Gagal menyimpan.",
+      notebook_save_conn_error: "Gagal menghubungi server.",
+      notebook_loading: "Memuat...",
+      notebook_load_error: "Gagal memuat daftar dokumen.",
+      notebook_modified_prefix: "Diubah",
+      notebook_delete_confirm: "Hapus dokumen ini? Tindakan ini tidak bisa dibatalkan.",
+      notebook_exporting: "Membuat .docx...",
+      notebook_open_error: "Gagal membuka dokumen.",
+      notebook_create_error: "Gagal membuat dokumen baru.",
+      notebook_conn_error: "Gagal menghubungi server.",
+      notebook_delete_error: "Gagal menghapus dokumen.",
+      notebook_export_error: "Gagal membuat file .docx.",
+      // Koleksi Saya - TL;DR toggle & loading states
+      myref_tldr_show_more: "Lihat selengkapnya",
+      myref_tldr_hide: "Sembunyikan",
+      myref_folders_loading: "Memuat...",
+      myref_folders_error: "Gagal memuat daftar riset.",
+      myref_paper_count_suffix: "paper",
+      myref_table_loading: "Memuat...",
+      myref_delete_research_confirm: "Hapus riset \"{name}\" beserta seluruh referensi di dalamnya? Tindakan ini tidak dapat dibatalkan.",
+      myref_delete_paper_confirm: "Hapus paper ini dari riset?",
+      myref_delete_research_error: "Gagal menghapus riset.",
+      myref_conn_error: "Gagal menghubungi server.",
+      myref_rename_error: "Gagal mengganti nama riset.",
+      myref_table_error: "Gagal memuat referensi.",
+      myref_journal_article_label: "Journal Article",
+      myref_remove_from_research_tooltip: "Hapus dari riset ini",
+      myref_rename_prompt: "Nama baru untuk riset ini:",
+      myref_flyout_empty: "Belum ada folder koleksi.",
+      myref_flyout_load_error: "Gagal memuat folder.",
+      myref_folders_empty_title: "Belum ada riset",
+      myref_folders_empty_desc: "Buat folder riset pertama Anda, lalu simpan paper dari Cari Referensi atau popover sitasi ke dalamnya.",
+      // Profile dropdown
+      profile_help_center: "Pusat Bantuan",
+      profile_notifications: "Notifikasi",
+      settings_help_legal_heading: "Bantuan & Legal",
+      settings_help_privacy: "Kebijakan Privasi",
+      settings_help_terms: "Syarat & Ketentuan",
+      settings_help_refund: "Refund Policy",
+      settings_help_center: "Pusat Bantuan",
+      settings_help_contact: "Kontak",
       // Kode Promo
       promo_apply_btn: "Terapkan",
       promo_input_placeholder: "Punya kode promo? (khusus paket bulanan)",
@@ -850,6 +943,99 @@ document.addEventListener('DOMContentLoaded', () => {
       realtime_open_source: "Open Source",
       realtime_generic_error: "Failed to fetch data from OpenAlex.",
       realtime_conn_error: "Failed to contact the server to search for data.",
+      // Cari Referensi - advanced filters & sort
+      realtime_mode_keyword: "Title / Keyword",
+      realtime_mode_author: "Author",
+      realtime_search_placeholder_author: "Search by author name... (e.g. John Smith)",
+      realtime_author_min_chars_alert: "Author name must be at least 3 characters.",
+      realtime_filter_quartile_label: "JOURNAL RANK (SJR)",
+      realtime_filter_quartile_all: "All Ranks",
+      realtime_filter_quartile_q1: "Q1 only",
+      realtime_filter_quartile_q1q2: "Q1 - Q2",
+      realtime_filter_quartile_q1q3: "Q1 - Q3",
+      realtime_filter_quartile_q1q4: "Q1 - Q4 (has SJR)",
+      realtime_filter_year_label: "PUBLICATION YEAR",
+      realtime_year_preset_all: "All Time",
+      realtime_year_preset_2y: "Last 2 Years",
+      realtime_year_preset_5y: "Last 5 Years",
+      realtime_year_preset_10y: "Last 10 Years",
+      realtime_year_from_placeholder: "From",
+      realtime_year_to_placeholder: "To",
+      realtime_filter_citations_label: "MINIMUM CITATIONS",
+      realtime_filter_country_label: "COUNTRY (AUTHOR AFFILIATION)",
+      realtime_filter_country_all: "All Countries",
+      realtime_filter_exclude_preprint: "Exclude Preprint",
+      realtime_filter_open_access: "Open Access Only",
+      realtime_filter_reset_btn: "Reset Filter",
+      realtime_sort_label: "Sort:",
+      realtime_sort_relevance: "Relevance",
+      realtime_sort_newest: "Newest",
+      realtime_sort_most_cited: "Most Cited",
+      realtime_sort_alpha: "Alphabetical (A-Z)",
+      realtime_badge_year_title: "Publication year",
+      realtime_badge_country_title: "Author affiliation country",
+      realtime_badge_quartile_title: "Journal rank (SCImago Journal Rank)",
+      realtime_save_btn: "Save",
+      realtime_saved_btn: "Saved",
+      cari_referensi_quota_unlimited: "Unlimited Cari Referensi searches ({type} account).",
+      cari_referensi_quota_limit_reached: "Monthly limit of 5 Cari Referensi searches reached.",
+      cari_referensi_quota_upgrade_suffix: "for unlimited searches.",
+      cari_referensi_quota_remaining: "{n} searches left this month (free account, limit 5/month).",
+      citation_graph_quota_limit_reached: "Monthly limit of {limit} citation map explorations reached.",
+      citation_graph_quota_upgrade_suffix: "for a bigger quota.",
+      citation_graph_quota_remaining: "{n} explorations left this month ({type} account, limit {limit}/month).",
+      // Notebook (AI Writer Phase 1)
+      notebook_intro: "Write manuscripts, research notes, or any draft with a rich text editor - autosaved.",
+      notebook_create_btn: "New Document",
+      notebook_empty_title: "No documents yet",
+      notebook_empty_desc: "Click \"New Document\" to start writing.",
+      notebook_back_btn: "Back",
+      notebook_export_btn: "Export .docx",
+      notebook_delete_tooltip: "Delete this document",
+      notebook_editor_placeholder: "Start writing here...",
+      notebook_saving: "Saving...",
+      notebook_saved_at: "Saved at {time}",
+      notebook_save_failed: "Failed to save.",
+      notebook_save_conn_error: "Failed to contact the server.",
+      notebook_loading: "Loading...",
+      notebook_load_error: "Failed to load document list.",
+      notebook_modified_prefix: "Modified",
+      notebook_delete_confirm: "Delete this document? This action cannot be undone.",
+      notebook_exporting: "Generating .docx...",
+      notebook_open_error: "Failed to open document.",
+      notebook_create_error: "Failed to create new document.",
+      notebook_conn_error: "Failed to contact the server.",
+      notebook_delete_error: "Failed to delete document.",
+      notebook_export_error: "Failed to generate .docx file.",
+      // Koleksi Saya - TL;DR toggle & loading states
+      myref_tldr_show_more: "See more",
+      myref_tldr_hide: "Hide",
+      myref_folders_loading: "Loading...",
+      myref_folders_error: "Failed to load research list.",
+      myref_paper_count_suffix: "papers",
+      myref_table_loading: "Loading...",
+      myref_delete_research_confirm: "Delete research \"{name}\" along with all references in it? This action cannot be undone.",
+      myref_delete_paper_confirm: "Remove this paper from the research?",
+      myref_delete_research_error: "Failed to delete research.",
+      myref_conn_error: "Failed to contact the server.",
+      myref_rename_error: "Failed to rename research.",
+      myref_table_error: "Failed to load references.",
+      myref_journal_article_label: "Journal Article",
+      myref_remove_from_research_tooltip: "Remove from this research",
+      myref_rename_prompt: "New name for this research:",
+      myref_flyout_empty: "No collection folders yet.",
+      myref_flyout_load_error: "Failed to load folders.",
+      myref_folders_empty_title: "No research yet",
+      myref_folders_empty_desc: "Create your first research folder, then save papers from Cari Referensi or the citation popover into it.",
+      // Profile dropdown
+      profile_help_center: "Help Center",
+      profile_notifications: "Notifications",
+      settings_help_legal_heading: "Help & Legal",
+      settings_help_privacy: "Privacy Policy",
+      settings_help_terms: "Terms & Conditions",
+      settings_help_refund: "Refund Policy",
+      settings_help_center: "Help Center",
+      settings_help_contact: "Contact",
       // Promo Code
       promo_apply_btn: "Apply",
       promo_input_placeholder: "Have a promo code? (monthly plans only)",
@@ -1637,34 +1823,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const badgeEl = document.getElementById('citationGraphQuotaBadge');
     if (!badgeEl || !user) return;
 
+    const t = TRANSLATIONS[window.currentLanguage || 'id'];
     const limitLabel = { free: '5x', premium: '20x', ultimate: '100x' }[user.type] || '5x';
     const remaining = typeof user.citationGraphRemaining === 'number' ? user.citationGraphRemaining : null;
     badgeEl.style.display = 'block';
 
     window.citationGraphLimitReached = !!user.isCitationGraphLimitReached;
     if (user.isCitationGraphLimitReached) {
-      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> Limit ${limitLabel}/bulan eksplorasi peta sitasi tercapai. <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">Upgrade</a> untuk kuota lebih besar.`;
+      const msg = t.citation_graph_quota_limit_reached.replace('{limit}', limitLabel);
+      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> ${msg} <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">${t.peer_review_upgrade_link}</a> ${t.citation_graph_quota_upgrade_suffix}`;
     } else {
-      badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> Sisa ${remaining !== null ? remaining : '-'}x eksplorasi bulan ini (akun ${user.type}, limit ${limitLabel}/bulan).`;
+      const msg = t.citation_graph_quota_remaining
+        .replace('{n}', remaining !== null ? remaining : '-')
+        .replace('{type}', user.type)
+        .replace('{limit}', limitLabel);
+      badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> ${msg}`;
     }
   }
   function updateCariReferensiAccess(user) {
     const badgeEl = document.getElementById('cariReferensiQuotaBadge');
     if (!badgeEl || !user) return;
 
+    const t = TRANSLATIONS[window.currentLanguage || 'id'];
     window.cariReferensiLimitReached = !!user.isCariReferensiLimitReached;
     badgeEl.style.display = 'block';
 
     if (user.type === 'premium' || user.type === 'ultimate') {
-      badgeEl.innerHTML = `<i class="fa-solid fa-infinity" style="color: #059669;"></i> Pencarian Cari Referensi tanpa batas (akun ${user.type}).`;
+      const msg = t.cari_referensi_quota_unlimited.replace('{type}', user.type);
+      badgeEl.innerHTML = `<i class="fa-solid fa-infinity" style="color: #059669;"></i> ${msg}`;
       return;
     }
 
     const remaining = typeof user.cariReferensiRemaining === 'number' ? user.cariReferensiRemaining : null;
     if (user.isCariReferensiLimitReached) {
-      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> Limit 5x/bulan pencarian Cari Referensi tercapai. <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">Upgrade</a> untuk pencarian tanpa batas.`;
+      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> ${t.cari_referensi_quota_limit_reached} <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">${t.peer_review_upgrade_link}</a> ${t.cari_referensi_quota_upgrade_suffix}`;
     } else {
-      badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> Sisa ${remaining !== null ? remaining : '-'}x pencarian bulan ini (akun free, limit 5x/bulan).`;
+      const msg = t.cari_referensi_quota_remaining.replace('{n}', remaining !== null ? remaining : '-');
+      badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> ${msg}`;
     }
   }
   window.updateCariReferensiAccess = updateCariReferensiAccess;
@@ -2669,7 +2864,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (realtimeSearchInput) {
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
         if (realtimeSearchMode === 'author') {
-          realtimeSearchInput.placeholder = 'Cari berdasarkan nama penulis... (contoh: John Smith)';
+          realtimeSearchInput.placeholder = t.realtime_search_placeholder_author;
         } else {
           realtimeSearchInput.placeholder = (realtimeBooleanToggle && realtimeBooleanToggle.checked)
             ? t.realtime_search_placeholder_example
@@ -2684,7 +2879,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const t = TRANSLATIONS[window.currentLanguage || 'id'];
     const query = realtimeSearchInput.value.trim();
     if (!query || query.length < 3) {
-      alert(realtimeSearchMode === 'author' ? 'Nama penulis minimal 3 karakter.' : t.realtime_min_chars_alert);
+      alert(realtimeSearchMode === 'author' ? t.realtime_author_min_chars_alert : t.realtime_min_chars_alert);
       realtimeSearchInput.focus();
       return;
     }
@@ -2762,12 +2957,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <div class="card-header">
               <div class="card-badge-group">
-                <span class="card-type-tag" title="Tahun terbit" style="background: rgba(8,34,64,0.05); color: var(--text-muted); border-color: rgba(8,34,64,0.08);">
+                <span class="card-type-tag" title="${t.realtime_badge_year_title}" style="background: rgba(8,34,64,0.05); color: var(--text-muted); border-color: rgba(8,34,64,0.08);">
                   <i class="fa-regular fa-calendar"></i> ${escapeHtml(work.year)}
                 </span>
-                ${work.authorCountry ? `<span class="card-type-tag" title="Negara afiliasi penulis" style="background: rgba(8,34,64,0.05); color: var(--text-muted); border-color: rgba(8,34,64,0.08);">${countryCodeToFlagEmoji(work.authorCountry)} ${escapeHtml(work.authorCountry)}</span>` : ''}
+                ${work.authorCountry ? `<span class="card-type-tag" title="${t.realtime_badge_country_title}" style="background: rgba(8,34,64,0.05); color: var(--text-muted); border-color: rgba(8,34,64,0.08);">${countryCodeToFlagEmoji(work.authorCountry)} ${escapeHtml(work.authorCountry)}</span>` : ''}
                 ${work.isOpenAccess ? '<span class="card-type-tag" style="background: rgba(16,185,129,0.1); color:#10b981; border-color: rgba(16,185,129,0.2);">Open Access</span>' : ''}
-                ${work.journalQuartile ? `<span class="card-type-tag" title="Peringkat jurnal (SCImago Journal Rank)" style="background: rgba(37,99,235,0.1); color:#2563eb; border-color: rgba(37,99,235,0.2);"><i class="fa-solid fa-ranking-star"></i> ${escapeHtml(work.journalQuartile)}</span>` : ''}
+                ${work.journalQuartile ? `<span class="card-type-tag" title="${t.realtime_badge_quartile_title}" style="background: rgba(37,99,235,0.1); color:#2563eb; border-color: rgba(37,99,235,0.2);"><i class="fa-solid fa-ranking-star"></i> ${escapeHtml(work.journalQuartile)}</span>` : ''}
               </div>
               <span class="rank-badge" style="background: rgba(139,92,246,0.1); color: #7c3aed; border: 1px solid rgba(139,92,246,0.2);">${work.citedByCount}${t.realtime_cited_suffix}</span>
             </div>
@@ -2782,7 +2977,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="card-footer" style="margin-top: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
               <a href="${work.url}" target="_blank" class="journal-link">${t.realtime_open_source} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
               <button type="button" class="reset-filter-btn realtime-save-ref-btn" ${alreadySaved ? 'disabled' : ''} style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.78rem;">
-                <i class="${alreadySaved ? 'fa-solid fa-check' : 'fa-regular fa-bookmark'}"></i> ${alreadySaved ? 'Tersimpan' : 'Simpan'}
+                <i class="${alreadySaved ? 'fa-solid fa-check' : 'fa-regular fa-bookmark'}"></i> ${alreadySaved ? t.realtime_saved_btn : t.realtime_save_btn}
               </button>
             </div>
           </div>
@@ -5906,17 +6101,19 @@ document.addEventListener('DOMContentLoaded', () => {
       // yang expand teksnya langsung di dalam sel (lihat delegasi klik di tableBody).
       function renderTldrCell(text) {
         if (!text) return '<td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">-</td>';
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
         const isLong = text.length > TLDR_TRUNCATE_LENGTH;
         return `
           <td class="my-ref-tldr-cell" data-full="${escapeHtml(text)}" data-truncated="${escapeHtml(truncate(text, TLDR_TRUNCATE_LENGTH))}" style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-main); line-height: 1.4;">
             <span class="my-ref-tldr-text">${escapeHtml(truncate(text, TLDR_TRUNCATE_LENGTH))}</span>
-            ${isLong ? `<button type="button" class="my-ref-tldr-toggle" data-expanded="false">Lihat selengkapnya</button>` : ''}
+            ${isLong ? `<button type="button" class="my-ref-tldr-toggle" data-expanded="false">${t.myref_tldr_show_more}</button>` : ''}
           </td>
         `;
       }
 
       async function loadMyReferencesFolders() {
-        foldersGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">Memuat...</div>';
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        foldersGrid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">${t.myref_folders_loading}</div>`;
         try {
           const res = await fetch('/api/my-references/researches');
           const data = await res.json();
@@ -5931,17 +6128,18 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="my-ref-folder-card filter-box-card" data-research-id="${r.id}" data-research-name="${escapeHtml(r.name)}" style="text-align: left; cursor: pointer; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; font-family: inherit; border: 1px solid var(--border-light-hover);">
               <i class="fa-solid fa-folder" style="font-size: 1.5rem; color: var(--brand-blue);"></i>
               <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; color: var(--text-main); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(r.name)}</h4>
-              <span style="font-size: 0.78rem; color: var(--text-muted);">${r.referenceCount} paper</span>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">${r.referenceCount} ${t.myref_paper_count_suffix}</span>
             </button>
           `).join('');
         } catch (err) {
-          foldersGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #dc2626;">Gagal memuat daftar riset.</div>';
+          foldersGrid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #dc2626;">${t.myref_folders_error}</div>`;
         }
       }
       window.loadMyReferencesFolders = loadMyReferencesFolders;
 
       async function loadReferencesTable(researchId) {
-        tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-muted);">Memuat...</td></tr>`;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-muted);">${t.myref_table_loading}</td></tr>`;
         if (tableEmpty) tableEmpty.style.display = 'none';
         try {
           const res = await fetch(`/api/my-references?researchId=${encodeURIComponent(researchId)}`);
@@ -5963,7 +6161,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <td style="padding: 0.85rem 1rem; vertical-align: top; max-width: 260px;">
                 ${ref.url ? `<a href="${ref.url}" target="_blank" rel="noopener" style="font-weight: 700; color: var(--text-main); text-decoration: none;" title="${escapeHtml(ref.title)}">${escapeHtml(truncate(ref.title, 70))}</a>` : `<span style="font-weight: 700; color: var(--text-main);" title="${escapeHtml(ref.title)}">${escapeHtml(truncate(ref.title, 70))}</span>`}
               </td>
-              <td style="padding: 0.85rem 1rem; vertical-align: top; white-space: nowrap;"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); margin-right: 0.3rem;"></i>Journal Article</td>
+              <td style="padding: 0.85rem 1rem; vertical-align: top; white-space: nowrap;"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); margin-right: 0.3rem;"></i>${t.myref_journal_article_label}</td>
               <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">${escapeHtml(truncate(ref.authors, 40))}</td>
               <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">${escapeHtml(truncate(ref.journal, 30))}</td>
               <td style="padding: 0.85rem 1rem; vertical-align: top; color: var(--text-muted);">${escapeHtml(ref.year || '-')}</td>
@@ -5971,14 +6169,14 @@ document.addEventListener('DOMContentLoaded', () => {
               ${renderTldrCell(ref.tldrEn)}
               ${renderTldrCell(ref.tldrId)}
               <td style="padding: 0.85rem 1rem; vertical-align: top;">
-                <button type="button" class="my-ref-delete-btn" data-ref-id="${ref.id}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.85rem;" title="Hapus dari riset ini">
+                <button type="button" class="my-ref-delete-btn" data-ref-id="${ref.id}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.85rem;" title="${t.myref_remove_from_research_tooltip}">
                   <i class="fa-regular fa-trash-can"></i>
                 </button>
               </td>
             </tr>
           `).join('');
         } catch (err) {
-          tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: #dc2626;">Gagal memuat referensi.</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: #dc2626;">${t.myref_table_error}</td></tr>`;
         }
       }
 
@@ -6019,7 +6217,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (renameBtn) {
         renameBtn.addEventListener('click', async () => {
           if (!currentResearchId) return;
-          const newName = prompt('Nama baru untuk riset ini:', currentResearchName);
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
+          const newName = prompt(t.myref_rename_prompt, currentResearchName);
           if (!newName || !newName.trim() || newName.trim() === currentResearchName) return;
           try {
             const res = await fetch(`/api/my-references/researches/${encodeURIComponent(currentResearchId)}`, {
@@ -6029,13 +6228,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (!data.ok) {
-              alert(data.message || 'Gagal mengganti nama riset.');
+              alert(data.message || t.myref_rename_error);
               return;
             }
             currentResearchName = newName.trim();
             if (detailTitle) detailTitle.textContent = currentResearchName;
           } catch (err) {
-            alert('Gagal menghubungi server.');
+            alert(t.myref_conn_error);
           }
         });
       }
@@ -6043,17 +6242,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (deleteResearchBtn) {
         deleteResearchBtn.addEventListener('click', async () => {
           if (!currentResearchId) return;
-          if (!confirm(`Hapus riset "${currentResearchName}" beserta seluruh referensi di dalamnya? Tindakan ini tidak dapat dibatalkan.`)) return;
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
+          if (!confirm(t.myref_delete_research_confirm.replace('{name}', currentResearchName))) return;
           try {
             const res = await fetch(`/api/my-references/researches/${encodeURIComponent(currentResearchId)}`, { method: 'DELETE' });
             const data = await res.json();
             if (!data.ok) {
-              alert(data.message || 'Gagal menghapus riset.');
+              alert(data.message || t.myref_delete_research_error);
               return;
             }
             backToFolders();
           } catch (err) {
-            alert('Gagal menghubungi server.');
+            alert(t.myref_conn_error);
           }
         });
       }
@@ -6061,16 +6261,17 @@ document.addEventListener('DOMContentLoaded', () => {
       tableBody.addEventListener('click', async (e) => {
         const toggleBtn = e.target.closest('.my-ref-tldr-toggle');
         if (toggleBtn) {
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
           const cell = toggleBtn.closest('.my-ref-tldr-cell');
           const textEl = cell.querySelector('.my-ref-tldr-text');
           const isExpanded = toggleBtn.getAttribute('data-expanded') === 'true';
           if (isExpanded) {
             textEl.textContent = cell.getAttribute('data-truncated') || '';
-            toggleBtn.textContent = 'Lihat selengkapnya';
+            toggleBtn.textContent = t.myref_tldr_show_more;
             toggleBtn.setAttribute('data-expanded', 'false');
           } else {
             textEl.textContent = cell.getAttribute('data-full') || '';
-            toggleBtn.textContent = 'Sembunyikan';
+            toggleBtn.textContent = t.myref_tldr_hide;
             toggleBtn.setAttribute('data-expanded', 'true');
           }
           return;
@@ -6078,7 +6279,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const delBtn = e.target.closest('.my-ref-delete-btn');
         if (!delBtn) return;
-        if (!confirm('Hapus paper ini dari riset?')) return;
+        const t2 = TRANSLATIONS[window.currentLanguage || 'id'];
+        if (!confirm(t2.myref_delete_paper_confirm)) return;
         try {
           const res = await fetch(`/api/my-references/${encodeURIComponent(delBtn.getAttribute('data-ref-id'))}`, { method: 'DELETE' });
           const data = await res.json();
@@ -6089,7 +6291,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadSavedReferenceKeys(true);
           }
         } catch (err) {
-          alert('Gagal menghubungi server.');
+          alert(t2.myref_conn_error);
         }
       });
 
@@ -6106,7 +6308,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const researches = data.ok ? (data.researches || []) : [];
           if (researches.length === 0) {
             flyoutList.innerHTML = '';
-            if (flyoutEmpty) flyoutEmpty.style.display = 'block';
+            if (flyoutEmpty) {
+              delete flyoutEmpty.dataset.isError;
+              flyoutEmpty.textContent = TRANSLATIONS[window.currentLanguage || 'id'].myref_flyout_empty;
+              flyoutEmpty.style.display = 'block';
+            }
             return;
           }
           if (flyoutEmpty) flyoutEmpty.style.display = 'none';
@@ -6119,7 +6325,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
           flyoutList.innerHTML = '';
           if (flyoutEmpty) {
-            flyoutEmpty.textContent = 'Gagal memuat folder.';
+            flyoutEmpty.dataset.isError = '1';
+            flyoutEmpty.textContent = TRANSLATIONS[window.currentLanguage || 'id'].myref_flyout_load_error;
             flyoutEmpty.style.display = 'block';
           }
         }
@@ -6312,10 +6519,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       function ensureQuill() {
         if (quill || typeof Quill === 'undefined') return quill;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
         quill = new Quill('#notebookEditor', {
           theme: 'snow',
           modules: { toolbar: '#notebookToolbar' },
-          placeholder: 'Mulai menulis di sini...'
+          placeholder: t.notebook_editor_placeholder
         });
         quill.on('text-change', () => {
           if (suppressChange) return;
@@ -6329,13 +6537,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       function scheduleSave() {
-        setSaveStatus('Menyimpan...');
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        setSaveStatus(t.notebook_saving);
         clearTimeout(saveTimer);
         saveTimer = setTimeout(saveCurrentDocument, 1200);
       }
 
       async function saveCurrentDocument() {
         if (!currentDocId || !quill) return;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
         try {
           const res = await fetch(`/api/documents/${currentDocId}`, {
             method: 'PUT',
@@ -6347,26 +6557,29 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           const data = await res.json();
           if (!data.ok) {
-            setSaveStatus('Gagal menyimpan.');
+            setSaveStatus(t.notebook_save_failed);
             return;
           }
           const now = new Date();
-          setSaveStatus(`Tersimpan pukul ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`);
+          const locale = (window.currentLanguage || 'id') === 'en' ? 'en-US' : 'id-ID';
+          setSaveStatus(t.notebook_saved_at.replace('{time}', now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })));
         } catch (err) {
-          setSaveStatus('Gagal menghubungi server.');
+          setSaveStatus(t.notebook_save_conn_error);
         }
       }
 
       function formatUpdatedAt(iso) {
         try {
-          return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+          const locale = (window.currentLanguage || 'id') === 'en' ? 'en-US' : 'id-ID';
+          return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
         } catch (e) {
           return '';
         }
       }
 
       async function loadNotebookList() {
-        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">Memuat...</div>';
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">${t.notebook_loading}</div>`;
         try {
           const res = await fetch('/api/documents');
           const data = await res.json();
@@ -6381,11 +6594,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="notebook-doc-card filter-box-card" data-doc-id="${d.id}" style="text-align: left; cursor: pointer; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; font-family: inherit; border: 1px solid var(--border-light-hover);">
               <i class="fa-solid fa-file-lines" style="font-size: 1.5rem; color: var(--brand-blue);"></i>
               <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95rem; color: var(--text-main); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(d.title || 'Untitled')}</h4>
-              <span style="font-size: 0.78rem; color: var(--text-muted);">Diubah ${formatUpdatedAt(d.updatedAt)}</span>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">${t.notebook_modified_prefix} ${formatUpdatedAt(d.updatedAt)}</span>
             </button>
           `).join('');
         } catch (err) {
-          grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #dc2626;">Gagal memuat daftar dokumen.</div>';
+          grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #dc2626;">${t.notebook_load_error}</div>`;
         }
       }
 
@@ -6400,11 +6613,12 @@ document.addEventListener('DOMContentLoaded', () => {
       window.showNotebookListView = showListView;
 
       async function openDocument(id) {
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
         try {
           const res = await fetch(`/api/documents/${id}`);
           const data = await res.json();
           if (!data.ok) {
-            alert(data.message || 'Gagal membuka dokumen.');
+            alert(data.message || t.notebook_open_error);
             return;
           }
           currentDocId = data.document.id;
@@ -6420,12 +6634,13 @@ document.addEventListener('DOMContentLoaded', () => {
             suppressChange = false;
           }
         } catch (err) {
-          alert('Gagal menghubungi server.');
+          alert(t.notebook_conn_error);
         }
       }
 
       if (createBtn) {
         createBtn.addEventListener('click', async () => {
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
           try {
             const res = await fetch('/api/documents', {
               method: 'POST',
@@ -6434,12 +6649,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (!data.ok) {
-              alert(data.message || 'Gagal membuat dokumen baru.');
+              alert(data.message || t.notebook_create_error);
               return;
             }
             openDocument(data.document.id);
           } catch (err) {
-            alert('Gagal menghubungi server.');
+            alert(t.notebook_conn_error);
           }
         });
       }
@@ -6459,20 +6674,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (deleteBtn) {
         deleteBtn.addEventListener('click', async () => {
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
           if (!currentDocId) return;
-          if (!confirm('Hapus dokumen ini? Tindakan ini tidak bisa dibatalkan.')) return;
+          if (!confirm(t.notebook_delete_confirm)) return;
           clearTimeout(saveTimer);
           try {
             const res = await fetch(`/api/documents/${currentDocId}`, { method: 'DELETE' });
             const data = await res.json();
             if (!data.ok) {
-              alert(data.message || 'Gagal menghapus dokumen.');
+              alert(data.message || t.notebook_delete_error);
               return;
             }
             currentDocId = null;
             showListView();
           } catch (err) {
-            alert('Gagal menghubungi server.');
+            alert(t.notebook_conn_error);
           }
         });
       }
@@ -6480,9 +6696,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (exportBtn) {
         exportBtn.addEventListener('click', async () => {
           if (!currentDocId) return;
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
           const originalHtml = exportBtn.innerHTML;
           exportBtn.disabled = true;
-          exportBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membuat .docx...';
+          exportBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${t.notebook_exporting}`;
           try {
             // Simpan dulu perubahan terbaru sebelum export supaya file yang
             // diunduh selalu mencerminkan isi editor saat ini
@@ -6492,7 +6709,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/documents/${currentDocId}/export-docx`, { method: 'POST' });
             if (!res.ok) {
               const data = await res.json().catch(() => ({}));
-              alert(data.message || 'Gagal membuat file .docx.');
+              alert(data.message || t.notebook_export_error);
               return;
             }
             const blob = await res.blob();
@@ -6504,7 +6721,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
           } catch (err) {
-            alert('Gagal menghubungi server untuk membuat file .docx.');
+            alert(t.notebook_conn_error);
           } finally {
             exportBtn.disabled = false;
             exportBtn.innerHTML = originalHtml;
@@ -7050,7 +7267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="lit-cite-popover-actions">
           ${citation.url ? `<a href="${citation.url}" target="_blank" rel="noopener" class="lit-cite-popover-link">${t.cite_popover_open_source} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
           ${citation.pdfUrl ? `<a href="${citation.pdfUrl}" target="_blank" rel="noopener" class="lit-cite-popover-pdf" title="${t.cite_popover_pdf_title}"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : ''}
-          <button type="button" class="lit-cite-popover-save-btn" ${alreadySaved ? 'disabled' : ''}><i class="${alreadySaved ? 'fa-solid fa-check' : 'fa-regular fa-bookmark'}"></i> ${alreadySaved ? 'Tersimpan' : 'Simpan'}</button>
+          <button type="button" class="lit-cite-popover-save-btn" ${alreadySaved ? 'disabled' : ''}><i class="${alreadySaved ? 'fa-solid fa-check' : 'fa-regular fa-bookmark'}"></i> ${alreadySaved ? t.realtime_saved_btn : t.realtime_save_btn}</button>
         </div>
       `;
       pop.style.display = 'block';
@@ -8697,14 +8914,127 @@ document.addEventListener('DOMContentLoaded', () => {
       const realtimeSearchInputEl = document.getElementById('realtimeSearchInput');
       const realtimeBooleanToggleEl = document.getElementById('realtimeBooleanToggle');
       if (realtimeSearchInputEl) {
-        realtimeSearchInputEl.placeholder = (realtimeBooleanToggleEl && realtimeBooleanToggleEl.checked)
-          ? TRANSLATIONS[lang].realtime_search_placeholder_example
-          : TRANSLATIONS[lang].realtime_search_placeholder_normal;
+        realtimeSearchInputEl.placeholder = typeof realtimeSearchMode !== 'undefined' && realtimeSearchMode === 'author'
+          ? TRANSLATIONS[lang].realtime_search_placeholder_author
+          : (realtimeBooleanToggleEl && realtimeBooleanToggleEl.checked)
+            ? TRANSLATIONS[lang].realtime_search_placeholder_example
+            : TRANSLATIONS[lang].realtime_search_placeholder_normal;
       }
       const realtimeResultsCountEl = document.getElementById('realtimeResultsCount');
       if (realtimeResultsCountEl && !realtimeResultsCountEl.dataset.hasResults) {
         realtimeResultsCountEl.textContent = TRANSLATIONS[lang].realtime_default_hint;
       }
+
+      const realtimeModeKeywordBtnEl = document.getElementById('realtimeModeKeywordBtn');
+      if (realtimeModeKeywordBtnEl) realtimeModeKeywordBtnEl.textContent = TRANSLATIONS[lang].realtime_mode_keyword;
+      const realtimeModeAuthorBtnEl = document.getElementById('realtimeModeAuthorBtn');
+      if (realtimeModeAuthorBtnEl) realtimeModeAuthorBtnEl.textContent = TRANSLATIONS[lang].realtime_mode_author;
+
+      const realtimeFilterQuartileLabelEl = document.getElementById('realtimeFilterQuartileLabel');
+      if (realtimeFilterQuartileLabelEl) realtimeFilterQuartileLabelEl.textContent = TRANSLATIONS[lang].realtime_filter_quartile_label;
+      const realtimeFilterQuartileAllEl = document.getElementById('realtimeFilterQuartileAll');
+      if (realtimeFilterQuartileAllEl) realtimeFilterQuartileAllEl.textContent = TRANSLATIONS[lang].realtime_filter_quartile_all;
+      const realtimeFilterQuartileQ1El = document.getElementById('realtimeFilterQuartileQ1');
+      if (realtimeFilterQuartileQ1El) realtimeFilterQuartileQ1El.textContent = TRANSLATIONS[lang].realtime_filter_quartile_q1;
+      const realtimeFilterQuartileQ1Q2El = document.getElementById('realtimeFilterQuartileQ1Q2');
+      if (realtimeFilterQuartileQ1Q2El) realtimeFilterQuartileQ1Q2El.textContent = TRANSLATIONS[lang].realtime_filter_quartile_q1q2;
+      const realtimeFilterQuartileQ1Q3El = document.getElementById('realtimeFilterQuartileQ1Q3');
+      if (realtimeFilterQuartileQ1Q3El) realtimeFilterQuartileQ1Q3El.textContent = TRANSLATIONS[lang].realtime_filter_quartile_q1q3;
+      const realtimeFilterQuartileQ1Q4El = document.getElementById('realtimeFilterQuartileQ1Q4');
+      if (realtimeFilterQuartileQ1Q4El) realtimeFilterQuartileQ1Q4El.textContent = TRANSLATIONS[lang].realtime_filter_quartile_q1q4;
+
+      const realtimeFilterYearLabelEl = document.getElementById('realtimeFilterYearLabel');
+      if (realtimeFilterYearLabelEl) realtimeFilterYearLabelEl.textContent = TRANSLATIONS[lang].realtime_filter_year_label;
+      const realtimeYearPresetAllEl = document.getElementById('realtimeYearPresetAll');
+      if (realtimeYearPresetAllEl) realtimeYearPresetAllEl.textContent = TRANSLATIONS[lang].realtime_year_preset_all;
+      const realtimeYearPreset2El = document.getElementById('realtimeYearPreset2');
+      if (realtimeYearPreset2El) realtimeYearPreset2El.textContent = TRANSLATIONS[lang].realtime_year_preset_2y;
+      const realtimeYearPreset5El = document.getElementById('realtimeYearPreset5');
+      if (realtimeYearPreset5El) realtimeYearPreset5El.textContent = TRANSLATIONS[lang].realtime_year_preset_5y;
+      const realtimeYearPreset10El = document.getElementById('realtimeYearPreset10');
+      if (realtimeYearPreset10El) realtimeYearPreset10El.textContent = TRANSLATIONS[lang].realtime_year_preset_10y;
+      const realtimeYearMinEl = document.getElementById('realtimeYearMin');
+      if (realtimeYearMinEl) realtimeYearMinEl.placeholder = TRANSLATIONS[lang].realtime_year_from_placeholder;
+      const realtimeYearMaxEl = document.getElementById('realtimeYearMax');
+      if (realtimeYearMaxEl) realtimeYearMaxEl.placeholder = TRANSLATIONS[lang].realtime_year_to_placeholder;
+
+      const realtimeFilterCitationsLabelEl = document.getElementById('realtimeFilterCitationsLabel');
+      if (realtimeFilterCitationsLabelEl) realtimeFilterCitationsLabelEl.textContent = TRANSLATIONS[lang].realtime_filter_citations_label;
+      const realtimeFilterCountryLabelEl = document.getElementById('realtimeFilterCountryLabel');
+      if (realtimeFilterCountryLabelEl) realtimeFilterCountryLabelEl.textContent = TRANSLATIONS[lang].realtime_filter_country_label;
+      const realtimeFilterCountryAllEl = document.getElementById('realtimeFilterCountryAll');
+      if (realtimeFilterCountryAllEl) realtimeFilterCountryAllEl.textContent = TRANSLATIONS[lang].realtime_filter_country_all;
+      const realtimeExcludePreprintsLabelEl = document.getElementById('realtimeExcludePreprintsLabel');
+      if (realtimeExcludePreprintsLabelEl) realtimeExcludePreprintsLabelEl.textContent = TRANSLATIONS[lang].realtime_filter_exclude_preprint;
+      const realtimeOpenAccessOnlyLabelEl = document.getElementById('realtimeOpenAccessOnlyLabel');
+      if (realtimeOpenAccessOnlyLabelEl) realtimeOpenAccessOnlyLabelEl.textContent = TRANSLATIONS[lang].realtime_filter_open_access;
+      const realtimeFilterResetBtnEl = document.getElementById('realtimeFilterResetBtn');
+      if (realtimeFilterResetBtnEl) realtimeFilterResetBtnEl.textContent = TRANSLATIONS[lang].realtime_filter_reset_btn;
+
+      const realtimeSortLabelEl = document.getElementById('realtimeSortLabel');
+      if (realtimeSortLabelEl) realtimeSortLabelEl.textContent = TRANSLATIONS[lang].realtime_sort_label;
+      const realtimeSortRelevanceEl = document.getElementById('realtimeSortRelevance');
+      if (realtimeSortRelevanceEl) realtimeSortRelevanceEl.textContent = TRANSLATIONS[lang].realtime_sort_relevance;
+      const realtimeSortNewestEl = document.getElementById('realtimeSortNewest');
+      if (realtimeSortNewestEl) realtimeSortNewestEl.textContent = TRANSLATIONS[lang].realtime_sort_newest;
+      const realtimeSortMostCitedEl = document.getElementById('realtimeSortMostCited');
+      if (realtimeSortMostCitedEl) realtimeSortMostCitedEl.textContent = TRANSLATIONS[lang].realtime_sort_most_cited;
+      const realtimeSortAlphaEl = document.getElementById('realtimeSortAlpha');
+      if (realtimeSortAlphaEl) realtimeSortAlphaEl.textContent = TRANSLATIONS[lang].realtime_sort_alpha;
+
+      // Notebook
+      const notebookIntroTextEl = document.getElementById('notebookIntroText');
+      if (notebookIntroTextEl) notebookIntroTextEl.textContent = TRANSLATIONS[lang].notebook_intro;
+      const notebookCreateBtnTextEl = document.getElementById('notebookCreateBtnText');
+      if (notebookCreateBtnTextEl) notebookCreateBtnTextEl.textContent = TRANSLATIONS[lang].notebook_create_btn;
+      const notebookEmptyTitleEl = document.getElementById('notebookEmptyTitle');
+      if (notebookEmptyTitleEl) notebookEmptyTitleEl.textContent = TRANSLATIONS[lang].notebook_empty_title;
+      const notebookEmptyDescEl = document.getElementById('notebookEmptyDesc');
+      if (notebookEmptyDescEl) notebookEmptyDescEl.textContent = TRANSLATIONS[lang].notebook_empty_desc;
+      const notebookBackBtnTextEl = document.getElementById('notebookBackBtnText');
+      if (notebookBackBtnTextEl) notebookBackBtnTextEl.textContent = TRANSLATIONS[lang].notebook_back_btn;
+      const notebookExportBtnTextEl = document.getElementById('notebookExportBtnText');
+      if (notebookExportBtnTextEl) notebookExportBtnTextEl.textContent = TRANSLATIONS[lang].notebook_export_btn;
+      const notebookDeleteBtnEl = document.getElementById('notebookDeleteBtn');
+      if (notebookDeleteBtnEl) notebookDeleteBtnEl.title = TRANSLATIONS[lang].notebook_delete_tooltip;
+
+      // Koleksi Saya - TL;DR toggle (see .my-ref-tldr-toggle handler in initMyReferencesTab)
+      document.querySelectorAll('.my-ref-tldr-toggle').forEach(btn => {
+        btn.textContent = btn.getAttribute('data-expanded') === 'true' ? TRANSLATIONS[lang].myref_tldr_hide : TRANSLATIONS[lang].myref_tldr_show_more;
+      });
+      const flyoutKoleksiSayaEmptyEl = document.getElementById('flyoutKoleksiSayaEmpty');
+      if (flyoutKoleksiSayaEmptyEl && !flyoutKoleksiSayaEmptyEl.dataset.isError) {
+        flyoutKoleksiSayaEmptyEl.textContent = TRANSLATIONS[lang].myref_flyout_empty;
+      }
+      const myRefFoldersEmptyTitleEl = document.getElementById('myRefFoldersEmptyTitle');
+      if (myRefFoldersEmptyTitleEl) myRefFoldersEmptyTitleEl.textContent = TRANSLATIONS[lang].myref_folders_empty_title;
+      const myRefFoldersEmptyDescEl = document.getElementById('myRefFoldersEmptyDesc');
+      if (myRefFoldersEmptyDescEl) myRefFoldersEmptyDescEl.textContent = TRANSLATIONS[lang].myref_folders_empty_desc;
+
+      // Profile dropdown
+      const profileHelpCenterTextEl = document.getElementById('helpGuideBtnText');
+      if (profileHelpCenterTextEl) profileHelpCenterTextEl.textContent = TRANSLATIONS[lang].profile_help_center;
+      const profileNotificationsTextEl = document.getElementById('profileNotificationsText');
+      if (profileNotificationsTextEl) profileNotificationsTextEl.textContent = TRANSLATIONS[lang].profile_notifications;
+      const profileNotificationsBtnEl = document.getElementById('profileNotificationsBtn');
+      if (profileNotificationsBtnEl) profileNotificationsBtnEl.title = TRANSLATIONS[lang].profile_notifications;
+      const logoutTextEl = document.getElementById('sidebarLogoutBtnText');
+      if (logoutTextEl) logoutTextEl.textContent = TRANSLATIONS[lang].logout;
+
+      const settingsHelpLegalHeadingEl = document.getElementById('settingsHelpLegalHeading');
+      if (settingsHelpLegalHeadingEl) {
+        settingsHelpLegalHeadingEl.innerHTML = `<i class="fa-regular fa-circle-question"></i> ${TRANSLATIONS[lang].settings_help_legal_heading}`;
+      }
+      const settingsHelpPrivacyEl = document.getElementById('settingsHelpPrivacy');
+      if (settingsHelpPrivacyEl) settingsHelpPrivacyEl.textContent = TRANSLATIONS[lang].settings_help_privacy;
+      const settingsHelpTermsEl = document.getElementById('settingsHelpTerms');
+      if (settingsHelpTermsEl) settingsHelpTermsEl.textContent = TRANSLATIONS[lang].settings_help_terms;
+      const settingsHelpRefundEl = document.getElementById('settingsHelpRefund');
+      if (settingsHelpRefundEl) settingsHelpRefundEl.textContent = TRANSLATIONS[lang].settings_help_refund;
+      const settingsHelpCenterEl = document.getElementById('settingsHelpCenter');
+      if (settingsHelpCenterEl) settingsHelpCenterEl.textContent = TRANSLATIONS[lang].settings_help_center;
+      const settingsHelpContactEl = document.getElementById('settingsHelpContact');
+      if (settingsHelpContactEl) settingsHelpContactEl.textContent = TRANSLATIONS[lang].settings_help_contact;
 
       // 9l. Translate Promo Code UI in the upgrade modal
       const promoCodeInputEl = document.getElementById('promoCodeInput');

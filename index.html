@@ -4100,10 +4100,10 @@
         </div>
         <div class="profile-dropdown-divider"></div>
         <a href="/help-center.html" target="_blank" rel="noopener" class="sidebar-link profile-dropdown-item" id="helpGuideBtn">
-          <i class="fa-regular fa-circle-question"></i> <span>Pusat Bantuan</span>
+          <i class="fa-regular fa-circle-question"></i> <span id="helpGuideBtnText">Pusat Bantuan</span>
         </a>
-        <button type="button" class="sidebar-link profile-dropdown-item" title="Notifikasi">
-          <i class="fa-regular fa-bell"></i> <span>Notifikasi</span>
+        <button type="button" class="sidebar-link profile-dropdown-item" title="Notifikasi" id="profileNotificationsBtn">
+          <i class="fa-regular fa-bell"></i> <span id="profileNotificationsText">Notifikasi</span>
         </button>
         <button type="button" class="sidebar-link profile-dropdown-item" id="darkModeToggleBtn">
           <i class="fa-solid fa-moon" id="darkModeIcon"></i> <span id="darkModeLabel">Mode Gelap</span>
@@ -4114,7 +4114,7 @@
         </a>
         <div class="profile-dropdown-divider"></div>
         <button type="button" class="profile-dropdown-item profile-dropdown-logout" id="sidebarLogoutBtn">
-          <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Keluar</span>
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> <span id="sidebarLogoutBtnText">Keluar</span>
         </button>
       </div>
       </div>
@@ -4655,8 +4655,8 @@
             <button id="realtimeClearSearch" style="position: absolute; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; display: none;"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div id="realtimeSearchModeGroup" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-            <button type="button" class="year-preset-btn active" data-mode="keyword">Judul / Kata Kunci</button>
-            <button type="button" class="year-preset-btn" data-mode="author">Penulis (Author)</button>
+            <button type="button" class="year-preset-btn active" data-mode="keyword" id="realtimeModeKeywordBtn">Judul / Kata Kunci</button>
+            <button type="button" class="year-preset-btn" data-mode="author" id="realtimeModeAuthorBtn">Penulis (Author)</button>
           </div>
           <div id="cariReferensiQuotaBadge" style="font-size: 0.82rem; color: var(--text-muted); display: none; margin-bottom: 1rem;"></div>
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
@@ -4690,22 +4690,22 @@
               <div class="filter-dropdown-item">
                 <label id="realtimeFilterQuartileLabel">PERINGKAT JURNAL (SJR)</label>
                 <select id="realtimeFilterQuartile">
-                  <option value="">Semua Peringkat</option>
-                  <option value="Q1">Q1 saja</option>
-                  <option value="Q1,Q2">Q1 - Q2</option>
-                  <option value="Q1,Q2,Q3">Q1 - Q3</option>
-                  <option value="Q1,Q2,Q3,Q4">Q1 - Q4 (punya SJR)</option>
+                  <option value="" id="realtimeFilterQuartileAll">Semua Peringkat</option>
+                  <option value="Q1" id="realtimeFilterQuartileQ1">Q1 saja</option>
+                  <option value="Q1,Q2" id="realtimeFilterQuartileQ1Q2">Q1 - Q2</option>
+                  <option value="Q1,Q2,Q3" id="realtimeFilterQuartileQ1Q3">Q1 - Q3</option>
+                  <option value="Q1,Q2,Q3,Q4" id="realtimeFilterQuartileQ1Q4">Q1 - Q4 (punya SJR)</option>
                 </select>
               </div>
             </div>
 
             <div style="margin-bottom: 1.5rem;">
-              <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.7rem;">TAHUN TERBIT</label>
+              <label id="realtimeFilterYearLabel" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.7rem;">TAHUN TERBIT</label>
               <div id="realtimeYearPresetGroup" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
-                <button type="button" class="year-preset-btn active" data-years="0">Semua</button>
-                <button type="button" class="year-preset-btn" data-years="2">2 Tahun Terakhir</button>
-                <button type="button" class="year-preset-btn" data-years="5">5 Tahun Terakhir</button>
-                <button type="button" class="year-preset-btn" data-years="10">10 Tahun Terakhir</button>
+                <button type="button" class="year-preset-btn active" data-years="0" id="realtimeYearPresetAll">Semua</button>
+                <button type="button" class="year-preset-btn" data-years="2" id="realtimeYearPreset2">2 Tahun Terakhir</button>
+                <button type="button" class="year-preset-btn" data-years="5" id="realtimeYearPreset5">5 Tahun Terakhir</button>
+                <button type="button" class="year-preset-btn" data-years="10" id="realtimeYearPreset10">10 Tahun Terakhir</button>
               </div>
               <div style="display: flex; align-items: center; gap: 0.6rem; max-width: 320px;">
                 <input type="number" id="realtimeYearMin" placeholder="Dari" min="1900" max="2100">
@@ -4716,13 +4716,13 @@
 
             <div class="filter-dropdowns" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 1.5rem;">
               <div class="filter-dropdown-item">
-                <label>MINIMAL SITASI</label>
+                <label id="realtimeFilterCitationsLabel">MINIMAL SITASI</label>
                 <input type="number" id="realtimeMinCitations" min="0" placeholder="0">
               </div>
               <div class="filter-dropdown-item">
-                <label>NEGARA (AFILIASI PENULIS)</label>
+                <label id="realtimeFilterCountryLabel">NEGARA (AFILIASI PENULIS)</label>
                 <select id="realtimeFilterCountry">
-                  <option value="">Semua Negara</option>
+                  <option value="" id="realtimeFilterCountryAll">Semua Negara</option>
                 </select>
               </div>
             </div>
@@ -4733,14 +4733,14 @@
                   <input type="checkbox" id="realtimeExcludePreprints">
                   <span class="toggle-slider"></span>
                 </label>
-                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Exclude Preprint</span>
+                <span id="realtimeExcludePreprintsLabel" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Exclude Preprint</span>
               </div>
               <div style="display: flex; align-items: center; gap: 0.6rem;">
                 <label class="toggle-switch">
                   <input type="checkbox" id="realtimeOpenAccessOnly">
                   <span class="toggle-slider"></span>
                 </label>
-                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Open Access Saja</span>
+                <span id="realtimeOpenAccessOnlyLabel" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Open Access Saja</span>
               </div>
               <button type="button" id="realtimeFilterResetBtn" style="margin-left: auto; background: none; border: none; color: var(--brand-blue); font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                 Reset Filter
@@ -4758,12 +4758,12 @@
         <div class="results-meta-header">
           <span class="results-count-text" id="realtimeResultsCount">Ketik kata kunci lalu klik Cari untuk menampilkan hasil (maks. 50).</span>
           <div id="realtimeSortWrapper" style="display: none; align-items: center; gap: 0.5rem;">
-            <label for="realtimeSortSelect" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Urutkan:</label>
+            <label for="realtimeSortSelect" id="realtimeSortLabel" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Urutkan:</label>
             <select id="realtimeSortSelect" class="realtime-sort-select">
-              <option value="">Relevansi</option>
-              <option value="publication_date:desc">Terbaru</option>
-              <option value="cited_by_count:desc">Sitasi Terbanyak</option>
-              <option value="display_name:asc">Abjad (A-Z)</option>
+              <option value="" id="realtimeSortRelevance">Relevansi</option>
+              <option value="publication_date:desc" id="realtimeSortNewest">Terbaru</option>
+              <option value="cited_by_count:desc" id="realtimeSortMostCited">Sitasi Terbanyak</option>
+              <option value="display_name:asc" id="realtimeSortAlpha">Abjad (A-Z)</option>
             </select>
           </div>
         </div>
@@ -5174,16 +5174,16 @@
         <!-- View 1: Daftar Notebook -->
         <div id="notebookListView">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Tulis naskah, catatan riset, atau draf apa pun dengan editor teks kaya - tersimpan otomatis.</p>
+            <p id="notebookIntroText" style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Tulis naskah, catatan riset, atau draf apa pun dengan editor teks kaya - tersimpan otomatis.</p>
             <button type="button" id="notebookCreateBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.25rem;">
-              <i class="fa-solid fa-plus"></i> Dokumen Baru
+              <i class="fa-solid fa-plus"></i> <span id="notebookCreateBtnText">Dokumen Baru</span>
             </button>
           </div>
           <div id="notebookGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;"></div>
           <div id="notebookEmpty" style="display: none; text-align: center; padding: 4rem 2rem; background: var(--bg-card); border: 1px dashed var(--border-light-hover); border-radius: 16px;">
             <i class="fa-solid fa-file-lines" style="font-size: 2.25rem; color: var(--text-muted); margin-bottom: 1rem; display: block;"></i>
-            <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.4rem;">Belum ada dokumen</h4>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Klik "Dokumen Baru" untuk mulai menulis.</p>
+            <h4 id="notebookEmptyTitle" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.4rem;">Belum ada dokumen</h4>
+            <p id="notebookEmptyDesc" style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Klik "Dokumen Baru" untuk mulai menulis.</p>
           </div>
         </div>
 
@@ -5191,11 +5191,11 @@
         <div id="notebookEditorView" style="display: none;">
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
             <button type="button" id="notebookBackBtn" class="reset-filter-btn" style="width: auto;">
-              <i class="fa-solid fa-arrow-left"></i> Kembali
+              <i class="fa-solid fa-arrow-left"></i> <span id="notebookBackBtnText">Kembali</span>
             </button>
             <span id="notebookSaveStatus" style="font-size: 0.78rem; color: var(--text-muted); margin-left: auto;"></span>
             <button type="button" id="notebookExportBtn" class="reset-filter-btn" style="width: auto;">
-              <i class="fa-solid fa-download"></i> Export .docx
+              <i class="fa-solid fa-download"></i> <span id="notebookExportBtnText">Export .docx</span>
             </button>
             <button type="button" id="notebookDeleteBtn" class="reset-filter-btn" style="width: auto; border-color: rgba(239,68,68,0.3); color: #ef4444;" title="Hapus dokumen ini">
               <i class="fa-regular fa-trash-can"></i>
@@ -6193,15 +6193,15 @@
 
             <!-- Section 5: Bantuan & Legal -->
             <div class="filter-box-card" style="padding: 1.5rem 2rem;">
-              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-muted); margin-bottom: 0.9rem; display: flex; align-items: center; gap: 0.6rem; text-transform: uppercase; letter-spacing: 0.03em;">
+              <h3 id="settingsHelpLegalHeading" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-muted); margin-bottom: 0.9rem; display: flex; align-items: center; gap: 0.6rem; text-transform: uppercase; letter-spacing: 0.03em;">
                 <i class="fa-regular fa-circle-question"></i> Bantuan & Legal
               </h3>
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-size: 0.82rem;">
-                <a href="/privacy.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Kebijakan Privasi</a>
-                <a href="/terms.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Syarat & Ketentuan</a>
-                <a href="/refund.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Refund Policy</a>
-                <a href="/help-center.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Pusat Bantuan</a>
-                <a href="/contact.html" target="_blank" rel="noopener" style="color: var(--text-muted); text-decoration: none;">Kontak</a>
+                <a href="/privacy.html" target="_blank" rel="noopener" id="settingsHelpPrivacy" style="color: var(--text-muted); text-decoration: none;">Kebijakan Privasi</a>
+                <a href="/terms.html" target="_blank" rel="noopener" id="settingsHelpTerms" style="color: var(--text-muted); text-decoration: none;">Syarat & Ketentuan</a>
+                <a href="/refund.html" target="_blank" rel="noopener" id="settingsHelpRefund" style="color: var(--text-muted); text-decoration: none;">Refund Policy</a>
+                <a href="/help-center.html" target="_blank" rel="noopener" id="settingsHelpCenter" style="color: var(--text-muted); text-decoration: none;">Pusat Bantuan</a>
+                <a href="/contact.html" target="_blank" rel="noopener" id="settingsHelpContact" style="color: var(--text-muted); text-decoration: none;">Kontak</a>
               </div>
             </div>
 
