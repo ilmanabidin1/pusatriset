@@ -922,6 +922,9 @@ app.get('/api/me', (req, res) => {
     let cariReferensiRemaining = 5;
     let isCitationGraphLimitReached = false;
     let citationGraphRemaining = 5;
+    // Notebook AI Continue Writing - Free 10x/bulan, Premium 50x/bulan, Ultimate unlimited
+    let isNotebookContinueLimitReached = false;
+    let notebookContinueRemaining = 10;
 
     const userType = req.session.userType || 'free';
     const isFree = userType === 'free';
@@ -961,6 +964,9 @@ app.get('/api/me', (req, res) => {
 
       isCariReferensiLimitReached = (user.lastCariReferensiMonth === currentMonth) && (user.cariReferensiCountThisMonth >= 5);
       cariReferensiRemaining = Math.max(0, 5 - (user.lastCariReferensiMonth === currentMonth ? user.cariReferensiCountThisMonth : 0));
+
+      isNotebookContinueLimitReached = (user.lastNotebookContinueMonth === currentMonth) && (user.notebookContinueCountThisMonth >= 10);
+      notebookContinueRemaining = Math.max(0, 10 - (user.lastNotebookContinueMonth === currentMonth ? user.notebookContinueCountThisMonth : 0));
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
       isLimitReached = false;
@@ -1000,6 +1006,9 @@ app.get('/api/me', (req, res) => {
 
       isCariReferensiLimitReached = false;
       cariReferensiRemaining = 999;
+
+      isNotebookContinueLimitReached = (user.lastNotebookContinueMonth === currentMonth) && (user.notebookContinueCountThisMonth >= 50);
+      notebookContinueRemaining = Math.max(0, 50 - (user.lastNotebookContinueMonth === currentMonth ? user.notebookContinueCountThisMonth : 0));
     } else {
       isLimitReached = false;
       isDraftLimitReached = false;
@@ -1019,6 +1028,8 @@ app.get('/api/me', (req, res) => {
       peerReviewRemaining = 999;
       isCitationGraphLimitReached = false;
       citationGraphRemaining = 100;
+      isNotebookContinueLimitReached = false;
+      notebookContinueRemaining = 999;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
@@ -1081,6 +1092,9 @@ app.get('/api/me', (req, res) => {
         cariReferensiCountThisMonth: user ? (user.cariReferensiCountThisMonth || 0) : 0,
         isCariReferensiLimitReached: isCariReferensiLimitReached,
         cariReferensiRemaining: cariReferensiRemaining,
+        notebookContinueCountThisMonth: user ? (user.notebookContinueCountThisMonth || 0) : 0,
+        isNotebookContinueLimitReached: isNotebookContinueLimitReached,
+        notebookContinueRemaining: notebookContinueRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
@@ -2871,6 +2885,165 @@ app.delete('/api/documents/:id', requireAccess, (req, res) => {
   docs.splice(idx, 1);
   saveDocuments(docs);
   res.json({ ok: true });
+});
+
+// Notebook Phase 0: impor naskah .docx yang sudah dikerjakan user di Word,
+// lanjut ditulis di Notebook. Pakai mammoth.convertToHtml (bukan extractRawText
+// seperti di extractTextFromDocument) supaya heading/bold/list dsb ikut
+// terbawa jadi HTML, bukan cuma teks polos - hasilnya langsung cocok jadi
+// contentHtml Quill.
+const notebookImportLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => (req.session && req.session.userId) || rateLimit.ipKeyGenerator(req.ip),
+  message: { ok: false, message: 'Terlalu banyak impor dokumen. Silakan coba lagi dalam beberapa menit.' }
+});
+const notebookImportUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB - naskah .docx wajar (bukan lampiran gambar berat)
+  fileFilter: (req, file, cb) => {
+    const originalName = (file.originalname || '').toLowerCase();
+    const isDocx = originalName.endsWith('.docx') || file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    if (isDocx) return cb(null, true);
+    cb(new Error('Hanya file .docx yang didukung untuk impor ke Notebook.'));
+  }
+});
+
+app.post('/api/documents/import-docx', requireAccess, notebookImportLimiter, (req, res) => {
+  notebookImportUpload.single('file')(req, res, async (err) => {
+    if (err) {
+      const message = err.message && err.message.includes('didukung')
+        ? err.message
+        : (err.code === 'LIMIT_FILE_SIZE' ? 'Ukuran file maksimal 5MB. Silakan unggah dokumen yang lebih kecil.' : 'Gagal mengunggah file.');
+      return res.status(400).json({ ok: false, message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ ok: false, message: 'File .docx wajib disertakan.' });
+    }
+
+    try {
+      const result = await mammoth.convertToHtml({ buffer: req.file.buffer });
+      const html = ((result && result.value) || '').trim();
+      if (!html) {
+        return res.status(400).json({ ok: false, message: 'Dokumen Word tidak berisi konten yang dapat dibaca.' });
+      }
+
+      const docs = getDocuments();
+      const now = new Date().toISOString();
+      const title = (req.file.originalname || 'Untitled').replace(/\.docx$/i, '').trim().slice(0, 200) || 'Untitled';
+      const newDoc = {
+        id: uuidv4(),
+        userId: req.session.userId,
+        title,
+        contentHtml: html.slice(0, 500000), // batas sama seperti PUT /api/documents/:id
+        createdAt: now,
+        updatedAt: now
+      };
+      docs.push(newDoc);
+      saveDocuments(docs);
+      res.json({ ok: true, document: newDoc });
+    } catch (error) {
+      console.error('[Notebook Import DOCX Error]', error);
+      res.status(500).json({ ok: false, message: 'Gagal membaca file .docx. Pastikan file tidak terkunci kata sandi atau korup.' });
+    }
+  });
+});
+
+// Notebook Phase 2: AI Continue Writing - lanjutkan tulisan user dari titik
+// kursor. Beda pola kuota dari tools sekali-generate (Outline/Peer Reviewer)
+// karena wajar dipanggil berkali-kali dalam 1 sesi menulis, jadi limitnya
+// dibuat lebih longgar (Free 10x/bulan, Premium 50x/bulan, Ultimate unlimited).
+app.post('/api/documents/continue-writing', requireAccess, async (req, res) => {
+  const context = String((req.body && req.body.context) || '').trim();
+  if (!context) {
+    return res.status(400).json({ ok: false, message: 'Tulis beberapa kalimat dulu sebelum minta AI melanjutkan.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const userType = (user && user.type) || 'free';
+
+  if (userType === 'free') {
+    if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 10) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 10x AI Continue Writing per bulan.' });
+    }
+  } else if (userType === 'premium') {
+    if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 50) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 50x AI Continue Writing per bulan.' });
+    }
+  }
+
+  const deepSeekKey = getDeepSeekApiKey();
+  if (!deepSeekKey) {
+    return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di server.' });
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+  const systemPrompt = `Anda adalah asisten penulisan akademis. Tugas Anda HANYA melanjutkan naskah yang diberikan pengguna secara natural, seolah-olah Anda adalah penulis yang sama.
+
+ATURAN PENTING:
+- Gunakan BAHASA YANG SAMA dengan naskah yang diberikan (Bahasa Indonesia jika naskah berbahasa Indonesia, Bahasa Inggris jika berbahasa Inggris).
+- Samakan gaya bahasa, nada, dan tingkat formalitas dengan teks sebelumnya.
+- Lanjutkan tepat dari titik terakhir naskah berhenti - JANGAN mengulang kalimat terakhir, JANGAN memberi salam/intro/penutup.
+- Panjang wajar: sekitar 1-2 paragraf (maksimal ~150 kata), bukan menulis sisa keseluruhan dokumen.
+- Kembalikan HANYA teks lanjutannya, tanpa tanda kutip, tanpa markdown, tanpa penjelasan tambahan.`;
+
+  const userPrompt = `Berikut naskah yang sudah ditulis pengguna (dipotong ke ~2000 karakter terakhir jika naskah panjang):\n\n"""\n${context.slice(-2000)}\n"""\n\nLanjutkan naskah ini.`;
+
+  try {
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 400,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+    }
+
+    const dsData = await dsResponse.json();
+    const choice = dsData?.choices?.[0];
+    let continuation = choice?.message?.content?.trim();
+    if (!continuation && choice?.message?.reasoning_content) {
+      continuation = String(choice.message.reasoning_content).trim();
+    }
+    if (!continuation) {
+      throw new Error('Respons AI kosong.');
+    }
+
+    if (userType === 'free' || userType === 'premium') {
+      if (user.lastNotebookContinueMonth !== currentMonth) {
+        user.lastNotebookContinueMonth = currentMonth;
+        user.notebookContinueCountThisMonth = 0;
+      }
+      user.notebookContinueCountThisMonth += 1;
+      saveUsers(users);
+    }
+
+    res.json({ ok: true, continuation });
+  } catch (error) {
+    console.error('[Notebook Continue Writing] Error:', error);
+    res.status(500).json({ ok: false, message: 'Gagal menghubungi AI untuk melanjutkan tulisan: ' + error.message });
+  }
 });
 
 // Decode entity HTML dasar yang dipakai Quill (bukan parser HTML umum - cukup

@@ -5175,9 +5175,15 @@
         <div id="notebookListView">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
             <p id="notebookIntroText" style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Tulis naskah, catatan riset, atau draf apa pun dengan editor teks kaya - tersimpan otomatis.</p>
-            <button type="button" id="notebookCreateBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.25rem;">
-              <i class="fa-solid fa-plus"></i> <span id="notebookCreateBtnText">Dokumen Baru</span>
-            </button>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <input type="file" id="notebookImportInput" accept=".docx" style="display: none;">
+              <button type="button" id="notebookImportBtn" class="reset-filter-btn" style="width: auto;">
+                <i class="fa-solid fa-file-import"></i> <span id="notebookImportBtnText">Impor .docx</span>
+              </button>
+              <button type="button" id="notebookCreateBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.25rem;">
+                <i class="fa-solid fa-plus"></i> <span id="notebookCreateBtnText">Dokumen Baru</span>
+              </button>
+            </div>
           </div>
           <div id="notebookGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;"></div>
           <div id="notebookEmpty" style="display: none; text-align: center; padding: 4rem 2rem; background: var(--bg-card); border: 1px dashed var(--border-light-hover); border-radius: 16px;">
@@ -5193,6 +5199,10 @@
             <button type="button" id="notebookBackBtn" class="reset-filter-btn" style="width: auto;">
               <i class="fa-solid fa-arrow-left"></i> <span id="notebookBackBtnText">Kembali</span>
             </button>
+            <button type="button" id="notebookContinueBtn" class="upgrade-btn" style="width: auto; padding: 0.6rem 1.1rem;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="notebookContinueBtnText">Lanjutkan dengan AI</span>
+            </button>
+            <span id="notebookContinueQuotaBadge" style="font-size: 0.72rem; color: var(--text-muted);"></span>
             <span id="notebookSaveStatus" style="font-size: 0.78rem; color: var(--text-muted); margin-left: auto;"></span>
             <button type="button" id="notebookExportBtn" class="reset-filter-btn" style="width: auto;">
               <i class="fa-solid fa-download"></i> <span id="notebookExportBtnText">Export .docx</span>

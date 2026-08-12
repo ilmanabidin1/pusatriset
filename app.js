@@ -667,6 +667,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Notebook (AI Writer Phase 1)
       notebook_intro: "Tulis naskah, catatan riset, atau draf apa pun dengan editor teks kaya - tersimpan otomatis.",
       notebook_create_btn: "Dokumen Baru",
+      notebook_import_btn: "Impor .docx",
+      notebook_importing: "Mengimpor...",
+      notebook_import_error: "Gagal mengimpor file .docx.",
       notebook_empty_title: "Belum ada dokumen",
       notebook_empty_desc: "Klik \"Dokumen Baru\" untuk mulai menulis.",
       notebook_back_btn: "Kembali",
@@ -687,6 +690,12 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_conn_error: "Gagal menghubungi server.",
       notebook_delete_error: "Gagal menghapus dokumen.",
       notebook_export_error: "Gagal membuat file .docx.",
+      notebook_continue_btn: "Lanjutkan dengan AI",
+      notebook_continue_generating: "Menulis...",
+      notebook_continue_empty_alert: "Tulis beberapa kalimat dulu sebelum minta AI melanjutkan.",
+      notebook_continue_error: "Gagal menghubungi AI untuk melanjutkan tulisan.",
+      notebook_continue_quota_limit_reached: "Limit {limit}/bulan AI Continue Writing tercapai.",
+      notebook_continue_quota_remaining: "Sisa {n}x AI Continue Writing bulan ini (limit {limit}/bulan)",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -987,6 +996,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Notebook (AI Writer Phase 1)
       notebook_intro: "Write manuscripts, research notes, or any draft with a rich text editor - autosaved.",
       notebook_create_btn: "New Document",
+      notebook_import_btn: "Import .docx",
+      notebook_importing: "Importing...",
+      notebook_import_error: "Failed to import .docx file.",
       notebook_empty_title: "No documents yet",
       notebook_empty_desc: "Click \"New Document\" to start writing.",
       notebook_back_btn: "Back",
@@ -1007,6 +1019,12 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_conn_error: "Failed to contact the server.",
       notebook_delete_error: "Failed to delete document.",
       notebook_export_error: "Failed to generate .docx file.",
+      notebook_continue_btn: "Continue with AI",
+      notebook_continue_generating: "Writing...",
+      notebook_continue_empty_alert: "Write a few sentences first before asking AI to continue.",
+      notebook_continue_error: "Failed to contact AI to continue writing.",
+      notebook_continue_quota_limit_reached: "Monthly limit of {limit} AI Continue Writing reached.",
+      notebook_continue_quota_remaining: "{n} AI Continue Writing left this month (limit {limit}/month)",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -1542,6 +1560,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updatePeerReviewerAccess(currentUser.user);
           updateCitationGraphAccess(currentUser.user);
           updateCariReferensiAccess(currentUser.user);
+          updateNotebookContinueAccess(currentUser.user);
         }
 
         // Logout handler
@@ -1862,6 +1881,31 @@ document.addEventListener('DOMContentLoaded', () => {
       badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> ${msg}`;
     }
   }
+  function updateNotebookContinueAccess(user) {
+    const badgeEl = document.getElementById('notebookContinueQuotaBadge');
+    const btn = document.getElementById('notebookContinueBtn');
+    if (!badgeEl || !user) return;
+
+    const t = TRANSLATIONS[window.currentLanguage || 'id'];
+    window.notebookContinueLimitReached = !!user.isNotebookContinueLimitReached;
+
+    if (user.type === 'ultimate') {
+      badgeEl.textContent = '';
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    const limitLabel = user.type === 'premium' ? '50x' : '10x';
+    const remaining = typeof user.notebookContinueRemaining === 'number' ? user.notebookContinueRemaining : null;
+    if (user.isNotebookContinueLimitReached) {
+      badgeEl.textContent = t.notebook_continue_quota_limit_reached.replace('{limit}', limitLabel);
+      if (btn) btn.disabled = true;
+    } else {
+      badgeEl.textContent = t.notebook_continue_quota_remaining.replace('{n}', remaining !== null ? remaining : '-').replace('{limit}', limitLabel);
+      if (btn) btn.disabled = false;
+    }
+  }
+  window.updateNotebookContinueAccess = updateNotebookContinueAccess;
   window.updateCariReferensiAccess = updateCariReferensiAccess;
   window.updateCitationGraphAccess = updateCitationGraphAccess;
   window.updatePeerReviewerAccess = updatePeerReviewerAccess;
@@ -6504,9 +6548,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const grid = document.getElementById('notebookGrid');
       const emptyHint = document.getElementById('notebookEmpty');
       const createBtn = document.getElementById('notebookCreateBtn');
+      const importBtn = document.getElementById('notebookImportBtn');
+      const importInput = document.getElementById('notebookImportInput');
       const backBtn = document.getElementById('notebookBackBtn');
       const deleteBtn = document.getElementById('notebookDeleteBtn');
       const exportBtn = document.getElementById('notebookExportBtn');
+      const continueBtn = document.getElementById('notebookContinueBtn');
       const titleInput = document.getElementById('notebookTitleInput');
       const saveStatusEl = document.getElementById('notebookSaveStatus');
       const editorEl = document.getElementById('notebookEditor');
@@ -6633,6 +6680,10 @@ document.addEventListener('DOMContentLoaded', () => {
             editor.root.innerHTML = data.document.contentHtml || '';
             suppressChange = false;
           }
+
+          if (window.currentUser && window.currentUser.user && window.updateNotebookContinueAccess) {
+            window.updateNotebookContinueAccess(window.currentUser.user);
+          }
         } catch (err) {
           alert(t.notebook_conn_error);
         }
@@ -6655,6 +6706,35 @@ document.addEventListener('DOMContentLoaded', () => {
             openDocument(data.document.id);
           } catch (err) {
             alert(t.notebook_conn_error);
+          }
+        });
+      }
+
+      if (importBtn && importInput) {
+        importBtn.addEventListener('click', () => importInput.click());
+        importInput.addEventListener('change', async () => {
+          const file = importInput.files && importInput.files[0];
+          if (!file) return;
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
+          const originalHtml = importBtn.innerHTML;
+          importBtn.disabled = true;
+          importBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${t.notebook_importing}`;
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/documents/import-docx', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || t.notebook_import_error);
+              return;
+            }
+            openDocument(data.document.id);
+          } catch (err) {
+            alert(t.notebook_conn_error);
+          } finally {
+            importInput.value = '';
+            importBtn.disabled = false;
+            importBtn.innerHTML = originalHtml;
           }
         });
       }
@@ -6725,6 +6805,55 @@ document.addEventListener('DOMContentLoaded', () => {
           } finally {
             exportBtn.disabled = false;
             exportBtn.innerHTML = originalHtml;
+          }
+        });
+      }
+
+      if (continueBtn) {
+        continueBtn.addEventListener('click', async () => {
+          if (!currentDocId) return;
+          const editor = ensureQuill();
+          if (!editor) return;
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
+
+          const selection = editor.getSelection(true);
+          const cursorIndex = selection ? selection.index : Math.max(0, editor.getLength() - 1);
+          const contextText = editor.getText(0, cursorIndex).trim();
+          if (!contextText) {
+            alert(t.notebook_continue_empty_alert);
+            return;
+          }
+
+          const originalHtml = continueBtn.innerHTML;
+          continueBtn.disabled = true;
+          continueBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${t.notebook_continue_generating}`;
+          try {
+            const res = await fetch('/api/documents/continue-writing', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ context: contextText })
+            });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || t.notebook_continue_error);
+              return;
+            }
+            const insertText = (/\s$/.test(contextText) ? '' : ' ') + data.continuation;
+            editor.insertText(cursorIndex, insertText, 'user');
+            editor.setSelection(cursorIndex + insertText.length, 0);
+
+            // Refresh badge kuota AI Continue Writing setelah dipakai
+            fetch('/api/me').then(r => r.json()).then(meData => {
+              if (meData.loggedIn && meData.user) {
+                window.currentUser = meData;
+                if (window.updateNotebookContinueAccess) window.updateNotebookContinueAccess(meData.user);
+              }
+            }).catch(() => {});
+          } catch (err) {
+            alert(t.notebook_continue_error);
+          } finally {
+            continueBtn.disabled = false;
+            continueBtn.innerHTML = originalHtml;
           }
         });
       }
@@ -8868,6 +8997,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePeerReviewerAccess(currentUser.user);
         updateCitationGraphAccess(currentUser.user);
         updateCariReferensiAccess(currentUser.user);
+        updateNotebookContinueAccess(currentUser.user);
       }
       // Re-render chat bubbles so export button tooltips (PDF/DOCX/.ris/.bib) pick up the new language
       if (typeof renderResearchChatMessages === 'function' && typeof researchChatMessages !== 'undefined' && researchChatMessages.length > 0) {
@@ -8987,6 +9117,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (notebookIntroTextEl) notebookIntroTextEl.textContent = TRANSLATIONS[lang].notebook_intro;
       const notebookCreateBtnTextEl = document.getElementById('notebookCreateBtnText');
       if (notebookCreateBtnTextEl) notebookCreateBtnTextEl.textContent = TRANSLATIONS[lang].notebook_create_btn;
+      const notebookImportBtnTextEl = document.getElementById('notebookImportBtnText');
+      if (notebookImportBtnTextEl) notebookImportBtnTextEl.textContent = TRANSLATIONS[lang].notebook_import_btn;
+      const notebookContinueBtnTextEl = document.getElementById('notebookContinueBtnText');
+      if (notebookContinueBtnTextEl) notebookContinueBtnTextEl.textContent = TRANSLATIONS[lang].notebook_continue_btn;
       const notebookEmptyTitleEl = document.getElementById('notebookEmptyTitle');
       if (notebookEmptyTitleEl) notebookEmptyTitleEl.textContent = TRANSLATIONS[lang].notebook_empty_title;
       const notebookEmptyDescEl = document.getElementById('notebookEmptyDesc');
