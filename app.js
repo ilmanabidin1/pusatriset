@@ -690,12 +690,25 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_conn_error: "Gagal menghubungi server.",
       notebook_delete_error: "Gagal menghapus dokumen.",
       notebook_export_error: "Gagal membuat file .docx.",
-      notebook_continue_btn: "Lanjutkan dengan AI",
-      notebook_continue_generating: "Menulis...",
       notebook_continue_empty_alert: "Tulis beberapa kalimat dulu sebelum minta AI melanjutkan.",
       notebook_continue_error: "Gagal menghubungi AI untuk melanjutkan tulisan.",
       notebook_continue_quota_limit_reached: "Limit {limit}/bulan AI Continue Writing tercapai.",
       notebook_continue_quota_remaining: "Sisa {n}x AI Continue Writing bulan ini (limit {limit}/bulan)",
+      notebook_slash_hint: 'Ketik "/" di editor untuk bantuan AI',
+      notebook_slash_section_draft: "Tulis dengan AI",
+      notebook_slash_section_generate: "Buat dari isi naskah",
+      notebook_slash_continue: "Lanjutkan tulisan",
+      notebook_slash_outline: "Buat Outline",
+      notebook_slash_introduction: "Tulis Pendahuluan",
+      notebook_slash_conclusion: "Tulis Kesimpulan",
+      notebook_slash_opposing: "Tulis Argumen Tandingan",
+      notebook_slash_critique: "Kritik Seperti Reviewer",
+      notebook_slash_no_results: "Tidak ada perintah yang cocok",
+      notebook_slash_generating: "Menulis...",
+      notebook_slash_empty_doc_alert: "Tulis judul atau beberapa kalimat dulu sebelum minta AI membantu.",
+      notebook_slash_error: "Gagal menghubungi AI.",
+      notebook_slash_conn_error: "Gagal menghubungi server.",
+      notebook_slash_critique_heading: "Kritik AI (seperti Reviewer):",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -1019,12 +1032,25 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_conn_error: "Failed to contact the server.",
       notebook_delete_error: "Failed to delete document.",
       notebook_export_error: "Failed to generate .docx file.",
-      notebook_continue_btn: "Continue with AI",
-      notebook_continue_generating: "Writing...",
       notebook_continue_empty_alert: "Write a few sentences first before asking AI to continue.",
       notebook_continue_error: "Failed to contact AI to continue writing.",
       notebook_continue_quota_limit_reached: "Monthly limit of {limit} AI Continue Writing reached.",
       notebook_continue_quota_remaining: "{n} AI Continue Writing left this month (limit {limit}/month)",
+      notebook_slash_hint: 'Type "/" in the editor for AI help',
+      notebook_slash_section_draft: "Draft with AI",
+      notebook_slash_section_generate: "Generate from page",
+      notebook_slash_continue: "Continue writing",
+      notebook_slash_outline: "Outline Builder",
+      notebook_slash_introduction: "Write Introduction",
+      notebook_slash_conclusion: "Write Conclusion",
+      notebook_slash_opposing: "Write Opposing Arguments",
+      notebook_slash_critique: "Critique Like a Reviewer",
+      notebook_slash_no_results: "No matching commands",
+      notebook_slash_generating: "Writing...",
+      notebook_slash_empty_doc_alert: "Write a title or a few sentences first before asking AI to help.",
+      notebook_slash_error: "Failed to contact AI.",
+      notebook_slash_conn_error: "Failed to contact the server.",
+      notebook_slash_critique_heading: "AI Critique (like a Reviewer):",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -1560,7 +1586,6 @@ document.addEventListener('DOMContentLoaded', () => {
           updatePeerReviewerAccess(currentUser.user);
           updateCitationGraphAccess(currentUser.user);
           updateCariReferensiAccess(currentUser.user);
-          updateNotebookContinueAccess(currentUser.user);
         }
 
         // Logout handler
@@ -1881,31 +1906,6 @@ document.addEventListener('DOMContentLoaded', () => {
       badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> ${msg}`;
     }
   }
-  function updateNotebookContinueAccess(user) {
-    const badgeEl = document.getElementById('notebookContinueQuotaBadge');
-    const btn = document.getElementById('notebookContinueBtn');
-    if (!badgeEl || !user) return;
-
-    const t = TRANSLATIONS[window.currentLanguage || 'id'];
-    window.notebookContinueLimitReached = !!user.isNotebookContinueLimitReached;
-
-    if (user.type === 'ultimate') {
-      badgeEl.textContent = '';
-      if (btn) btn.disabled = false;
-      return;
-    }
-
-    const limitLabel = user.type === 'premium' ? '50x' : '10x';
-    const remaining = typeof user.notebookContinueRemaining === 'number' ? user.notebookContinueRemaining : null;
-    if (user.isNotebookContinueLimitReached) {
-      badgeEl.textContent = t.notebook_continue_quota_limit_reached.replace('{limit}', limitLabel);
-      if (btn) btn.disabled = true;
-    } else {
-      badgeEl.textContent = t.notebook_continue_quota_remaining.replace('{n}', remaining !== null ? remaining : '-').replace('{limit}', limitLabel);
-      if (btn) btn.disabled = false;
-    }
-  }
-  window.updateNotebookContinueAccess = updateNotebookContinueAccess;
   window.updateCariReferensiAccess = updateCariReferensiAccess;
   window.updateCitationGraphAccess = updateCitationGraphAccess;
   window.updatePeerReviewerAccess = updatePeerReviewerAccess;
@@ -6553,7 +6553,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const backBtn = document.getElementById('notebookBackBtn');
       const deleteBtn = document.getElementById('notebookDeleteBtn');
       const exportBtn = document.getElementById('notebookExportBtn');
-      const continueBtn = document.getElementById('notebookContinueBtn');
+      const slashMenuEl = document.getElementById('notebookSlashMenu');
+      const slashHintTextEl = document.getElementById('notebookSlashHintText');
       const titleInput = document.getElementById('notebookTitleInput');
       const saveStatusEl = document.getElementById('notebookSaveStatus');
       const editorEl = document.getElementById('notebookEditor');
@@ -6572,10 +6573,50 @@ document.addEventListener('DOMContentLoaded', () => {
           modules: { toolbar: '#notebookToolbar' },
           placeholder: t.notebook_editor_placeholder
         });
-        quill.on('text-change', () => {
+        quill.on('text-change', (delta, oldDelta, source) => {
           if (suppressChange) return;
           scheduleSave();
+          if (source !== 'user' || slashBusy) return;
+
+          const sel = quill.getSelection();
+          if (!sel) { closeSlashMenu(); return; }
+
+          if (!slashActive) {
+            const typedSlash = delta.ops && delta.ops.some(op => op.insert === '/');
+            if (typedSlash && sel.index > 0 && quill.getText(sel.index - 1, 1) === '/') {
+              openSlashMenu(quill, sel.index - 1);
+            }
+            return;
+          }
+
+          if (sel.index <= slashStartIndex || quill.getText(slashStartIndex, 1) !== '/') {
+            closeSlashMenu();
+            return;
+          }
+          slashQuery = quill.getText(slashStartIndex + 1, sel.index - slashStartIndex - 1);
+          if (/\s/.test(slashQuery)) { closeSlashMenu(); return; }
+          slashHighlightIndex = 0;
+          renderSlashMenu();
+          positionSlashMenu(quill);
         });
+        quill.root.addEventListener('keydown', (e) => {
+          if (!slashActive) return;
+          if (e.key === 'ArrowDown') {
+            e.preventDefault(); e.stopPropagation();
+            slashHighlightIndex = Math.min(slashHighlightIndex + 1, slashFilteredItems.length - 1);
+            renderSlashMenu();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault(); e.stopPropagation();
+            slashHighlightIndex = Math.max(slashHighlightIndex - 1, 0);
+            renderSlashMenu();
+          } else if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault(); e.stopPropagation();
+            selectSlashItem(quill, slashHighlightIndex);
+          } else if (e.key === 'Escape') {
+            e.preventDefault(); e.stopPropagation();
+            closeSlashMenu();
+          }
+        }, true);
         return quill;
       }
 
@@ -6679,10 +6720,6 @@ document.addEventListener('DOMContentLoaded', () => {
             suppressChange = true;
             editor.root.innerHTML = data.document.contentHtml || '';
             suppressChange = false;
-          }
-
-          if (window.currentUser && window.currentUser.user && window.updateNotebookContinueAccess) {
-            window.updateNotebookContinueAccess(window.currentUser.user);
           }
         } catch (err) {
           alert(t.notebook_conn_error);
@@ -6809,52 +6846,186 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      if (continueBtn) {
-        continueBtn.addEventListener('click', async () => {
-          if (!currentDocId) return;
-          const editor = ensureQuill();
-          if (!editor) return;
-          const t = TRANSLATIONS[window.currentLanguage || 'id'];
+      // --- Menu "/" (slash command) ala SciSpace/Notion - muncul persis di
+      // posisi kursor supaya user tidak perlu bolak-balik ke tombol di atas. ---
+      const SLASH_MENU_ITEMS = [
+        { id: 'continue', section: 'draft', icon: 'fa-solid fa-pen-to-square', labelKey: 'notebook_slash_continue' },
+        { id: 'outline', section: 'draft', icon: 'fa-solid fa-wand-magic-sparkles', labelKey: 'notebook_slash_outline' },
+        { id: 'introduction', section: 'generate', icon: 'fa-solid fa-pen', labelKey: 'notebook_slash_introduction' },
+        { id: 'conclusion', section: 'generate', icon: 'fa-solid fa-pen', labelKey: 'notebook_slash_conclusion' },
+        { id: 'opposing', section: 'generate', icon: 'fa-solid fa-scale-balanced', labelKey: 'notebook_slash_opposing' },
+        { id: 'critique', section: 'generate', icon: 'fa-solid fa-user-tie', labelKey: 'notebook_slash_critique' }
+      ];
+      const SLASH_SECTION_LABEL_KEYS = { draft: 'notebook_slash_section_draft', generate: 'notebook_slash_section_generate' };
 
-          const selection = editor.getSelection(true);
-          const cursorIndex = selection ? selection.index : Math.max(0, editor.getLength() - 1);
-          const contextText = editor.getText(0, cursorIndex).trim();
-          if (!contextText) {
-            alert(t.notebook_continue_empty_alert);
-            return;
+      let slashActive = false;
+      let slashBusy = false;
+      let slashStartIndex = -1;
+      let slashQuery = '';
+      let slashHighlightIndex = 0;
+      let slashFilteredItems = [];
+
+      function closeSlashMenu() {
+        slashActive = false;
+        if (slashMenuEl) {
+          slashMenuEl.classList.remove('active');
+          slashMenuEl.innerHTML = '';
+        }
+      }
+
+      function getFilteredSlashItems() {
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        const q = slashQuery.trim().toLowerCase();
+        if (!q) return SLASH_MENU_ITEMS.slice();
+        return SLASH_MENU_ITEMS.filter(item => t[item.labelKey].toLowerCase().includes(q));
+      }
+
+      function renderSlashMenu() {
+        if (!slashMenuEl) return;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        slashFilteredItems = getFilteredSlashItems();
+        if (slashHighlightIndex >= slashFilteredItems.length) slashHighlightIndex = 0;
+        if (!slashFilteredItems.length) {
+          slashMenuEl.innerHTML = `<div class="notebook-slash-menu-empty">${t.notebook_slash_no_results}</div>`;
+          return;
+        }
+        let html = '';
+        let lastSection = null;
+        slashFilteredItems.forEach((item, i) => {
+          if (item.section !== lastSection) {
+            html += `<div class="notebook-slash-menu-section">${t[SLASH_SECTION_LABEL_KEYS[item.section]]}</div>`;
+            lastSection = item.section;
           }
+          html += `<div class="notebook-slash-menu-item${i === slashHighlightIndex ? ' active' : ''}" data-idx="${i}"><i class="${item.icon}"></i><span>${t[item.labelKey]}</span></div>`;
+        });
+        html += renderSlashQuotaFooter(t);
+        slashMenuEl.innerHTML = html;
+      }
 
-          const originalHtml = continueBtn.innerHTML;
-          continueBtn.disabled = true;
-          continueBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${t.notebook_continue_generating}`;
-          try {
+      function renderSlashQuotaFooter(t) {
+        const user = window.currentUser && window.currentUser.user;
+        if (!user || user.type === 'ultimate') return '';
+        const limitLabel = user.type === 'premium' ? '50x' : '10x';
+        const text = user.isNotebookContinueLimitReached
+          ? t.notebook_continue_quota_limit_reached.replace('{limit}', limitLabel)
+          : t.notebook_continue_quota_remaining
+              .replace('{n}', typeof user.notebookContinueRemaining === 'number' ? user.notebookContinueRemaining : '-')
+              .replace('{limit}', limitLabel);
+        return `<div class="notebook-slash-menu-quota">${text}</div>`;
+      }
+
+      function positionSlashMenu(editor) {
+        if (!slashMenuEl) return;
+        const cardEl = editorEl.closest('.filter-box-card');
+        const qlEditorEl = editorEl.querySelector('.ql-editor');
+        if (!cardEl || !qlEditorEl) return;
+        const bounds = editor.getBounds(slashStartIndex, 0);
+        const editorRect = qlEditorEl.getBoundingClientRect();
+        const cardRect = cardEl.getBoundingClientRect();
+        slashMenuEl.style.top = ((editorRect.top - cardRect.top) + bounds.top + bounds.height + 6) + 'px';
+        slashMenuEl.style.left = ((editorRect.left - cardRect.left) + bounds.left) + 'px';
+      }
+
+      function openSlashMenu(editor, index) {
+        slashActive = true;
+        slashStartIndex = index;
+        slashQuery = '';
+        slashHighlightIndex = 0;
+        renderSlashMenu();
+        positionSlashMenu(editor);
+        if (slashMenuEl) slashMenuEl.classList.add('active');
+      }
+
+      async function runSlashAction(editor, actionId, insertIndex, t) {
+        try {
+          if (actionId === 'continue') {
+            const contextText = editor.getText(0, insertIndex).trim();
+            if (!contextText) { alert(t.notebook_continue_empty_alert); return; }
             const res = await fetch('/api/documents/continue-writing', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ context: contextText })
             });
             const data = await res.json();
-            if (!data.ok) {
-              alert(data.message || t.notebook_continue_error);
-              return;
-            }
-            const insertText = (/\s$/.test(contextText) ? '' : ' ') + data.continuation;
-            editor.insertText(cursorIndex, insertText, 'user');
-            editor.setSelection(cursorIndex + insertText.length, 0);
-
-            // Refresh badge kuota AI Continue Writing setelah dipakai
-            fetch('/api/me').then(r => r.json()).then(meData => {
-              if (meData.loggedIn && meData.user) {
-                window.currentUser = meData;
-                if (window.updateNotebookContinueAccess) window.updateNotebookContinueAccess(meData.user);
-              }
-            }).catch(() => {});
-          } catch (err) {
-            alert(t.notebook_continue_error);
-          } finally {
-            continueBtn.disabled = false;
-            continueBtn.innerHTML = originalHtml;
+            if (!data.ok) { alert(data.message || t.notebook_continue_error); return; }
+            const insertStr = (/\s$/.test(contextText) ? '' : ' ') + data.continuation;
+            editor.insertText(insertIndex, insertStr, 'user');
+            editor.setSelection(insertIndex + insertStr.length, 0);
+          } else if (actionId === 'critique') {
+            const fullText = editor.getText().trim();
+            if (!fullText) { alert(t.notebook_slash_empty_doc_alert); return; }
+            const res = await fetch('/api/documents/ai-draft-action', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'critique', title: titleInput.value.trim(), context: fullText })
+            });
+            const data = await res.json();
+            if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
+            const headingIndex = Math.max(0, editor.getLength() - 1);
+            editor.insertText(headingIndex, '\n\n' + t.notebook_slash_critique_heading + '\n', { bold: true, color: '#dc2626' }, 'user');
+            const bodyIndex = Math.max(0, editor.getLength() - 1);
+            editor.insertText(bodyIndex, data.result, { color: '#dc2626', bold: false }, 'user');
+            editor.setSelection(Math.max(0, editor.getLength() - 1), 0);
+          } else {
+            const fullText = editor.getText().trim();
+            const res = await fetch('/api/documents/ai-draft-action', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: actionId, title: titleInput.value.trim(), context: fullText })
+            });
+            const data = await res.json();
+            if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
+            const lengthBefore = editor.getLength();
+            editor.clipboard.dangerouslyPasteHTML(insertIndex, data.html, 'user');
+            const inserted = editor.getLength() - lengthBefore;
+            editor.setSelection(insertIndex + Math.max(0, inserted), 0);
           }
+
+          // Refresh badge kuota AI Notebook (dipakai bersama semua aksi slash) setelah dipakai
+          fetch('/api/me').then(r => r.json()).then(meData => {
+            if (meData.loggedIn && meData.user) window.currentUser = meData;
+          }).catch(() => {});
+        } catch (err) {
+          alert(t.notebook_slash_conn_error);
+        }
+      }
+
+      async function selectSlashItem(editor, idx) {
+        const item = slashFilteredItems[idx];
+        if (!item || slashBusy) return;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        const insertIndex = slashStartIndex;
+        const currentSel = editor.getSelection();
+        const removeLength = currentSel ? Math.max(1, currentSel.index - slashStartIndex) : 1;
+
+        slashActive = false; // stop text-change dari melacak query "/" yang sebentar lagi dihapus
+        slashBusy = true;
+        editor.deleteText(insertIndex, removeLength, 'user');
+        editor.setSelection(insertIndex, 0);
+        if (slashMenuEl) {
+          slashMenuEl.innerHTML = `<div class="notebook-slash-menu-loading"><i class="fa-solid fa-spinner fa-spin"></i> ${t.notebook_slash_generating}</div>`;
+        }
+
+        try {
+          await runSlashAction(editor, item.id, insertIndex, t);
+        } finally {
+          slashBusy = false;
+          closeSlashMenu();
+        }
+      }
+
+      if (slashMenuEl) {
+        slashMenuEl.addEventListener('mousedown', (e) => {
+          // mousedown (bukan click) supaya menu tidak keburu blur/hilang duluan sebelum terpilih
+          const itemEl = e.target.closest('.notebook-slash-menu-item');
+          if (!itemEl) return;
+          e.preventDefault();
+          const idx = parseInt(itemEl.getAttribute('data-idx'), 10);
+          const editor = ensureQuill();
+          if (editor) selectSlashItem(editor, idx);
+        });
+        document.addEventListener('click', (e) => {
+          if (slashActive && !slashMenuEl.contains(e.target)) closeSlashMenu();
         });
       }
     })();
@@ -8997,7 +9168,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePeerReviewerAccess(currentUser.user);
         updateCitationGraphAccess(currentUser.user);
         updateCariReferensiAccess(currentUser.user);
-        updateNotebookContinueAccess(currentUser.user);
       }
       // Re-render chat bubbles so export button tooltips (PDF/DOCX/.ris/.bib) pick up the new language
       if (typeof renderResearchChatMessages === 'function' && typeof researchChatMessages !== 'undefined' && researchChatMessages.length > 0) {
@@ -9119,8 +9289,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (notebookCreateBtnTextEl) notebookCreateBtnTextEl.textContent = TRANSLATIONS[lang].notebook_create_btn;
       const notebookImportBtnTextEl = document.getElementById('notebookImportBtnText');
       if (notebookImportBtnTextEl) notebookImportBtnTextEl.textContent = TRANSLATIONS[lang].notebook_import_btn;
-      const notebookContinueBtnTextEl = document.getElementById('notebookContinueBtnText');
-      if (notebookContinueBtnTextEl) notebookContinueBtnTextEl.textContent = TRANSLATIONS[lang].notebook_continue_btn;
+      const notebookSlashHintTextEl = document.getElementById('notebookSlashHintText');
+      if (notebookSlashHintTextEl) notebookSlashHintTextEl.textContent = TRANSLATIONS[lang].notebook_slash_hint;
       const notebookEmptyTitleEl = document.getElementById('notebookEmptyTitle');
       if (notebookEmptyTitleEl) notebookEmptyTitleEl.textContent = TRANSLATIONS[lang].notebook_empty_title;
       const notebookEmptyDescEl = document.getElementById('notebookEmptyDesc');

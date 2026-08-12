@@ -3046,6 +3046,163 @@ ATURAN PENTING:
   }
 });
 
+// Notebook Phase 2: menu "/" (slash command) ala SciSpace - Outline Builder,
+// Write Introduction/Conclusion/Opposing Arguments (dikembalikan sbg HTML
+// sederhana supaya bisa langsung di-paste ke Quill lewat dangerouslyPasteHTML),
+// dan Critique Like a Reviewer (dikembalikan sbg teks polos, ditampilkan
+// client-side dengan warna merah). Berbagi kuota yang sama dengan Continue
+// Writing (lastNotebookContinueMonth/notebookContinueCountThisMonth) karena
+// sama-sama single-call AI assist ringan dalam 1 sesi menulis.
+const NOTEBOOK_DRAFT_ACTIONS = {
+  outline: {
+    systemPrompt: `Anda adalah asisten penulisan akademis. Berdasarkan judul naskah dan isi yang sudah ditulis (jika ada), buat KERANGKA/OUTLINE terstruktur untuk membantu penulis melanjutkan naskahnya.
+
+ATURAN:
+- Gunakan BAHASA YANG SAMA dengan judul/isi naskah yang diberikan.
+- Format output WAJIB HTML sederhana memakai HANYA tag berikut: <h2>, <h3>, <p>, <ul>, <li>, <strong>.
+- JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML.
+- Kembalikan HANYA HTML outline-nya.`,
+    isHtml: true
+  },
+  introduction: {
+    systemPrompt: `Anda adalah asisten penulisan akademis. Tulis draf PENDAHULUAN (introduction) akademis untuk naskah ini berdasarkan judul dan konteks yang tersedia.
+
+ATURAN:
+- Gunakan BAHASA YANG SAMA dengan judul/isi naskah yang diberikan.
+- Format output WAJIB HTML sederhana memakai HANYA tag berikut: <p>, <strong>, <em>.
+- Panjang wajar 2-3 paragraf.
+- JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML.
+- Kembalikan HANYA HTML-nya.`,
+    isHtml: true
+  },
+  conclusion: {
+    systemPrompt: `Anda adalah asisten penulisan akademis. Tulis draf KESIMPULAN (conclusion) akademis berdasarkan isi naskah yang sudah ditulis sejauh ini.
+
+ATURAN:
+- Gunakan BAHASA YANG SAMA dengan isi naskah yang diberikan.
+- Format output WAJIB HTML sederhana memakai HANYA tag berikut: <p>, <strong>, <em>.
+- Panjang wajar 1-2 paragraf.
+- JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML.
+- Kembalikan HANYA HTML-nya.`,
+    isHtml: true
+  },
+  opposing: {
+    systemPrompt: `Anda adalah asisten penulisan akademis. Tulis paragraf berisi ARGUMEN TANDINGAN / PERSPEKTIF KRITIS terhadap poin-poin yang sudah ditulis di naskah ini, seolah mewakili pandangan berbeda/skeptis, untuk memperkaya diskusi akademis (bukan untuk menyerang, tapi menunjukkan sisi lain yang perlu dipertimbangkan).
+
+ATURAN:
+- Gunakan BAHASA YANG SAMA dengan isi naskah yang diberikan.
+- Format output WAJIB HTML sederhana memakai HANYA tag berikut: <p>, <strong>, <em>.
+- Panjang wajar 1-2 paragraf.
+- JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML.
+- Kembalikan HANYA HTML-nya.`,
+    isHtml: true
+  },
+  critique: {
+    systemPrompt: `Anda adalah reviewer jurnal akademis yang kritis, objektif, dan konstruktif. Berikan KRITIK singkat terhadap naskah yang diberikan - kelemahan argumen, celah metodologis, klaim yang kurang didukung, atau saran perbaikan - seperti komentar reviewer di pinggir naskah.
+
+ATURAN:
+- Gunakan BAHASA YANG SAMA dengan isi naskah yang diberikan.
+- Format: 3-5 poin kritis, tiap poin diawali tanda hubung (-) di baris baru, 1 kalimat ringkas per poin.
+- JANGAN gunakan HTML atau markdown selain tanda hubung di awal baris.
+- JANGAN memuji secara berlebihan - fokus pada hal yang perlu diperbaiki.
+- Kembalikan HANYA poin-poin kritiknya.`,
+    isHtml: false
+  }
+};
+
+app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
+  const action = String((req.body && req.body.action) || '');
+  const title = String((req.body && req.body.title) || '').trim().slice(0, 300);
+  const context = String((req.body && req.body.context) || '').trim().slice(0, 6000);
+  const actionConfig = NOTEBOOK_DRAFT_ACTIONS[action];
+
+  if (!actionConfig) {
+    return res.status(400).json({ ok: false, message: 'Aksi AI tidak dikenali.' });
+  }
+  if (!title && !context) {
+    return res.status(400).json({ ok: false, message: 'Tulis judul atau beberapa kalimat dulu sebelum minta AI membantu.' });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const userType = (user && user.type) || 'free';
+
+  if (userType === 'free') {
+    if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 10) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 10x bantuan AI Notebook per bulan.' });
+    }
+  } else if (userType === 'premium') {
+    if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 50) {
+      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 50x bantuan AI Notebook per bulan.' });
+    }
+  }
+
+  const deepSeekKey = getDeepSeekApiKey();
+  if (!deepSeekKey) {
+    return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di server.' });
+  }
+
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+  const userPrompt = `Judul naskah: "${title || '(tidak ada judul)'}"\n\nIsi naskah yang sudah ditulis sejauh ini:\n"""\n${context || '(belum ada isi)'}\n"""`;
+
+  try {
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 900,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        messages: [
+          { role: 'system', content: actionConfig.systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!dsResponse.ok) {
+      const errText = await dsResponse.text();
+      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+    }
+
+    const dsData = await dsResponse.json();
+    const choice = dsData?.choices?.[0];
+    let result = choice?.message?.content?.trim();
+    if (!result && choice?.message?.reasoning_content) {
+      result = String(choice.message.reasoning_content).trim();
+    }
+    if (!result) {
+      throw new Error('Respons AI kosong.');
+    }
+    // Jaga-jaga kalau model tetap membungkus dengan ```html ... ``` walau sudah dilarang di prompt
+    if (actionConfig.isHtml) {
+      result = result.replace(/^```html\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
+    }
+
+    if (userType === 'free' || userType === 'premium') {
+      if (user.lastNotebookContinueMonth !== currentMonth) {
+        user.lastNotebookContinueMonth = currentMonth;
+        user.notebookContinueCountThisMonth = 0;
+      }
+      user.notebookContinueCountThisMonth += 1;
+      saveUsers(users);
+    }
+
+    res.json(actionConfig.isHtml ? { ok: true, html: result } : { ok: true, result });
+  } catch (error) {
+    console.error(`[Notebook AI Draft Action: ${action}] Error:`, error);
+    res.status(500).json({ ok: false, message: 'Gagal menghubungi AI: ' + error.message });
+  }
+});
+
 // Decode entity HTML dasar yang dipakai Quill (bukan parser HTML umum - cukup
 // untuk output Quill sendiri, bukan untuk sanitasi HTML sembarang).
 function decodeHtmlEntities(str) {
