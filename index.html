@@ -3271,14 +3271,46 @@
       text-decoration: underline;
     }
 
-    /* Notebook - editor Quill.js dibungkus supaya menyatu dengan .filter-box-card
-       (border/radius sendiri dimatikan, dipakai punya wrapper-nya saja). */
+    /* Notebook - dibuat terasa seperti lembar kertas A4 melayang di atas
+       kanvas abu-abu (ala Google Docs/Microsoft Word): toolbar jadi bar
+       terpisah full-width sticky di atas, lalu kanvas abu-abu berisi lembar
+       putih (.notebook-page-sheet) yang di-center dan dibatasi lebarnya
+       supaya proporsinya mirip halaman, bukan melebar penuh ke tepi layar. */
+    .notebook-toolbar-bar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--card-radius) var(--card-radius) 0 0;
+      box-shadow: 0 4px 15px rgba(8, 34, 64, 0.02);
+    }
     #notebookToolbar.ql-toolbar.ql-snow {
       border: none;
-      border-top: 1px solid var(--border-light-hover);
-      border-bottom: 1px solid var(--border-light-hover);
       padding: 0.75rem 1.5rem;
       font-family: inherit;
+    }
+    .notebook-page-canvas {
+      background: var(--bg-body);
+      border: 1px solid var(--border-light);
+      border-top: none;
+      border-radius: 0 0 var(--card-radius) var(--card-radius);
+      padding: 2.5rem 1.5rem 4rem;
+      display: flex;
+      justify-content: center;
+    }
+    .notebook-page-sheet.filter-box-card {
+      position: relative;
+      width: 100%;
+      max-width: 850px;
+      min-height: 1050px;
+      margin: 0;
+      padding: 0;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(8, 34, 64, 0.08), 0 10px 30px rgba(8, 34, 64, 0.08);
+    }
+    .notebook-page-sheet #notebookTitleInput {
+      padding: 3.5rem 4rem 0.5rem;
     }
     #notebookEditor.ql-container.ql-snow {
       border: none;
@@ -3286,9 +3318,23 @@
       font-size: 0.95rem;
     }
     #notebookEditor .ql-editor {
-      min-height: 60vh;
-      padding: 1.75rem;
+      min-height: 40vh;
+      padding: 0.5rem 4rem 4rem;
       color: var(--text-main);
+    }
+    @media (max-width: 900px) {
+      .notebook-page-canvas {
+        padding: 1.5rem 0.5rem 3rem;
+      }
+      .notebook-page-sheet.filter-box-card {
+        min-height: 700px;
+      }
+      .notebook-page-sheet #notebookTitleInput {
+        padding: 2rem 1.5rem 0.5rem;
+      }
+      #notebookEditor .ql-editor {
+        padding: 0.5rem 1.5rem 3rem;
+      }
     }
     #notebookEditor .ql-editor.ql-blank::before {
       color: var(--text-muted);
@@ -5350,7 +5396,10 @@
           </div>
         </div>
 
-        <!-- View 2: Editor 1 dokumen -->
+        <!-- View 2: Editor 1 dokumen - dibuat seperti "kertas" A4 melayang di
+             atas kanvas abu-abu (ala Google Docs/Microsoft Word), toolbar-nya
+             jadi bar terpisah full-width sticky di atas kanvas, bukan menyatu
+             di dalam lembar putihnya. -->
         <div id="notebookEditorView" style="display: none;">
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
             <button type="button" id="notebookBackBtn" class="reset-filter-btn" style="width: auto;">
@@ -5368,9 +5417,7 @@
             </button>
           </div>
 
-          <div class="filter-box-card" style="padding: 0; overflow: hidden; position: relative;">
-            <div id="notebookSlashMenu" class="notebook-slash-menu"></div>
-            <input type="text" id="notebookTitleInput" placeholder="Untitled" style="width: 100%; box-sizing: border-box; border: none; outline: none; padding: 1.5rem 1.75rem 0.5rem; font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main); background: transparent;">
+          <div class="notebook-toolbar-bar">
             <div id="notebookToolbar">
               <span class="ql-formats">
                 <select class="ql-header" defaultValue="">
@@ -5402,7 +5449,14 @@
                 <button class="ql-align" value="justify"></button>
               </span>
             </div>
-            <div id="notebookEditor"></div>
+          </div>
+
+          <div class="notebook-page-canvas">
+            <div class="filter-box-card notebook-page-sheet">
+              <div id="notebookSlashMenu" class="notebook-slash-menu"></div>
+              <input type="text" id="notebookTitleInput" placeholder="Untitled" style="width: 100%; box-sizing: border-box; border: none; outline: none; font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main); background: transparent;">
+              <div id="notebookEditor"></div>
+            </div>
           </div>
         </div>
       </div>
