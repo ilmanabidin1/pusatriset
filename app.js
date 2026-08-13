@@ -4309,6 +4309,38 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Field <input type="password"> Ubah Kata Sandi SENGAJA tidak statis di HTML
+    // (lihat catatan di changePasswordFieldsWrap, index.html) - disuntikkan cuma
+    // selagi tab Pengaturan aktif, dilepas lagi begitu pindah tab lain, supaya
+    // Chrome tidak mendeteksi "halaman ini punya form login" dan menawarkan
+    // autofill kredensial tersimpan di field teks lain yang tidak berkaitan
+    // (mis. judul dokumen Notebook) selama user TIDAK sedang di tab Pengaturan.
+    function syncPasswordFieldsMount(tabName) {
+      const wrap = document.getElementById('changePasswordFieldsWrap');
+      if (!wrap) return;
+      if (tabName === 'pengaturan') {
+        if (wrap.childElementCount > 0) return; // sudah ter-mount
+        wrap.innerHTML = `
+          <div class="filter-dropdown-item">
+            <label id="lblOldPassword">Kata Sandi Lama</label>
+            <input type="password" id="oldPassword" placeholder="Masukkan kata sandi saat ini" required autocomplete="current-password" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+          </div>
+          <div class="filter-dropdown-item">
+            <label id="lblNewPassword">Kata Sandi Baru</label>
+            <input type="password" id="newPassword" placeholder="Kata sandi baru (minimal 6 karakter)" required autocomplete="new-password" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+          </div>
+          <div class="filter-dropdown-item">
+            <label id="lblConfirmPassword">Konfirmasi Kata Sandi Baru</label>
+            <input type="password" id="confirmNewPassword" placeholder="Ulangi kata sandi baru" required autocomplete="new-password" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
+          </div>
+        `;
+        if (typeof applyLanguage === 'function') applyLanguage(window.currentLanguage || 'id');
+      } else {
+        wrap.innerHTML = '';
+      }
+    }
+    window.syncPasswordFieldsMount = syncPasswordFieldsMount;
+
     // Change Password Form Handler
     const changePasswordForm = document.getElementById('changePasswordForm');
     const changePasswordMessage = document.getElementById('changePasswordMessage');
@@ -4365,7 +4397,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeDeleteAccountModal() {
       if (deleteAccountModal) deleteAccountModal.classList.remove('active');
-      if (deleteAccountPassword) deleteAccountPassword.value = '';
+      if (deleteAccountPassword) {
+        deleteAccountPassword.value = '';
+        // Balikin ke type="text" begitu modal ditutup - lihat catatan di
+        // index.html soal kenapa ini tidak boleh statis type="password".
+        deleteAccountPassword.type = 'text';
+      }
       if (deleteAccountEmail) deleteAccountEmail.value = '';
       if (deleteAccountMessage) {
         deleteAccountMessage.style.display = 'none';
@@ -4380,6 +4417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasPassword = !!(currentUser && currentUser.user && currentUser.user.hasPassword);
         if (deleteAccountPasswordField) deleteAccountPasswordField.style.display = hasPassword ? 'block' : 'none';
         if (deleteAccountEmailField) deleteAccountEmailField.style.display = hasPassword ? 'none' : 'block';
+        if (deleteAccountPassword && hasPassword) deleteAccountPassword.type = 'password';
         deleteAccountModal.classList.add('active');
       });
     }

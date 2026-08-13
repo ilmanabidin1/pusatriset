@@ -6416,18 +6416,16 @@
               </h3>
 
               <form id="changePasswordForm" style="display: grid; gap: 1.25rem; max-width: 500px;">
-                <div class="filter-dropdown-item">
-                  <label id="lblOldPassword">Kata Sandi Lama</label>
-                  <input type="password" id="oldPassword" placeholder="Masukkan kata sandi saat ini" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
-                </div>
-                <div class="filter-dropdown-item">
-                  <label id="lblNewPassword">Kata Sandi Baru</label>
-                  <input type="password" id="newPassword" placeholder="Kata sandi baru (minimal 6 karakter)" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
-                </div>
-                <div class="filter-dropdown-item">
-                  <label id="lblConfirmPassword">Konfirmasi Kata Sandi Baru</label>
-                  <input type="password" id="confirmNewPassword" placeholder="Ulangi kata sandi baru" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.4rem;">
-                </div>
+                <!-- Field password-nya SENGAJA tidak dirender statis di sini (lihat
+                     syncPasswordFieldsMount di app.js, dipanggil dari switchTab) -
+                     kalau <input type="password"> ada di DOM terus-menerus walau
+                     tab Pengaturan tidak sedang dibuka, Chrome mendeteksi "halaman
+                     ini punya form login" dan menawarkan autofill kredensial
+                     tersimpan di field TEKS LAIN yang sama sekali tidak berkaitan
+                     (mis. judul dokumen Notebook) di tab manapun. Field ini baru
+                     disuntikkan begitu tab Pengaturan aktif, dan dilepas lagi saat
+                     pindah ke tab lain. -->
+                <div id="changePasswordFieldsWrap"></div>
                 <div id="changePasswordMessage" style="font-size: 0.88rem; display: none; font-weight: 600;"></div>
                 <button type="submit" class="btn btn-primary" id="btnUpdatePassword" style="padding: 0.7rem 1.75rem; font-size: 0.88rem; width: fit-content; margin-top: 0.5rem;">Perbarui Kata Sandi</button>
               </form>
@@ -6526,6 +6524,7 @@
         if (window.resetJustGeneratedFlags && !['drafting-companion', 'peer-reviewer', 'lit-review', 'humanizer'].includes(tabName)) {
           window.resetJustGeneratedFlags();
         }
+        if (window.syncPasswordFieldsMount) window.syncPasswordFieldsMount(tabName);
         // Close mobile menu if open
         sidebar.classList.remove('show');
         const mobileMenuIcon = mobileMenuBtn.querySelector('i');
@@ -7525,7 +7524,16 @@
 
         <div id="deleteAccountPasswordField" style="margin-bottom: 1rem;">
           <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.4rem;">Masukkan kata sandi Anda untuk konfirmasi</label>
-          <input type="password" id="deleteAccountPassword" placeholder="Kata sandi" style="width: 100%; padding: 0.7rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.88rem; outline: none;">
+          <!-- type="text" secara default (BUKAN "password") - modal ini pre-rendered
+               di DOM sepanjang waktu walau tersembunyi (cuma display via CSS
+               .active), jadi kalau type="password" statis di sini, Chrome
+               mendeteksi "halaman ini punya form login" bahkan saat modal-nya
+               tertutup, dan menawarkan autofill kredensial tersimpan di field
+               teks lain yang tidak berkaitan di tab manapun. JS menukar type
+               jadi "password" cuma pas modal dibuka (lihat btnOpenDeleteAccount/
+               closeDeleteAccountModal di app.js) - amannya terjamin karena
+               value-nya juga selalu dikosongkan tiap modal ditutup. -->
+          <input type="text" id="deleteAccountPassword" placeholder="Kata sandi" style="width: 100%; padding: 0.7rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.88rem; outline: none;">
         </div>
 
         <div id="deleteAccountEmailField" style="display: none; margin-bottom: 1rem;">
