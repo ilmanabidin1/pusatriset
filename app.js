@@ -772,6 +772,8 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_critique_heading: "Kritik AI (seperti Reviewer):",
       notebook_slash_line_hint: "Ketik \"/\" untuk bantuan AI",
       notebook_references_heading: "Daftar Pustaka",
+      notebook_citation_loading: "Memuat detail kutipan...",
+      notebook_citation_not_found: "Detail kutipan tidak ditemukan.",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -1116,6 +1118,8 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_critique_heading: "AI Critique (like a Reviewer):",
       notebook_slash_line_hint: "Type \"/\" for AI help",
       notebook_references_heading: "References",
+      notebook_citation_loading: "Loading citation details...",
+      notebook_citation_not_found: "Citation details not found.",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -6687,21 +6691,34 @@ document.addEventListener('DOMContentLoaded', () => {
       let saveTimer = null;
       let suppressChange = false;
 
-      // URL sumber -> metadata sitasi lengkap, dipopulasi tiap kali aksi AI
-      // Notebook mengembalikan referensi (lihat registerNotebookCitations) -
-      // dipakai buat menampilkan kartu preview sitasi (sama seperti Lit Review)
-      // saat marker sitasi di editor diklik. Href adalah satu-satunya identitas
-      // yang bertahan lewat dangerouslyPasteHTML (lihat catatan di server), jadi
-      // ini cuma berfungsi utk sitasi yang di-generate dalam sesi berjalan ini -
-      // sitasi lama dari sesi sebelumnya (dokumen dibuka ulang) belum ter-index
-      // lagi sampai di-generate ulang.
-      const notebookCitationsByUrl = new Map();
-      function registerNotebookCitations(references) {
-        (references || []).forEach(r => {
-          if (r && r.citation && r.citation.url) {
-            notebookCitationsByUrl.set(r.citation.url, r.citation);
+      // DOI -> metadata sitasi, cuma dipakai sebagai cache dalam sesi berjalan
+      // (bukan sumber data utama) - kartu preview sitasi di-load "malas" (lazy)
+      // langsung dari /api/citation-lookup begitu marker diklik (lihat
+      // showNotebookCitationCard), BUKAN disimpan permanen di dokumen. Dengan
+      // begini dokumen tetap ringan (cuma nyimpan link biasa) dan sitasi lama
+      // dari sesi sebelumnya (dokumen dibuka ulang) tetap bisa diklik, tidak
+      // cuma yang baru saja digenerate.
+      const notebookCitationCache = new Map();
+
+      async function showNotebookCitationCard(linkEl, doi) {
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        if (notebookCitationCache.has(doi)) {
+          showLitCitePopover(linkEl, notebookCitationCache.get(doi));
+          return;
+        }
+        showLitCitePopover(linkEl, { title: t.notebook_citation_loading, abstract: '', authors: '', journal: '', year: '' });
+        try {
+          const res = await fetch('/api/citation-lookup?doi=' + encodeURIComponent(doi));
+          const data = await res.json();
+          if (!data.ok || !data.citation) {
+            showLitCitePopover(linkEl, { title: t.notebook_citation_not_found, abstract: '', authors: '', journal: '', year: '' });
+            return;
           }
-        });
+          notebookCitationCache.set(doi, data.citation);
+          showLitCitePopover(linkEl, data.citation);
+        } catch (err) {
+          showLitCitePopover(linkEl, { title: t.notebook_citation_not_found, abstract: '', authors: '', journal: '', year: '' });
+        }
       }
 
       function ensureQuill() {
@@ -6732,18 +6749,19 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
         quill.on('selection-change', () => updateLineHint(quill));
-        // Klik marker sitasi (tag <a> yang href-nya dikenali di
-        // notebookCitationsByUrl) -> tampilkan kartu preview sitasi ala Lit
-        // Review, BUKAN navigasi keluar. Link biasa yang user tempel/tulis
-        // sendiri (href-nya tidak dikenali) dibiarkan berperilaku normal.
+        // Klik marker sitasi (tag <a> yang href-nya adalah URL DOI, ala format
+        // yang disisipkan server - lihat linkifyUsedApaCitations) -> tampilkan
+        // kartu preview sitasi ala Lit Review (di-load malas dari OpenAlex),
+        // BUKAN navigasi keluar. Link biasa yang user tempel/tulis sendiri
+        // (bukan URL DOI) dibiarkan berperilaku normal.
         quill.root.addEventListener('click', (e) => {
           const link = e.target.closest('a');
           if (!link) return;
-          const citation = notebookCitationsByUrl.get(link.getAttribute('href'));
-          if (!citation) return;
+          const doiMatch = (link.getAttribute('href') || '').match(/^https?:\/\/doi\.org\/(.+)$/i);
+          if (!doiMatch) return;
           e.preventDefault();
           e.stopPropagation();
-          showLitCitePopover(link, citation);
+          showNotebookCitationCard(link, doiMatch[1]);
         });
         return quill;
       }
@@ -7149,15 +7167,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // akhir dokumen (bikin baru kalau belum ada) - dipanggil setelah konten
       // utama selesai di-insert supaya index insertIndex konten utama tidak
       // terpengaruh oleh perubahan panjang dokumen dari bagian ini.
-      // newReferences: array {reference, citation} dari server (lihat
-      // registerNotebookCitations di bawah utk kegunaan field citation-nya).
+      // newReferences: array string referensi APA terformat dari server.
       function mergeReferencesIntoDocument(editor, newReferences) {
         if (!newReferences || newReferences.length === 0) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
         try {
           const info = findReferencesListInfo(editor);
-          const newReferenceTexts = newReferences.map(r => r.reference);
-          const merged = Array.from(new Set([...(info ? info.existing : []), ...newReferenceTexts]));
+          const merged = Array.from(new Set([...(info ? info.existing : []), ...newReferences]));
           merged.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
           const listHtml = '<ol>' + merged.map(r => `<li>${escapeHtml(r)}</li>`).join('') + '</ol>';
 
@@ -7198,7 +7214,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
-            registerNotebookCitations(data.references);
             const lengthBefore = editor.getLength();
             editor.clipboard.dangerouslyPasteHTML(insertIndex, data.html, 'user');
             const inserted = editor.getLength() - lengthBefore;
@@ -7214,7 +7229,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_continue_error); return; }
-            registerNotebookCitations(data.references);
             // data.continuation sudah HTML aman (di-escape + sitasi dibungkus <a>)
             // dari server, TANPA tag block - dangerouslyPasteHTML di sini menyisip
             // inline persis seperti insertText sebelumnya (paragraf yang sedang
@@ -7249,7 +7263,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
-            registerNotebookCitations(data.references);
             const lengthBefore = editor.getLength();
             editor.clipboard.dangerouslyPasteHTML(insertIndex, data.html, 'user');
             const inserted = editor.getLength() - lengthBefore;

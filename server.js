@@ -2055,41 +2055,74 @@ async function searchOpenAlexWorks(query, perPage, extraFilter, sort) {
   const results = Array.isArray(data.results) ? data.results : [];
 
   return results
-    .map(w => {
-      const abstract = reconstructAbstractFromInvertedIndex(w.abstract_inverted_index);
-      if (!abstract) return null; // buang paper tanpa abstrak - tidak berguna untuk sintesis
-      const authorNames = (w.authorships || []).map(a => a.author?.display_name).filter(Boolean);
-      const authors = authorNames.length > 3
-        ? `${authorNames.slice(0, 3).join(', ')}, et al.`
-        : authorNames.join(', ') || 'Tidak diketahui';
-      const doi = w.doi ? String(w.doi).replace('https://doi.org/', '') : null;
-      const scimago = lookupJournalQuartile(w.primary_location?.source);
-      return {
-        title: w.title || 'Tanpa judul',
-        authors,
-        // Daftar nama penulis MENTAH (belum dipotong/digabung jadi string tampilan
-        // seperti "authors" di atas) - dibutuhkan buat menyusun sitasi APA 7 yang
-        // benar (format "Nama Belakang, I." per penulis, bukan "Nama Depan Nama Belakang").
-        authorNames,
-        journal: w.primary_location?.source?.display_name || '-',
-        year: w.publication_year ? String(w.publication_year) : '-',
-        // Detail bibliografi (volume/issue/halaman) - dari field "biblio" OpenAlex,
-        // dipakai buat menyusun entri Daftar Pustaka APA 7 yang lebih lengkap.
-        volume: w.biblio?.volume || null,
-        issue: w.biblio?.issue || null,
-        firstPage: w.biblio?.first_page || null,
-        lastPage: w.biblio?.last_page || null,
-        doi,
-        url: w.doi || w.primary_location?.landing_page_url || '#',
-        citedByCount: w.cited_by_count || 0,
-        isOpenAccess: !!w.open_access?.is_oa,
-        journalQuartile: scimago ? scimago.quartile : null,
-        authorCountry: extractAuthorCountryCode(w.authorships),
-        pdfUrl: w.open_access?.oa_url || null,
-        abstract: abstract.slice(0, 800)
-      };
-    })
+    .map(w => formatOpenAlexWork(w, { requireAbstract: true }))
     .filter(Boolean);
+}
+
+// Ubah 1 object "work" mentah dari OpenAlex jadi shape paper yang dipakai di
+// seluruh app - dipisah dari searchOpenAlexWorks supaya bisa dipakai juga
+// utk lookup SATU paper by DOI (lihat fetchOpenAlexWorkByDoi), bukan cuma
+// hasil pencarian. requireAbstract:true (dipakai utk hasil pencarian, biar AI
+// selalu punya bahan sintesis) vs false (dipakai utk lookup kartu sitasi
+// on-demand - paper tanpa abstrak tetap valid ditampilkan, cuma bagian
+// abstraknya kosong).
+function formatOpenAlexWork(w, opts) {
+  const abstract = reconstructAbstractFromInvertedIndex(w.abstract_inverted_index) || '';
+  if (opts && opts.requireAbstract && !abstract) return null;
+  const authorNames = (w.authorships || []).map(a => a.author?.display_name).filter(Boolean);
+  const authors = authorNames.length > 3
+    ? `${authorNames.slice(0, 3).join(', ')}, et al.`
+    : authorNames.join(', ') || 'Tidak diketahui';
+  const doi = w.doi ? String(w.doi).replace('https://doi.org/', '') : null;
+  const scimago = lookupJournalQuartile(w.primary_location?.source);
+  return {
+    title: w.title || 'Tanpa judul',
+    authors,
+    // Daftar nama penulis MENTAH (belum dipotong/digabung jadi string tampilan
+    // seperti "authors" di atas) - dibutuhkan buat menyusun sitasi APA 7 yang
+    // benar (format "Nama Belakang, I." per penulis, bukan "Nama Depan Nama Belakang").
+    authorNames,
+    journal: w.primary_location?.source?.display_name || '-',
+    year: w.publication_year ? String(w.publication_year) : '-',
+    // Detail bibliografi (volume/issue/halaman) - dari field "biblio" OpenAlex,
+    // dipakai buat menyusun entri Daftar Pustaka APA 7 yang lebih lengkap.
+    volume: w.biblio?.volume || null,
+    issue: w.biblio?.issue || null,
+    firstPage: w.biblio?.first_page || null,
+    lastPage: w.biblio?.last_page || null,
+    doi,
+    url: w.doi || w.primary_location?.landing_page_url || '#',
+    citedByCount: w.cited_by_count || 0,
+    isOpenAccess: !!w.open_access?.is_oa,
+    journalQuartile: scimago ? scimago.quartile : null,
+    authorCountry: extractAuthorCountryCode(w.authorships),
+    pdfUrl: w.open_access?.oa_url || null,
+    abstract: abstract.slice(0, 800)
+  };
+}
+
+// Ambil metadata SATU paper by DOI - dipakai kartu preview sitasi Notebook yang
+// di-load "malas" (lazy) saat marker sitasi diklik, BUKAN disimpan permanen di
+// dalam dokumen - supaya dokumen tetap ringan (cuma nyimpan link <a href>) dan
+// datanya selalu diambil langsung dari OpenAlex saat dibutuhkan.
+async function fetchOpenAlexWorkByDoi(doi) {
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const openAlexBase = process.env.OPENALEX_API_BASE || 'https://api.openalex.org';
+  const params = new URLSearchParams({
+    select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access,biblio'
+  });
+  const apiKey = process.env.OPENALEX_API_KEY;
+  if (apiKey) params.set('api_key', apiKey);
+  const mailto = process.env.OPENALEX_MAILTO;
+  if (mailto) params.set('mailto', mailto);
+
+  // OpenAlex mendukung lookup by ID lewat path literal "works/https://doi.org/..."
+  // (DOI-nya TIDAK di-URL-encode - itu memang formatnya, lihat dokumentasi
+  // OpenAlex soal ID-based lookup).
+  const response = await fetchFn(`${openAlexBase}/works/https://doi.org/${doi}?${params.toString()}`);
+  if (!response.ok) return null;
+  const w = await response.json();
+  return formatOpenAlexWork(w, { requireAbstract: false });
 }
 
 // --- Formatter APA 7th Edition (dipakai fitur AI Notebook, lihat searchApaAcademicContext) ---
@@ -2212,13 +2245,12 @@ function escapeHtmlServer(str) {
 
 // Bungkus tiap kemunculan sitasi dalam-teks yang BENAR-BENAR dipakai model
 // (dicocokkan PERSIS, mis. "(Rahman, 2021)") dengan tag <a href="..."> ke URL
-// sumber aslinya - href-nya dipakai frontend sebagai kunci lookup utk kartu
-// preview sitasi yang bisa diklik (Quill tidak menyimpan atribut custom lain
-// selain href di elemen link, jadi href = satu-satunya cara identifikasi yang
-// bertahan lewat dangerouslyPasteHTML). Sekaligus jadi "Daftar Pustaka HANYA
-// entri yang beneran dikutip" filter (paper yang cuma "ditawarkan" ke model
-// tapi tidak dipakai TIDAK ikut masuk ke references yang dikembalikan) -
-// menjaga bibliografi yang dihasilkan tetap akurat & bisa dipertanggungjawabkan.
+// sumber aslinya - kartu preview sitasi di-load LANGSUNG dari URL/DOI ini saat
+// diklik (lihat /api/citation-lookup), bukan disimpan di dokumen,
+// jadi dokumen tetap ringan & cuma menyimpan link biasa. Sekaligus jadi
+// "Daftar Pustaka HANYA entri yang beneran dikutip" filter (paper yang cuma
+// "ditawarkan" ke model tapi tidak dipakai TIDAK ikut masuk ke references yang
+// dikembalikan) - menjaga bibliografi yang dihasilkan tetap akurat.
 //
 // variant 'html': teks INPUT sudah berupa HTML (hasil generate outline/
 // pendahuluan/dst yang sudah dibungkus <p>/<h2>/dst oleh model) - cari&ganti
@@ -2243,7 +2275,7 @@ function linkifyUsedApaCitations(text, apaContext, variant) {
     const linked = `<a href="${escapeHtmlServer(e.citation.url || '#')}">${marker}</a>`;
     html = html.split(marker).join(linked);
   });
-  return { html, references: usedEntries.map(e => ({ reference: e.reference, citation: e.citation })) };
+  return { html, references: usedEntries.map(e => e.reference) };
 }
 
 const REALTIME_WORK_TYPES = ['article', 'review', 'book-chapter', 'dissertation', 'preprint', 'report'];
@@ -3430,6 +3462,46 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
   } catch (error) {
     console.error(`[Notebook AI Draft Action: ${action}] Error:`, error);
     res.status(500).json({ ok: false, message: 'Gagal menghubungi AI: ' + error.message });
+  }
+});
+
+// Kartu preview sitasi di Notebook di-load "malas" (lazy) lewat endpoint ini
+// begitu marker sitasi diklik - BUKAN disimpan di dokumen saat digenerate,
+// biar dokumen tetap ringan (cuma nyimpan link <a href> biasa) dan berlaku
+// juga utk sitasi dari sesi sebelumnya (dokumen dibuka ulang), bukan cuma yang
+// baru saja digenerate dalam sesi berjalan.
+// Path top-level (BUKAN /api/documents/citation-lookup) - sengaja dihindari
+// supaya tidak ketabrak duluan oleh route "/api/documents/:id" yang didaftar
+// lebih awal (Express mencocokkan route berdasar urutan definisi, ":id" akan
+// menganggap "citation-lookup" sebagai nilai id-nya kalau pathnya sama).
+app.get('/api/citation-lookup', requireAccess, async (req, res) => {
+  const doi = String(req.query.doi || '').trim();
+  if (!/^10\.\d{4,9}\/\S+$/.test(doi)) {
+    return res.status(400).json({ ok: false, message: 'DOI tidak valid.' });
+  }
+  try {
+    const paper = await fetchOpenAlexWorkByDoi(doi);
+    if (!paper) {
+      return res.status(404).json({ ok: false, message: 'Detail kutipan tidak ditemukan.' });
+    }
+    res.json({
+      ok: true,
+      citation: {
+        title: paper.title,
+        authors: paper.authors,
+        journal: paper.journal,
+        year: paper.year,
+        url: paper.url,
+        doi: paper.doi,
+        citedByCount: paper.citedByCount,
+        isOpenAccess: paper.isOpenAccess,
+        pdfUrl: paper.pdfUrl,
+        abstract: paper.abstract
+      }
+    });
+  } catch (error) {
+    console.error('[Notebook Citation Lookup] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mengambil detail kutipan.' });
   }
 });
 
