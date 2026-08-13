@@ -3340,6 +3340,26 @@
       color: var(--text-muted);
       font-style: normal;
     }
+    /* Marker sitasi APA yang disisipkan otomatis oleh aksi AI (lihat
+       registerNotebookCitations/showLitCitePopover di app.js) memakai format
+       <a> bawaan Quill (satu-satunya cara data href-nya bertahan lewat
+       dangerouslyPasteHTML) - disorot biru & bisa diklik utk kartu preview
+       sitasi, bukan langsung navigasi keluar. Link biasa yang user tempel/
+       tulis sendiri kena style sama (Quill tidak membedakan sumbernya), yang
+       cukup wajar untuk editor tulisan akademis. */
+    #notebookEditor .ql-editor a {
+      color: var(--brand-blue);
+      background: rgba(7, 135, 220, 0.1);
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.05rem 0.25rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #notebookEditor .ql-editor a:hover {
+      background: rgba(7, 135, 220, 0.18);
+    }
     /* Sapaan JurnalHub Intelligence (empty state) - ikon logo di sebelah teks,
        muter kalau diklik (ala logo Claude), sekadar easter egg iseng. */
     .research-chat-greeting-row {

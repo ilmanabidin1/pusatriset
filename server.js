@@ -2172,7 +2172,23 @@ async function searchApaAcademicContext(query, perPage) {
 
     const entries = top.map(p => ({
       inText: `(${formatApaInTextAuthors(p.authorNames)}, ${p.year})`,
-      reference: formatApaReference(p)
+      reference: formatApaReference(p),
+      // Metadata lengkap (bukan cuma string referensi) - dipakai frontend utk
+      // kartu preview sitasi yang bisa diklik, format sama persis dengan
+      // citations Lit Review/JurnalHub Intelligence supaya bisa pakai komponen
+      // popover yang sama.
+      citation: {
+        title: p.title,
+        authors: p.authors,
+        journal: p.journal,
+        year: p.year,
+        url: p.url,
+        doi: p.doi || null,
+        citedByCount: p.citedByCount,
+        isOpenAccess: p.isOpenAccess,
+        pdfUrl: p.pdfUrl || null,
+        abstract: p.abstract ? p.abstract.slice(0, 280) : ''
+      }
     }));
 
     const listText = entries.map((e, i) => `${i + 1}. Sitasi dalam teks: ${e.inText}\n   Entri Daftar Pustaka: ${e.reference}`).join('\n');
@@ -2185,18 +2201,49 @@ async function searchApaAcademicContext(query, perPage) {
   }
 }
 
-// Daftar Pustaka HANYA boleh berisi entri yang benar-benar dikutip di teks -
-// jangan kirim balik referensi paper yang cuma "disediakan sebagai opsi" ke
-// model tapi ternyata tidak dipakai (topiknya kurang cocok, dsb), supaya
-// bibliografi yang dihasilkan tetap akurat & bisa dipertanggungjawabkan.
-// Dicek dengan mencari string sitasi dalam-teks PERSIS (mis. "(Rahman, 2021)")
-// di teks hasil AI - andal karena system prompt eksplisit meminta model
-// menyalin string itu apa adanya, bukan menyusun formatnya sendiri.
-function filterUsedApaReferences(generatedText, apaContext) {
-  if (!generatedText || !apaContext || !apaContext.entries) return [];
-  return apaContext.entries
-    .filter(e => generatedText.includes(e.inText))
-    .map(e => e.reference);
+function escapeHtmlServer(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Bungkus tiap kemunculan sitasi dalam-teks yang BENAR-BENAR dipakai model
+// (dicocokkan PERSIS, mis. "(Rahman, 2021)") dengan tag <a href="..."> ke URL
+// sumber aslinya - href-nya dipakai frontend sebagai kunci lookup utk kartu
+// preview sitasi yang bisa diklik (Quill tidak menyimpan atribut custom lain
+// selain href di elemen link, jadi href = satu-satunya cara identifikasi yang
+// bertahan lewat dangerouslyPasteHTML). Sekaligus jadi "Daftar Pustaka HANYA
+// entri yang beneran dikutip" filter (paper yang cuma "ditawarkan" ke model
+// tapi tidak dipakai TIDAK ikut masuk ke references yang dikembalikan) -
+// menjaga bibliografi yang dihasilkan tetap akurat & bisa dipertanggungjawabkan.
+//
+// variant 'html': teks INPUT sudah berupa HTML (hasil generate outline/
+// pendahuluan/dst yang sudah dibungkus <p>/<h2>/dst oleh model) - cari&ganti
+// langsung tanpa escape ulang.
+// variant 'text': teks INPUT masih plain text (continue-writing) - di-escape
+// dulu jadi HTML aman, BUKAN dibungkus tag block (<p> dst) supaya kalau
+// di-paste inline di tengah paragraf yang sedang ditulis user, tidak memutus
+// paragraf itu jadi blok baru.
+function linkifyUsedApaCitations(text, apaContext, variant) {
+  const baseHtml = variant === 'html' ? text : escapeHtmlServer(text);
+  if (!text || !apaContext || !apaContext.entries || apaContext.entries.length === 0) {
+    return { html: baseHtml, references: [] };
+  }
+  const matchIn = variant === 'html' ? baseHtml : text; // untuk variant text, cek match di teks ASLI (belum di-escape) - inText tidak mengandung karakter yang berubah signifikan lewat escape
+  const usedEntries = apaContext.entries.filter(e => matchIn.includes(e.inText));
+  if (usedEntries.length === 0) {
+    return { html: baseHtml, references: [] };
+  }
+  let html = baseHtml;
+  usedEntries.forEach(e => {
+    const marker = variant === 'html' ? e.inText : escapeHtmlServer(e.inText);
+    const linked = `<a href="${escapeHtmlServer(e.citation.url || '#')}">${marker}</a>`;
+    html = html.split(marker).join(linked);
+  });
+  return { html, references: usedEntries.map(e => ({ reference: e.reference, citation: e.citation })) };
 }
 
 const REALTIME_WORK_TYPES = ['article', 'review', 'book-chapter', 'dissertation', 'preprint', 'report'];
@@ -3178,7 +3225,12 @@ ATURAN PENTING:
       saveUsers(users);
     }
 
-    res.json({ ok: true, continuation, references: filterUsedApaReferences(continuation, apaContext) });
+    // continuation dikembalikan sudah dalam bentuk HTML aman (di-escape + sitasi
+    // yang dipakai dibungkus <a href>) - BUKAN plain text lagi seperti sebelumnya,
+    // supaya frontend bisa langsung dangerouslyPasteHTML tanpa memutus paragraf
+    // yang sedang ditulis user jadi blok baru (tidak ada tag block di dalamnya).
+    const linked = linkifyUsedApaCitations(continuation, apaContext, 'text');
+    res.json({ ok: true, continuation: linked.html, references: linked.references });
   } catch (error) {
     console.error('[Notebook Continue Writing] Error:', error);
     res.status(500).json({ ok: false, message: 'Gagal menghubungi AI untuk melanjutkan tulisan: ' + error.message });
@@ -3365,8 +3417,16 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
-    const references = filterUsedApaReferences(result, apaContext);
-    res.json(actionConfig.isHtml ? { ok: true, html: result, references } : { ok: true, result, references });
+    // "critique" (satu-satunya aksi non-HTML) TIDAK pernah punya apaContext
+    // (dikecualikan dari pencarian sitasi di atas) - result-nya harus tetap
+    // plain text apa adanya karena di-insert lewat editor.insertText di
+    // frontend, bukan dangerouslyPasteHTML, jadi JANGAN di-escape/linkify.
+    if (actionConfig.isHtml) {
+      const linked = linkifyUsedApaCitations(result, apaContext, 'html');
+      res.json({ ok: true, html: linked.html, references: linked.references });
+    } else {
+      res.json({ ok: true, result, references: [] });
+    }
   } catch (error) {
     console.error(`[Notebook AI Draft Action: ${action}] Error:`, error);
     res.status(500).json({ ok: false, message: 'Gagal menghubungi AI: ' + error.message });

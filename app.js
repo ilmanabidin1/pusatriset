@@ -6687,6 +6687,23 @@ document.addEventListener('DOMContentLoaded', () => {
       let saveTimer = null;
       let suppressChange = false;
 
+      // URL sumber -> metadata sitasi lengkap, dipopulasi tiap kali aksi AI
+      // Notebook mengembalikan referensi (lihat registerNotebookCitations) -
+      // dipakai buat menampilkan kartu preview sitasi (sama seperti Lit Review)
+      // saat marker sitasi di editor diklik. Href adalah satu-satunya identitas
+      // yang bertahan lewat dangerouslyPasteHTML (lihat catatan di server), jadi
+      // ini cuma berfungsi utk sitasi yang di-generate dalam sesi berjalan ini -
+      // sitasi lama dari sesi sebelumnya (dokumen dibuka ulang) belum ter-index
+      // lagi sampai di-generate ulang.
+      const notebookCitationsByUrl = new Map();
+      function registerNotebookCitations(references) {
+        (references || []).forEach(r => {
+          if (r && r.citation && r.citation.url) {
+            notebookCitationsByUrl.set(r.citation.url, r.citation);
+          }
+        });
+      }
+
       function ensureQuill() {
         if (quill || typeof Quill === 'undefined') return quill;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
@@ -6715,6 +6732,19 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
         quill.on('selection-change', () => updateLineHint(quill));
+        // Klik marker sitasi (tag <a> yang href-nya dikenali di
+        // notebookCitationsByUrl) -> tampilkan kartu preview sitasi ala Lit
+        // Review, BUKAN navigasi keluar. Link biasa yang user tempel/tulis
+        // sendiri (href-nya tidak dikenali) dibiarkan berperilaku normal.
+        quill.root.addEventListener('click', (e) => {
+          const link = e.target.closest('a');
+          if (!link) return;
+          const citation = notebookCitationsByUrl.get(link.getAttribute('href'));
+          if (!citation) return;
+          e.preventDefault();
+          e.stopPropagation();
+          showLitCitePopover(link, citation);
+        });
         return quill;
       }
 
@@ -7119,12 +7149,15 @@ document.addEventListener('DOMContentLoaded', () => {
       // akhir dokumen (bikin baru kalau belum ada) - dipanggil setelah konten
       // utama selesai di-insert supaya index insertIndex konten utama tidak
       // terpengaruh oleh perubahan panjang dokumen dari bagian ini.
+      // newReferences: array {reference, citation} dari server (lihat
+      // registerNotebookCitations di bawah utk kegunaan field citation-nya).
       function mergeReferencesIntoDocument(editor, newReferences) {
         if (!newReferences || newReferences.length === 0) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
         try {
           const info = findReferencesListInfo(editor);
-          const merged = Array.from(new Set([...(info ? info.existing : []), ...newReferences]));
+          const newReferenceTexts = newReferences.map(r => r.reference);
+          const merged = Array.from(new Set([...(info ? info.existing : []), ...newReferenceTexts]));
           merged.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
           const listHtml = '<ol>' + merged.map(r => `<li>${escapeHtml(r)}</li>`).join('') + '</ol>';
 
@@ -7165,6 +7198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
+            registerNotebookCitations(data.references);
             const lengthBefore = editor.getLength();
             editor.clipboard.dangerouslyPasteHTML(insertIndex, data.html, 'user');
             const inserted = editor.getLength() - lengthBefore;
@@ -7180,9 +7214,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_continue_error); return; }
-            const insertStr = (/\s$/.test(contextText) ? '' : ' ') + data.continuation;
-            editor.insertText(insertIndex, insertStr, 'user');
-            editor.setSelection(insertIndex + insertStr.length, 0);
+            registerNotebookCitations(data.references);
+            // data.continuation sudah HTML aman (di-escape + sitasi dibungkus <a>)
+            // dari server, TANPA tag block - dangerouslyPasteHTML di sini menyisip
+            // inline persis seperti insertText sebelumnya (paragraf yang sedang
+            // ditulis user tidak ikut terpotong jadi blok baru).
+            const insertHtml = (/\s$/.test(contextText) ? '' : ' ') + data.continuation;
+            const lengthBefore = editor.getLength();
+            editor.clipboard.dangerouslyPasteHTML(insertIndex, insertHtml, 'user');
+            const inserted = editor.getLength() - lengthBefore;
+            editor.setSelection(insertIndex + Math.max(0, inserted), 0);
             mergeReferencesIntoDocument(editor, data.references);
           } else if (actionId === 'critique') {
             const fullText = editor.getText().trim();
@@ -7208,6 +7249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
+            registerNotebookCitations(data.references);
             const lengthBefore = editor.getLength();
             editor.clipboard.dangerouslyPasteHTML(insertIndex, data.html, 'user');
             const inserted = editor.getLength() - lengthBefore;
