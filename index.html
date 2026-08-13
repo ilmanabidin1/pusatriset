@@ -3376,8 +3376,18 @@
        kursor sedang berada (bukan whole-doc placeholder Quill di atas, yang
        cuma aktif kalau SELURUH dokumen kosong), supaya user tetap diingatkan
        fitur AI ada tanpa mengganggu baris lain yang sudah berisi teks. */
+    #notebookEditor .ql-editor .notebook-slash-line-hint {
+      position: relative;
+    }
     #notebookEditor .ql-editor .notebook-slash-line-hint::before {
       content: attr(data-slash-hint);
+      /* position:absolute (persis seperti .ql-blank::before bawaan Quill sendiri
+         untuk placeholder dokumen kosong) - kalau dibiarkan mengalir normal di
+         inline flow, teks hint ini ikut mendorong titik kosong baris (dan kursor
+         yang dirender di situ) ke KANAN hint, bukan di posisi kiri sungguhan. */
+      position: absolute;
+      left: 0;
+      top: 0;
       color: var(--text-muted);
       opacity: 0.6;
       pointer-events: none;
