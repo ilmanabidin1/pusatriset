@@ -3318,6 +3318,7 @@
       font-size: 0.95rem;
     }
     #notebookEditor .ql-editor {
+      position: relative;
       min-height: 40vh;
       padding: 0.5rem 4rem 4rem;
       color: var(--text-main);
@@ -3339,6 +3340,16 @@
     #notebookEditor .ql-editor.ql-blank::before {
       color: var(--text-muted);
       font-style: normal;
+      /* position:absolute EKSPLISIT (jangan andalkan default bawaan Quill) -
+         kalau dibiarkan mengalir normal di inline flow, teks placeholder ini
+         ikut mendorong titik kosong dokumen (dan kursor yang dirender di situ)
+         ke KANAN teks placeholder, bukan di posisi kiri sungguhan - persis
+         seperti bug yang sama pernah terjadi di hint "/" per-baris
+         (.notebook-slash-line-hint::before, lihat catatan di situ). */
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
     }
     /* Marker sitasi APA yang disisipkan otomatis oleh aksi AI (lihat
        registerNotebookCitations/showLitCitePopover di app.js) memakai format
