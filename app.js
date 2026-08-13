@@ -6976,7 +6976,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const prev = editor.root.querySelector('.notebook-slash-line-hint');
         if (prev) prev.classList.remove('notebook-slash-line-hint');
 
-        if (slashActive || editor.getLength() <= 1) return;
+        // slashBusy: barusan hapus karakter "/" pemicu (bikin baris itu kosong
+        // SESAAT) tapi konten AI akan segera di-paste ke baris yang sama begitu
+        // fetch selesai - kalau hint sempat nempel di jendela sesaat ini, Quill
+        // sering pakai ulang node <p> yang sama utk paste konten, jadi teks hint
+        // ini bisa nyangkut ketiban/nempel di depan teks asli hasil AI. Makanya
+        // jangan tempelkan hint baru sama sekali selama proses ini berlangsung.
+        if (slashActive || slashBusy || editor.getLength() <= 1) return;
 
         const sel = editor.getSelection();
         if (!sel || sel.length > 0) return;
@@ -7080,6 +7086,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       async function runSlashAction(editor, actionId, insertIndex, t, customInstruction) {
+        // Bersihkan paksa sisa hint "/" ("Ketik / untuk bantuan AI") kalau sempat
+        // nempel di baris target ini - lihat catatan slashBusy di updateLineHint,
+        // ini jaring pengaman terakhir sebelum konten AI beneran di-insert supaya
+        // teks hint tidak pernah ikut ketiban/nempel di depan hasil tulisan AI.
+        const [targetLine] = editor.getLine(insertIndex);
+        if (targetLine && targetLine.domNode) {
+          targetLine.domNode.classList.remove('notebook-slash-line-hint');
+          targetLine.domNode.removeAttribute('data-slash-hint');
+        }
         try {
           if (actionId === 'custom-prompt') {
             const fullText = editor.getText().trim();
