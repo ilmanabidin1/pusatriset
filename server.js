@@ -2030,7 +2030,7 @@ async function searchOpenAlexWorks(query, perPage, extraFilter, sort) {
   const params = new URLSearchParams({
     per_page: String(perPage),
     filter: `has_abstract:true${extraFilter || ''}`,
-    select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access'
+    select: 'id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_location,authorships,open_access,biblio'
   });
   // Query kosong (mis. mode pencarian author, yang query utamanya sudah
   // dipindah ke filter raw_author_name.search) - jangan kirim param "search"
@@ -2067,8 +2067,18 @@ async function searchOpenAlexWorks(query, perPage, extraFilter, sort) {
       return {
         title: w.title || 'Tanpa judul',
         authors,
+        // Daftar nama penulis MENTAH (belum dipotong/digabung jadi string tampilan
+        // seperti "authors" di atas) - dibutuhkan buat menyusun sitasi APA 7 yang
+        // benar (format "Nama Belakang, I." per penulis, bukan "Nama Depan Nama Belakang").
+        authorNames,
         journal: w.primary_location?.source?.display_name || '-',
         year: w.publication_year ? String(w.publication_year) : '-',
+        // Detail bibliografi (volume/issue/halaman) - dari field "biblio" OpenAlex,
+        // dipakai buat menyusun entri Daftar Pustaka APA 7 yang lebih lengkap.
+        volume: w.biblio?.volume || null,
+        issue: w.biblio?.issue || null,
+        firstPage: w.biblio?.first_page || null,
+        lastPage: w.biblio?.last_page || null,
         doi,
         url: w.doi || w.primary_location?.landing_page_url || '#',
         citedByCount: w.cited_by_count || 0,
@@ -2080,6 +2090,113 @@ async function searchOpenAlexWorks(query, perPage, extraFilter, sort) {
       };
     })
     .filter(Boolean);
+}
+
+// --- Formatter APA 7th Edition (dipakai fitur AI Notebook, lihat searchApaAcademicContext) ---
+// OpenAlex hanya menyediakan "display_name" gabungan per penulis (mis. "John A.
+// Smith"), bukan field given/family terpisah - heuristiknya: kata TERAKHIR
+// dianggap nama keluarga, sisanya jadi inisial. Tidak sempurna untuk nama
+// majemuk budaya tertentu, tapi ini pendekatan yang sama dipakai kebanyakan
+// tool sitasi (Zotero/EndNote dsb) saat parsing nama dari metadata semacam ini.
+function formatApaAuthorName(displayName) {
+  const parts = String(displayName || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0];
+  const family = parts[parts.length - 1];
+  const initials = parts.slice(0, -1).map(p => p.charAt(0).toUpperCase() + '.').join(' ');
+  return `${family}, ${initials}`;
+}
+
+// Daftar penulis lengkap ala APA 7 buat entri Daftar Pustaka: "&" sebelum nama
+// terakhir untuk <=20 penulis; >20 penulis pakai 19 nama pertama + "..." + nama
+// terakhir (aturan APA 7 utk penulis sangat banyak).
+function formatApaAuthorList(authorNames) {
+  const formatted = (authorNames || []).map(formatApaAuthorName).filter(Boolean);
+  if (formatted.length === 0) return 'Tidak diketahui';
+  if (formatted.length === 1) return formatted[0];
+  if (formatted.length <= 20) {
+    return formatted.slice(0, -1).join(', ') + ', & ' + formatted[formatted.length - 1];
+  }
+  return formatted.slice(0, 19).join(', ') + ', ... ' + formatted[formatted.length - 1];
+}
+
+// Sitasi dalam-teks ala APA 7: 1 penulis "Smith", 2 penulis "Smith & Jones",
+// 3+ penulis "Smith et al." (aturan APA 7 menyederhanakan ambang "et al." jadi
+// 3+ untuk SEMUA kemunculan, beda dari APA 6 yang beda aturan kemunculan pertama/berikutnya).
+function formatApaInTextAuthors(authorNames) {
+  const families = (authorNames || []).map(n => {
+    const parts = String(n || '').trim().split(/\s+/).filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : '';
+  }).filter(Boolean);
+  if (families.length === 0) return 'Tidak diketahui';
+  if (families.length === 1) return families[0];
+  if (families.length === 2) return `${families[0]} & ${families[1]}`;
+  return `${families[0]} et al.`;
+}
+
+// Susun 1 entri lengkap Daftar Pustaka APA 7 dari metadata paper OpenAlex asli
+// (bukan hasil karangan AI) - format: Penulis (Tahun). Judul. Jurnal, Vol(Isu),
+// halaman. https://doi.org/xxx - bagian yang datanya tidak tersedia dilewati.
+function formatApaReference(paper) {
+  const authorsPart = formatApaAuthorList(paper.authorNames);
+  const yearPart = paper.year && paper.year !== '-' ? `(${paper.year})` : '(n.d.)';
+  const titlePart = paper.title || 'Tanpa judul';
+  let journalPart = '';
+  if (paper.journal && paper.journal !== '-') {
+    journalPart = paper.journal;
+    if (paper.volume) {
+      journalPart += `, ${paper.volume}`;
+      if (paper.issue) journalPart += `(${paper.issue})`;
+    }
+    if (paper.firstPage) {
+      journalPart += paper.lastPage ? `, ${paper.firstPage}-${paper.lastPage}` : `, ${paper.firstPage}`;
+    }
+    journalPart += '.';
+  }
+  const doiPart = paper.doi ? `https://doi.org/${paper.doi}` : (paper.url && paper.url !== '#' ? paper.url : '');
+  return [`${authorsPart} ${yearPart}. ${titlePart}.`, journalPart, doiPart].filter(Boolean).join(' ').trim();
+}
+
+// Cari paper ASLI di OpenAlex yang relevan dengan topik naskah Notebook, lalu
+// siapkan (1) instruksi sitasi utk system prompt DeepSeek yang mewajibkan
+// sitasi dalam-teks APA 7 HANYA dari paper ini (larang mengarang), dan (2)
+// daftar string referensi APA 7 lengkap yang sudah diformat siap tampil -
+// bukan diminta AI yang menyusun formatnya sendiri, supaya formatnya selalu
+// benar & datanya selalu bisa diverifikasi (tidak rawan halusinasi APA-nya).
+async function searchApaAcademicContext(query, perPage) {
+  if (!query) return null;
+  try {
+    const papers = await searchOpenAlexWorks(query, perPage || 6);
+    if (!papers || papers.length === 0) return null;
+    const top = [...papers].sort((a, b) => b.citedByCount - a.citedByCount).slice(0, 5);
+
+    const entries = top.map(p => ({
+      inText: `(${formatApaInTextAuthors(p.authorNames)}, ${p.year})`,
+      reference: formatApaReference(p)
+    }));
+
+    const listText = entries.map((e, i) => `${i + 1}. Sitasi dalam teks: ${e.inText}\n   Entri Daftar Pustaka: ${e.reference}`).join('\n');
+    const contextText = `Berikut paper ilmiah ASLI dari OpenAlex yang relevan dengan topik naskah ini. Kalau ada klaim di tulisanmu yang benar-benar didukung salah satu paper ini, WAJIB sisipkan sitasi dalam-teks APA 7th edition PERSIS seperti tertulis di depan tiap paper di bawah (contoh: (Smith & Jones, 2021)), taruh tepat setelah klausa/kalimat yang didukung. JANGAN mengarang paper, penulis, atau sitasi lain di luar daftar ini. JANGAN menuliskan Daftar Pustaka/References sendiri di akhir teks - itu akan ditambahkan otomatis oleh sistem secara terpisah. Kalau tidak ada paper di daftar ini yang benar-benar relevan untuk mendukung suatu klaim, JANGAN paksa mengutip - tulis bagian itu tanpa sitasi seperti biasa:\n\n${listText}`;
+
+    return { contextText, entries };
+  } catch (error) {
+    console.warn('[Notebook APA Search] Gagal ambil konteks OpenAlex (diabaikan):', error.message);
+    return null;
+  }
+}
+
+// Daftar Pustaka HANYA boleh berisi entri yang benar-benar dikutip di teks -
+// jangan kirim balik referensi paper yang cuma "disediakan sebagai opsi" ke
+// model tapi ternyata tidak dipakai (topiknya kurang cocok, dsb), supaya
+// bibliografi yang dihasilkan tetap akurat & bisa dipertanggungjawabkan.
+// Dicek dengan mencari string sitasi dalam-teks PERSIS (mis. "(Rahman, 2021)")
+// di teks hasil AI - andal karena system prompt eksplisit meminta model
+// menyalin string itu apa adanya, bukan menyusun formatnya sendiri.
+function filterUsedApaReferences(generatedText, apaContext) {
+  if (!generatedText || !apaContext || !apaContext.entries) return [];
+  return apaContext.entries
+    .filter(e => generatedText.includes(e.inText))
+    .map(e => e.reference);
 }
 
 const REALTIME_WORK_TYPES = ['article', 'review', 'book-chapter', 'dissertation', 'preprint', 'report'];
@@ -3013,6 +3130,14 @@ ATURAN PENTING:
   const userPrompt = `Berikut naskah yang sudah ditulis pengguna (dipotong ke ~2000 karakter terakhir jika naskah panjang):\n\n"""\n${context.slice(-2000)}\n"""\n\nLanjutkan naskah ini.`;
 
   try {
+    // Cari paper ASLI OpenAlex yang relevan dengan fokus topik SAAT INI (bagian
+    // akhir naskah, bukan keseluruhan dokumen yang bisa sudah membahas banyak
+    // hal) untuk landasan sitasi APA 7 kalau memang relevan.
+    const apaContext = await searchApaAcademicContext(context.slice(-500), 6);
+    const messages = [{ role: 'system', content: systemPrompt }];
+    if (apaContext) messages.push({ role: 'system', content: apaContext.contextText });
+    messages.push({ role: 'user', content: userPrompt });
+
     const dsResponse = await fetchFn(deepSeekUrl, {
       method: 'POST',
       headers: {
@@ -3025,10 +3150,7 @@ ATURAN PENTING:
         stream: false,
         thinking: { type: 'disabled' },
         extra_body: { thinking: { type: 'disabled' } },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ]
+        messages
       })
     });
 
@@ -3056,7 +3178,7 @@ ATURAN PENTING:
       saveUsers(users);
     }
 
-    res.json({ ok: true, continuation });
+    res.json({ ok: true, continuation, references: filterUsedApaReferences(continuation, apaContext) });
   } catch (error) {
     console.error('[Notebook Continue Writing] Error:', error);
     res.status(500).json({ ok: false, message: 'Gagal menghubungi AI untuk melanjutkan tulisan: ' + error.message });
@@ -3185,6 +3307,19 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
     ? `Judul naskah: "${title || '(tidak ada judul)'}"\n\nIsi naskah yang sudah ditulis sejauh ini:\n"""\n${context || '(belum ada isi)'}\n"""\n\nInstruksi dari penulis: "${instruction}"`
     : `Judul naskah: "${title || '(tidak ada judul)'}"\n\nIsi naskah yang sudah ditulis sejauh ini:\n"""\n${context || '(belum ada isi)'}\n"""`;
 
+  // Cari paper ASLI OpenAlex utk landasan sitasi APA 7 - dilewati khusus untuk
+  // "critique" (komentar reviewer terhadap naskah, bukan klaim akademis baru
+  // yang butuh rujukan pustaka).
+  const shouldSearchCitations = action !== 'critique';
+  const citationQueryBasis = isCustom
+    ? `${instruction} ${title}`.trim()
+    : `${title} ${context.slice(-500)}`.trim();
+  const apaContext = shouldSearchCitations ? await searchApaAcademicContext(citationQueryBasis, 6) : null;
+
+  const messages = [{ role: 'system', content: actionConfig.systemPrompt }];
+  if (apaContext) messages.push({ role: 'system', content: apaContext.contextText });
+  messages.push({ role: 'user', content: userPrompt });
+
   try {
     const dsResponse = await fetchFn(deepSeekUrl, {
       method: 'POST',
@@ -3198,10 +3333,7 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
         stream: false,
         thinking: { type: 'disabled' },
         extra_body: { thinking: { type: 'disabled' } },
-        messages: [
-          { role: 'system', content: actionConfig.systemPrompt },
-          { role: 'user', content: userPrompt }
-        ]
+        messages
       })
     });
 
@@ -3233,7 +3365,8 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
       saveUsers(users);
     }
 
-    res.json(actionConfig.isHtml ? { ok: true, html: result } : { ok: true, result });
+    const references = filterUsedApaReferences(result, apaContext);
+    res.json(actionConfig.isHtml ? { ok: true, html: result, references } : { ok: true, result, references });
   } catch (error) {
     console.error(`[Notebook AI Draft Action: ${action}] Error:`, error);
     res.status(500).json({ ok: false, message: 'Gagal menghubungi AI: ' + error.message });

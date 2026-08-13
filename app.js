@@ -771,6 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_conn_error: "Gagal menghubungi server.",
       notebook_slash_critique_heading: "Kritik AI (seperti Reviewer):",
       notebook_slash_line_hint: "Ketik \"/\" untuk bantuan AI",
+      notebook_references_heading: "Daftar Pustaka",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -1114,6 +1115,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_slash_conn_error: "Failed to contact the server.",
       notebook_slash_critique_heading: "AI Critique (like a Reviewer):",
       notebook_slash_line_hint: "Type \"/\" for AI help",
+      notebook_references_heading: "References",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -7085,6 +7087,64 @@ document.addEventListener('DOMContentLoaded', () => {
         if (slashCustomInputEl) slashCustomInputEl.focus();
       }
 
+      // Cari section "Daftar Pustaka" (heading <h2> + <ol> di bawahnya) yang
+      // SUDAH ada di dokumen ini, kalau ada - dipakai buat menggabungkan
+      // referensi baru ke situ (bukan bikin section baru terpisah tiap AI
+      // generate ulang). Mengandalkan editor.root (DOM asli Quill), bukan Delta
+      // API, karena lebih gampang cocokkan heading teksnya lewat querySelector.
+      function findReferencesListInfo(editor) {
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        const headingText = t.notebook_references_heading;
+        const headingEl = Array.from(editor.root.querySelectorAll('h2')).find(h => h.textContent.trim() === headingText);
+        if (!headingEl) return null;
+        const headingBlot = Quill.find(headingEl);
+        if (!headingBlot) return null;
+        const headingIndex = editor.getIndex(headingBlot);
+
+        const listEl = headingEl.nextElementSibling && headingEl.nextElementSibling.tagName === 'OL'
+          ? headingEl.nextElementSibling
+          : null;
+        if (!listEl) {
+          return { existing: [], insertStart: headingIndex + headingBlot.length(), insertEnd: headingIndex + headingBlot.length() };
+        }
+        const listBlot = Quill.find(listEl);
+        if (!listBlot) return null;
+        const listStart = editor.getIndex(listBlot);
+        const listEnd = listStart + listBlot.length();
+        const existing = Array.from(listEl.children).map(li => li.textContent.trim());
+        return { existing, insertStart: listStart, insertEnd: listEnd };
+      }
+
+      // Gabung & buang duplikat referensi baru ke section "Daftar Pustaka" di
+      // akhir dokumen (bikin baru kalau belum ada) - dipanggil setelah konten
+      // utama selesai di-insert supaya index insertIndex konten utama tidak
+      // terpengaruh oleh perubahan panjang dokumen dari bagian ini.
+      function mergeReferencesIntoDocument(editor, newReferences) {
+        if (!newReferences || newReferences.length === 0) return;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        try {
+          const info = findReferencesListInfo(editor);
+          const merged = Array.from(new Set([...(info ? info.existing : []), ...newReferences]));
+          merged.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+          const listHtml = '<ol>' + merged.map(r => `<li>${escapeHtml(r)}</li>`).join('') + '</ol>';
+
+          if (info) {
+            if (info.insertEnd > info.insertStart) {
+              editor.deleteText(info.insertStart, info.insertEnd - info.insertStart, 'user');
+            }
+            editor.clipboard.dangerouslyPasteHTML(info.insertStart, listHtml, 'user');
+          } else {
+            const insertAt = Math.max(0, editor.getLength() - 1);
+            const sectionHtml = `<h2>${escapeHtml(t.notebook_references_heading)}</h2>${listHtml}`;
+            editor.clipboard.dangerouslyPasteHTML(insertAt, sectionHtml, 'user');
+          }
+        } catch (err) {
+          // Gagal menggabungkan Daftar Pustaka TIDAK boleh membatalkan/merusak
+          // konten utama yang sudah berhasil di-insert - cukup log & lewati.
+          console.error('[Notebook References Merge]', err);
+        }
+      }
+
       async function runSlashAction(editor, actionId, insertIndex, t, customInstruction) {
         // Bersihkan paksa sisa hint "/" ("Ketik / untuk bantuan AI") kalau sempat
         // nempel di baris target ini - lihat catatan slashBusy di updateLineHint,
@@ -7109,6 +7169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             editor.clipboard.dangerouslyPasteHTML(insertIndex, data.html, 'user');
             const inserted = editor.getLength() - lengthBefore;
             editor.setSelection(insertIndex + Math.max(0, inserted), 0);
+            mergeReferencesIntoDocument(editor, data.references);
           } else if (actionId === 'continue') {
             const contextText = editor.getText(0, insertIndex).trim();
             if (!contextText) { alert(t.notebook_continue_empty_alert); return; }
@@ -7122,6 +7183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const insertStr = (/\s$/.test(contextText) ? '' : ' ') + data.continuation;
             editor.insertText(insertIndex, insertStr, 'user');
             editor.setSelection(insertIndex + insertStr.length, 0);
+            mergeReferencesIntoDocument(editor, data.references);
           } else if (actionId === 'critique') {
             const fullText = editor.getText().trim();
             if (!fullText) { alert(t.notebook_slash_empty_doc_alert); return; }
@@ -7150,6 +7212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             editor.clipboard.dangerouslyPasteHTML(insertIndex, data.html, 'user');
             const inserted = editor.getLength() - lengthBefore;
             editor.setSelection(insertIndex + Math.max(0, inserted), 0);
+            mergeReferencesIntoDocument(editor, data.references);
           }
 
           // Refresh badge kuota AI Notebook (dipakai bersama semua aksi slash) setelah dipakai
