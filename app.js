@@ -774,6 +774,10 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_references_heading: "Daftar Pustaka",
       notebook_citation_loading: "Memuat detail kutipan...",
       notebook_citation_not_found: "Detail kutipan tidak ditemukan.",
+      notebook_ai_language_tooltip: "Bahasa hasil tulisan AI di dokumen ini",
+      notebook_ai_language_auto: "Bahasa AI: Otomatis",
+      notebook_ai_language_id: "Bahasa AI: Indonesia",
+      notebook_ai_language_en: "Bahasa AI: English",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -1120,6 +1124,10 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_references_heading: "References",
       notebook_citation_loading: "Loading citation details...",
       notebook_citation_not_found: "Citation details not found.",
+      notebook_ai_language_tooltip: "Language for AI-written content in this document",
+      notebook_ai_language_auto: "AI language: Auto",
+      notebook_ai_language_id: "AI language: Indonesian",
+      notebook_ai_language_en: "AI language: English",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -6684,10 +6692,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const titleInput = document.getElementById('notebookTitleInput');
       const saveStatusEl = document.getElementById('notebookSaveStatus');
       const editorEl = document.getElementById('notebookEditor');
+      const aiLanguageSelect = document.getElementById('notebookAiLanguageSelect');
       if (!listView || !editorEl) return;
 
       let quill = null;
       let currentDocId = null;
+      // Bahasa hasil tulisan AI utk dokumen yang sedang dibuka - "auto" (default)
+      // = ikuti bahasa judul/konteks seperti biasa; "id"/"en" = paksa AI selalu
+      // menulis dalam bahasa itu (lihat buildLanguageOverrideMessage di server).
+      let currentDocLanguage = 'auto';
       let saveTimer = null;
       let suppressChange = false;
 
@@ -6786,7 +6799,8 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: titleInput.value.trim() || 'Untitled',
-              contentHtml: quill.root.innerHTML
+              contentHtml: quill.root.innerHTML,
+              language: currentDocLanguage
             })
           });
           const data = await res.json();
@@ -6857,6 +6871,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           currentDocId = data.document.id;
           titleInput.value = data.document.title || '';
+          currentDocLanguage = data.document.language || 'auto';
+          if (aiLanguageSelect) aiLanguageSelect.value = currentDocLanguage;
           listView.style.display = 'none';
           editorView.style.display = 'block';
           setSaveStatus('');
@@ -6933,6 +6949,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (titleInput) {
         titleInput.addEventListener('input', scheduleSave);
+      }
+
+      if (aiLanguageSelect) {
+        aiLanguageSelect.addEventListener('change', () => {
+          currentDocLanguage = aiLanguageSelect.value;
+          // Simpan langsung (bukan lewat debounce scheduleSave) - ini pilihan
+          // diskret yang wajar terasa langsung tersimpan, bukan nunggu 1.2 detik.
+          saveCurrentDocument();
+        });
       }
 
       if (deleteBtn) {
@@ -7210,7 +7235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/documents/ai-draft-action', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'custom', title: titleInput.value.trim(), context: fullText, instruction: customInstruction })
+              body: JSON.stringify({ action: 'custom', title: titleInput.value.trim(), context: fullText, instruction: customInstruction, language: currentDocLanguage })
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
@@ -7225,7 +7250,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/documents/continue-writing', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ context: contextText })
+              body: JSON.stringify({ context: contextText, language: currentDocLanguage })
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_continue_error); return; }
@@ -7245,7 +7270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/documents/ai-draft-action', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'critique', title: titleInput.value.trim(), context: fullText })
+              body: JSON.stringify({ action: 'critique', title: titleInput.value.trim(), context: fullText, language: currentDocLanguage })
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
@@ -7259,7 +7284,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/documents/ai-draft-action', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: actionId, title: titleInput.value.trim(), context: fullText })
+              body: JSON.stringify({ action: actionId, title: titleInput.value.trim(), context: fullText, language: currentDocLanguage })
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
@@ -9755,6 +9780,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (notebookExportBtnTextEl) notebookExportBtnTextEl.textContent = TRANSLATIONS[lang].notebook_export_btn;
       const notebookDeleteBtnEl = document.getElementById('notebookDeleteBtn');
       if (notebookDeleteBtnEl) notebookDeleteBtnEl.title = TRANSLATIONS[lang].notebook_delete_tooltip;
+      const notebookAiLanguageWrapEl = document.getElementById('notebookAiLanguageWrap');
+      if (notebookAiLanguageWrapEl) notebookAiLanguageWrapEl.title = TRANSLATIONS[lang].notebook_ai_language_tooltip;
+      const notebookAiLanguageAutoOptEl = document.getElementById('notebookAiLanguageAutoOpt');
+      if (notebookAiLanguageAutoOptEl) notebookAiLanguageAutoOptEl.textContent = TRANSLATIONS[lang].notebook_ai_language_auto;
+      const notebookAiLanguageIdOptEl = document.getElementById('notebookAiLanguageIdOpt');
+      if (notebookAiLanguageIdOptEl) notebookAiLanguageIdOptEl.textContent = TRANSLATIONS[lang].notebook_ai_language_id;
+      const notebookAiLanguageEnOptEl = document.getElementById('notebookAiLanguageEnOpt');
+      if (notebookAiLanguageEnOptEl) notebookAiLanguageEnOptEl.textContent = TRANSLATIONS[lang].notebook_ai_language_en;
 
       // Koleksi Saya - TL;DR toggle (see .my-ref-tldr-toggle handler in initMyReferencesTab)
       document.querySelectorAll('.my-ref-tldr-toggle').forEach(btn => {

@@ -5439,6 +5439,14 @@
             <span id="notebookSlashHint" style="font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
               <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--brand-blue);"></i> <span id="notebookSlashHintText">Ketik "/" di editor untuk bantuan AI</span>
             </span>
+            <label id="notebookAiLanguageWrap" style="font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;" title="Bahasa hasil tulisan AI di dokumen ini">
+              <i class="fa-solid fa-language" style="color: var(--brand-blue);"></i>
+              <select id="notebookAiLanguageSelect" style="border: 1px solid var(--border-light-hover); border-radius: 6px; padding: 0.3rem 0.5rem; font-family: inherit; font-size: 0.78rem; color: var(--text-main); background: var(--bg-card);">
+                <option value="auto" id="notebookAiLanguageAutoOpt">Bahasa AI: Otomatis</option>
+                <option value="id" id="notebookAiLanguageIdOpt">Bahasa AI: Indonesia</option>
+                <option value="en" id="notebookAiLanguageEnOpt">Bahasa AI: English</option>
+              </select>
+            </label>
             <span id="notebookSaveStatus" style="font-size: 0.78rem; color: var(--text-muted); margin-left: auto;"></span>
             <button type="button" id="notebookExportBtn" class="reset-filter-btn" style="width: auto;">
               <i class="fa-solid fa-download"></i> <span id="notebookExportBtnText">Export .docx</span>

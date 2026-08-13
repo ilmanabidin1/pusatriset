@@ -3054,6 +3054,8 @@ app.get('/api/documents', requireAccess, (req, res) => {
   res.json({ ok: true, documents: docs });
 });
 
+const NOTEBOOK_AI_LANGUAGES = new Set(['auto', 'id', 'en']);
+
 app.post('/api/documents', requireAccess, (req, res) => {
   const docs = getDocuments();
   const now = new Date().toISOString();
@@ -3062,6 +3064,12 @@ app.post('/api/documents', requireAccess, (req, res) => {
     userId: req.session.userId,
     title: String((req.body && req.body.title) || 'Untitled').trim().slice(0, 200) || 'Untitled',
     contentHtml: '',
+    // Bahasa hasil tulisan AI utk dokumen ini - "auto" (default) berarti ikuti
+    // bahasa judul/isi naskah seperti sebelumnya; "id"/"en" memaksa AI SELALU
+    // menulis dalam bahasa itu apapun bahasa judul/instruksi yang diberikan -
+    // penting utk penulis yang naskahnya harus Bahasa Inggris (submission
+    // SINTA 3 ke atas/Scopus) tapi instruksi/judul awal ditulis campur/Indonesia.
+    language: NOTEBOOK_AI_LANGUAGES.has(req.body && req.body.language) ? req.body.language : 'auto',
     createdAt: now,
     updatedAt: now
   };
@@ -3085,6 +3093,9 @@ app.put('/api/documents/:id', requireAccess, documentSaveLimiter, (req, res) => 
   }
   if (typeof req.body.contentHtml === 'string') {
     docs[idx].contentHtml = req.body.contentHtml.slice(0, 500000); // batas wajar ~500KB per dokumen
+  }
+  if (NOTEBOOK_AI_LANGUAGES.has(req.body.language)) {
+    docs[idx].language = req.body.language;
   }
   docs[idx].updatedAt = new Date().toISOString();
   saveDocuments(docs);
@@ -3164,6 +3175,24 @@ app.post('/api/documents/import-docx', requireAccess, notebookImportLimiter, (re
   });
 });
 
+// Override eksplisit bahasa hasil tulisan AI Notebook - dipakai kalau dokumen
+// diset ke "id"/"en" (bukan "auto"), supaya AI SELALU menulis dalam bahasa itu
+// TERLEPAS dari bahasa judul/konteks/instruksi yang diberikan. Penting utk
+// penulis yang naskahnya harus Bahasa Inggris (submission SINTA 3 ke
+// atas/Scopus) tapi kebiasaan mengetik judul/perintah "/" tetap pakai Bahasa
+// Indonesia - instruksi "samakan bahasa dgn konteks" di systemPrompt tiap aksi
+// jadi kalah prioritas dibanding pesan system TERPISAH ini (dikirim belakangan,
+// tepat sebelum pesan user, supaya lebih diprioritaskan model).
+function buildLanguageOverrideMessage(language) {
+  if (language === 'en') {
+    return { role: 'system', content: 'INSTRUKSI BAHASA (WAJIB DIPATUHI, PRIORITAS DI ATAS SEMUA INSTRUKSI BAHASA LAIN DI ATAS): Tulis SELURUH konten dalam Bahasa Inggris (English) akademis yang baik, APAPUN bahasa judul/instruksi/konteks naskah yang diberikan. Ini preferensi eksplisit penulis (naskah ditujukan utk jurnal internasional/Scopus) - JANGAN ikut bahasa judul/konteks kalau berbeda.' };
+  }
+  if (language === 'id') {
+    return { role: 'system', content: 'INSTRUKSI BAHASA (WAJIB DIPATUHI, PRIORITAS DI ATAS SEMUA INSTRUKSI BAHASA LAIN DI ATAS): Tulis SELURUH konten dalam Bahasa Indonesia akademis yang baik, APAPUN bahasa judul/instruksi/konteks naskah yang diberikan. Ini preferensi eksplisit penulis - JANGAN ikut bahasa judul/konteks kalau berbeda.' };
+  }
+  return null;
+}
+
 // Notebook Phase 2: AI Continue Writing - lanjutkan tulisan user dari titik
 // kursor. Beda pola kuota dari tools sekali-generate (Outline/Peer Reviewer)
 // karena wajar dipanggil berkali-kali dalam 1 sesi menulis, jadi limitnya
@@ -3215,6 +3244,8 @@ ATURAN PENTING:
     const apaContext = await searchApaAcademicContext(context.slice(-500), 6);
     const messages = [{ role: 'system', content: systemPrompt }];
     if (apaContext) messages.push({ role: 'system', content: apaContext.contextText });
+    const languageOverride = buildLanguageOverrideMessage(req.body && req.body.language);
+    if (languageOverride) messages.push(languageOverride);
     messages.push({ role: 'user', content: userPrompt });
 
     const dsResponse = await fetchFn(deepSeekUrl, {
@@ -3402,6 +3433,8 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
 
   const messages = [{ role: 'system', content: actionConfig.systemPrompt }];
   if (apaContext) messages.push({ role: 'system', content: apaContext.contextText });
+  const languageOverride = buildLanguageOverrideMessage(req.body && req.body.language);
+  if (languageOverride) messages.push(languageOverride);
   messages.push({ role: 'user', content: userPrompt });
 
   try {
