@@ -3233,6 +3233,7 @@ ATURAN PENTING:
 - Samakan gaya bahasa, nada, dan tingkat formalitas dengan teks sebelumnya.
 - Lanjutkan tepat dari titik terakhir naskah berhenti - JANGAN mengulang kalimat terakhir, JANGAN memberi salam/intro/penutup.
 - Panjang wajar: sekitar 1-2 paragraf (maksimal ~150 kata), bukan menulis sisa keseluruhan dokumen.
+- JANGAN cantumkan sitasi/rujukan akademis apapun (nama penulis + tahun dalam kurung, mis. "(Smith, 2020)") KECUALI daftar paper ASLI disediakan secara eksplisit di pesan system terpisah di bawah. Kalau tidak ada daftar paper yang diberikan, tulis TANPA sitasi sama sekali - JANGAN PERNAH mengarang nama penulis atau tahun publikasi sendiri, walau naskah sebelumnya sudah mengandung sitasi lain.
 - Kembalikan HANYA teks lanjutannya, tanpa tanda kutip, tanpa markdown, tanpa penjelasan tambahan.`;
 
   const userPrompt = `Berikut naskah yang sudah ditulis pengguna (dipotong ke ~2000 karakter terakhir jika naskah panjang):\n\n"""\n${context.slice(-2000)}\n"""\n\nLanjutkan naskah ini.`;
@@ -3315,6 +3316,7 @@ ATURAN:
 - Gunakan BAHASA YANG SAMA dengan judul/isi naskah yang diberikan.
 - Format output WAJIB HTML sederhana memakai HANYA tag berikut: <h2>, <h3>, <p>, <ul>, <li>, <strong>.
 - JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML.
+- JANGAN cantumkan sitasi/rujukan akademis apapun (nama penulis + tahun dalam kurung) KECUALI daftar paper ASLI disediakan secara eksplisit di pesan system terpisah. Kalau tidak disediakan, tulis TANPA sitasi - JANGAN PERNAH mengarang nama penulis/tahun sendiri, walau naskah sebelumnya sudah mengandung sitasi lain.
 - Kembalikan HANYA HTML outline-nya.`,
     isHtml: true
   },
@@ -3326,6 +3328,7 @@ ATURAN:
 - Format output WAJIB HTML sederhana memakai HANYA tag berikut: <p>, <strong>, <em>.
 - Panjang wajar 2-3 paragraf.
 - JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML.
+- JANGAN cantumkan sitasi/rujukan akademis apapun (nama penulis + tahun dalam kurung) KECUALI daftar paper ASLI disediakan secara eksplisit di pesan system terpisah. Kalau tidak disediakan, tulis TANPA sitasi - JANGAN PERNAH mengarang nama penulis/tahun sendiri, walau naskah sebelumnya sudah mengandung sitasi lain.
 - Kembalikan HANYA HTML-nya.`,
     isHtml: true
   },
@@ -3337,6 +3340,7 @@ ATURAN:
 - Format output WAJIB HTML sederhana memakai HANYA tag berikut: <p>, <strong>, <em>.
 - Panjang wajar 1-2 paragraf.
 - JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML.
+- JANGAN cantumkan sitasi/rujukan akademis apapun (nama penulis + tahun dalam kurung) KECUALI daftar paper ASLI disediakan secara eksplisit di pesan system terpisah. Kalau tidak disediakan, tulis TANPA sitasi - JANGAN PERNAH mengarang nama penulis/tahun sendiri, walau naskah sebelumnya sudah mengandung sitasi lain.
 - Kembalikan HANYA HTML-nya.`,
     isHtml: true
   },
@@ -3348,6 +3352,7 @@ ATURAN:
 - Format output WAJIB HTML sederhana memakai HANYA tag berikut: <p>, <strong>, <em>.
 - Panjang wajar 1-2 paragraf.
 - JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML.
+- JANGAN cantumkan sitasi/rujukan akademis apapun (nama penulis + tahun dalam kurung) KECUALI daftar paper ASLI disediakan secara eksplisit di pesan system terpisah. Kalau tidak disediakan, tulis TANPA sitasi - JANGAN PERNAH mengarang nama penulis/tahun sendiri, walau naskah sebelumnya sudah mengandung sitasi lain.
 - Kembalikan HANYA HTML-nya.`,
     isHtml: true
   },
@@ -3375,6 +3380,7 @@ ATURAN:
 - Gunakan BAHASA YANG SAMA dengan judul/isi naskah yang diberikan (atau bahasa instruksi kalau naskah masih kosong).
 - Format output WAJIB HTML sederhana memakai HANYA tag berikut: <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>.
 - JANGAN gunakan markdown, JANGAN bungkus dengan \`\`\`html, JANGAN beri penjelasan tambahan di luar HTML, JANGAN menyebut bahwa Anda adalah AI.
+- JANGAN cantumkan sitasi/rujukan akademis apapun (nama penulis + tahun dalam kurung) KECUALI daftar paper ASLI disediakan secara eksplisit di pesan system terpisah. Kalau tidak disediakan, tulis TANPA sitasi - JANGAN PERNAH mengarang nama penulis/tahun sendiri, walau naskah sebelumnya sudah mengandung sitasi lain.
 - Kembalikan HANYA HTML kontennya.`;
 
 app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
