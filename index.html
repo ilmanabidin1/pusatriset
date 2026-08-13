@@ -3337,19 +3337,36 @@
         padding: 0.5rem 1.5rem 3rem;
       }
     }
-    #notebookEditor .ql-editor.ql-blank::before {
-      color: var(--text-muted);
-      font-style: normal;
-      /* position:absolute EKSPLISIT (jangan andalkan default bawaan Quill) -
-         kalau dibiarkan mengalir normal di inline flow, teks placeholder ini
-         ikut mendorong titik kosong dokumen (dan kursor yang dirender di situ)
-         ke KANAN teks placeholder, bukan di posisi kiri sungguhan - persis
-         seperti bug yang sama pernah terjadi di hint "/" per-baris
-         (.notebook-slash-line-hint::before, lihat catatan di situ). */
+    /* Placeholder dokumen kosong Notebook - SENGAJA elemen DOM sungguhan yang
+       jadi SIBLING dari #notebookEditor (lihat markup-nya), BUKAN ::before di
+       dalam pohon contenteditable Quill (opsi "placeholder" Quill sendiri TIDAK
+       dipakai lagi, lihat ensureQuill di app.js). Alasannya: ::before based
+       placeholder (baik punya Quill sendiri maupun buatan sendiri) tetap
+       me-render glyph SUNGGUHAN di posisi itu walau position:absolute+
+       pointer-events:none - beberapa browser/versi Chromium tetap memakai
+       koordinat X klik terhadap glyph yang di-render itu utk menentukan posisi
+       kursor di baris kosong, bukan selalu snap ke satu-satunya posisi valid
+       (index 0). Dengan overlay sungguhan yang posisinya di ATAS #notebookEditor
+       (bukan bagian dari isinya), klik selalu tembus normal ke elemen
+       contenteditable KOSONG di baliknya tanpa ada glyph placeholder apapun utk
+       di-hit-test, jadi kursor selalu benar2 di posisi kiri. */
+    #notebookEditorPlaceholderOverlay {
       position: absolute;
-      left: 0;
       top: 0;
+      left: 0;
+      right: 0;
+      padding: 0.5rem 4rem 4rem;
+      color: var(--text-muted);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.95rem;
       pointer-events: none;
+      user-select: none;
+      display: none;
+    }
+    @media (max-width: 900px) {
+      #notebookEditorPlaceholderOverlay {
+        padding: 0.5rem 1.5rem 3rem;
+      }
     }
     /* Marker sitasi APA yang disisipkan otomatis oleh aksi AI (lihat
        registerNotebookCitations/showLitCitePopover di app.js) memakai format
@@ -3404,24 +3421,22 @@
       }
     }
     /* Hint "/" per-baris ala Notion - hanya muncul di baris kosong tempat
-       kursor sedang berada (bukan whole-doc placeholder Quill di atas, yang
-       cuma aktif kalau SELURUH dokumen kosong), supaya user tetap diingatkan
-       fitur AI ada tanpa mengganggu baris lain yang sudah berisi teks. */
-    #notebookEditor .ql-editor .notebook-slash-line-hint {
-      position: relative;
-    }
-    #notebookEditor .ql-editor .notebook-slash-line-hint::before {
-      content: attr(data-slash-hint);
-      /* position:absolute (persis seperti .ql-blank::before bawaan Quill sendiri
-         untuk placeholder dokumen kosong) - kalau dibiarkan mengalir normal di
-         inline flow, teks hint ini ikut mendorong titik kosong baris (dan kursor
-         yang dirender di situ) ke KANAN hint, bukan di posisi kiri sungguhan. */
+       kursor sedang berada (bukan whole-doc placeholder di atas, yang cuma
+       aktif kalau SELURUH dokumen kosong), supaya user tetap diingatkan fitur
+       AI ada tanpa mengganggu baris lain yang sudah berisi teks. Elemen DOM
+       sungguhan yang diposisikan lewat JS (editor.getBounds), bukan CSS
+       ::before - lihat catatan panjang di notebookEditorPlaceholderOverlay
+       soal kenapa ::before-based placeholder bermasalah di sini. */
+    #notebookLineHintOverlay {
       position: absolute;
-      left: 0;
-      top: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.95rem;
       color: var(--text-muted);
       opacity: 0.6;
       pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+      display: none;
     }
     [data-theme="dark"] #notebookToolbar.ql-toolbar.ql-snow .ql-stroke {
       stroke: var(--text-muted);
@@ -5511,7 +5526,21 @@
                 <div id="notebookSlashMenuList"></div>
               </div>
               <input type="text" id="notebookTitleInput" name="notebook-doc-title" placeholder="Untitled" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" style="width: 100%; box-sizing: border-box; border: none; outline: none; font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main); background: transparent;">
-              <div id="notebookEditor"></div>
+              <!-- notebookEditorPlaceholderOverlay: SIBLING dari notebookEditor, BUKAN
+                   ::before di dalam pohon contenteditable Quill sendiri (lihat catatan
+                   panjang di CSS-nya soal kenapa) - jadi klik di area placeholder
+                   selalu tembus normal ke <div id="notebookEditor"> di baliknya,
+                   kursor selalu mendarat di posisi kosong yang sesungguhnya, bukan
+                   ikut posisi X tempat user klik di teks placeholder-nya. -->
+              <div style="position: relative;">
+                <div id="notebookEditor"></div>
+                <div id="notebookEditorPlaceholderOverlay"></div>
+                <!-- Hint "/" per-baris (Notion-style) - posisinya dihitung & diisi
+                     lewat JS (editor.getBounds, sama seperti notebookSlashMenu),
+                     BUKAN CSS ::before, dengan alasan sama seperti
+                     notebookEditorPlaceholderOverlay di atas. -->
+                <div id="notebookLineHintOverlay"></div>
+              </div>
             </div>
           </div>
         </div>

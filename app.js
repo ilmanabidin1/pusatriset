@@ -6731,7 +6731,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const saveStatusEl = document.getElementById('notebookSaveStatus');
       const editorEl = document.getElementById('notebookEditor');
       const aiLanguageSelect = document.getElementById('notebookAiLanguageSelect');
+      const editorPlaceholderOverlayEl = document.getElementById('notebookEditorPlaceholderOverlay');
+      const lineHintOverlayEl = document.getElementById('notebookLineHintOverlay');
       if (!listView || !editorEl) return;
+
+      // Placeholder dokumen kosong - elemen DOM sungguhan yang jadi SIBLING dari
+      // #notebookEditor (lihat catatan panjang di CSS-nya), bukan opsi
+      // "placeholder" bawaan Quill lagi. Dipanggil tiap text-change & tiap kali
+      // dokumen baru dibuka/dibuat.
+      function updateEmptyDocPlaceholder(editor) {
+        if (!editorPlaceholderOverlayEl) return;
+        editorPlaceholderOverlayEl.style.display = editor.getLength() <= 1 ? 'block' : 'none';
+      }
 
       let quill = null;
       let currentDocId = null;
@@ -6774,16 +6785,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       function ensureQuill() {
         if (quill || typeof Quill === 'undefined') return quill;
-        const t = TRANSLATIONS[window.currentLanguage || 'id'];
         quill = new Quill('#notebookEditor', {
           theme: 'snow',
-          modules: { toolbar: '#notebookToolbar' },
-          placeholder: t.notebook_editor_placeholder
+          modules: { toolbar: '#notebookToolbar' }
         });
+        if (editorPlaceholderOverlayEl) {
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
+          editorPlaceholderOverlayEl.textContent = t.notebook_editor_placeholder;
+        }
+        updateEmptyDocPlaceholder(quill);
         quill.on('text-change', (delta, oldDelta, source) => {
           if (suppressChange) return;
           scheduleSave();
           updateLineHint(quill);
+          updateEmptyDocPlaceholder(quill);
           // Begitu menu "/" kebuka, fokus langsung pindah ke input di dalam
           // menu (lihat openSlashMenu) - jadi text-change lanjutan dari Quill
           // selama slashActive seharusnya tidak lagi terjadi dari ketikan user
@@ -6920,6 +6935,9 @@ document.addEventListener('DOMContentLoaded', () => {
             suppressChange = true;
             editor.root.innerHTML = data.document.contentHtml || '';
             suppressChange = false;
+            // innerHTML langsung tidak lewat Delta API Quill, jadi text-change
+            // tidak terpicu di sini - update manual placeholder dokumen kosong.
+            updateEmptyDocPlaceholder(editor);
           }
         } catch (err) {
           alert(t.notebook_conn_error);
@@ -7082,29 +7100,42 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Hint "/" ala Notion di baris kosong tempat kursor berada - beda dari
-      // placeholder bawaan Quill (notebook_editor_placeholder) yang cuma
+      // placeholder dokumen kosong (notebookEditorPlaceholderOverlay) yang cuma
       // tampil kalau SELURUH dokumen kosong. Ini supaya user tetap diingatkan
       // fitur AI ada walau sedang menulis di tengah dokumen yang sudah berisi.
-      function updateLineHint(editor) {
-        const prev = editor.root.querySelector('.notebook-slash-line-hint');
-        if (prev) prev.classList.remove('notebook-slash-line-hint');
+      // Diposisikan lewat JS (editor.getBounds, sama seperti positionSlashMenu),
+      // BUKAN CSS ::before - lihat catatan di notebookEditorPlaceholderOverlay
+      // soal kenapa ::before-based hint bermasalah (klik di teks hint bisa
+      // menaruh kursor di posisi X klik, bukan selalu di awal baris kosong).
+      function hideLineHint() {
+        if (lineHintOverlayEl) lineHintOverlayEl.style.display = 'none';
+      }
 
+      function updateLineHint(editor) {
         // slashBusy: barusan hapus karakter "/" pemicu (bikin baris itu kosong
         // SESAAT) tapi konten AI akan segera di-paste ke baris yang sama begitu
         // fetch selesai - kalau hint sempat nempel di jendela sesaat ini, Quill
-        // sering pakai ulang node <p> yang sama utk paste konten, jadi teks hint
-        // ini bisa nyangkut ketiban/nempel di depan teks asli hasil AI. Makanya
-        // jangan tempelkan hint baru sama sekali selama proses ini berlangsung.
-        if (slashActive || slashBusy || editor.getLength() <= 1) return;
+        // sering pakai ulang node <p> yang sama utk paste konten, jadi hint ini
+        // bisa nyangkut ketiban/nempel di depan teks asli hasil AI. Makanya
+        // jangan tampilkan hint baru sama sekali selama proses ini berlangsung.
+        if (!lineHintOverlayEl || slashActive || slashBusy || editor.getLength() <= 1) { hideLineHint(); return; }
 
         const sel = editor.getSelection();
-        if (!sel || sel.length > 0) return;
+        if (!sel || sel.length > 0) { hideLineHint(); return; }
 
         const [line] = editor.getLine(sel.index);
-        if (!line || !line.domNode || line.length() !== 1) return;
+        if (!line || !line.domNode || line.length() !== 1) { hideLineHint(); return; }
 
-        line.domNode.classList.add('notebook-slash-line-hint');
-        line.domNode.setAttribute('data-slash-hint', TRANSLATIONS[window.currentLanguage || 'id'].notebook_slash_line_hint);
+        const qlEditorEl = editorEl.querySelector('.ql-editor');
+        const wrapperEl = editorEl.parentElement;
+        if (!qlEditorEl || !wrapperEl) { hideLineHint(); return; }
+        const bounds = editor.getBounds(sel.index, 0);
+        const editorRect = qlEditorEl.getBoundingClientRect();
+        const wrapperRect = wrapperEl.getBoundingClientRect();
+        lineHintOverlayEl.style.top = ((editorRect.top - wrapperRect.top) + bounds.top) + 'px';
+        lineHintOverlayEl.style.left = ((editorRect.left - wrapperRect.left) + bounds.left) + 'px';
+        lineHintOverlayEl.textContent = TRANSLATIONS[window.currentLanguage || 'id'].notebook_slash_line_hint;
+        lineHintOverlayEl.style.display = 'block';
       }
 
       function getFilteredSlashItems() {
@@ -7258,15 +7289,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       async function runSlashAction(editor, actionId, insertIndex, t, customInstruction) {
-        // Bersihkan paksa sisa hint "/" ("Ketik / untuk bantuan AI") kalau sempat
-        // nempel di baris target ini - lihat catatan slashBusy di updateLineHint,
-        // ini jaring pengaman terakhir sebelum konten AI beneran di-insert supaya
-        // teks hint tidak pernah ikut ketiban/nempel di depan hasil tulisan AI.
-        const [targetLine] = editor.getLine(insertIndex);
-        if (targetLine && targetLine.domNode) {
-          targetLine.domNode.classList.remove('notebook-slash-line-hint');
-          targetLine.domNode.removeAttribute('data-slash-hint');
-        }
+        // Sembunyikan paksa hint "/" kalau sempat tampil di baris target ini -
+        // lihat catatan slashBusy di updateLineHint, ini jaring pengaman
+        // terakhir sebelum konten AI beneran di-insert.
+        hideLineHint();
         try {
           if (actionId === 'custom-prompt') {
             const fullText = editor.getText().trim();
@@ -9808,6 +9834,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (notebookImportBtnTextEl) notebookImportBtnTextEl.textContent = TRANSLATIONS[lang].notebook_import_btn;
       const notebookSlashHintTextEl = document.getElementById('notebookSlashHintText');
       if (notebookSlashHintTextEl) notebookSlashHintTextEl.textContent = TRANSLATIONS[lang].notebook_slash_hint;
+      const notebookEditorPlaceholderOverlayEl = document.getElementById('notebookEditorPlaceholderOverlay');
+      if (notebookEditorPlaceholderOverlayEl) notebookEditorPlaceholderOverlayEl.textContent = TRANSLATIONS[lang].notebook_editor_placeholder;
       const notebookEmptyTitleEl = document.getElementById('notebookEmptyTitle');
       if (notebookEmptyTitleEl) notebookEmptyTitleEl.textContent = TRANSLATIONS[lang].notebook_empty_title;
       const notebookEmptyDescEl = document.getElementById('notebookEmptyDesc');
