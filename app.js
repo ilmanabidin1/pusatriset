@@ -7277,7 +7277,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             editor.clipboard.dangerouslyPasteHTML(info.insertStart, listHtml, 'user');
           } else {
-            const insertAt = Math.max(0, editor.getLength() - 1);
+            // PENTING: pakai editor.getLength() (posisi PERSIS di ujung akhir
+            // dokumen, setelah newline implisit terakhir Quill), BUKAN
+            // getLength()-1. Paste di getLength()-1 menyisip SEBELUM newline
+            // akhir dokumen - kalau baris terakhir yang sudah ada TIDAK
+            // kebetulan diikuti baris kosong tambahan, heading <h2> yang
+            // dipaste ikut "menempel" di baris terakhir itu dan format
+            // heading-nya (font besar+bold) malah menular ke seluruh baris
+            // tsb, plus teksnya nyambung tanpa jeda baris (bug: paragraf
+            // terakhir naskah AI ikut jadi besar & "Daftar Pustaka" nempel
+            // tanpa spasi). getLength() menjamin newline akhir dokumen ikut
+            // "diretain" dulu sebelum konten baru disisip, jadi heading pasti
+            // mulai di baris baru yang benar2 kosong.
+            const insertAt = editor.getLength();
             const sectionHtml = `<h2>${escapeHtml(t.notebook_references_heading)}</h2>${listHtml}`;
             editor.clipboard.dangerouslyPasteHTML(insertAt, sectionHtml, 'user');
           }
