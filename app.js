@@ -16,6 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;');
   }
 
+  // Dipindah ke scope bersama ini (dari dalam initMyReferencesTab) supaya bisa
+  // dipakai IIFE tab lain juga (mis. panel referensi Notebook) - sebelumnya
+  // cuma terlihat oleh initMyReferencesTab sendiri, dipakai IIFE lain (mis.
+  // initNotebookTab) langsung ReferenceError karena tiap tab adalah closure
+  // terpisah, bukan berbagi scope satu sama lain kecuali lewat sini.
+  function truncate(text, max) {
+    if (!text) return '-';
+    return text.length > max ? text.slice(0, max) + '…' : text;
+  }
+
   // Cache ringan berisi doi/judul paper yang sudah tersimpan di Koleksi Saya
   // (folder manapun) - dipakai supaya tombol "Simpan" di kartu Cari Referensi &
   // popover sitasi otomatis berubah jadi "Tersimpan" (dan tidak bisa diklik lagi)
@@ -6328,11 +6338,6 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentResearchId = null;
       let currentResearchName = '';
 
-      function truncate(text, max) {
-        if (!text) return '-';
-        return text.length > max ? text.slice(0, max) + '…' : text;
-      }
-
       const TLDR_TRUNCATE_LENGTH = 100;
       // TL;DR sering lebih panjang dari yang muat di sel tabel - dulu cuma ada
       // tooltip title="..." pas hover, sekarang ada tombol "Lihat selengkapnya"
@@ -6997,10 +7002,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const editor = quill;
         editor.focus();
         const sel = editor.getSelection() || { index: Math.max(0, editor.getLength() - 1), length: 0 };
-        const insertIndex = sel.index + sel.length;
+        let insertIndex = sel.index + sel.length;
         const charBefore = insertIndex > 0 ? editor.getText(insertIndex - 1, 1) : '\n';
         const needsLeadingSpace = charBefore && !/\s/.test(charBefore);
-        const html = (needsLeadingSpace ? ' ' : '') + `<a href="${escapeHtml(apa.href)}">${escapeHtml(apa.inText)}</a>`;
+        // Spasi pemisah HARUS disisip lewat insertText terpisah, BUKAN sebagai
+        // teks polos di depan string HTML yang dilempar ke dangerouslyPasteHTML -
+        // dibuktikan lewat test nyata (quill.clipboard.dangerouslyPasteHTML
+        // mem-parse HTML lewat DOM parser, yang men-trim text node spasi-doang
+        // di awal fragment, jadi " <a>...</a>" berakhir tanpa spasi sama sekali
+        // di dokumen). insertText tidak lewat parsing HTML sama sekali jadi
+        // spasinya selalu utuh.
+        if (needsLeadingSpace) {
+          editor.insertText(insertIndex, ' ', 'user');
+          insertIndex += 1;
+        }
+        const html = `<a href="${escapeHtml(apa.href)}">${escapeHtml(apa.inText)}</a>`;
         const lengthBefore = editor.getLength();
         editor.clipboard.dangerouslyPasteHTML(insertIndex, html, 'user');
         const inserted = editor.getLength() - lengthBefore;
@@ -7441,8 +7457,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const editorRect = qlEditorEl.getBoundingClientRect();
         const wrapperRect = wrapperEl.getBoundingClientRect();
         // Ditaruh di ATAS seleksi (bounds.top - tinggi tombol - jarak) supaya
-        // tidak menutupi teks yang sedang diseleksi user.
-        humanizeBtnEl.style.top = ((editorRect.top - wrapperRect.top) + bounds.top - 36) + 'px';
+        // tidak menutupi teks yang sedang diseleksi user - KECUALI kalau
+        // seleksinya di baris PALING ATAS dokumen (ruang di atas < tinggi
+        // tombol), taruh di BAWAH seleksi sebagai gantinya. Dikonfirmasi lewat
+        // screenshot nyata: tanpa fallback ini tombol malah menimpa judul
+        // dokumen (#notebookTitleInput, di ATAS #notebookEditor) begitu user
+        // menyeleksi teks di paragraf pertama.
+        const BTN_HEIGHT_WITH_GAP = 36;
+        const top = bounds.top >= BTN_HEIGHT_WITH_GAP
+          ? bounds.top - BTN_HEIGHT_WITH_GAP
+          : bounds.top + bounds.height + 8;
+        humanizeBtnEl.style.top = ((editorRect.top - wrapperRect.top) + top) + 'px';
         humanizeBtnEl.style.left = ((editorRect.left - wrapperRect.left) + bounds.left) + 'px';
         if (humanizeBtnTextEl) humanizeBtnTextEl.textContent = TRANSLATIONS[window.currentLanguage || 'id'].notebook_humanize_btn;
         humanizeBtnEl.classList.add('active');
