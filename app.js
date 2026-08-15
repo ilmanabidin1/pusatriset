@@ -6763,6 +6763,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const collectionPanelEl = document.getElementById('notebookCollectionPanel');
       const collectionPanelTitleEl = document.getElementById('notebookCollectionPanelTitle');
       const collectionPanelListEl = document.getElementById('notebookCollectionPanelList');
+      const collectionPanelSwitcherEl = document.getElementById('notebookCollectionPanelSwitcher');
       if (!listView || !editorEl) return;
 
       // Placeholder dokumen kosong - elemen DOM sungguhan yang jadi SIBLING dari
@@ -6901,15 +6902,39 @@ document.addEventListener('DOMContentLoaded', () => {
       async function loadCollectionOptions() {
         if (!collectionSelect) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        const fallbackHtml = `<option value="" id="notebookCollectionNoneOpt">${t.notebook_collection_none}</option>`;
         try {
           const res = await fetch('/api/my-references/researches');
           const data = await res.json();
           const researches = data.ok ? (data.researches || []) : [];
-          collectionSelect.innerHTML = `<option value="" id="notebookCollectionNoneOpt">${t.notebook_collection_none}</option>` +
-            researches.map(r => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)}</option>`).join('');
+          const optionsHtml = researches.map(r => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)}</option>`).join('');
+          collectionSelect.innerHTML = fallbackHtml + optionsHtml;
+          // Switcher folder di dalam panel referensi (lihat notebookCollectionPanel)
+          // pakai daftar opsi yang SAMA persis - id opsi "kosong"-nya beda
+          // (notebookCollectionPanelSwitcherNoneOpt) supaya tidak duplikat id
+          // dgn punya collectionSelect di toolbar atas.
+          if (collectionPanelSwitcherEl) {
+            collectionPanelSwitcherEl.innerHTML = `<option value="" id="notebookCollectionPanelSwitcherNoneOpt">${t.notebook_collection_none}</option>` + optionsHtml;
+          }
         } catch (err) {
-          collectionSelect.innerHTML = `<option value="" id="notebookCollectionNoneOpt">${t.notebook_collection_none}</option>`;
+          collectionSelect.innerHTML = fallbackHtml;
+          if (collectionPanelSwitcherEl) {
+            collectionPanelSwitcherEl.innerHTML = `<option value="" id="notebookCollectionPanelSwitcherNoneOpt">${t.notebook_collection_none}</option>`;
+          }
         }
+      }
+
+      // Satu titik masuk untuk mengganti folder Koleksi Saya yang di-attach ke
+      // dokumen ini - dipanggil baik dari notebookCollectionSelect (toolbar
+      // atas) maupun notebookCollectionPanelSwitcher (di dalam panel referensi
+      // sendiri), keduanya disinkronkan supaya nilainya selalu konsisten
+      // apapun yang dipakai user untuk gantinya.
+      function applyCollectionSelection(newId) {
+        currentDocCollectionId = newId;
+        if (collectionSelect) collectionSelect.value = newId;
+        if (collectionPanelSwitcherEl) collectionPanelSwitcherEl.value = newId;
+        saveCurrentDocument();
+        loadCollectionPanel();
       }
 
       // Panel referensi folder Koleksi Saya di sisi editor - tampil HANYA kalau
@@ -6946,10 +6971,17 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="notebook-collection-panel-item">
               <div class="notebook-collection-panel-item-title">${escapeHtml(ref.title)}</div>
               <div class="notebook-collection-panel-item-meta">${escapeHtml(truncate(ref.authors, 40))} &middot; ${escapeHtml(String(ref.year || '-'))}</div>
-              <button type="button" class="notebook-collection-panel-item-btn" data-ref-idx="${i}">${t.notebook_collection_panel_insert_btn}</button>
+              ${ref.apa
+                ? `<button type="button" class="notebook-collection-panel-item-btn" data-ref-idx="${i}">${t.notebook_collection_panel_insert_btn}</button>`
+                : ''}
             </div>
           `).join('');
         } catch (err) {
+          // err di-log ke console (bukan cuma pesan generik ke user) supaya
+          // penyebab aslinya kelihatan lewat devtools kalau ini terjadi lagi -
+          // laporan sebelumnya ("Gagal memuat referensi") tidak bisa didiagnosis
+          // lebih lanjut tanpa ini.
+          console.error('[Notebook Collection Panel]', err);
           collectionPanelRefs = [];
           collectionPanelListEl.innerHTML = `<div class="notebook-collection-panel-empty">${t.notebook_collection_panel_load_error}</div>`;
         }
@@ -7063,6 +7095,7 @@ document.addEventListener('DOMContentLoaded', () => {
           currentDocCollectionId = data.document.collectionId || '';
           await loadCollectionOptions();
           if (collectionSelect) collectionSelect.value = currentDocCollectionId;
+          if (collectionPanelSwitcherEl) collectionPanelSwitcherEl.value = currentDocCollectionId;
           loadCollectionPanel();
           listView.style.display = 'none';
           editorView.style.display = 'block';
@@ -7155,11 +7188,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (collectionSelect) {
-        collectionSelect.addEventListener('change', () => {
-          currentDocCollectionId = collectionSelect.value;
-          saveCurrentDocument();
-          loadCollectionPanel();
-        });
+        collectionSelect.addEventListener('change', () => applyCollectionSelection(collectionSelect.value));
+      }
+
+      if (collectionPanelSwitcherEl) {
+        collectionPanelSwitcherEl.addEventListener('change', () => applyCollectionSelection(collectionPanelSwitcherEl.value));
       }
 
       if (collectionPanelListEl) {
@@ -10147,6 +10180,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (notebookCollectionWrapEl) notebookCollectionWrapEl.title = TRANSLATIONS[lang].notebook_collection_tooltip;
       const notebookCollectionNoneOptEl = document.getElementById('notebookCollectionNoneOpt');
       if (notebookCollectionNoneOptEl) notebookCollectionNoneOptEl.textContent = TRANSLATIONS[lang].notebook_collection_none;
+      const notebookCollectionPanelSwitcherNoneOptEl = document.getElementById('notebookCollectionPanelSwitcherNoneOpt');
+      if (notebookCollectionPanelSwitcherNoneOptEl) notebookCollectionPanelSwitcherNoneOptEl.textContent = TRANSLATIONS[lang].notebook_collection_none;
       const notebookHumanizeBtnTextEl = document.getElementById('notebookHumanizeBtnText');
       if (notebookHumanizeBtnTextEl) notebookHumanizeBtnTextEl.textContent = TRANSLATIONS[lang].notebook_humanize_btn;
 

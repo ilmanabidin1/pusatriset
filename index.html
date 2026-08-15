@@ -3330,12 +3330,39 @@
     .notebook-collection-panel-header {
       padding: 0.9rem 1rem;
       border-bottom: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .notebook-collection-panel-header-title {
       font-size: 0.8rem;
       font-weight: 700;
       color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 0.4rem;
+      overflow: hidden;
+    }
+    .notebook-collection-panel-header-title span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* Switcher folder di dalam panel sendiri - fungsinya SAMA persis dengan
+       notebookCollectionSelect di toolbar atas (keduanya disinkronkan lewat
+       applyCollectionSelection di app.js), cuma ditaruh di sini juga supaya
+       ganti folder tidak mengharuskan user mencari-cari dropdown kecil di
+       baris toolbar yang penuh kontrol lain. */
+    #notebookCollectionPanelSwitcher {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid var(--border-light-hover);
+      border-radius: 6px;
+      padding: 0.3rem 0.5rem;
+      font-family: inherit;
+      font-size: 0.74rem;
+      color: var(--text-main);
+      background: var(--bg-card);
     }
     .notebook-collection-panel-list {
       overflow-y: auto;
@@ -5695,8 +5722,13 @@
                  polos seperti sebelumnya. -->
             <aside id="notebookCollectionPanel" class="notebook-collection-panel">
               <div class="notebook-collection-panel-header">
-                <i class="fa-solid fa-bookmark" style="color: var(--brand-blue);"></i>
-                <span id="notebookCollectionPanelTitle">Referensi Folder</span>
+                <div class="notebook-collection-panel-header-title">
+                  <i class="fa-solid fa-bookmark" style="color: var(--brand-blue);"></i>
+                  <span id="notebookCollectionPanelTitle">Referensi Folder</span>
+                </div>
+                <select id="notebookCollectionPanelSwitcher" title="Ganti folder Koleksi Saya yang di-attach ke dokumen ini">
+                  <option value="" id="notebookCollectionPanelSwitcherNoneOpt">Sitasi: Pencarian Otomatis</option>
+                </select>
               </div>
               <div id="notebookCollectionPanelList" class="notebook-collection-panel-list"></div>
             </aside>

@@ -3892,7 +3892,18 @@ app.get('/api/my-references', requireAccess, (req, res) => {
     references = references.filter(ref => ref.researchId === researchId);
   }
   references.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-  const withApa = references.map(ref => Object.assign({}, ref, { apa: buildApaEntryFromSavedReference(ref) }));
+  // Per-referensi try/catch: satu record lama/tidak terduga bentuknya TIDAK
+  // boleh bikin seluruh daftar gagal dimuat (404/apa:null lebih baik daripada
+  // 500 utk seluruh folder) - lihat "Gagal memuat daftar referensi" bug report,
+  // panel klien sudah menangani apa:null dgn menyembunyikan tombol Sisipkan.
+  const withApa = references.map(ref => {
+    try {
+      return Object.assign({}, ref, { apa: buildApaEntryFromSavedReference(ref) });
+    } catch (err) {
+      console.error('[My References] Gagal menyusun format APA utk referensi', ref.id, ':', err.message);
+      return Object.assign({}, ref, { apa: null });
+    }
+  });
   res.json({ ok: true, references: withApa });
 });
 
