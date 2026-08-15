@@ -340,6 +340,37 @@ function getUsers() {
   }
 }
 
+// Akun admin: akses tanpa batas ke SEMUA fitur (lihat tiap blok kuota di
+// bawah, semuanya di-skip kalau req.session.isAdmin true) + akses dashboard
+// /api/admin/* (daftar user, status langganan). Bukan field "type" (yang
+// tetap merepresentasikan tier LANGGANAN sungguhan buat keperluan billing/
+// analytics, tidak boleh tercampur), tapi flag terpisah "isAdmin" - jadi
+// admin bisa tetap punya type 'free'/'premium' apa adanya tanpa konflik
+// dengan logic upgrade/downgrade webhook Faspay.
+//
+// Cara jadi admin: set env var ADMIN_EMAILS (dipisah koma) di Railway, lalu
+// restart server - email yang match otomatis di-set isAdmin:true saat startup
+// (lihat pemanggilannya di app.listen). Tidak ada UI buat self-promote,
+// sengaja (keamanan) - satu-satunya jalan masuk ya lewat env var ini.
+function syncAdminFlagsFromEnv() {
+  const adminEmails = String(process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (adminEmails.length === 0) return;
+  const users = getUsers();
+  let changed = false;
+  users.forEach(u => {
+    const shouldBeAdmin = adminEmails.includes(String(u.email || '').toLowerCase());
+    if (shouldBeAdmin !== !!u.isAdmin) {
+      u.isAdmin = shouldBeAdmin;
+      changed = true;
+      console.log(`[Admin Sync] ${u.email}: isAdmin -> ${shouldBeAdmin}`);
+    }
+  });
+  if (changed) saveUsers(users);
+}
+
 // Hitung tanggal expired baru saat user bayar - kalau masa aktif
 // SEBELUMNYA masih berlaku (belum lewat), durasi baru ditambahkan ke sisa waktu
 // itu, bukan menimpa dari sekarang. Supaya user yang perpanjang/upgrade lebih
@@ -516,6 +547,15 @@ function hasAccess(req) {
   return false;
 }
 
+// Dipakai di tiap titik penolakan kuota (return 403 "Limit bulanan tercapai"
+// dkk) di seluruh file - satu helper kecil ini, bukan fungsi gate terpusat,
+// karena tiap fitur punya cara cek kuotanya sendiri-sendiri (hitungan bulanan,
+// kata, dsb) yang sudah tersebar dari awal - lihat req.session.isAdmin
+// (di-set saat login/di /api/me, lihat syncAdminFlagsFromEnv).
+function isAdminReq(req) {
+  return !!(req.session && req.session.isAdmin);
+}
+
 function requireAccess(req, res, next) {
   if (hasAccess(req)) {
     next();
@@ -529,6 +569,47 @@ function requireAccess(req, res, next) {
 
   res.status(401).json({ ok: false, message: 'Harap login terlebih dahulu.' });
 }
+
+// Dipasang SETELAH requireAccess (jadi req.session.userId sudah pasti valid) -
+// menolak siapapun yang bukan admin, termasuk user login biasa yang coba akses
+// endpoint /api/admin/* langsung lewat panggilan API manual.
+function requireAdmin(req, res, next) {
+  if (!isAdminReq(req)) {
+    return res.status(403).json({ ok: false, message: 'Akses ditolak. Halaman ini khusus admin.' });
+  }
+  next();
+}
+
+// Dashboard admin (versi minimal): daftar SEMUA user + ringkasan jumlah per
+// tipe akun. Whitelist field secara eksplisit (bukan buang field sensitif
+// dari objek user apa adanya) - supaya password hash/token verifikasi/session
+// token TIDAK PERNAH bisa ke-expose walau skema user berubah di kemudian hari.
+app.get('/api/admin/users', requireAccess, requireAdmin, (req, res) => {
+  const users = getUsers();
+  const list = users
+    .map(u => ({
+      id: u.id,
+      email: u.email,
+      name: u.name || '',
+      type: u.type || 'free',
+      isAdmin: !!u.isAdmin,
+      isVerified: !!u.isVerified,
+      planId: u.planId || null,
+      paymentExpiredAt: u.paymentExpiredAt || null,
+      createdAt: u.createdAt || null
+    }))
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+  const summary = {
+    total: list.length,
+    free: list.filter(u => u.type === 'free').length,
+    premium: list.filter(u => u.type === 'premium').length,
+    ultimate: list.filter(u => u.type === 'ultimate').length,
+    admins: list.filter(u => u.isAdmin).length
+  };
+
+  res.json({ ok: true, users: list, summary });
+});
 
 // User Authentication API Endpoints
 // User Authentication API Endpoints
@@ -636,6 +717,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
 
     req.session.userId = user.id;
     req.session.userType = user.type || 'free';
+    req.session.isAdmin = !!user.isAdmin;
     req.session.email = user.email;
     req.session.sessionToken = sessionToken;
 
@@ -793,6 +875,7 @@ app.post('/api/auth/google', authLimiter, async (req, res) => {
 
     req.session.userId = user.id;
     req.session.userType = user.type || 'free';
+    req.session.isAdmin = !!user.isAdmin;
     req.session.email = user.email;
     req.session.sessionToken = sessionToken;
 
@@ -867,6 +950,7 @@ app.get('/api/auth/google/callback', authLimiter, async (req, res) => {
 
     req.session.userId = user.id;
     req.session.userType = user.type || 'free';
+    req.session.isAdmin = !!user.isAdmin;
     req.session.email = user.email;
     req.session.sessionToken = sessionToken;
 
@@ -915,7 +999,10 @@ app.get('/api/me', (req, res) => {
     if (user && user.type && req.session.userType !== user.type) {
       req.session.userType = user.type;
     }
-    
+    if (user && req.session.isAdmin !== !!user.isAdmin) {
+      req.session.isAdmin = !!user.isAdmin;
+    }
+
     let isLimitReached = false;
     let isDraftLimitReached = false;
     let draftsRemaining = 1;
@@ -1071,12 +1158,31 @@ app.get('/api/me', (req, res) => {
       }
     }
 
+    // Admin: timpa SEMUA flag "limit reached" jadi false & tampilkan angka
+    // "sisa" yang jelas-jelas besar (bukan cuma bypass di titik generate-nya
+    // saja) - supaya badge kuota di UI juga tidak nunjukin "hampir habis" ke
+    // admin. Pengecekan kuota SESUNGGUHNYA (yang menolak request) ada di
+    // masing-masing endpoint AI, lihat req.session.isAdmin di situ.
+    if (req.session.isAdmin) {
+      isLimitReached = false;
+      isDraftLimitReached = false; draftsRemaining = 999999;
+      isLitReviewLimitReached = false; litReviewsRemaining = 999999;
+      isHumanizerLimitReached = false; humanizerWordsRemaining = 999999; humanizerWordsLimit = 999999;
+      isResearchChatLimitReached = false; researchChatsRemaining = 999999; researchChatLimit = 999999;
+      isSlrLimitReached = false; slrRemaining = 999999;
+      isPatentSearchLimitReached = false; patentSearchRemaining = 999999;
+      isPeerReviewLimitReached = false; peerReviewRemaining = 999999;
+      isCariReferensiLimitReached = false; cariReferensiRemaining = 999999;
+      isCitationGraphLimitReached = false; citationGraphRemaining = 999999;
+      isNotebookContinueLimitReached = false; notebookContinueRemaining = 999999;
+    }
 
     res.json({
       loggedIn: true,
       user: {
         email: req.session.email || 'Premium User',
         type: req.session.userType,
+        isAdmin: !!req.session.isAdmin,
         name: user ? (user.name || '') : '',
         faculty: user ? (user.faculty || '') : '',
         university: user ? (user.university || '') : '',
@@ -1650,7 +1756,7 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  if (user && (user.type || 'free') === 'free') {
+  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
     if (user.lastMatchMonth === currentMonth && user.matchCountThisMonth >= 1) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x pencocokan per bulan.' });
     }
@@ -1794,11 +1900,11 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  if (user && (user.type || 'free') === 'free') {
+  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
     if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 3) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 3x drafting per bulan.' });
     }
-  } else if (user && user.type === 'premium') {
+  } else if (!isAdminReq(req) && user && user.type === 'premium') {
     if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 15) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x drafting per bulan.' });
     }
@@ -1922,7 +2028,7 @@ app.post('/api/generate-template-draft/export-docx', requireAccess, async (req, 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
   const userType = (user && user.type) || 'free';
-  if (userType !== 'ultimate') {
+  if (!isAdminReq(req) && userType !== 'ultimate') {
     return res.status(403).json({ ok: false, message: 'Ekspor panduan ke .docx khusus akun Ultimate.' });
   }
 
@@ -2446,7 +2552,7 @@ app.get('/api/works/search-live', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const planType = user ? (user.type || 'free') : 'free';
   const currentMonth = new Date().toISOString().slice(0, 7);
-  if (planType === 'free' && user) {
+  if (!isAdminReq(req) && planType === 'free' && user) {
     const usedThisMonth = user.lastCariReferensiMonth === currentMonth ? (user.cariReferensiCountThisMonth || 0) : 0;
     if (usedThisMonth >= CARI_REFERENSI_FREE_MONTHLY_LIMIT) {
       return res.status(403).json({ ok: false, message: `Limit bulanan tercapai. Akun Free dibatasi ${CARI_REFERENSI_FREE_MONTHLY_LIMIT}x pencarian Cari Referensi per bulan. Upgrade ke Premium/Ultimate untuk pencarian tanpa batas.` });
@@ -2578,7 +2684,7 @@ app.post('/api/patents/search-live', requireAccess, async (req, res) => {
   const planType = user ? (user.type || 'free') : 'free';
   const limit = PATENT_SEARCH_MONTHLY_LIMIT[planType] ?? PATENT_SEARCH_MONTHLY_LIMIT.free;
 
-  if (user) {
+  if (!isAdminReq(req) && user) {
     const usedThisMonth = user.lastPatentSearchMonth === currentMonth ? (user.patentSearchCountThisMonth || 0) : 0;
     if (usedThisMonth >= limit) {
       return res.status(403).json({ ok: false, message: `Limit bulanan tercapai. Akun ${planType} dibatasi ${limit}x pencarian paten per bulan.` });
@@ -2887,7 +2993,7 @@ app.post('/api/citation-graph/expand', requireAccess, citationGraphLimiter, asyn
   const planType = user ? (user.type || 'free') : 'free';
   const limit = CITATION_GRAPH_MONTHLY_LIMIT[planType] ?? CITATION_GRAPH_MONTHLY_LIMIT.free;
 
-  if (user) {
+  if (!isAdminReq(req) && user) {
     const usedThisMonth = user.lastCitationGraphMonth === currentMonth ? (user.citationGraphCountThisMonth || 0) : 0;
     if (usedThisMonth >= limit) {
       return res.status(403).json({ ok: false, message: `Limit bulanan tercapai. Akun ${planType} dibatasi ${limit}x eksplorasi peta sitasi per bulan.` });
@@ -3317,11 +3423,11 @@ app.post('/api/documents/continue-writing', requireAccess, async (req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const userType = (user && user.type) || 'free';
 
-  if (userType === 'free') {
+  if (!isAdminReq(req) && userType === 'free') {
     if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 10) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 10x AI Continue Writing per bulan.' });
     }
-  } else if (userType === 'premium') {
+  } else if (!isAdminReq(req) && userType === 'premium') {
     if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 50) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 50x AI Continue Writing per bulan.' });
     }
@@ -3517,11 +3623,11 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const userType = (user && user.type) || 'free';
 
-  if (userType === 'free') {
+  if (!isAdminReq(req) && userType === 'free') {
     if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 10) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 10x bantuan AI Notebook per bulan.' });
     }
-  } else if (userType === 'premium') {
+  } else if (!isAdminReq(req) && userType === 'premium') {
     if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 50) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 50x bantuan AI Notebook per bulan.' });
     }
@@ -3993,7 +4099,7 @@ function requireFolderChatAccess(req, res, next) {
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
   const userType = (user && user.type) || 'free';
-  if (userType !== 'premium' && userType !== 'ultimate') {
+  if (!isAdminReq(req) && userType !== 'premium' && userType !== 'ultimate') {
     return res.status(403).json({ ok: false, message: 'JurnalHub Intelligence for Folder khusus akun Premium & Ultimate. Upgrade untuk akses tanpa batas.' });
   }
   next();
@@ -4245,11 +4351,11 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Check quota for Free and Premium users
-  if (user && (user.type || 'free') === 'free') {
+  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
     if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 3) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 3x Literature Review per bulan.' });
     }
-  } else if (user && user.type === 'premium') {
+  } else if (!isAdminReq(req) && user && user.type === 'premium') {
     if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 15) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x Literature Review per bulan.' });
     }
@@ -4555,11 +4661,11 @@ app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Check quota for SLR (Free: 1x, Premium: 5x, Ultimate: unlimited)
-  if (user && (user.type || 'free') === 'free') {
+  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
     if (user.lastSlrMonth === currentMonth && user.slrCountThisMonth >= 1) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x coba Systematic Literature Review per bulan.' });
     }
-  } else if (user && user.type === 'premium') {
+  } else if (!isAdminReq(req) && user && user.type === 'premium') {
     if (user.lastSlrMonth === currentMonth && user.slrCountThisMonth >= 5) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 5x Systematic Literature Review per bulan.' });
     }
@@ -4896,11 +5002,11 @@ app.post('/api/peer-review', requireAccess, async (req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Kuota AI Peer Reviewer (Free: 2x, Premium: 15x, Ultimate: unlimited)
-  if (user && (user.type || 'free') === 'free') {
+  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
     if (user.lastPeerReviewMonth === currentMonth && user.peerReviewCountThisMonth >= 2) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 2x AI Peer Reviewer per bulan.' });
     }
-  } else if (user && user.type === 'premium') {
+  } else if (!isAdminReq(req) && user && user.type === 'premium') {
     if (user.lastPeerReviewMonth === currentMonth && user.peerReviewCountThisMonth >= 15) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x AI Peer Reviewer per bulan.' });
     }
@@ -4991,7 +5097,7 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
 
   // Check user limit
   const userType = req.session.userType || 'free';
-  if (userType === 'free') {
+  if (!isAdminReq(req) && userType === 'free') {
     return res.status(403).json({ ok: false, message: 'Fitur Humanizer hanya tersedia untuk pelanggan Premium dan Ultimate.' });
   }
 
@@ -5011,10 +5117,10 @@ app.post('/api/humanize', requireAccess, async (req, res) => {
     const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
     const remaining = Math.max(0, limit - wordsUsed);
 
-    if (remaining < wordCount) {
-      return res.status(403).json({ 
-        ok: false, 
-        message: `Kuota kata Anda tidak mencukupi. Sisa kuota Anda: ${remaining} kata, sedangkan teks input Anda berisi: ${wordCount} kata.` 
+    if (!isAdminReq(req) && remaining < wordCount) {
+      return res.status(403).json({
+        ok: false,
+        message: `Kuota kata Anda tidak mencukupi. Sisa kuota Anda: ${remaining} kata, sedangkan teks input Anda berisi: ${wordCount} kata.`
       });
     }
   }
@@ -5596,7 +5702,7 @@ app.post('/api/research-chat/upload', requireAccess, documentUploadLimiter, (req
     const users = getUsers();
     const user = users.find(u => u.id === req.session.userId);
     const userType = (user && user.type) || 'free';
-    if (userType !== 'premium' && userType !== 'ultimate') {
+    if (!isAdminReq(req) && userType !== 'premium' && userType !== 'ultimate') {
       return res.status(403).json({ ok: false, message: 'Fitur lampiran dokumen khusus akun Premium & Ultimate.' });
     }
 
@@ -5643,7 +5749,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  if (userType === 'free' && user) {
+  if (!isAdminReq(req) && userType === 'free' && user) {
     const chatUsed = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
     if (chatUsed >= 20) {
       return res.status(403).json({ ok: false, message: 'Limit bulanan JurnalHub Intelligence tercapai (20 pesan/bulan untuk akun Free). Upgrade ke Premium/Ultimate untuk akses tanpa batas.' });
@@ -6332,7 +6438,7 @@ app.use((req, res, next) => {
 // Route statis aman untuk file template jurnal (hanya premium/ultimate, kecuali Wiley)
 app.use('/templates', requireAccess, (req, res, next) => {
   const isWiley = req.path.toLowerCase().includes('wiley');
-  if (!isWiley && req.session.userType !== 'premium' && req.session.userType !== 'ultimate') {
+  if (!isAdminReq(req) && !isWiley && req.session.userType !== 'premium' && req.session.userType !== 'ultimate') {
     return res.status(403).send('Akses ditolak. Fitur ini khusus pengguna PRO (Premium & Ultimate).');
   }
   next();
@@ -6808,6 +6914,12 @@ process.on('unhandledRejection', (reason) => {
 
 app.listen(PORT, async () => {
   console.log(`Server JurnalHub berjalan di port ${PORT}`);
+
+  try {
+    syncAdminFlagsFromEnv();
+  } catch (err) {
+    console.error('[Admin Sync] Gagal sinkronisasi ADMIN_EMAILS:', err.message);
+  }
 
   // Seed demo user if it doesn't exist (for payment gateway review/testing)
   try {

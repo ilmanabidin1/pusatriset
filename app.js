@@ -26,6 +26,63 @@ document.addEventListener('DOMContentLoaded', () => {
     return text.length > max ? text.slice(0, max) + '…' : text;
   }
 
+  // Tampilkan/sembunyikan link sidebar "Admin" (#sidebarAdminLink) sesuai
+  // flag isAdmin dari /api/me - dipanggil sekali tiap kali checkAuthState
+  // jalan. Ini murni kosmetik/UX (endpoint /api/admin/* tetap divalidasi
+  // server-side lewat requireAdmin terlepas dari ini), jadi aman kalaupun
+  // ada race atau elemen belum ada saat dipanggil.
+  function applyAdminVisibility(user) {
+    const link = document.getElementById('sidebarAdminLink');
+    if (link) link.style.display = (user && user.isAdmin) ? 'flex' : 'none';
+  }
+
+  // Muat daftar user + ringkasan jumlah per tipe akun ke tab Admin - dipanggil
+  // dari switchTab (index.html) tiap kali tab 'admin' dibuka, BUKAN di-cache,
+  // karena datanya perlu selalu terkini dan tab ini jarang dibuka.
+  window.loadAdminUsers = async function loadAdminUsers() {
+    const tbody = document.getElementById('adminUsersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Memuat...</td></tr>';
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      if (!data.ok) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #dc2626;">${escapeHtml(data.message || 'Gagal memuat daftar user.')}</td></tr>`;
+        return;
+      }
+      const s = data.summary || {};
+      const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '-'; };
+      setStat('adminStatTotal', s.total);
+      setStat('adminStatFree', s.free);
+      setStat('adminStatPremium', s.premium);
+      setStat('adminStatUltimate', s.ultimate);
+
+      const users = data.users || [];
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Belum ada user.</td></tr>';
+        return;
+      }
+      const formatDate = (iso) => {
+        if (!iso) return '-';
+        try { return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
+        catch (e) { return '-'; }
+      };
+      const typeLabel = { free: 'Free', premium: 'Premium', ultimate: 'Ultimate' };
+      tbody.innerHTML = users.map(u => `
+        <tr style="border-bottom: 1px solid var(--border-light);">
+          <td style="padding: 0.7rem 1rem; white-space: nowrap;">${escapeHtml(u.email)}${u.isAdmin ? ' <span style="font-size: 0.68rem; font-weight: 700; color: #fff; background: var(--brand-blue); padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.3rem;">ADMIN</span>' : ''}</td>
+          <td style="padding: 0.7rem 1rem; color: var(--text-muted);">${escapeHtml(u.name || '-')}</td>
+          <td style="padding: 0.7rem 1rem;">${escapeHtml(typeLabel[u.type] || u.type)}</td>
+          <td style="padding: 0.7rem 1rem; color: var(--text-muted); white-space: nowrap;">${formatDate(u.paymentExpiredAt)}</td>
+          <td style="padding: 0.7rem 1rem;">${u.isVerified ? '<span style="color: #16a34a;">Ya</span>' : '<span style="color: var(--text-muted);">Belum</span>'}</td>
+          <td style="padding: 0.7rem 1rem; color: var(--text-muted); white-space: nowrap;">${formatDate(u.createdAt)}</td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #dc2626;">Gagal terhubung ke server.</td></tr>';
+    }
+  };
+
   // Cache ringan berisi doi/judul paper yang sudah tersimpan di Koleksi Saya
   // (folder manapun) - dipakai supaya tombol "Simpan" di kartu Cari Referensi &
   // popover sitasi otomatis berubah jadi "Tersimpan" (dan tidak bisa diklik lagi)
@@ -1413,6 +1470,8 @@ document.addEventListener('DOMContentLoaded', () => {
               profileAvatar.innerHTML = emailPrefix.substring(0, 2).toUpperCase();
             }
           }
+
+          applyAdminVisibility(currentUser.user);
 
           // Update settings fields
           const settingsEmail = document.getElementById('settingsEmail');

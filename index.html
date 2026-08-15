@@ -4521,6 +4521,14 @@
         <a href="#" class="sidebar-link profile-dropdown-item" data-tab="pengaturan">
           <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
         </a>
+        <!-- Link Admin - display:none default, dimunculkan lewat JS
+             (applyAdminVisibility di app.js) HANYA kalau /api/me balikin
+             user.isAdmin true. Tetap ada guard server-side (requireAdmin) di
+             endpoint-nya, jadi menyembunyikan link ini murni soal UX, bukan
+             satu-satunya lapisan keamanan. -->
+        <a href="#" class="sidebar-link profile-dropdown-item" data-tab="admin" id="sidebarAdminLink" style="display: none;">
+          <i class="fa-solid fa-user-shield"></i> <span>Admin</span>
+        </a>
         <div class="profile-dropdown-divider"></div>
         <button type="button" class="profile-dropdown-item profile-dropdown-logout" id="sidebarLogoutBtn">
           <i class="fa-solid fa-arrow-right-from-bracket"></i> <span id="sidebarLogoutBtnText">Keluar</span>
@@ -6716,6 +6724,54 @@
         </div>
       </div>
 
+      <!-- TAB: ADMIN (versi minimal - lihat catatan panjang di app.js
+           initAdminTab soal apa yang sengaja belum ada di sini: statistik
+           agregat/revenue, grafik pertumbuhan, dsb - itu bukan scope
+           putaran ini). Guard aksesnya DUA lapis: link sidebar disembunyikan
+           kalau bukan admin (lihat applyAdminVisibility), DAN endpoint
+           /api/admin/users sendiri menolak non-admin server-side
+           (requireAdmin) - jadi menyembunyikan link ini di UI bukan
+           satu-satunya proteksi. -->
+      <div id="tabContentAdmin" class="tab-content">
+        <div style="max-width: 1000px; margin: 0 auto;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="filter-box-card" style="padding: 1.25rem; text-align: center;">
+              <div id="adminStatTotal" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main);">-</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Total User</div>
+            </div>
+            <div class="filter-box-card" style="padding: 1.25rem; text-align: center;">
+              <div id="adminStatFree" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main);">-</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Free</div>
+            </div>
+            <div class="filter-box-card" style="padding: 1.25rem; text-align: center;">
+              <div id="adminStatPremium" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main);">-</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Premium</div>
+            </div>
+            <div class="filter-box-card" style="padding: 1.25rem; text-align: center;">
+              <div id="adminStatUltimate" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.6rem; color: var(--text-main);">-</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Ultimate</div>
+            </div>
+          </div>
+          <div class="filter-box-card" style="padding: 0; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-light);">
+                  <th style="text-align: left; padding: 0.85rem 1rem; color: var(--text-muted); font-weight: 700; white-space: nowrap;">Email</th>
+                  <th style="text-align: left; padding: 0.85rem 1rem; color: var(--text-muted); font-weight: 700; white-space: nowrap;">Nama</th>
+                  <th style="text-align: left; padding: 0.85rem 1rem; color: var(--text-muted); font-weight: 700; white-space: nowrap;">Tipe Akun</th>
+                  <th style="text-align: left; padding: 0.85rem 1rem; color: var(--text-muted); font-weight: 700; white-space: nowrap;">Berlaku s/d</th>
+                  <th style="text-align: left; padding: 0.85rem 1rem; color: var(--text-muted); font-weight: 700; white-space: nowrap;">Terverifikasi</th>
+                  <th style="text-align: left; padding: 0.85rem 1rem; color: var(--text-muted); font-weight: 700; white-space: nowrap;">Daftar</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody">
+                <tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Memuat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -6849,6 +6905,12 @@
         // Koleksi Saya: muat ulang daftar folder riset tiap kali tab dibuka
         if (tabName === 'koleksi-saya' && window.loadMyReferencesFolders) {
           window.loadMyReferencesFolders();
+        }
+
+        // Admin: muat ulang daftar user tiap kali tab dibuka (bukan cache -
+        // datanya perlu selalu terkini, bukan tab yang sering dibuka juga)
+        if (tabName === 'admin' && window.loadAdminUsers) {
+          window.loadAdminUsers();
         }
       }
       window.switchTab = switchTab;
