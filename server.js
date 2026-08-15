@@ -2234,6 +2234,40 @@ async function searchApaAcademicContext(query, perPage) {
   }
 }
 
+// Susun entri sitasi APA (in-text + Daftar Pustaka + href kartu preview) dari
+// SATU saved-reference (Koleksi Saya) - dipakai baik oleh buildApaContextFromCollection
+// (grounding AI) maupun endpoint GET /api/my-references (panel referensi di
+// editor Notebook - klik "Sisipkan" langsung pakai field ini, tanpa AI sama
+// sekali). Satu-satunya tempat "authors" (string gabungan display_name, mis.
+// "Nama Satu, Nama Dua, et al.") diparse balik jadi array nama penulis -
+// literal "et al." dibuang supaya tidak ikut dianggap nama penulis oleh
+// formatApaInTextAuthors/formatApaAuthorList (fungsi itu sendiri yang
+// menentukan kapan menambahkan "et al." berdasarkan panjang array).
+function buildApaEntryFromSavedReference(r) {
+  const authorNames = String(r.authors || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s && s.toLowerCase() !== 'et al.');
+  return {
+    inText: `(${formatApaInTextAuthors(authorNames)}, ${r.year || 'n.d.'})`,
+    reference: formatApaReference({
+      authorNames,
+      year: r.year,
+      title: r.title,
+      journal: r.journal,
+      doi: r.doi,
+      url: r.url
+    }),
+    // href buat <a> yang disisip ke dokumen - DOI diutamakan (biar kartu
+    // preview sitasi bisa di-load lewat /api/citation-lookup begitu diklik,
+    // sama seperti sitasi hasil AI), fallback ke url biasa kalau papernya
+    // tidak punya DOI (linknya tetap valid, cuma tidak memicu kartu preview -
+    // itu perilaku yang sudah ada & wajar utk link non-DOI, lihat click
+    // handler quill.root di app.js).
+    href: r.doi ? `https://doi.org/${r.doi}` : (r.url || '#')
+  };
+}
+
 // Bangun konteks sitasi APA dari paper yang SUDAH DISIMPAN user di sebuah folder
 // Koleksi Saya (getSavedReferences, lihat definisinya di bawah - aman dipanggil
 // dari sini karena function declaration di-hoist), bukan dari live search
@@ -2248,25 +2282,10 @@ function buildApaContextFromCollection(userId, researchId) {
   const top = references.slice().sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt)).slice(0, 12);
 
   const entries = top.map(r => {
-    // "authors" tersimpan sbg string gabungan display_name ("Nama Satu, Nama
-    // Dua, et al.") - susun ulang jadi array nama per penulis, buang literal
-    // "et al." supaya tidak ikut diperlakukan sbg nama penulis oleh
-    // formatApaInTextAuthors/formatApaAuthorList (fungsi itu sendiri yang
-    // menentukan kapan menambahkan "et al." berdasarkan panjang array).
-    const authorNames = String(r.authors || '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(s => s && s.toLowerCase() !== 'et al.');
+    const apa = buildApaEntryFromSavedReference(r);
     return {
-      inText: `(${formatApaInTextAuthors(authorNames)}, ${r.year || 'n.d.'})`,
-      reference: formatApaReference({
-        authorNames,
-        year: r.year,
-        title: r.title,
-        journal: r.journal,
-        doi: r.doi,
-        url: r.url
-      }),
+      inText: apa.inText,
+      reference: apa.reference,
       citation: {
         title: r.title,
         authors: r.authors,
@@ -3862,6 +3881,10 @@ app.delete('/api/my-references/researches/:id', requireAccess, (req, res) => {
 });
 
 // Daftar referensi tersimpan milik user, opsional difilter per riset (?researchId=).
+// Tiap referensi disertai field "apa" (in-text/reference/href APA 7 siap pakai,
+// lihat buildApaEntryFromSavedReference) - dipakai panel referensi di editor
+// Notebook ("Sisipkan Sitasi") supaya klik langsung sisip tanpa panggilan AI
+// atau round-trip tambahan ke server.
 app.get('/api/my-references', requireAccess, (req, res) => {
   const { researchId } = req.query;
   let references = getSavedReferences().filter(ref => ref.userId === req.session.userId);
@@ -3869,7 +3892,8 @@ app.get('/api/my-references', requireAccess, (req, res) => {
     references = references.filter(ref => ref.researchId === researchId);
   }
   references.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-  res.json({ ok: true, references });
+  const withApa = references.map(ref => Object.assign({}, ref, { apa: buildApaEntryFromSavedReference(ref) }));
+  res.json({ ok: true, references: withApa });
 });
 
 // Simpan 1 paper ke folder riset tertentu + generate TL;DR dwibahasa sekaligus

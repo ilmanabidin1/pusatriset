@@ -786,6 +786,10 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_humanize_too_long: "Seleksi maksimal 2.000 kata per proses. Pilih teks yang lebih pendek.",
       notebook_humanize_error: "Gagal memproses humanisasi teks.",
       notebook_humanize_conn_error: "Gagal terhubung ke server. Coba lagi.",
+      notebook_collection_panel_title: "Referensi: {name}",
+      notebook_collection_panel_empty: "Folder ini belum punya paper tersimpan.",
+      notebook_collection_panel_insert_btn: "Sisipkan Sitasi",
+      notebook_collection_panel_load_error: "Gagal memuat daftar referensi.",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -1144,6 +1148,10 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_humanize_too_long: "Selection is limited to 2,000 words per run. Select a shorter passage.",
       notebook_humanize_error: "Failed to humanize the text.",
       notebook_humanize_conn_error: "Failed to connect to the server. Please try again.",
+      notebook_collection_panel_title: "References: {name}",
+      notebook_collection_panel_empty: "This folder doesn't have any saved papers yet.",
+      notebook_collection_panel_insert_btn: "Insert Citation",
+      notebook_collection_panel_load_error: "Failed to load the reference list.",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -6752,6 +6760,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const lineHintOverlayEl = document.getElementById('notebookLineHintOverlay');
       const humanizeBtnEl = document.getElementById('notebookHumanizeBtn');
       const humanizeBtnTextEl = document.getElementById('notebookHumanizeBtnText');
+      const collectionPanelEl = document.getElementById('notebookCollectionPanel');
+      const collectionPanelTitleEl = document.getElementById('notebookCollectionPanelTitle');
+      const collectionPanelListEl = document.getElementById('notebookCollectionPanelList');
       if (!listView || !editorEl) return;
 
       // Placeholder dokumen kosong - elemen DOM sungguhan yang jadi SIBLING dari
@@ -6782,6 +6793,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // posisi oleh selection-change lain yang mungkin terpicu selama itu,
       // biarkan tetap di posisi & label spinner terakhirnya sampai selesai.
       let humanizeBusy = false;
+      // Referensi folder Koleksi Saya yang sedang ditampilkan di panel editor
+      // (hasil GET /api/my-references?researchId=..., sudah termasuk field
+      // "apa" per referensi dari server) - dipakai lookup saat tombol "Sisipkan
+      // Sitasi" diklik (event delegation by index, lihat loadCollectionPanel).
+      let collectionPanelRefs = [];
 
       // DOI -> metadata sitasi, cuma dipakai sebagai cache dalam sesi berjalan
       // (bukan sumber data utama) - kartu preview sitasi di-load "malas" (lazy)
@@ -6896,6 +6912,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      // Panel referensi folder Koleksi Saya di sisi editor - tampil HANYA kalau
+      // currentDocCollectionId terisi, isinya GET /api/my-references?researchId=
+      // (server sudah sertakan field "apa" siap pakai per referensi, lihat
+      // buildApaEntryFromSavedReference) supaya klik "Sisipkan Sitasi" tidak
+      // perlu round-trip/panggilan AI tambahan - tinggal ambil dari
+      // collectionPanelRefs yang disimpan di sini.
+      async function loadCollectionPanel() {
+        if (!collectionPanelEl || !collectionPanelListEl) return;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        if (!currentDocCollectionId) {
+          collectionPanelEl.classList.remove('active');
+          collectionPanelRefs = [];
+          return;
+        }
+        const folderName = collectionSelect && collectionSelect.selectedIndex >= 0
+          ? collectionSelect.options[collectionSelect.selectedIndex].textContent
+          : '';
+        if (collectionPanelTitleEl) {
+          collectionPanelTitleEl.textContent = t.notebook_collection_panel_title.replace('{name}', folderName);
+        }
+        collectionPanelEl.classList.add('active');
+        collectionPanelListEl.innerHTML = `<div class="notebook-collection-panel-empty"><i class="fa-solid fa-spinner fa-spin"></i></div>`;
+        try {
+          const res = await fetch(`/api/my-references?researchId=${encodeURIComponent(currentDocCollectionId)}`);
+          const data = await res.json();
+          collectionPanelRefs = data.ok ? (data.references || []) : [];
+          if (collectionPanelRefs.length === 0) {
+            collectionPanelListEl.innerHTML = `<div class="notebook-collection-panel-empty">${t.notebook_collection_panel_empty}</div>`;
+            return;
+          }
+          collectionPanelListEl.innerHTML = collectionPanelRefs.map((ref, i) => `
+            <div class="notebook-collection-panel-item">
+              <div class="notebook-collection-panel-item-title">${escapeHtml(ref.title)}</div>
+              <div class="notebook-collection-panel-item-meta">${escapeHtml(truncate(ref.authors, 40))} &middot; ${escapeHtml(String(ref.year || '-'))}</div>
+              <button type="button" class="notebook-collection-panel-item-btn" data-ref-idx="${i}">${t.notebook_collection_panel_insert_btn}</button>
+            </div>
+          `).join('');
+        } catch (err) {
+          collectionPanelRefs = [];
+          collectionPanelListEl.innerHTML = `<div class="notebook-collection-panel-empty">${t.notebook_collection_panel_load_error}</div>`;
+        }
+      }
+
+      // Sisipkan sitasi dalam-teks (link ke href APA, lihat
+      // buildApaEntryFromSavedReference) di posisi kursor SAAT INI di editor +
+      // tambahkan entrinya ke Daftar Pustaka lewat mergeReferencesIntoDocument
+      // yang sudah ada (dedup otomatis) - murni operasi lokal, TIDAK ada
+      // panggilan AI sama sekali.
+      function insertCollectionCitation(apa) {
+        if (!quill) return;
+        const editor = quill;
+        editor.focus();
+        const sel = editor.getSelection() || { index: Math.max(0, editor.getLength() - 1), length: 0 };
+        const insertIndex = sel.index + sel.length;
+        const charBefore = insertIndex > 0 ? editor.getText(insertIndex - 1, 1) : '\n';
+        const needsLeadingSpace = charBefore && !/\s/.test(charBefore);
+        const html = (needsLeadingSpace ? ' ' : '') + `<a href="${escapeHtml(apa.href)}">${escapeHtml(apa.inText)}</a>`;
+        const lengthBefore = editor.getLength();
+        editor.clipboard.dangerouslyPasteHTML(insertIndex, html, 'user');
+        const inserted = editor.getLength() - lengthBefore;
+        editor.setSelection(insertIndex + Math.max(0, inserted), 0, 'user');
+        mergeReferencesIntoDocument(editor, [apa.reference]);
+      }
+
       async function saveCurrentDocument() {
         if (!currentDocId || !quill) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
@@ -6983,6 +7063,7 @@ document.addEventListener('DOMContentLoaded', () => {
           currentDocCollectionId = data.document.collectionId || '';
           await loadCollectionOptions();
           if (collectionSelect) collectionSelect.value = currentDocCollectionId;
+          loadCollectionPanel();
           listView.style.display = 'none';
           editorView.style.display = 'block';
           setSaveStatus('');
@@ -7077,6 +7158,26 @@ document.addEventListener('DOMContentLoaded', () => {
         collectionSelect.addEventListener('change', () => {
           currentDocCollectionId = collectionSelect.value;
           saveCurrentDocument();
+          loadCollectionPanel();
+        });
+      }
+
+      if (collectionPanelListEl) {
+        // mousedown+preventDefault (sama seperti humanizeBtnEl) - supaya klik
+        // tombol "Sisipkan Sitasi" TIDAK memicu blur editor sama sekali, jadi
+        // insertCollectionCitation tidak bergantung pada Quill berhasil
+        // memulihkan seleksi lama lewat savedRange saat di-focus() ulang -
+        // seleksi user di dokumen tetap aktif & valid sepanjang waktu.
+        collectionPanelListEl.addEventListener('mousedown', (e) => {
+          if (e.target.closest('.notebook-collection-panel-item-btn')) e.preventDefault();
+        });
+        collectionPanelListEl.addEventListener('click', (e) => {
+          const btn = e.target.closest('.notebook-collection-panel-item-btn');
+          if (!btn) return;
+          const idx = parseInt(btn.getAttribute('data-ref-idx'), 10);
+          const ref = collectionPanelRefs[idx];
+          if (!ref || !ref.apa) return;
+          insertCollectionCitation(ref.apa);
         });
       }
 

@@ -3298,6 +3298,97 @@
       padding: 2.5rem 1.5rem 4rem;
       display: flex;
       justify-content: center;
+      align-items: flex-start;
+      gap: 1.5rem;
+    }
+    /* Panel referensi folder Koleksi Saya yang di-attach ke dokumen ini -
+       SIBLING dari .notebook-page-sheet (bukan di dalamnya), disembunyikan
+       total (display:none, bukan cuma kosong) selagi tidak ada folder
+       di-attach atau foldernya belum berisi paper - biar mayoritas dokumen
+       (tanpa folder) tetap dapat layout "kertas center" polos seperti
+       sebelumnya (justify-content:center di .notebook-page-canvas otomatis
+       kembali center-kan .notebook-page-sheet sendirian begitu panel ini
+       display:none, tidak perlu penyesuaian lain). Sticky mengikuti scroll
+       biar daftar referensi tetap kelihatan sepanjang user menulis. */
+    .notebook-collection-panel {
+      display: none;
+      flex-direction: column;
+      width: 260px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 90px;
+      max-height: calc(100vh - 120px);
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--card-radius);
+      box-shadow: 0 1px 3px rgba(8, 34, 64, 0.08);
+      overflow: hidden;
+    }
+    .notebook-collection-panel.active {
+      display: flex;
+    }
+    .notebook-collection-panel-header {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .notebook-collection-panel-list {
+      overflow-y: auto;
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .notebook-collection-panel-item {
+      border: 1px solid var(--border-light-hover);
+      border-radius: 8px;
+      padding: 0.6rem 0.7rem;
+    }
+    .notebook-collection-panel-item-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 0.25rem;
+    }
+    .notebook-collection-panel-item-meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .notebook-collection-panel-item-btn {
+      width: 100%;
+      border: 1px solid var(--brand-blue);
+      color: var(--brand-blue);
+      background: transparent;
+      border-radius: 6px;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .notebook-collection-panel-item-btn:hover {
+      background: rgba(7, 135, 220, 0.08);
+    }
+    .notebook-collection-panel-empty {
+      padding: 1.5rem 1rem;
+      text-align: center;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+    @media (max-width: 1150px) {
+      .notebook-collection-panel {
+        display: none !important;
+      }
     }
     .notebook-page-sheet.filter-box-card {
       position: relative;
@@ -5591,6 +5682,24 @@
                 </button>
               </div>
             </div>
+            <!-- Panel referensi folder Koleksi Saya yang di-attach ke dokumen ini
+                 (lihat notebookCollectionSelect di atas) - isinya dimuat lewat JS
+                 (loadCollectionPanel di initNotebookTab, GET /api/my-references)
+                 setiap kali folder yang di-attach berubah/dokumen dibuka. Klik
+                 "Sisipkan Sitasi" langsung menyisip sitasi dalam-teks APA 7 +
+                 menambah entrinya ke Daftar Pustaka, TANPA panggilan AI sama
+                 sekali - field APA-nya (in-text/reference/href) sudah dihitung
+                 server-side (buildApaEntryFromSavedReference), bukan disusun di
+                 sini. Display:none secara default (lihat CSS-nya) - mayoritas
+                 dokumen tanpa folder di-attach tetap dapat layout "kertas center"
+                 polos seperti sebelumnya. -->
+            <aside id="notebookCollectionPanel" class="notebook-collection-panel">
+              <div class="notebook-collection-panel-header">
+                <i class="fa-solid fa-bookmark" style="color: var(--brand-blue);"></i>
+                <span id="notebookCollectionPanelTitle">Referensi Folder</span>
+              </div>
+              <div id="notebookCollectionPanelList" class="notebook-collection-panel-list"></div>
+            </aside>
           </div>
         </div>
       </div>
