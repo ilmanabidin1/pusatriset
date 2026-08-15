@@ -47,14 +47,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // Jumlah penerima blast utk segmen yang sedang dipilih - filter PERSIS sama
   // dengan yang dipakai server (POST /api/admin/email-blast): isVerified &&
   // !emailOptOut && (segmen 'all' atau type cocok) - supaya angka preview di
-  // sini selalu akurat, tidak pernah menyesatkan admin sebelum kirim.
+  // sini selalu akurat, tidak pernah menyesatkan admin sebelum kirim. Rincian
+  // alasan pengecualian (belum verifikasi/sudah unsubscribe) SENGAJA
+  // ditampilkan eksplisit - kalau tidak, gap antara jumlah total di kartu
+  // statistik (mis. "1371 Free") vs jumlah penerima blast yang jauh lebih
+  // kecil bisa kelihatan seperti bug, padahal itu memang exclusion yang
+  // disengaja (mengirim ke email yang belum pernah dikonfirmasi pemiliknya
+  // berisiko high bounce-rate/spam-complaint, merusak reputasi domain).
   function renderAdminBlastPreview() {
     const segmentEl = document.getElementById('adminBlastSegment');
     const previewEl = document.getElementById('adminBlastPreviewCount');
     if (!segmentEl || !previewEl) return;
     const segment = segmentEl.value;
-    const eligible = adminUsersCache.filter(u => u.isVerified && !u.emailOptOut && (segment === 'all' || u.type === segment));
-    previewEl.textContent = `${eligible.length} penerima akan menerima email ini.`;
+    const segmentUsers = adminUsersCache.filter(u => segment === 'all' || u.type === segment);
+    const eligible = segmentUsers.filter(u => u.isVerified && !u.emailOptOut);
+    const excludedUnverified = segmentUsers.filter(u => !u.isVerified).length;
+    const excludedOptOut = segmentUsers.filter(u => u.isVerified && u.emailOptOut).length;
+    let text = `${eligible.length} dari ${segmentUsers.length} user di segmen ini akan menerima email ini.`;
+    const reasons = [];
+    if (excludedUnverified > 0) reasons.push(`${excludedUnverified} belum verifikasi email`);
+    if (excludedOptOut > 0) reasons.push(`${excludedOptOut} sudah unsubscribe`);
+    if (reasons.length > 0) text += ` (dikecualikan: ${reasons.join(', ')})`;
+    previewEl.textContent = text;
   }
 
   window.loadAdminUsers = async function loadAdminUsers() {
@@ -133,6 +147,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1500);
   }
 
+  // Render ulang preview email (header + gambar opsional + paragraf + tombol
+  // CTA opsional + footer unsubscribe placeholder) - struktur & inline style
+  // di sini SENGAJA dijaga sama persis dengan yang dibangun server (lihat
+  // POST /api/admin/email-blast di server.js) supaya preview representatif,
+  // bukan cuma perkiraan kasar. Dipanggil tiap kali salah satu field terkait
+  // berubah (lihat listener 'input' di initAdminBlast).
+  function renderAdminBlastEmailPreview() {
+    const previewEl = document.getElementById('adminBlastPreviewEmail');
+    if (!previewEl) return;
+    const bodyText = (document.getElementById('adminBlastBody')?.value || '').trim();
+    const imageUrl = (document.getElementById('adminBlastImageUrl')?.value || '').trim();
+    const ctaText = (document.getElementById('adminBlastCtaText')?.value || '').trim();
+    const ctaUrl = (document.getElementById('adminBlastCtaUrl')?.value || '').trim();
+
+    const bodyHtml = bodyText
+      ? bodyText.split(/\n\s*\n/).map(p => `<p style="margin: 0 0 1rem; line-height: 1.6;">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('')
+      : '<p style="margin: 0; color: #a0aec0; font-style: italic;">(Isi email akan muncul di sini)</p>';
+    const imageHtml = imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="" style="max-width: 100%; border-radius: 8px; display: block; margin-bottom: 1.5rem;">` : '';
+    const ctaHtml = (ctaText && ctaUrl) ? `<div style="text-align: center; margin: 1.5rem 0;"><span style="display: inline-block; background: #0787dc; color: #ffffff; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem;">${escapeHtml(ctaText)}</span></div>` : '';
+
+    previewEl.innerHTML = `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a202c;">
+        <div style="padding: 0 0 1.5rem; border-bottom: 2px solid #0787dc;">
+          <span style="font-weight: 800; font-size: 1.1rem; color: #0787dc;">JurnalHub</span>
+        </div>
+        <div style="padding: 1.5rem 0;">${imageHtml}${bodyHtml}${ctaHtml}</div>
+        <div style="padding-top: 1.5rem; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #a0aec0;">
+          Anda menerima email ini karena terdaftar sebagai pengguna JurnalHub.
+          <span style="color: #a0aec0; text-decoration: underline;">Berhenti berlangganan email promosi</span>.
+        </div>
+      </div>`;
+  }
+
   (function initAdminBlast() {
     const segmentEl = document.getElementById('adminBlastSegment');
     const sendBtn = document.getElementById('adminBlastSendBtn');
@@ -140,16 +187,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     segmentEl.addEventListener('change', renderAdminBlastPreview);
 
+    ['adminBlastBody', 'adminBlastImageUrl', 'adminBlastCtaText', 'adminBlastCtaUrl'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', renderAdminBlastEmailPreview);
+    });
+    renderAdminBlastEmailPreview();
+
     sendBtn.addEventListener('click', async () => {
       const segment = segmentEl.value;
       const subjectEl = document.getElementById('adminBlastSubject');
       const bodyEl = document.getElementById('adminBlastBody');
+      const imageUrlEl = document.getElementById('adminBlastImageUrl');
+      const ctaTextEl = document.getElementById('adminBlastCtaText');
+      const ctaUrlEl = document.getElementById('adminBlastCtaUrl');
       const statusEl = document.getElementById('adminBlastStatusText');
       const subject = subjectEl ? subjectEl.value.trim() : '';
       const bodyText = bodyEl ? bodyEl.value.trim() : '';
+      const imageUrl = imageUrlEl ? imageUrlEl.value.trim() : '';
+      const ctaText = ctaTextEl ? ctaTextEl.value.trim() : '';
+      const ctaUrl = ctaUrlEl ? ctaUrlEl.value.trim() : '';
 
       if (!subject || !bodyText) {
         alert('Subjek dan isi email wajib diisi.');
+        return;
+      }
+      if ((ctaText && !ctaUrl) || (!ctaText && ctaUrl)) {
+        alert('Teks tombol dan link tombol harus diisi berdua, atau dikosongkan berdua.');
+        return;
+      }
+      if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
+        alert('URL gambar harus diawali http:// atau https://.');
+        return;
+      }
+      if (ctaUrl && !/^https?:\/\//i.test(ctaUrl)) {
+        alert('Link tombol harus diawali http:// atau https://.');
         return;
       }
       const eligibleCount = adminUsersCache.filter(u => u.isVerified && !u.emailOptOut && (segment === 'all' || u.type === segment)).length;
@@ -170,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/admin/email-blast', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ segment, subject, bodyText })
+          body: JSON.stringify({ segment, subject, bodyText, imageUrl, ctaText, ctaUrl })
         });
         const data = await res.json();
         if (!data.ok) {

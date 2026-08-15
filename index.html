@@ -6783,11 +6783,36 @@
                 <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Isi Email (tiap baris kosong jadi paragraf baru)</label>
                 <textarea id="adminBlastBody" rows="6" placeholder="Tulis isi email di sini..." style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main); resize: vertical;"></textarea>
               </div>
+              <div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">URL Gambar (opsional)</label>
+                <input type="text" id="adminBlastImageUrl" placeholder="https://... (upload gambarnya ke tempat lain dulu, mis. imgur/CDN sendiri, lalu tempel link-nya di sini)" style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Teks Tombol (opsional)</label>
+                  <input type="text" id="adminBlastCtaText" placeholder="mis. Upgrade Sekarang" style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Link Tombol</label>
+                  <input type="text" id="adminBlastCtaUrl" placeholder="https://jurnalhub.id/..." style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+                </div>
+              </div>
               <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                 <button type="button" id="adminBlastSendBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.5rem;">
                   <i class="fa-regular fa-paper-plane"></i> Kirim Blast
                 </button>
                 <span id="adminBlastStatusText" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+              </div>
+              <!-- Preview live - dirender ulang lewat JS (renderAdminBlastEmailPreview
+                   di app.js) tiap kali salah satu field di atas diketik, pakai
+                   struktur HTML yang SAMA (header/gambar/paragraf/tombol/footer
+                   unsubscribe) dengan yang dibangun server saat benar-benar
+                   kirim - supaya preview ini representatif, bukan cuma kira-kira. -->
+              <div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Preview</label>
+                <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1.5rem; background: #ffffff;">
+                  <div id="adminBlastPreviewEmail"></div>
+                </div>
               </div>
             </div>
           </div>

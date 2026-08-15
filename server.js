@@ -698,12 +698,31 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
   const segment = String((req.body && req.body.segment) || '').trim();
   const subject = String((req.body && req.body.subject) || '').trim().slice(0, 200);
   const bodyText = String((req.body && req.body.bodyText) || '').trim().slice(0, 20000);
+  // imageUrl/ctaText/ctaUrl semua opsional - user paste link gambar yang
+  // sudah di-hosting di tempat lain (imgur/CDN sendiri/dsb), BUKAN upload
+  // file baru lewat form ini (di luar scope versi ini, lihat catatan di
+  // index.html) - dan link tombol CTA opsional buat ajakan aksi (mis. link
+  // ke halaman upgrade).
+  const imageUrl = String((req.body && req.body.imageUrl) || '').trim().slice(0, 1000);
+  const ctaText = String((req.body && req.body.ctaText) || '').trim().slice(0, 60);
+  const ctaUrl = String((req.body && req.body.ctaUrl) || '').trim().slice(0, 1000);
 
   if (!EMAIL_BLAST_SEGMENTS.has(segment)) {
     return res.status(400).json({ ok: false, message: 'Segmen tidak valid.' });
   }
   if (!subject || !bodyText) {
     return res.status(400).json({ ok: false, message: 'Subjek dan isi email wajib diisi.' });
+  }
+  // Wajib http(s) - mencegah skema aneh (javascript:, data:, dsb) ke-embed
+  // sebagai href/src di email yang bakal dikirim ke ratusan orang.
+  if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
+    return res.status(400).json({ ok: false, message: 'URL gambar harus diawali http:// atau https://.' });
+  }
+  if (ctaUrl && !/^https?:\/\//i.test(ctaUrl)) {
+    return res.status(400).json({ ok: false, message: 'Link tombol harus diawali http:// atau https://.' });
+  }
+  if ((ctaText && !ctaUrl) || (!ctaText && ctaUrl)) {
+    return res.status(400).json({ ok: false, message: 'Teks tombol dan link tombol harus diisi berdua, atau dikosongkan berdua.' });
   }
 
   const users = getUsers();
@@ -723,6 +742,8 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
   // Paragraf dipisah baris kosong di textarea -> jadi <p> terpisah, biar admin
   // tidak perlu menulis HTML manual buat email sesederhana ini.
   const bodyHtml = bodyText.split(/\n\s*\n/).map(p => `<p style="margin: 0 0 1rem; line-height: 1.6;">${escapeHtmlServer(p).replace(/\n/g, '<br>')}</p>`).join('');
+  const imageHtml = imageUrl ? `<img src="${escapeHtmlServer(imageUrl)}" alt="" style="max-width: 100%; border-radius: 8px; display: block; margin-bottom: 1.5rem;">` : '';
+  const ctaHtml = (ctaText && ctaUrl) ? `<div style="text-align: center; margin: 1.5rem 0;"><a href="${escapeHtmlServer(ctaUrl)}" style="display: inline-block; background: #0787dc; color: #ffffff; padding: 0.75rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">${escapeHtmlServer(ctaText)}</a></div>` : '';
 
   (async () => {
     for (const user of recipients) {
@@ -733,7 +754,7 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
           <div style="padding: 1.5rem 0; border-bottom: 2px solid #0787dc;">
             <span style="font-weight: 800; font-size: 1.1rem; color: #0787dc;">JurnalHub</span>
           </div>
-          <div style="padding: 1.5rem 0;">${bodyHtml}</div>
+          <div style="padding: 1.5rem 0;">${imageHtml}${bodyHtml}${ctaHtml}</div>
           <div style="padding-top: 1.5rem; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #a0aec0;">
             Anda menerima email ini karena terdaftar sebagai pengguna JurnalHub.
             <a href="${unsubUrl}" style="color: #a0aec0;">Berhenti berlangganan email promosi</a>.
