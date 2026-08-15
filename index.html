@@ -3438,6 +3438,37 @@
       white-space: nowrap;
       display: none;
     }
+    /* Tombol "Humanize" mengambang di atas teks yang diseleksi user di editor
+       Notebook (posisinya dihitung lewat JS - editor.getBounds pada rentang
+       seleksi - sama seperti notebookLineHintOverlay/notebookSlashMenu), BUKAN
+       tombol tetap di toolbar, supaya alurnya: seleksi teks hasil AI -> klik
+       Humanize -> teks yang SAMA langsung diganti hasil humanize-nya di
+       tempat, tanpa pindah tab/copy-paste ke fitur Paraphraser & Humanizer. */
+    #notebookHumanizeBtn {
+      position: absolute;
+      z-index: 55;
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.7rem;
+      border: none;
+      border-radius: 999px;
+      background: var(--text-main);
+      color: var(--bg-card);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(8,34,64,0.22);
+      white-space: nowrap;
+    }
+    #notebookHumanizeBtn.active {
+      display: flex;
+    }
+    #notebookHumanizeBtn:disabled {
+      opacity: 0.7;
+      cursor: default;
+    }
     [data-theme="dark"] #notebookToolbar.ql-toolbar.ql-snow .ql-stroke {
       stroke: var(--text-muted);
     }
@@ -5552,6 +5583,12 @@
                      BUKAN CSS ::before, dengan alasan sama seperti
                      notebookEditorPlaceholderOverlay di atas. -->
                 <div id="notebookLineHintOverlay"></div>
+                <!-- Tombol "Humanize" mengambang di atas seleksi teks - lihat
+                     catatan panjang di CSS-nya (mekanismenya sama dgn 2 overlay
+                     di atas: posisi dihitung lewat JS, bukan CSS ::before). -->
+                <button type="button" id="notebookHumanizeBtn">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="notebookHumanizeBtnText">Humanize</span>
+                </button>
               </div>
             </div>
           </div>

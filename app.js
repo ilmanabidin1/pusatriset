@@ -780,6 +780,12 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_ai_language_en: "Bahasa AI: English",
       notebook_collection_tooltip: "Sumber sitasi AI di dokumen ini: folder Koleksi Saya (bukan pencarian OpenAlex acak)",
       notebook_collection_none: "Sitasi: Pencarian Otomatis",
+      notebook_humanize_btn: "Humanize",
+      notebook_humanize_running: "Memproses...",
+      notebook_humanize_confirm: "Proses {words} kata terpilih dengan Humanizer? Sisa kuota kamu bulan ini: {remaining} kata.",
+      notebook_humanize_too_long: "Seleksi maksimal 2.000 kata per proses. Pilih teks yang lebih pendek.",
+      notebook_humanize_error: "Gagal memproses humanisasi teks.",
+      notebook_humanize_conn_error: "Gagal terhubung ke server. Coba lagi.",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -1132,6 +1138,12 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_ai_language_en: "AI language: English",
       notebook_collection_tooltip: "AI citation source for this document: a My Collection folder (instead of a random OpenAlex search)",
       notebook_collection_none: "Citations: Auto Search",
+      notebook_humanize_btn: "Humanize",
+      notebook_humanize_running: "Processing...",
+      notebook_humanize_confirm: "Process {words} selected words with Humanizer? Your remaining quota this month: {remaining} words.",
+      notebook_humanize_too_long: "Selection is limited to 2,000 words per run. Select a shorter passage.",
+      notebook_humanize_error: "Failed to humanize the text.",
+      notebook_humanize_conn_error: "Failed to connect to the server. Please try again.",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -6738,6 +6750,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const collectionSelect = document.getElementById('notebookCollectionSelect');
       const editorPlaceholderOverlayEl = document.getElementById('notebookEditorPlaceholderOverlay');
       const lineHintOverlayEl = document.getElementById('notebookLineHintOverlay');
+      const humanizeBtnEl = document.getElementById('notebookHumanizeBtn');
+      const humanizeBtnTextEl = document.getElementById('notebookHumanizeBtnText');
       if (!listView || !editorEl) return;
 
       // Placeholder dokumen kosong - elemen DOM sungguhan yang jadi SIBLING dari
@@ -6762,6 +6776,12 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentDocCollectionId = '';
       let saveTimer = null;
       let suppressChange = false;
+      // true selama panggilan /api/humanize dari tombol seleksi masih berjalan
+      // (bisa ~sampai ~110 detik - lihat polling async di server) - dipakai
+      // updateHumanizeButton supaya tombol TIDAK ikut disembunyikan/dipindah
+      // posisi oleh selection-change lain yang mungkin terpicu selama itu,
+      // biarkan tetap di posisi & label spinner terakhirnya sampai selesai.
+      let humanizeBusy = false;
 
       // DOI -> metadata sitasi, cuma dipakai sebagai cache dalam sesi berjalan
       // (bukan sumber data utama) - kartu preview sitasi di-load "malas" (lazy)
@@ -6809,6 +6829,7 @@ document.addEventListener('DOMContentLoaded', () => {
           scheduleSave();
           updateLineHint(quill);
           updateEmptyDocPlaceholder(quill);
+          updateHumanizeButton(quill);
           // Begitu menu "/" kebuka, fokus langsung pindah ke input di dalam
           // menu (lihat openSlashMenu) - jadi text-change lanjutan dari Quill
           // selama slashActive seharusnya tidak lagi terjadi dari ketikan user
@@ -6824,7 +6845,10 @@ document.addEventListener('DOMContentLoaded', () => {
             openSlashMenu(quill, sel.index - 1);
           }
         });
-        quill.on('selection-change', () => updateLineHint(quill));
+        quill.on('selection-change', () => {
+          updateLineHint(quill);
+          updateHumanizeButton(quill);
+        });
         // Klik marker sitasi (tag <a> yang href-nya adalah URL DOI, ala format
         // yang disisipkan server - lihat linkifyUsedApaCitations) -> tampilkan
         // kartu preview sitasi ala Lit Review (di-load malas dari OpenAlex),
@@ -7056,6 +7080,84 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
+      if (humanizeBtnEl) {
+        // mousedown (bukan cuma andalkan click) - dicegah default supaya klik
+        // tombol ini sendiri tidak menghapus seleksi teks di editor (blur) SEBELUM
+        // handler click sempat baca seleksinya lewat quill.getSelection().
+        humanizeBtnEl.addEventListener('mousedown', (e) => e.preventDefault());
+        humanizeBtnEl.addEventListener('click', async () => {
+          const editor = quill;
+          if (!editor || humanizeBusy) return;
+          const t = TRANSLATIONS[window.currentLanguage || 'id'];
+          const sel = editor.getSelection();
+          if (!sel || sel.length === 0) return;
+
+          // Fitur Humanizer (endpoint /api/humanize) khusus Premium/Ultimate -
+          // pakai modal upgrade global yang sama (#upgradeModal, dibuka lewat
+          // classList 'active' - lihat delegated listener .btn-upgrade-trigger
+          // di initApp), bukan pesan error tersendiri, biar konsisten dgn
+          // seluruh fitur berbayar lain di app ini.
+          const user = window.currentUser && window.currentUser.user;
+          if (!user || user.type === 'free') {
+            const upgradeModal = document.getElementById('upgradeModal');
+            if (upgradeModal) upgradeModal.classList.add('active');
+            return;
+          }
+
+          const selectedText = editor.getText(sel.index, sel.length);
+          const wordCount = selectedText.trim().split(/\s+/).filter(Boolean).length;
+          if (wordCount > 2000) { alert(t.notebook_humanize_too_long); return; }
+
+          const remaining = typeof user.humanizerWordsRemaining === 'number' ? user.humanizerWordsRemaining : 0;
+          const confirmMsg = t.notebook_humanize_confirm
+            .replace('{words}', wordCount)
+            .replace('{remaining}', remaining);
+          if (!confirm(confirmMsg)) return;
+
+          humanizeBusy = true;
+          humanizeBtnEl.disabled = true;
+          const originalLabel = humanizeBtnTextEl ? humanizeBtnTextEl.textContent : '';
+          if (humanizeBtnTextEl) humanizeBtnTextEl.textContent = t.notebook_humanize_running;
+
+          try {
+            // mode 'academic' selalu (bukan pilihan user) - Notebook memang
+            // khusus penulisan akademis, jadi tidak perlu duplikasi toggle
+            // Academic/Standard yang sudah ada di tab Humanizer terpisah.
+            const res = await fetch('/api/humanize', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: selectedText, mode: 'academic' })
+            });
+            const data = await res.json();
+            if (!data.ok) { alert(data.message || t.notebook_humanize_error); return; }
+
+            editor.deleteText(sel.index, sel.length, 'user');
+            editor.insertText(sel.index, data.humanizedText, 'user');
+            editor.setSelection(sel.index + data.humanizedText.length, 0, 'user');
+
+            // Refresh kuota (humanizerWordsRemaining dkk) supaya confirm dialog
+            // berikutnya & badge kuota di tempat lain langsung akurat.
+            fetch('/api/me').then(r => r.json()).then(meData => {
+              if (meData.loggedIn && meData.user) window.currentUser = meData;
+            }).catch(() => {});
+          } catch (err) {
+            alert(t.notebook_humanize_conn_error);
+          } finally {
+            humanizeBusy = false;
+            humanizeBtnEl.disabled = false;
+            if (humanizeBtnTextEl) humanizeBtnTextEl.textContent = originalLabel || t.notebook_humanize_btn;
+            // Sinkronkan ulang tombol ke seleksi TERKINI (bukan asumsikan masih
+            // sama seperti saat klik) - permintaan StealthGPT bisa makan waktu
+            // sampai ~110 detik (lihat polling async di server), selama itu user
+            // bisa saja sudah pindah/ubah seleksi. updateHumanizeButton yang
+            // menentukan sendiri: sembunyikan (seleksi sudah collapse setelah
+            // sukses, atau user sudah klik ke tempat lain) atau reposisi ke
+            // seleksi baru yang valid.
+            updateHumanizeButton(editor);
+          }
+        });
+      }
+
       if (deleteBtn) {
         deleteBtn.addEventListener('click', async () => {
           const t = TRANSLATIONS[window.currentLanguage || 'id'];
@@ -7176,6 +7278,40 @@ document.addEventListener('DOMContentLoaded', () => {
         lineHintOverlayEl.style.left = ((editorRect.left - wrapperRect.left) + bounds.left) + 'px';
         lineHintOverlayEl.textContent = TRANSLATIONS[window.currentLanguage || 'id'].notebook_slash_line_hint;
         lineHintOverlayEl.style.display = 'block';
+      }
+
+      function hideHumanizeButton() {
+        if (humanizeBtnEl) humanizeBtnEl.classList.remove('active');
+      }
+
+      // Tombol "Humanize" mengambang di atas seleksi teks user di editor -
+      // muncul begitu ada seleksi berisi >=3 kata (biar tidak nongol utk
+      // drag-seleksi tidak sengaja 1-2 huruf), posisinya dihitung lewat JS
+      // (editor.getBounds pada rentang seleksi) persis pola yang sama dengan
+      // updateLineHint/positionSlashMenu.
+      function updateHumanizeButton(editor) {
+        if (!humanizeBtnEl || humanizeBusy) return; // biarkan di posisi & label terakhirnya selama request /api/humanize masih berjalan
+        if (slashActive || slashBusy) { hideHumanizeButton(); return; }
+
+        const sel = editor.getSelection();
+        if (!sel || sel.length === 0) { hideHumanizeButton(); return; }
+
+        const selectedText = editor.getText(sel.index, sel.length);
+        const wordCount = selectedText.trim().split(/\s+/).filter(Boolean).length;
+        if (wordCount < 3) { hideHumanizeButton(); return; }
+
+        const qlEditorEl = editorEl.querySelector('.ql-editor');
+        const wrapperEl = editorEl.parentElement;
+        if (!qlEditorEl || !wrapperEl) { hideHumanizeButton(); return; }
+        const bounds = editor.getBounds(sel.index, sel.length);
+        const editorRect = qlEditorEl.getBoundingClientRect();
+        const wrapperRect = wrapperEl.getBoundingClientRect();
+        // Ditaruh di ATAS seleksi (bounds.top - tinggi tombol - jarak) supaya
+        // tidak menutupi teks yang sedang diseleksi user.
+        humanizeBtnEl.style.top = ((editorRect.top - wrapperRect.top) + bounds.top - 36) + 'px';
+        humanizeBtnEl.style.left = ((editorRect.left - wrapperRect.left) + bounds.left) + 'px';
+        if (humanizeBtnTextEl) humanizeBtnTextEl.textContent = TRANSLATIONS[window.currentLanguage || 'id'].notebook_humanize_btn;
+        humanizeBtnEl.classList.add('active');
       }
 
       function getFilteredSlashItems() {
@@ -9910,6 +10046,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (notebookCollectionWrapEl) notebookCollectionWrapEl.title = TRANSLATIONS[lang].notebook_collection_tooltip;
       const notebookCollectionNoneOptEl = document.getElementById('notebookCollectionNoneOpt');
       if (notebookCollectionNoneOptEl) notebookCollectionNoneOptEl.textContent = TRANSLATIONS[lang].notebook_collection_none;
+      const notebookHumanizeBtnTextEl = document.getElementById('notebookHumanizeBtnText');
+      if (notebookHumanizeBtnTextEl) notebookHumanizeBtnTextEl.textContent = TRANSLATIONS[lang].notebook_humanize_btn;
 
       // Koleksi Saya - TL;DR toggle (see .my-ref-tldr-toggle handler in initMyReferencesTab)
       document.querySelectorAll('.my-ref-tldr-toggle').forEach(btn => {
