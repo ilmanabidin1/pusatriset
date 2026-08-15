@@ -45,27 +45,22 @@ document.addEventListener('DOMContentLoaded', () => {
   let adminUsersCache = [];
 
   // Jumlah penerima blast utk segmen yang sedang dipilih - filter PERSIS sama
-  // dengan yang dipakai server (POST /api/admin/email-blast): isVerified &&
-  // !emailOptOut && (segmen 'all' atau type cocok) - supaya angka preview di
-  // sini selalu akurat, tidak pernah menyesatkan admin sebelum kirim. Rincian
-  // alasan pengecualian (belum verifikasi/sudah unsubscribe) SENGAJA
-  // ditampilkan eksplisit - kalau tidak, gap antara jumlah total di kartu
-  // statistik (mis. "1371 Free") vs jumlah penerima blast yang jauh lebih
-  // kecil bisa kelihatan seperti bug, padahal itu memang exclusion yang
-  // disengaja (mengirim ke email yang belum pernah dikonfirmasi pemiliknya
-  // berisiko high bounce-rate/spam-complaint, merusak reputasi domain).
+  // dengan yang dipakai server (POST /api/admin/email-blast): !emailOptOut &&
+  // (segmen 'all' atau type cocok) - supaya angka preview di sini selalu
+  // akurat, tidak pernah menyesatkan admin sebelum kirim. Status verifikasi
+  // email SENGAJA TIDAK dijadikan syarat (atas permintaan eksplisit) - satu-
+  // satunya pengecualian yang tersisa adalah emailOptOut, karena itu
+  // permintaan berhenti berlangganan eksplisit dari user sendiri.
   function renderAdminBlastPreview() {
     const segmentEl = document.getElementById('adminBlastSegment');
     const previewEl = document.getElementById('adminBlastPreviewCount');
     if (!segmentEl || !previewEl) return;
     const segment = segmentEl.value;
     const segmentUsers = adminUsersCache.filter(u => segment === 'all' || u.type === segment);
-    const eligible = segmentUsers.filter(u => u.isVerified && !u.emailOptOut);
-    const excludedUnverified = segmentUsers.filter(u => !u.isVerified).length;
-    const excludedOptOut = segmentUsers.filter(u => u.isVerified && u.emailOptOut).length;
+    const eligible = segmentUsers.filter(u => !u.emailOptOut);
+    const excludedOptOut = segmentUsers.filter(u => u.emailOptOut).length;
     let text = `${eligible.length} dari ${segmentUsers.length} user di segmen ini akan menerima email ini.`;
     const reasons = [];
-    if (excludedUnverified > 0) reasons.push(`${excludedUnverified} belum verifikasi email`);
     if (excludedOptOut > 0) reasons.push(`${excludedOptOut} sudah unsubscribe`);
     if (reasons.length > 0) text += ` (dikecualikan: ${reasons.join(', ')})`;
     previewEl.textContent = text;
@@ -223,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Link tombol harus diawali http:// atau https://.');
         return;
       }
-      const eligibleCount = adminUsersCache.filter(u => u.isVerified && !u.emailOptOut && (segment === 'all' || u.type === segment)).length;
+      const eligibleCount = adminUsersCache.filter(u => !u.emailOptOut && (segment === 'all' || u.type === segment)).length;
       if (eligibleCount === 0) {
         alert('Tidak ada penerima di segmen ini.');
         return;

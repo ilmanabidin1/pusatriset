@@ -725,15 +725,20 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
     return res.status(400).json({ ok: false, message: 'Teks tombol dan link tombol harus diisi berdua, atau dikosongkan berdua.' });
   }
 
+  // Dikirim ke SEMUA user di segmen ini terlepas status verifikasi email -
+  // atas permintaan eksplisit (sebelumnya user belum verifikasi dikecualikan
+  // demi proteksi reputasi domain, tapi diputuskan tetap disertakan). Yang
+  // TETAP dikecualikan cuma emailOptOut - itu permintaan berhenti berlangganan
+  // eksplisit dari user sendiri, tidak boleh di-override oleh siapapun.
   const users = getUsers();
   const recipients = users.filter(u => {
-    if (!u.email || !u.isVerified || u.emailOptOut) return false;
+    if (!u.email || u.emailOptOut) return false;
     if (segment === 'all') return true;
     return computeEffectiveUserType(u) === segment;
   });
 
   if (recipients.length === 0) {
-    return res.status(400).json({ ok: false, message: 'Tidak ada penerima di segmen ini (sudah dikurangi yang belum verifikasi/sudah unsubscribe).' });
+    return res.status(400).json({ ok: false, message: 'Tidak ada penerima di segmen ini (sudah dikurangi yang sudah unsubscribe).' });
   }
 
   emailBlastStatus = { inProgress: true, total: recipients.length, sent: 0, failed: 0, startedAt: new Date().toISOString(), finishedAt: null, subject };
