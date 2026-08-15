@@ -2234,6 +2234,76 @@ async function searchApaAcademicContext(query, perPage) {
   }
 }
 
+// Bangun konteks sitasi APA dari paper yang SUDAH DISIMPAN user di sebuah folder
+// Koleksi Saya (getSavedReferences, lihat definisinya di bawah - aman dipanggil
+// dari sini karena function declaration di-hoist), bukan dari live search
+// OpenAlex - dipakai saat dokumen Notebook di-attach ke folder Riset tertentu,
+// supaya AI ground ke paper yang memang sudah dikurasi user sendiri untuk
+// proyek riset itu, bukan hasil pencarian acak tiap kali generate.
+function buildApaContextFromCollection(userId, researchId) {
+  const references = getSavedReferences().filter(r => r.userId === userId && r.researchId === researchId);
+  if (references.length === 0) return null;
+  // Batasi jumlah yang dikirim ke prompt (paling baru disimpan dulu - kemungkinan
+  // paling relevan dgn fokus riset yang sedang berjalan) supaya prompt tidak membengkak.
+  const top = references.slice().sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt)).slice(0, 12);
+
+  const entries = top.map(r => {
+    // "authors" tersimpan sbg string gabungan display_name ("Nama Satu, Nama
+    // Dua, et al.") - susun ulang jadi array nama per penulis, buang literal
+    // "et al." supaya tidak ikut diperlakukan sbg nama penulis oleh
+    // formatApaInTextAuthors/formatApaAuthorList (fungsi itu sendiri yang
+    // menentukan kapan menambahkan "et al." berdasarkan panjang array).
+    const authorNames = String(r.authors || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s && s.toLowerCase() !== 'et al.');
+    return {
+      inText: `(${formatApaInTextAuthors(authorNames)}, ${r.year || 'n.d.'})`,
+      reference: formatApaReference({
+        authorNames,
+        year: r.year,
+        title: r.title,
+        journal: r.journal,
+        doi: r.doi,
+        url: r.url
+      }),
+      citation: {
+        title: r.title,
+        authors: r.authors,
+        journal: r.journal,
+        year: r.year,
+        url: r.url,
+        doi: r.doi || null,
+        citedByCount: null,
+        isOpenAccess: !!r.pdfUrl,
+        pdfUrl: r.pdfUrl || null,
+        abstract: r.abstract ? r.abstract.slice(0, 280) : ''
+      }
+    };
+  });
+
+  const listText = entries.map((e, i) => `${i + 1}. Sitasi dalam teks: ${e.inText}\n   Entri Daftar Pustaka: ${e.reference}`).join('\n');
+  const contextText = `Berikut paper yang SUDAH DISIMPAN user sendiri di folder Koleksi Saya untuk riset ini - ini SATU-SATUNYA sumber sitasi yang boleh dipakai untuk naskah ini. Kalau ada klaim di tulisanmu yang benar-benar didukung salah satu paper ini, WAJIB sisipkan sitasi dalam-teks APA 7th edition PERSIS seperti tertulis di depan tiap paper di bawah (contoh: (Smith & Jones, 2021)), taruh tepat setelah klausa/kalimat yang didukung. JANGAN mengarang paper, penulis, atau sitasi lain di luar daftar ini, dan JANGAN memakai paper lain di luar daftar ini walau menurutmu relevan. JANGAN menuliskan Daftar Pustaka/References sendiri di akhir teks - itu akan ditambahkan otomatis oleh sistem secara terpisah. Kalau tidak ada paper di daftar ini yang benar-benar relevan untuk mendukung suatu klaim, JANGAN paksa mengutip - tulis bagian itu tanpa sitasi seperti biasa:\n\n${listText}`;
+
+  return { contextText, entries };
+}
+
+// Konteks sitasi APA final utk 1 kali generate AI Notebook: kalau dokumen
+// di-attach ke folder Koleksi Saya yang valid & folder itu punya isi, PAKAI
+// HANYA itu (hormati kurasi eksplisit user - jangan campur dgn live search).
+// Kalau tidak di-attach, folder kosong, atau folder invalid/bukan milik user,
+// fallback ke live search OpenAlex seperti sebelumnya.
+async function resolveApaContext(userId, collectionId, query, perPage) {
+  if (collectionId) {
+    const owns = getSavedResearches().some(r => r.id === collectionId && r.userId === userId);
+    if (owns) {
+      const collectionContext = buildApaContextFromCollection(userId, collectionId);
+      if (collectionContext) return collectionContext;
+    }
+  }
+  return searchApaAcademicContext(query, perPage);
+}
+
 function escapeHtmlServer(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
@@ -3056,6 +3126,17 @@ app.get('/api/documents', requireAccess, (req, res) => {
 
 const NOTEBOOK_AI_LANGUAGES = new Set(['auto', 'id', 'en']);
 
+// Validasi researchId yang dikirim client BENAR-BENAR folder Koleksi Saya milik
+// user ini (bukan cuma sekedar string kosong/valid uuid) - kalau tidak valid
+// (kosong, folder sudah dihapus, atau milik user lain), kembalikan null supaya
+// dokumen tidak ke-attach ke folder yang salah/tidak ada.
+function resolveOwnedResearchId(userId, researchId) {
+  const id = String(researchId || '').trim();
+  if (!id) return null;
+  const owns = getSavedResearches().some(r => r.id === id && r.userId === userId);
+  return owns ? id : null;
+}
+
 app.post('/api/documents', requireAccess, (req, res) => {
   const docs = getDocuments();
   const now = new Date().toISOString();
@@ -3070,6 +3151,12 @@ app.post('/api/documents', requireAccess, (req, res) => {
     // penting utk penulis yang naskahnya harus Bahasa Inggris (submission
     // SINTA 3 ke atas/Scopus) tapi instruksi/judul awal ditulis campur/Indonesia.
     language: NOTEBOOK_AI_LANGUAGES.has(req.body && req.body.language) ? req.body.language : 'auto',
+    // Folder Koleksi Saya (getSavedResearches) yang di-attach ke dokumen ini,
+    // kalau ada - saat diisi, AI Notebook (continue-writing/ai-draft-action)
+    // ground sitasinya HANYA ke paper yang sudah disimpan user di folder itu,
+    // bukan live search OpenAlex acak (lihat resolveApaContext). null = tidak
+    // di-attach ke folder manapun (perilaku lama, live search seperti biasa).
+    collectionId: resolveOwnedResearchId(req.session.userId, req.body && req.body.collectionId),
     createdAt: now,
     updatedAt: now
   };
@@ -3096,6 +3183,9 @@ app.put('/api/documents/:id', requireAccess, documentSaveLimiter, (req, res) => 
   }
   if (NOTEBOOK_AI_LANGUAGES.has(req.body.language)) {
     docs[idx].language = req.body.language;
+  }
+  if ('collectionId' in req.body) {
+    docs[idx].collectionId = resolveOwnedResearchId(req.session.userId, req.body.collectionId);
   }
   docs[idx].updatedAt = new Date().toISOString();
   saveDocuments(docs);
@@ -3239,10 +3329,12 @@ ATURAN PENTING:
   const userPrompt = `Berikut naskah yang sudah ditulis pengguna (dipotong ke ~2000 karakter terakhir jika naskah panjang):\n\n"""\n${context.slice(-2000)}\n"""\n\nLanjutkan naskah ini.`;
 
   try {
-    // Cari paper ASLI OpenAlex yang relevan dengan fokus topik SAAT INI (bagian
-    // akhir naskah, bukan keseluruhan dokumen yang bisa sudah membahas banyak
-    // hal) untuk landasan sitasi APA 7 kalau memang relevan.
-    const apaContext = await searchApaAcademicContext(context.slice(-500), 6);
+    // Landasan sitasi APA 7 kalau memang relevan: PRIORITAS ke folder Koleksi
+    // Saya yang di-attach ke dokumen ini (kalau ada & terisi), fallback ke live
+    // search OpenAlex berdasarkan fokus topik SAAT INI (bagian akhir naskah,
+    // bukan keseluruhan dokumen yang bisa sudah membahas banyak hal) - lihat
+    // resolveApaContext.
+    const apaContext = await resolveApaContext(req.session.userId, req.body && req.body.collectionId, context.slice(-500), 6);
     const messages = [{ role: 'system', content: systemPrompt }];
     if (apaContext) messages.push({ role: 'system', content: apaContext.contextText });
     const languageOverride = buildLanguageOverrideMessage(req.body && req.body.language);
@@ -3428,14 +3520,17 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
     ? `Judul naskah: "${title || '(tidak ada judul)'}"\n\nIsi naskah yang sudah ditulis sejauh ini:\n"""\n${context || '(belum ada isi)'}\n"""\n\nInstruksi dari penulis: "${instruction}"`
     : `Judul naskah: "${title || '(tidak ada judul)'}"\n\nIsi naskah yang sudah ditulis sejauh ini:\n"""\n${context || '(belum ada isi)'}\n"""`;
 
-  // Cari paper ASLI OpenAlex utk landasan sitasi APA 7 - dilewati khusus untuk
+  // Landasan sitasi APA 7 (folder Koleksi Saya diprioritaskan, fallback live
+  // search OpenAlex - lihat resolveApaContext) - dilewati khusus untuk
   // "critique" (komentar reviewer terhadap naskah, bukan klaim akademis baru
   // yang butuh rujukan pustaka).
   const shouldSearchCitations = action !== 'critique';
   const citationQueryBasis = isCustom
     ? `${instruction} ${title}`.trim()
     : `${title} ${context.slice(-500)}`.trim();
-  const apaContext = shouldSearchCitations ? await searchApaAcademicContext(citationQueryBasis, 6) : null;
+  const apaContext = shouldSearchCitations
+    ? await resolveApaContext(req.session.userId, req.body && req.body.collectionId, citationQueryBasis, 6)
+    : null;
 
   const messages = [{ role: 'system', content: actionConfig.systemPrompt }];
   if (apaContext) messages.push({ role: 'system', content: apaContext.contextText });

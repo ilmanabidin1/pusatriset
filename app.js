@@ -778,6 +778,8 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_ai_language_auto: "Bahasa AI: Otomatis",
       notebook_ai_language_id: "Bahasa AI: Indonesia",
       notebook_ai_language_en: "Bahasa AI: English",
+      notebook_collection_tooltip: "Sumber sitasi AI di dokumen ini: folder Koleksi Saya (bukan pencarian OpenAlex acak)",
+      notebook_collection_none: "Sitasi: Pencarian Otomatis",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "Lihat selengkapnya",
       myref_tldr_hide: "Sembunyikan",
@@ -1128,6 +1130,8 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_ai_language_auto: "AI language: Auto",
       notebook_ai_language_id: "AI language: Indonesian",
       notebook_ai_language_en: "AI language: English",
+      notebook_collection_tooltip: "AI citation source for this document: a My Collection folder (instead of a random OpenAlex search)",
+      notebook_collection_none: "Citations: Auto Search",
       // Koleksi Saya - TL;DR toggle & loading states
       myref_tldr_show_more: "See more",
       myref_tldr_hide: "Hide",
@@ -6731,6 +6735,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const saveStatusEl = document.getElementById('notebookSaveStatus');
       const editorEl = document.getElementById('notebookEditor');
       const aiLanguageSelect = document.getElementById('notebookAiLanguageSelect');
+      const collectionSelect = document.getElementById('notebookCollectionSelect');
       const editorPlaceholderOverlayEl = document.getElementById('notebookEditorPlaceholderOverlay');
       const lineHintOverlayEl = document.getElementById('notebookLineHintOverlay');
       if (!listView || !editorEl) return;
@@ -6750,6 +6755,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // = ikuti bahasa judul/konteks seperti biasa; "id"/"en" = paksa AI selalu
       // menulis dalam bahasa itu (lihat buildLanguageOverrideMessage di server).
       let currentDocLanguage = 'auto';
+      // Folder Koleksi Saya (id-nya) yang di-attach ke dokumen yang sedang dibuka,
+      // '' = tidak di-attach (perilaku lama: AI ground ke live search OpenAlex).
+      // Lihat resolveApaContext di server - saat terisi, AI Notebook HANYA
+      // ground ke paper yang sudah disimpan user di folder itu.
+      let currentDocCollectionId = '';
       let saveTimer = null;
       let suppressChange = false;
 
@@ -6843,6 +6853,25 @@ document.addEventListener('DOMContentLoaded', () => {
         saveTimer = setTimeout(saveCurrentDocument, 1200);
       }
 
+      // Isi ulang opsi dropdown folder Koleksi Saya - dinamis (milik user, bisa
+      // berubah kapan saja lewat tab Koleksi Saya), makanya di-fetch tiap kali
+      // dokumen dibuka, bukan daftar tetap seperti pilihan bahasa AI. Kegagalan
+      // fetch TIDAK boleh menghalangi dokumen tetap terbuka - cukup select-nya
+      // jatuh balik ke opsi "Sitasi: Pencarian Otomatis" saja.
+      async function loadCollectionOptions() {
+        if (!collectionSelect) return;
+        const t = TRANSLATIONS[window.currentLanguage || 'id'];
+        try {
+          const res = await fetch('/api/my-references/researches');
+          const data = await res.json();
+          const researches = data.ok ? (data.researches || []) : [];
+          collectionSelect.innerHTML = `<option value="" id="notebookCollectionNoneOpt">${t.notebook_collection_none}</option>` +
+            researches.map(r => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)}</option>`).join('');
+        } catch (err) {
+          collectionSelect.innerHTML = `<option value="" id="notebookCollectionNoneOpt">${t.notebook_collection_none}</option>`;
+        }
+      }
+
       async function saveCurrentDocument() {
         if (!currentDocId || !quill) return;
         const t = TRANSLATIONS[window.currentLanguage || 'id'];
@@ -6853,7 +6882,8 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({
               title: titleInput.value.trim() || 'Untitled',
               contentHtml: quill.root.innerHTML,
-              language: currentDocLanguage
+              language: currentDocLanguage,
+              collectionId: currentDocCollectionId
             })
           });
           const data = await res.json();
@@ -6926,6 +6956,9 @@ document.addEventListener('DOMContentLoaded', () => {
           titleInput.value = data.document.title || '';
           currentDocLanguage = data.document.language || 'auto';
           if (aiLanguageSelect) aiLanguageSelect.value = currentDocLanguage;
+          currentDocCollectionId = data.document.collectionId || '';
+          await loadCollectionOptions();
+          if (collectionSelect) collectionSelect.value = currentDocCollectionId;
           listView.style.display = 'none';
           editorView.style.display = 'block';
           setSaveStatus('');
@@ -7012,6 +7045,13 @@ document.addEventListener('DOMContentLoaded', () => {
           currentDocLanguage = aiLanguageSelect.value;
           // Simpan langsung (bukan lewat debounce scheduleSave) - ini pilihan
           // diskret yang wajar terasa langsung tersimpan, bukan nunggu 1.2 detik.
+          saveCurrentDocument();
+        });
+      }
+
+      if (collectionSelect) {
+        collectionSelect.addEventListener('change', () => {
+          currentDocCollectionId = collectionSelect.value;
           saveCurrentDocument();
         });
       }
@@ -7311,7 +7351,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/documents/ai-draft-action', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'custom', title: titleInput.value.trim(), context: fullText, instruction: customInstruction, language: currentDocLanguage })
+              body: JSON.stringify({ action: 'custom', title: titleInput.value.trim(), context: fullText, instruction: customInstruction, language: currentDocLanguage, collectionId: currentDocCollectionId })
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
@@ -7326,7 +7366,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/documents/continue-writing', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ context: contextText, language: currentDocLanguage })
+              body: JSON.stringify({ context: contextText, language: currentDocLanguage, collectionId: currentDocCollectionId })
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_continue_error); return; }
@@ -7360,7 +7400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/documents/ai-draft-action', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: actionId, title: titleInput.value.trim(), context: fullText, language: currentDocLanguage })
+              body: JSON.stringify({ action: actionId, title: titleInput.value.trim(), context: fullText, language: currentDocLanguage, collectionId: currentDocCollectionId })
             });
             const data = await res.json();
             if (!data.ok) { alert(data.message || t.notebook_slash_error); return; }
@@ -9866,6 +9906,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (notebookAiLanguageIdOptEl) notebookAiLanguageIdOptEl.textContent = TRANSLATIONS[lang].notebook_ai_language_id;
       const notebookAiLanguageEnOptEl = document.getElementById('notebookAiLanguageEnOpt');
       if (notebookAiLanguageEnOptEl) notebookAiLanguageEnOptEl.textContent = TRANSLATIONS[lang].notebook_ai_language_en;
+      const notebookCollectionWrapEl = document.getElementById('notebookCollectionWrap');
+      if (notebookCollectionWrapEl) notebookCollectionWrapEl.title = TRANSLATIONS[lang].notebook_collection_tooltip;
+      const notebookCollectionNoneOptEl = document.getElementById('notebookCollectionNoneOpt');
+      if (notebookCollectionNoneOptEl) notebookCollectionNoneOptEl.textContent = TRANSLATIONS[lang].notebook_collection_none;
 
       // Koleksi Saya - TL;DR toggle (see .my-ref-tldr-toggle handler in initMyReferencesTab)
       document.querySelectorAll('.my-ref-tldr-toggle').forEach(btn => {
