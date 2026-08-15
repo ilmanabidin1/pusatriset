@@ -48,7 +48,13 @@ if (transporter) {
   console.log('[SMTP] Warning: SMTP credentials not set. Emails will be logged to console instead.');
 }
 
-// Helper to send emails (Supports Resend API and SMTP fallback)
+// Helper to send emails (Supports Resend API and SMTP fallback).
+// Mengembalikan boolean sukses/gagal (TIDAK PERNAH reject/throw - dipakai
+// sejak awal sebagai fire-and-forget di verifikasi email/reset password TANPA
+// await/try-catch di sisi pemanggil, jadi kalau ini dibuat throw, itu jadi
+// unhandled rejection di situ). Nilai return ini dipakai Email Blast (lihat
+// POST /api/admin/email-blast) buat menghitung sent/failed per penerima -
+// call site lain yang tidak peduli hasilnya boleh tetap mengabaikan return-nya.
 async function sendMailHelper(to, subject, html) {
   const resendApiKey = process.env.RESEND_API_KEY;
 
@@ -73,11 +79,13 @@ async function sendMailHelper(to, subject, html) {
       const resData = await response.json();
       if (!response.ok) {
         console.error('[Resend API] Error sending email:', resData);
-      } else {
-        console.log(`[Resend API] Email sent successfully to ${to}, ID: ${resData.id}`);
+        return false;
       }
+      console.log(`[Resend API] Email sent successfully to ${to}, ID: ${resData.id}`);
+      return true;
     } catch (err) {
       console.error('[Resend API] Request error:', err);
+      return false;
     }
   } else if (transporter) {
     // Fallback ke SMTP
@@ -89,8 +97,10 @@ async function sendMailHelper(to, subject, html) {
         html
       });
       console.log(`[SMTP] Email sent successfully to ${to}`);
+      return true;
     } catch (err) {
       console.error(`[SMTP] Error sending email to ${to}:`, err);
+      return false;
     }
   } else {
     // Mocking lokal
@@ -99,6 +109,7 @@ async function sendMailHelper(to, subject, html) {
     console.log(`[SMTP MOCK] Subject: ${subject}`);
     console.log(`[SMTP MOCK] HTML:\n${html}`);
     console.log('==================================================');
+    return true;
   }
 }
 
@@ -584,6 +595,22 @@ function requireAdmin(req, res, next) {
 // tipe akun. Whitelist field secara eksplisit (bukan buang field sensitif
 // dari objek user apa adanya) - supaya password hash/token verifikasi/session
 // token TIDAK PERNAH bisa ke-expose walau skema user berubah di kemudian hari.
+// user.type di-set saat pembayaran berhasil (webhook Faspay) dan cuma
+// di-downgrade balik ke 'free' secara LAZY - lihat pengecekan paymentExpiredAt
+// di /api/me - yang berarti hanya jalan begitu USER ITU SENDIRI buka app lagi
+// setelah expired. Jadi field type mentah di database bisa "basi" (masih
+// tercatat premium/ultimate padahal sudah lewat masa aktifnya, kalau user itu
+// belum login lagi sejak expired) - dipakai di /api/admin/users (ringkasan
+// jumlah per tier) dan segmentasi Email Blast supaya keduanya mencerminkan
+// status BENERAN saat ini, bukan field yang mungkin belum ke-sync.
+function computeEffectiveUserType(user) {
+  const rawType = user.type || 'free';
+  if (rawType !== 'free' && user.paymentExpiredAt && new Date(user.paymentExpiredAt) < new Date()) {
+    return 'free';
+  }
+  return rawType;
+}
+
 app.get('/api/admin/users', requireAccess, requireAdmin, (req, res) => {
   const users = getUsers();
   const list = users
@@ -591,9 +618,10 @@ app.get('/api/admin/users', requireAccess, requireAdmin, (req, res) => {
       id: u.id,
       email: u.email,
       name: u.name || '',
-      type: u.type || 'free',
+      type: computeEffectiveUserType(u),
       isAdmin: !!u.isAdmin,
       isVerified: !!u.isVerified,
+      emailOptOut: !!u.emailOptOut,
       planId: u.planId || null,
       paymentExpiredAt: u.paymentExpiredAt || null,
       createdAt: u.createdAt || null
@@ -611,7 +639,121 @@ app.get('/api/admin/users', requireAccess, requireAdmin, (req, res) => {
   res.json({ ok: true, users: list, summary });
 });
 
-// User Authentication API Endpoints
+// --- EMAIL BLAST (konversi Free -> berbayar, dsb) ---
+// Token unsubscribe: HMAC(userId, SESSION_SECRET) dipotong 16 karakter -
+// cukup supaya orang tidak bisa unsubscribe-kan user LAIN cuma dengan
+// menebak userId-nya (butuh tahu secret server), tanpa perlu tabel token
+// terpisah/kadaluarsa (unsubscribe memang seharusnya berlaku selamanya
+// sampai user itu subscribe lagi, tidak perlu re-generate).
+function computeUnsubscribeToken(userId) {
+  return crypto.createHmac('sha256', SESSION_SECRET).update(String(userId)).digest('hex').slice(0, 16);
+}
+
+// Link ini SENGAJA publik (tanpa requireAccess) - orang yang klik dari email
+// belum tentu sedang login sesi browser yang sama, dan tujuannya justru supaya
+// unsubscribe semudah mungkin (1 klik, tanpa harus login dulu) sesuai praktik
+// standar email marketing.
+app.get('/api/unsubscribe', (req, res) => {
+  const { uid, token } = req.query;
+  if (!uid || !token || computeUnsubscribeToken(uid) !== token) {
+    return res.status(400).send('Tautan unsubscribe tidak valid.');
+  }
+  const users = getUsers();
+  const user = users.find(u => u.id === uid);
+  if (user) {
+    user.emailOptOut = true;
+    saveUsers(users);
+  }
+  res.send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Berhenti Berlangganan</title></head><body style="font-family: sans-serif; text-align: center; padding: 4rem 1rem; color: #1a202c;"><h2>Anda telah berhenti berlangganan email promosi JurnalHub.</h2><p style="color: #718096;">Anda tetap akan menerima email transaksional penting (verifikasi, reset password, dsb).</p></body></html>');
+});
+
+// Status blast berjalan - in-memory (bukan file JSON) karena sifatnya cuma
+// progress sementara SATU proses pengiriman, tidak perlu bertahan lintas
+// restart server; kalau server restart di tengah blast, blast itu berhenti
+// (dianggap gagal) - lihat catatan panjang soal keterbatasan ini di endpoint
+// POST di bawah.
+let emailBlastStatus = { inProgress: false, total: 0, sent: 0, failed: 0, startedAt: null, finishedAt: null, subject: null };
+
+app.get('/api/admin/email-blast/status', requireAccess, requireAdmin, (req, res) => {
+  res.json({ ok: true, status: emailBlastStatus });
+});
+
+const EMAIL_BLAST_SEGMENTS = new Set(['free', 'premium', 'ultimate', 'all']);
+
+// Kirim blast email promosi ke segmen user tertentu. TIDAK di-await sampai
+// selesai - langsung balas 200 begitu daftar penerima final ditentukan, lalu
+// proses pengiriman sungguhan jalan async di background (throttle 400ms per
+// email supaya tidak membanjiri Resend API sekaligus/kena rate limit),
+// progress-nya dipoll lewat GET .../status di atas. Kalau server redeploy di
+// tengah proses, sisa penerima yang belum kebagian TIDAK otomatis lanjut
+// setelah restart (keterbatasan yang sama seperti didiskusikan soal Co-Work
+// Agent - tidak ada job queue persisten di app ini) - makanya jumlah
+// penerima yang sudah terkirim vs total selalu ditampilkan di UI supaya admin
+// tahu kalau harus mengirim ulang sisanya secara manual.
+app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res) => {
+  if (emailBlastStatus.inProgress) {
+    return res.status(409).json({ ok: false, message: 'Masih ada blast email lain yang sedang berjalan. Tunggu sampai selesai.' });
+  }
+
+  const segment = String((req.body && req.body.segment) || '').trim();
+  const subject = String((req.body && req.body.subject) || '').trim().slice(0, 200);
+  const bodyText = String((req.body && req.body.bodyText) || '').trim().slice(0, 20000);
+
+  if (!EMAIL_BLAST_SEGMENTS.has(segment)) {
+    return res.status(400).json({ ok: false, message: 'Segmen tidak valid.' });
+  }
+  if (!subject || !bodyText) {
+    return res.status(400).json({ ok: false, message: 'Subjek dan isi email wajib diisi.' });
+  }
+
+  const users = getUsers();
+  const recipients = users.filter(u => {
+    if (!u.email || !u.isVerified || u.emailOptOut) return false;
+    if (segment === 'all') return true;
+    return computeEffectiveUserType(u) === segment;
+  });
+
+  if (recipients.length === 0) {
+    return res.status(400).json({ ok: false, message: 'Tidak ada penerima di segmen ini (sudah dikurangi yang belum verifikasi/sudah unsubscribe).' });
+  }
+
+  emailBlastStatus = { inProgress: true, total: recipients.length, sent: 0, failed: 0, startedAt: new Date().toISOString(), finishedAt: null, subject };
+  res.json({ ok: true, queued: recipients.length });
+
+  // Paragraf dipisah baris kosong di textarea -> jadi <p> terpisah, biar admin
+  // tidak perlu menulis HTML manual buat email sesederhana ini.
+  const bodyHtml = bodyText.split(/\n\s*\n/).map(p => `<p style="margin: 0 0 1rem; line-height: 1.6;">${escapeHtmlServer(p).replace(/\n/g, '<br>')}</p>`).join('');
+
+  (async () => {
+    for (const user of recipients) {
+      const unsubToken = computeUnsubscribeToken(user.id);
+      const unsubUrl = `https://jurnalhub.id/api/unsubscribe?uid=${encodeURIComponent(user.id)}&token=${unsubToken}`;
+      const fullHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a202c;">
+          <div style="padding: 1.5rem 0; border-bottom: 2px solid #0787dc;">
+            <span style="font-weight: 800; font-size: 1.1rem; color: #0787dc;">JurnalHub</span>
+          </div>
+          <div style="padding: 1.5rem 0;">${bodyHtml}</div>
+          <div style="padding-top: 1.5rem; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #a0aec0;">
+            Anda menerima email ini karena terdaftar sebagai pengguna JurnalHub.
+            <a href="${unsubUrl}" style="color: #a0aec0;">Berhenti berlangganan email promosi</a>.
+          </div>
+        </div>`;
+      const success = await sendMailHelper(user.email, subject, fullHtml);
+      if (success) {
+        emailBlastStatus.sent += 1;
+      } else {
+        emailBlastStatus.failed += 1;
+      }
+      // Jeda antar pengiriman - lindungi rate limit Resend/SMTP, bukan angka
+      // sakral, cuma jarak aman yang wajar utk pengiriman berurutan begini.
+      await new Promise(resolve => setTimeout(resolve, 400));
+    }
+    emailBlastStatus.inProgress = false;
+    emailBlastStatus.finishedAt = new Date().toISOString();
+  })();
+});
+
 // User Authentication API Endpoints
 app.post('/api/register', authLimiter, async (req, res) => {
   const { email, password } = req.body;

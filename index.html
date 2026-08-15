@@ -6752,6 +6752,46 @@
               <div style="font-size: 0.78rem; color: var(--text-muted);">Ultimate</div>
             </div>
           </div>
+
+          <!-- Email Blast - kirim email promosi ke segmen user tertentu
+               (mis. Free yang belum konversi). Preview jumlah penerima
+               dihitung client-side dari data /api/admin/users yang sudah
+               dimuat (isVerified/emailOptOut sudah dikecualikan di situ juga,
+               sama persis dgn filter server di POST /api/admin/email-blast)
+               supaya angkanya SELALU cocok dgn yang benar2 akan dikirimi -
+               lihat renderAdminBlastPreview di app.js. -->
+          <div class="filter-box-card" style="padding: 1.5rem 2rem; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;">
+              <i class="fa-regular fa-paper-plane" style="color: var(--brand-blue);"></i> Email Blast
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+              <div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Segmen Penerima</label>
+                <select id="adminBlastSegment" style="width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+                  <option value="free">Free</option>
+                  <option value="premium">Premium</option>
+                  <option value="ultimate">Ultimate</option>
+                  <option value="all">Semua</option>
+                </select>
+                <p id="adminBlastPreviewCount" style="font-size: 0.78rem; color: var(--text-muted); margin: 0.4rem 0 0;">-</p>
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Subjek</label>
+                <input type="text" id="adminBlastSubject" placeholder="mis. Upgrade ke Premium, dapatkan fitur AI tanpa batas" style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Isi Email (tiap baris kosong jadi paragraf baru)</label>
+                <textarea id="adminBlastBody" rows="6" placeholder="Tulis isi email di sini..." style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main); resize: vertical;"></textarea>
+              </div>
+              <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <button type="button" id="adminBlastSendBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.5rem;">
+                  <i class="fa-regular fa-paper-plane"></i> Kirim Blast
+                </button>
+                <span id="adminBlastStatusText" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+              </div>
+            </div>
+          </div>
+
           <div class="filter-box-card" style="padding: 0; overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
               <thead>

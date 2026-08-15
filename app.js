@@ -39,6 +39,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Muat daftar user + ringkasan jumlah per tipe akun ke tab Admin - dipanggil
   // dari switchTab (index.html) tiap kali tab 'admin' dibuka, BUKAN di-cache,
   // karena datanya perlu selalu terkini dan tab ini jarang dibuka.
+  // Cache daftar user terakhir yang dimuat dari /api/admin/users - dipakai
+  // renderAdminBlastPreview supaya hitung jumlah penerima blast tidak perlu
+  // fetch ulang, cukup filter data yang sama yang sudah ditampilkan di tabel.
+  let adminUsersCache = [];
+
+  // Jumlah penerima blast utk segmen yang sedang dipilih - filter PERSIS sama
+  // dengan yang dipakai server (POST /api/admin/email-blast): isVerified &&
+  // !emailOptOut && (segmen 'all' atau type cocok) - supaya angka preview di
+  // sini selalu akurat, tidak pernah menyesatkan admin sebelum kirim.
+  function renderAdminBlastPreview() {
+    const segmentEl = document.getElementById('adminBlastSegment');
+    const previewEl = document.getElementById('adminBlastPreviewCount');
+    if (!segmentEl || !previewEl) return;
+    const segment = segmentEl.value;
+    const eligible = adminUsersCache.filter(u => u.isVerified && !u.emailOptOut && (segment === 'all' || u.type === segment));
+    previewEl.textContent = `${eligible.length} penerima akan menerima email ini.`;
+  }
+
   window.loadAdminUsers = async function loadAdminUsers() {
     const tbody = document.getElementById('adminUsersTableBody');
     if (!tbody) return;
@@ -58,6 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setStat('adminStatUltimate', s.ultimate);
 
       const users = data.users || [];
+      adminUsersCache = users;
+      renderAdminBlastPreview();
       if (users.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Belum ada user.</td></tr>';
         return;
@@ -82,6 +102,90 @@ document.addEventListener('DOMContentLoaded', () => {
       tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #dc2626;">Gagal terhubung ke server.</td></tr>';
     }
   };
+
+  // Poll status blast (GET /api/admin/email-blast/status) tiap 1.5 detik
+  // selagi masih inProgress - server tidak punya mekanisme push/websocket,
+  // jadi polling sederhana ini cukup utk kebutuhan feedback progres blast
+  // (bukan operasi real-time yang butuh update sub-detik).
+  let adminBlastPollTimer = null;
+  function pollAdminBlastStatus() {
+    const statusEl = document.getElementById('adminBlastStatusText');
+    const sendBtn = document.getElementById('adminBlastSendBtn');
+    clearInterval(adminBlastPollTimer);
+    adminBlastPollTimer = setInterval(async () => {
+      try {
+        const res = await fetch('/api/admin/email-blast/status');
+        const data = await res.json();
+        if (!data.ok) return;
+        const s = data.status;
+        if (statusEl) {
+          statusEl.textContent = s.inProgress
+            ? `Mengirim... ${s.sent + s.failed}/${s.total} (${s.failed} gagal)`
+            : (s.finishedAt ? `Selesai: ${s.sent} terkirim, ${s.failed} gagal.` : '');
+        }
+        if (!s.inProgress) {
+          clearInterval(adminBlastPollTimer);
+          if (sendBtn) sendBtn.disabled = false;
+        }
+      } catch (err) {
+        // diamkan - polling berikutnya akan coba lagi
+      }
+    }, 1500);
+  }
+
+  (function initAdminBlast() {
+    const segmentEl = document.getElementById('adminBlastSegment');
+    const sendBtn = document.getElementById('adminBlastSendBtn');
+    if (!segmentEl || !sendBtn) return;
+
+    segmentEl.addEventListener('change', renderAdminBlastPreview);
+
+    sendBtn.addEventListener('click', async () => {
+      const segment = segmentEl.value;
+      const subjectEl = document.getElementById('adminBlastSubject');
+      const bodyEl = document.getElementById('adminBlastBody');
+      const statusEl = document.getElementById('adminBlastStatusText');
+      const subject = subjectEl ? subjectEl.value.trim() : '';
+      const bodyText = bodyEl ? bodyEl.value.trim() : '';
+
+      if (!subject || !bodyText) {
+        alert('Subjek dan isi email wajib diisi.');
+        return;
+      }
+      const eligibleCount = adminUsersCache.filter(u => u.isVerified && !u.emailOptOut && (segment === 'all' || u.type === segment)).length;
+      if (eligibleCount === 0) {
+        alert('Tidak ada penerima di segmen ini.');
+        return;
+      }
+      // Konfirmasi eksplisit - ini aksi yang TIDAK BISA dibatalkan setelah
+      // terkirim (beda dari kebanyakan aksi lain di app ini), jadi sengaja
+      // tidak langsung kirim begitu tombol diklik.
+      if (!confirm(`Kirim email ini ke ${eligibleCount} user (segmen: ${segment})? Aksi ini tidak bisa dibatalkan setelah dikirim.`)) {
+        return;
+      }
+
+      sendBtn.disabled = true;
+      if (statusEl) statusEl.textContent = 'Memulai pengiriman...';
+      try {
+        const res = await fetch('/api/admin/email-blast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ segment, subject, bodyText })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          alert(data.message || 'Gagal memulai blast email.');
+          sendBtn.disabled = false;
+          if (statusEl) statusEl.textContent = '';
+          return;
+        }
+        pollAdminBlastStatus();
+      } catch (err) {
+        alert('Gagal terhubung ke server.');
+        sendBtn.disabled = false;
+      }
+    });
+  })();
 
   // Cache ringan berisi doi/judul paper yang sudah tersimpan di Koleksi Saya
   // (folder manapun) - dipakai supaya tombol "Simpan" di kartu Cari Referensi &
