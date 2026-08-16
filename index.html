@@ -6882,6 +6882,30 @@
       <!-- Co-Work Agent: asisten riset otonom background via GLM 5.2 (OpenRouter).
            Bundel di paket Ultimate, kuota 5x run/bulan - lihat initCoworkTab di
            app.js untuk logic submit/poll/render riwayat. -->
+      <style>
+        .cowork-progress-track {
+          width: 100%;
+          height: 6px;
+          border-radius: 999px;
+          background: rgba(7, 135, 220, 0.12);
+          overflow: hidden;
+          position: relative;
+        }
+        .cowork-progress-bar {
+          position: absolute;
+          top: 0;
+          left: -40%;
+          height: 100%;
+          width: 40%;
+          border-radius: 999px;
+          background: var(--brand-blue);
+          animation: coworkProgressSlide 1.4s ease-in-out infinite;
+        }
+        @keyframes coworkProgressSlide {
+          0% { left: -40%; }
+          100% { left: 100%; }
+        }
+      </style>
       <div id="tabContentCowork" class="tab-content">
         <div style="max-width: 800px; margin: 0 auto;">
 

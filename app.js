@@ -396,6 +396,37 @@ document.addEventListener('DOMContentLoaded', () => {
     el.textContent = `Kuota bulan ini: ${usedThisMonth} dari 5 kali dipakai.`;
   }
 
+  // Timer elapsed utk task 'processing' - JALAN TERPISAH dari poll 5 detik
+  // (lihat window.loadCoworkTab) supaya angkanya update tiap detik tanpa
+  // harus render ulang seluruh kartu tiap detik juga. Auto-berhenti sendiri
+  // begitu tidak ada lagi elemen .cowork-elapsed di DOM (task sudah
+  // selesai/gagal dan render ulang menghapus elemen itu).
+  let coworkElapsedTicker = null;
+  function formatCoworkElapsed(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return min > 0 ? `${min} menit ${sec} detik` : `${sec} detik`;
+  }
+  function tickCoworkElapsed() {
+    const spans = document.querySelectorAll('.cowork-elapsed');
+    if (spans.length === 0) {
+      clearInterval(coworkElapsedTicker);
+      coworkElapsedTicker = null;
+      return;
+    }
+    spans.forEach(span => {
+      const startedAt = span.getAttribute('data-started-at');
+      if (!startedAt) return;
+      span.textContent = formatCoworkElapsed(Date.now() - new Date(startedAt).getTime());
+    });
+  }
+  function ensureCoworkElapsedTicker() {
+    if (coworkElapsedTicker) return;
+    tickCoworkElapsed();
+    coworkElapsedTicker = setInterval(tickCoworkElapsed, 1000);
+  }
+
   function renderCoworkHistory(tasks) {
     const listEl = document.getElementById('coworkHistoryList');
     if (!listEl) return;
@@ -406,11 +437,25 @@ document.addEventListener('DOMContentLoaded', () => {
     listEl.innerHTML = tasks.map(t => {
       const st = COWORK_STATUS_META[t.status] || COWORK_STATUS_META.pending;
       const filesText = (t.inputFiles && t.inputFiles.length) ? ` · ${t.inputFiles.length} file lampiran` : '';
+      const previewBtn = (t.status === 'completed' && t.outputFileUrl)
+        ? `<button type="button" class="cowork-preview-btn" data-url="${escapeHtml(t.outputFileUrl)}" data-title="${escapeHtml(truncate(t.prompt, 60))}" style="font-size: 0.8rem; font-weight: 700; color: var(--brand-blue); background: rgba(7,135,220,0.1); padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;"><i class="fa-regular fa-eye"></i> Lihat Hasil</button>`
+        : '';
       const downloadBtn = (t.status === 'completed' && t.outputFileUrl)
         ? `<a href="${t.outputFileUrl}" style="font-size: 0.8rem; font-weight: 700; color: #fff; background: var(--brand-blue); padding: 0.4rem 0.9rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;"><i class="fa-solid fa-download"></i> Unduh .docx</a>`
         : '';
       const errorText = (t.status === 'failed' && t.errorMessage)
         ? `<p style="font-size: 0.78rem; color: #dc2626; margin: 0.4rem 0 0;">${escapeHtml(t.errorMessage)}</p>`
+        : '';
+      // Progress bar indeterminate + timer elapsed - hanya utk status
+      // 'processing'. startedAt fallback ke createdAt kalau entah kenapa
+      // belum sempat ke-set (mis. data lama dari sebelum field ini ada).
+      const progressBlock = t.status === 'processing'
+        ? `<div style="margin-top: 0.6rem;">
+             <div class="cowork-progress-track"><div class="cowork-progress-bar"></div></div>
+             <p style="margin: 0.4rem 0 0; font-size: 0.72rem; color: var(--text-muted);">
+               <span class="cowork-elapsed" data-started-at="${escapeHtml(t.startedAt || t.createdAt)}">0 detik</span> berjalan &middot; biasanya selesai dalam 2-5 menit tergantung panjang instruksi
+             </p>
+           </div>`
         : '';
       return `
         <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 0.75rem;">
@@ -422,11 +467,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span style="color: ${st.color}; font-weight: 600;">${st.label}</span>${t.status === 'processing' && t.statusLog ? ' · ' + escapeHtml(t.statusLog) : ''}${filesText} · ${formatCoworkDate(t.createdAt)}
               </p>
               ${errorText}
+              ${progressBlock}
             </div>
-            <div>${downloadBtn}</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">${previewBtn}${downloadBtn}</div>
           </div>
         </div>`;
     }).join('');
+
+    if (tasks.some(t => t.status === 'processing')) {
+      ensureCoworkElapsedTicker();
+    }
   }
 
   let coworkPollTimer = null;
@@ -473,6 +523,24 @@ document.addEventListener('DOMContentLoaded', () => {
       upsellBtn.addEventListener('click', () => {
         const upgradeModal = document.getElementById('upgradeModal');
         if (upgradeModal) upgradeModal.classList.add('active');
+      });
+    }
+
+    // Delegasi (bukan listener per tombol) - kartu riwayat di-render ulang
+    // (innerHTML) tiap kali poll 5 detik, jadi listener langsung di tombol
+    // akan hilang setiap render; container listnya sendiri tidak pernah
+    // diganti, jadi cukup didengarkan sekali di sini. openDocxViewer sudah
+    // ada di scope yang sama (dipakai juga oleh tab Templates) - dipakai
+    // apa adanya di sini supaya preview .docx Co-Work 100% sama rendering-nya
+    // dgn yang akan diunduh, bukan renderer markdown terpisah yang bisa beda.
+    const coworkHistoryListEl = document.getElementById('coworkHistoryList');
+    if (coworkHistoryListEl) {
+      coworkHistoryListEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.cowork-preview-btn');
+        if (!btn) return;
+        const url = btn.getAttribute('data-url');
+        const title = btn.getAttribute('data-title');
+        if (url) openDocxViewer('Hasil Co-Work: ' + (title || ''), url, url);
       });
     }
 

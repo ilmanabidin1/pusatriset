@@ -1174,6 +1174,7 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
       outputFileUrl: null,
       tokensUsed: 0,
       errorMessage: null,
+      startedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -1198,7 +1199,11 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
       };
 
       try {
-        updateTask({ status: 'processing', statusLog: 'Menjalankan analisis dengan GLM 5.2...' });
+        // startedAt dicatat terpisah dari createdAt - dipakai frontend utk
+        // timer elapsed selama proses (lihat renderCoworkHistory di app.js),
+        // supaya waktu tunggu di antrean (biasanya nyaris nol di app ini,
+        // tapi tetap) tidak ikut ke-hitung sebagai "sedang diproses".
+        updateTask({ status: 'processing', statusLog: 'Menjalankan analisis dengan GLM 5.2...', startedAt: new Date().toISOString() });
         const { text, tokensUsed } = await callOpenRouterGLM(prompt, attachedContext);
 
         updateTask({ statusLog: 'Menyusun dokumen Word (.docx)...' });
@@ -1267,7 +1272,8 @@ app.get('/api/cowork/history', requireAccess, (req, res) => {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .map(t => ({
       id: t.id, prompt: t.prompt, inputFiles: t.inputFiles, status: t.status, statusLog: t.statusLog,
-      outputFileUrl: t.outputFileUrl, errorMessage: t.errorMessage, createdAt: t.createdAt, updatedAt: t.updatedAt
+      outputFileUrl: t.outputFileUrl, errorMessage: t.errorMessage, startedAt: t.startedAt,
+      createdAt: t.createdAt, updatedAt: t.updatedAt
     }));
   res.json({ ok: true, tasks });
 });
@@ -1279,7 +1285,7 @@ app.get('/api/cowork/status/:id', requireAccess, (req, res) => {
   }
   res.json({ ok: true, task: {
     id: task.id, status: task.status, statusLog: task.statusLog, outputFileUrl: task.outputFileUrl,
-    errorMessage: task.errorMessage, createdAt: task.createdAt, updatedAt: task.updatedAt
+    errorMessage: task.errorMessage, startedAt: task.startedAt, createdAt: task.createdAt, updatedAt: task.updatedAt
   }});
 });
 
