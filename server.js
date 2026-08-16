@@ -6825,16 +6825,26 @@ const FASPAY_PLAN_PRICES = {
 };
 
 // Kode promo diskon - berlaku HANYA untuk paket bulanan (_monthly), tidak untuk
-// tahunan (yang sudah punya diskon "Hemat s.d 16%" sendiri). Key selalu dicocokkan
-// uppercase supaya input user tidak case-sensitive.
+// tahunan (yang sudah punya diskon "Hemat s.d 16%" sendiri) - dicek terpisah di
+// applyPromoToItemDef/POST /api/promo/validate, bukan di sini. Key selalu
+// dicocokkan uppercase supaya input user tidak case-sensitive. startsAt/endsAt
+// OPSIONAL (offset +07:00/WIB eksplisit di string-nya sendiri, bukan
+// diasumsikan/dikonversi manual) - kode tanpa keduanya berlaku terus-menerus
+// sampai dihapus manual dari sini (kayak JHTHREADS/JHTIKTOK di bawah).
 const PROMO_CODES = {
   JHTHREADS: { discountPercent: 20 },
-  JHTIKTOK: { discountPercent: 20 }
+  JHTIKTOK: { discountPercent: 20 },
+  JH17AN: { discountPercent: 25, startsAt: '2026-08-16T00:00:00+07:00', endsAt: '2026-08-17T23:59:00+07:00' }
 };
 
 function getPromoDiscount(code) {
   if (!code) return null;
-  return PROMO_CODES[String(code).trim().toUpperCase()] || null;
+  const promo = PROMO_CODES[String(code).trim().toUpperCase()];
+  if (!promo) return null;
+  const now = new Date();
+  if (promo.startsAt && now < new Date(promo.startsAt)) return null;
+  if (promo.endsAt && now > new Date(promo.endsAt)) return null;
+  return promo;
 }
 
 const FASPAY_TOPUP_PACKAGES = {
