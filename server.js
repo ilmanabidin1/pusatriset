@@ -1355,6 +1355,59 @@ app.get('/api/cowork/download/:id', requireAccess, (req, res) => {
   });
 });
 
+// Export hasil Co-Work langsung jadi dokumen Notebook baru - reuse jalur
+// konversi yang SAMA PERSIS dengan fitur impor .docx manual yang sudah ada
+// (POST /api/documents/import-docx, lihat mammoth.convertToHtml di sana),
+// cuma sumber buffernya dari file Co-Work yang sudah ada di server (bukan
+// upload baru dari user) supaya user tidak perlu unduh lalu unggah ulang
+// secara manual - user tinggal lanjut menulis/edit di Notebook begitu saja.
+app.post('/api/cowork/task/:id/export-to-notebook', requireAccess, async (req, res) => {
+  const task = getCoworkTasks().find(t => t.id === req.params.id);
+  if (!task || (task.userId !== req.session.userId && !isAdminReq(req))) {
+    return res.status(404).json({ ok: false, message: 'Task tidak ditemukan.' });
+  }
+  if (task.status !== 'completed') {
+    return res.status(400).json({ ok: false, message: 'Tugas belum selesai, belum bisa diekspor.' });
+  }
+  try {
+    const buffer = fs.readFileSync(path.join(COWORK_OUTPUTS_DIR, `${task.id}.docx`));
+    const result = await mammoth.convertToHtml({ buffer });
+    const html = ((result && result.value) || '').trim();
+    if (!html) {
+      return res.status(400).json({ ok: false, message: 'Hasil Co-Work tidak berisi konten yang dapat diekspor.' });
+    }
+
+    const docTitle = (task.title || task.prompt || 'Untitled').slice(0, 200);
+    // Hilangkan heading H1 pertama dari body kalau isinya SAMA PERSIS dgn
+    // docTitle (yang memang diekstrak dari heading itu, lihat
+    // extractTitleFromMarkdown di worker submit) - dokumen Notebook sudah
+    // punya field judul TERPISAH (titleInput), jadi tanpa ini judulnya
+    // muncul dobel: sekali di field judul, sekali lagi sebagai baris
+    // pertama isi dokumen.
+    const h1Match = html.match(/^<h1[^>]*>(.*?)<\/h1>/i);
+    const bodyHtml = (h1Match && h1Match[1].replace(/<[^>]+>/g, '').trim() === docTitle.trim())
+      ? html.slice(h1Match[0].length).trim()
+      : html;
+
+    const docs = getDocuments();
+    const now = new Date().toISOString();
+    const newDoc = {
+      id: uuidv4(),
+      userId: req.session.userId,
+      title: docTitle,
+      contentHtml: bodyHtml.slice(0, 500000),
+      createdAt: now,
+      updatedAt: now
+    };
+    docs.push(newDoc);
+    saveDocuments(docs);
+    res.json({ ok: true, document: newDoc });
+  } catch (error) {
+    console.error('[Co-Work Export to Notebook] Error:', error.message);
+    res.status(500).json({ ok: false, message: 'Gagal mengekspor hasil ke Notebook.' });
+  }
+});
+
 // Hapus 1 riwayat task Co-Work milik user sendiri (atau admin). Aman dipanggil
 // utk task apapun statusnya (termasuk 'processing') - kalau worker async-nya
 // masih jalan di background, updateTask() di dalamnya sudah punya guard

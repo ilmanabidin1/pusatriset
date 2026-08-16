@@ -432,6 +432,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const downloadBtn = (t.status === 'completed' && t.outputFileUrl)
         ? `<a href="${t.outputFileUrl}" style="font-size: 0.8rem; font-weight: 700; color: #fff; background: var(--brand-blue); padding: 0.4rem 0.9rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;"><i class="fa-solid fa-download"></i> Unduh .docx</a>`
         : '';
+      // Export langsung ke dokumen Notebook baru - reuse jalur konversi
+      // mammoth yang sama dgn impor .docx manual di Notebook (server-side,
+      // lihat POST /api/cowork/task/:id/export-to-notebook), user tidak
+      // perlu unduh lalu unggah ulang manual.
+      const exportBtn = (t.status === 'completed' && t.outputFileUrl)
+        ? `<button type="button" class="cowork-export-btn" data-task-id="${escapeHtml(t.id)}" style="font-size: 0.8rem; font-weight: 700; color: var(--brand-blue); background: rgba(7,135,220,0.1); padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;"><i class="fa-solid fa-file-import"></i> Export ke Notebook</button>`
+        : '';
       const errorText = (t.status === 'failed' && t.errorMessage)
         ? `<p style="font-size: 0.78rem; color: #dc2626; margin: 0.4rem 0 0;">${escapeHtml(t.errorMessage)}</p>`
         : '';
@@ -465,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
               ${errorText}
               ${progressBlock}
             </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">${previewBtn}${downloadBtn}${deleteBtn}</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">${previewBtn}${downloadBtn}${exportBtn}${deleteBtn}</div>
           </div>
         </div>`;
     }).join('');
@@ -535,6 +542,35 @@ document.addEventListener('DOMContentLoaded', () => {
           const url = previewBtn.getAttribute('data-url');
           const title = previewBtn.getAttribute('data-title');
           if (url) openDocxViewer('Hasil Co-Work: ' + (title || ''), url, url);
+          return;
+        }
+
+        const exportBtn = e.target.closest('.cowork-export-btn');
+        if (exportBtn) {
+          const taskId = exportBtn.getAttribute('data-task-id');
+          if (!taskId) return;
+          const originalHtml = exportBtn.innerHTML;
+          exportBtn.disabled = true;
+          exportBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengekspor...';
+          try {
+            const res = await fetch(`/api/cowork/task/${taskId}/export-to-notebook`, { method: 'POST' });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || 'Gagal mengekspor ke Notebook.');
+              exportBtn.disabled = false;
+              exportBtn.innerHTML = originalHtml;
+              return;
+            }
+            // Pindah ke tab Notebook lalu langsung buka dokumen barunya -
+            // window.openNotebookDocument diekspos oleh initNotebookTab
+            // (lihat catatan di app.js dekat window.showNotebookListView).
+            if (window.switchTab) window.switchTab('notebook');
+            if (window.openNotebookDocument) window.openNotebookDocument(data.document.id);
+          } catch (err) {
+            alert('Gagal terhubung ke server.');
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = originalHtml;
+          }
           return;
         }
 
@@ -7736,6 +7772,12 @@ document.addEventListener('DOMContentLoaded', () => {
           alert(t.notebook_conn_error);
         }
       }
+      // Diekspos global supaya tab lain (Co-Work Agent, lihat renderCoworkHistory)
+      // bisa langsung buka dokumen Notebook yang baru dibuat, tanpa perlu tahu
+      // detail internal Notebook (closure ini terisolasi dari IIFE tab lain,
+      // sama seperti kasus truncate() sebelumnya - lihat window.showNotebookListView
+      // di atas utk pola yang sama).
+      window.openNotebookDocument = openDocument;
 
       if (createBtn) {
         createBtn.addEventListener('click', async () => {
