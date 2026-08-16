@@ -523,26 +523,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // supaya hasilnya maksimal. Klik salah satu langsung MENGISI textarea dgn
   // template ini (bukan cuma placeholder yang hilang begitu mulai mengetik),
   // tetap bisa diedit/disesuaikan user sebelum submit.
+  //
+  // SENGAJA dibuat berat/besar-besaran (volume kata tinggi, banyak dokumen
+  // sekaligus, naskah utuh dari nol) - bukan tugas skala "tulis 3000 kata"
+  // yang sebenarnya sudah bisa dikerjakan chatbot biasa dalam 1 balasan.
+  // Co-Work Agent nilainya justru di tugas yang MEMANG butuh diproses lama di
+  // background (makanya hasilnya dikirim lewat email) - contoh promptnya
+  // harus mencerminkan skala itu, bukan tugas ringan yang menyamarkan value
+  // proposition fiturnya sendiri.
   const COWORK_PROMPT_EXAMPLES = [
     {
-      label: 'Draf Bab Tinjauan Pustaka',
+      label: 'Bab 2 Skripsi/Tesis 10.000 Kata',
       icon: 'fa-file-lines',
-      prompt: 'Susun draf lengkap Bab 2 (Tinjauan Pustaka) sepanjang 3000 kata tentang [topik penelitian Anda], berdasarkan dokumen yang saya lampirkan. Gunakan format sitasi APA 7th.'
+      prompt: 'Susun draf lengkap Bab 2 (Tinjauan Pustaka) skripsi/tesis saya, setebal 10.000-12.000 kata, tentang [topik penelitian Anda]. Sintesis dan bandingkan SEMUA dokumen/jurnal yang saya lampirkan, kelompokkan berdasarkan sub-tema, dan tutup dengan identifikasi gap penelitian. Gunakan sitasi APA 7th secara konsisten di sepanjang naskah.'
     },
     {
-      label: 'Sintesis Dokumen Lampiran',
+      label: 'Sintesis 10+ Jurnal Sekaligus',
       icon: 'fa-layer-group',
-      prompt: 'Baca semua dokumen yang saya lampirkan, lalu buat sintesis kritis yang membandingkan temuan, metode, dan gap penelitian dari masing-masing sumber.'
+      prompt: 'Baca dan sintesis SEMUA jurnal yang saya lampirkan (bisa lebih dari 10 dokumen sekaligus). Buat matriks perbandingan metode-temuan-gap tiap sumber, lalu rangkai jadi satu tinjauan pustaka utuh minimal 5000 kata yang mengalir sebagai satu narasi, bukan sekadar ringkasan satu-satu per jurnal.'
     },
     {
-      label: 'Analisis Data',
+      label: 'Naskah Jurnal Lengkap dari Nol',
+      icon: 'fa-book',
+      prompt: 'Susun draf lengkap naskah jurnal SIAP SUBMIT dari Abstrak sampai Kesimpulan (Pendahuluan, Tinjauan Pustaka, Metode, Hasil & Pembahasan, Kesimpulan), total sekitar 8000-10.000 kata, berdasarkan outline dan data yang saya lampirkan. Ikuti gaya penulisan jurnal terakreditasi SINTA 2/Scopus.'
+    },
+    {
+      label: 'Pembahasan: Data vs 10 Jurnal',
       icon: 'fa-chart-simple',
-      prompt: 'Analisis data yang saya lampirkan (format CSV), identifikasi pola/tren utama, lalu sajikan hasilnya dalam tabel ringkasan beserta interpretasinya.'
-    },
-    {
-      label: 'Ringkasan Multi-Dokumen',
-      icon: 'fa-clone',
-      prompt: 'Ringkas seluruh dokumen yang saya lampirkan menjadi satu tinjauan pustaka terpadu, urutkan berdasarkan tema, dan sertakan sitasi tiap sumber.'
+      prompt: 'Analisis mendalam data statistik yang saya lampirkan, lalu bandingkan SETIAP temuannya satu per satu dengan hasil-hasil penelitian di semua jurnal yang saya lampirkan juga. Susun jadi Bab Pembahasan lengkap yang mengaitkan tiap variabel dengan teori dan penelitian terdahulu, sepanjang 4000-5000 kata.'
     }
   ];
 
