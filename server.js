@@ -937,6 +937,15 @@ async function callOpenRouterGLM(userPrompt, attachedContext) {
         model: OPENROUTER_MODEL,
         temperature: 0.3,
         max_tokens: 16000,
+        // Dipin ke Baidu Qianfan (lagi promo di OpenRouter saat ini) -
+        // allow_fallbacks:false SENGAJA supaya request GAGAL kalau provider ini
+        // tidak tersedia (bukan diam-diam nyasar ke provider lain yang mungkin
+        // sudah tidak promo) - task Co-Work akan tercatat 'failed' dgn pesan
+        // errornya, bukan berhasil tapi kena biaya provider yang tidak diduga.
+        provider: {
+          order: ['Baidu Qianfan'],
+          allow_fallbacks: false
+        },
         messages: [
           { role: 'system', content: COWORK_SYSTEM_PROMPT },
           { role: 'user', content: userContent }
