@@ -678,6 +678,74 @@ app.get('/api/admin/email-blast/status', requireAccess, requireAdmin, (req, res)
   res.json({ ok: true, status: emailBlastStatus });
 });
 
+// Direktori gambar blast - di dalam DATA_DIR (bukan assets/ yang ikut source
+// code) supaya persisten di Railway Volume yang sudah di-mount di /app/data,
+// bertahan lintas redeploy (yang di proyek ini sering terjadi tiap push ke
+// main) - gambar perlu tetap bisa dimuat kalau penerima baru buka emailnya
+// beberapa hari setelah blast dikirim.
+const BLAST_UPLOADS_DIR = path.join(DATA_DIR, 'uploads', 'blast-images');
+const BLAST_IMAGE_EXT_BY_MIME = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp'
+};
+const blastImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB - cukup longgar utk gambar email tanpa bikin ukuran email membengkak berlebihan
+  fileFilter: (req, file, cb) => {
+    if (BLAST_IMAGE_EXT_BY_MIME[file.mimetype]) {
+      cb(null, true);
+    } else {
+      cb(new Error('Format gambar tidak didukung. Gunakan JPG, PNG, GIF, atau WEBP.'));
+    }
+  }
+});
+
+app.post('/api/admin/email-blast/upload-image', requireAccess, requireAdmin, (req, res) => {
+  blastImageUpload.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ ok: false, message: err.message || 'Gagal mengunggah gambar.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ ok: false, message: 'Tidak ada file gambar yang diunggah.' });
+    }
+    try {
+      fs.mkdirSync(BLAST_UPLOADS_DIR, { recursive: true });
+      // Nama file acak (BUKAN nama asli file upload) - selain menghindari
+      // tabrakan nama, juga mencegah nama file jadi vektor path traversal
+      // sama sekali (lihat validasi regex ketat di GET /blast-uploads/:filename).
+      const filename = uuidv4() + BLAST_IMAGE_EXT_BY_MIME[req.file.mimetype];
+      fs.writeFileSync(path.join(BLAST_UPLOADS_DIR, filename), req.file.buffer);
+      // URL absolut (bukan path relatif) - ini dipakai sbg <img src> di email
+      // yang dibuka di INBOX penerima, bukan di dalam app ini, jadi tidak ada
+      // "origin saat ini" yang bisa diandalkan buat resolve path relatif -
+      // hardcode domain produksi, konsisten dengan pola yang sama dipakai
+      // unsubUrl (lihat di bawah, POST /api/admin/email-blast).
+      res.json({ ok: true, url: `https://jurnalhub.id/blast-uploads/${filename}` });
+    } catch (writeErr) {
+      console.error('[Email Blast] Gagal menyimpan gambar upload:', writeErr.message);
+      res.status(500).json({ ok: false, message: 'Gagal menyimpan gambar di server.' });
+    }
+  });
+});
+
+// PUBLIK (tanpa requireAccess) - gambar ini akan dimuat oleh email client
+// PENERIMA blast, yang jelas tidak sedang login sesi browser JurnalHub.
+// Filename divalidasi ketat (harus PERSIS format yang dihasilkan uuidv4() +
+// salah satu ekstensi di atas) sebelum dipakai membentuk path - mencegah path
+// traversal (../../dst) walau nama filenya sendiri sepenuhnya server-generated.
+app.get('/blast-uploads/:filename', (req, res) => {
+  const filename = req.params.filename;
+  if (!/^[a-f0-9-]{36}\.(jpg|png|gif|webp)$/.test(filename)) {
+    return res.status(404).send('Not Found');
+  }
+  const filePath = path.join(BLAST_UPLOADS_DIR, filename);
+  res.sendFile(filePath, { maxAge: '30d' }, (err) => {
+    if (err && !res.headersSent) res.status(404).send('Not Found');
+  });
+});
+
 const EMAIL_BLAST_SEGMENTS = new Set(['free', 'premium', 'ultimate', 'all']);
 
 // Kirim blast email promosi ke segmen user tertentu. TIDAK di-await sampai

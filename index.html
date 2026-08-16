@@ -6784,8 +6784,15 @@
                 <textarea id="adminBlastBody" rows="6" placeholder="Tulis isi email di sini..." style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main); resize: vertical;"></textarea>
               </div>
               <div>
-                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">URL Gambar (opsional)</label>
-                <input type="text" id="adminBlastImageUrl" placeholder="https://... (upload gambarnya ke tempat lain dulu, mis. imgur/CDN sendiri, lalu tempel link-nya di sini)" style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Gambar (opsional)</label>
+                <!-- adminBlastImageUrl jadi hidden input (bukan dihapus) - tetap
+                     "sumber kebenaran" URL gambar yang dibaca renderAdminBlastEmailPreview
+                     & handler kirim, cuma sekarang diisi otomatis lewat upload
+                     (adminBlastImageFile -> POST /api/admin/email-blast/upload-image),
+                     bukan diketik manual. Lihat initAdminBlast di app.js. -->
+                <input type="file" id="adminBlastImageFile" accept="image/png,image/jpeg,image/gif,image/webp" style="width: 100%; font-size: 0.85rem;">
+                <input type="hidden" id="adminBlastImageUrl">
+                <p id="adminBlastImageUploadStatus" style="font-size: 0.76rem; color: var(--text-muted); margin: 0.4rem 0 0;"></p>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div>
@@ -6817,6 +6824,27 @@
             </div>
           </div>
 
+          <!-- Kontrol pencarian/filter/sort tabel user - semuanya dihitung
+               CLIENT-SIDE dari adminUsersCache yang sudah dimuat penuh (lihat
+               renderAdminUsersTable di app.js), bukan query server baru tiap
+               kali diketik/diganti - 1 fetch awal cukup, konsisten dengan cara
+               preview blast juga sudah pakai cache yang sama. -->
+          <div class="filter-box-card" style="padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <input type="text" id="adminUserSearch" placeholder="Cari email atau nama..." style="flex: 1; min-width: 200px; padding: 0.55rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+            <select id="adminUserFilterTier" style="padding: 0.55rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+              <option value="all">Semua Tier</option>
+              <option value="free">Free</option>
+              <option value="premium">Premium</option>
+              <option value="ultimate">Ultimate</option>
+            </select>
+            <select id="adminUserSort" style="padding: 0.55rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+              <option value="created_desc">Terbaru dulu</option>
+              <option value="created_asc">Terlama dulu</option>
+              <option value="email_asc">Email A-Z</option>
+              <option value="email_desc">Email Z-A</option>
+            </select>
+          </div>
+
           <div class="filter-box-card" style="padding: 0; overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
               <thead>
@@ -6833,6 +6861,17 @@
                 <tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Memuat...</td></tr>
               </tbody>
             </table>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+            <span id="adminUserPageInfo" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" id="adminUserPrevBtn" class="reset-filter-btn" style="width: auto; padding: 0.5rem 1rem;">
+                <i class="fa-solid fa-chevron-left"></i> Sebelumnya
+              </button>
+              <button type="button" id="adminUserNextBtn" class="reset-filter-btn" style="width: auto; padding: 0.5rem 1rem;">
+                Berikutnya <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>

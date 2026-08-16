@@ -66,6 +66,92 @@ document.addEventListener('DOMContentLoaded', () => {
     previewEl.textContent = text;
   }
 
+  const ADMIN_USERS_PER_PAGE = 50;
+  let adminUserPage = 1;
+
+  function formatAdminDate(iso) {
+    if (!iso) return '-';
+    try { return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
+    catch (e) { return '-'; }
+  }
+
+  // Render tabel user dari adminUsersCache (SUDAH dimuat penuh - lihat
+  // loadAdminUsers) - search/filter tier/sort/pagination semuanya dihitung
+  // ulang di sini tiap dipanggil, tanpa fetch baru, supaya interaksi terasa
+  // instan walau jumlah user besar (ribuan). Dipanggil ulang tiap kali salah
+  // satu kontrolnya berubah (lihat listener di initAdminUserTable).
+  function renderAdminUsersTable() {
+    const tbody = document.getElementById('adminUsersTableBody');
+    const pageInfoEl = document.getElementById('adminUserPageInfo');
+    const prevBtn = document.getElementById('adminUserPrevBtn');
+    const nextBtn = document.getElementById('adminUserNextBtn');
+    if (!tbody) return;
+
+    const searchEl = document.getElementById('adminUserSearch');
+    const tierEl = document.getElementById('adminUserFilterTier');
+    const sortEl = document.getElementById('adminUserSort');
+    const search = (searchEl?.value || '').trim().toLowerCase();
+    const tier = tierEl?.value || 'all';
+    const sort = sortEl?.value || 'created_desc';
+
+    let filtered = adminUsersCache.filter(u => {
+      if (tier !== 'all' && u.type !== tier) return false;
+      if (search && !(u.email || '').toLowerCase().includes(search) && !(u.name || '').toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    const sorters = {
+      created_desc: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+      created_asc: (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0),
+      email_asc: (a, b) => (a.email || '').localeCompare(b.email || ''),
+      email_desc: (a, b) => (b.email || '').localeCompare(a.email || '')
+    };
+    filtered = filtered.slice().sort(sorters[sort] || sorters.created_desc);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_USERS_PER_PAGE));
+    adminUserPage = Math.min(Math.max(1, adminUserPage), totalPages);
+    const pageItems = filtered.slice((adminUserPage - 1) * ADMIN_USERS_PER_PAGE, adminUserPage * ADMIN_USERS_PER_PAGE);
+
+    if (pageInfoEl) {
+      pageInfoEl.textContent = filtered.length === 0
+        ? 'Tidak ada user yang cocok.'
+        : `Menampilkan ${(adminUserPage - 1) * ADMIN_USERS_PER_PAGE + 1}-${Math.min(adminUserPage * ADMIN_USERS_PER_PAGE, filtered.length)} dari ${filtered.length} user`;
+    }
+    if (prevBtn) prevBtn.disabled = adminUserPage <= 1;
+    if (nextBtn) nextBtn.disabled = adminUserPage >= totalPages;
+
+    if (pageItems.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Tidak ada user yang cocok.</td></tr>';
+      return;
+    }
+    const typeLabel = { free: 'Free', premium: 'Premium', ultimate: 'Ultimate' };
+    tbody.innerHTML = pageItems.map(u => `
+      <tr style="border-bottom: 1px solid var(--border-light);">
+        <td style="padding: 0.7rem 1rem; white-space: nowrap;">${escapeHtml(u.email)}${u.isAdmin ? ' <span style="font-size: 0.68rem; font-weight: 700; color: #fff; background: var(--brand-blue); padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.3rem;">ADMIN</span>' : ''}</td>
+        <td style="padding: 0.7rem 1rem; color: var(--text-muted);">${escapeHtml(u.name || '-')}</td>
+        <td style="padding: 0.7rem 1rem;">${escapeHtml(typeLabel[u.type] || u.type)}</td>
+        <td style="padding: 0.7rem 1rem; color: var(--text-muted); white-space: nowrap;">${formatAdminDate(u.paymentExpiredAt)}</td>
+        <td style="padding: 0.7rem 1rem;">${u.isVerified ? '<span style="color: #16a34a;">Ya</span>' : '<span style="color: var(--text-muted);">Belum</span>'}</td>
+        <td style="padding: 0.7rem 1rem; color: var(--text-muted); white-space: nowrap;">${formatAdminDate(u.createdAt)}</td>
+      </tr>
+    `).join('');
+  }
+
+  (function initAdminUserTable() {
+    const searchEl = document.getElementById('adminUserSearch');
+    const tierEl = document.getElementById('adminUserFilterTier');
+    const sortEl = document.getElementById('adminUserSort');
+    const prevBtn = document.getElementById('adminUserPrevBtn');
+    const nextBtn = document.getElementById('adminUserNextBtn');
+    if (!searchEl) return;
+
+    searchEl.addEventListener('input', () => { adminUserPage = 1; renderAdminUsersTable(); });
+    if (tierEl) tierEl.addEventListener('change', () => { adminUserPage = 1; renderAdminUsersTable(); });
+    if (sortEl) sortEl.addEventListener('change', () => { adminUserPage = 1; renderAdminUsersTable(); });
+    if (prevBtn) prevBtn.addEventListener('click', () => { adminUserPage -= 1; renderAdminUsersTable(); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { adminUserPage += 1; renderAdminUsersTable(); });
+  })();
+
   window.loadAdminUsers = async function loadAdminUsers() {
     const tbody = document.getElementById('adminUsersTableBody');
     if (!tbody) return;
@@ -84,29 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setStat('adminStatPremium', s.premium);
       setStat('adminStatUltimate', s.ultimate);
 
-      const users = data.users || [];
-      adminUsersCache = users;
+      adminUsersCache = data.users || [];
+      adminUserPage = 1;
       renderAdminBlastPreview();
-      if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">Belum ada user.</td></tr>';
-        return;
-      }
-      const formatDate = (iso) => {
-        if (!iso) return '-';
-        try { return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
-        catch (e) { return '-'; }
-      };
-      const typeLabel = { free: 'Free', premium: 'Premium', ultimate: 'Ultimate' };
-      tbody.innerHTML = users.map(u => `
-        <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 0.7rem 1rem; white-space: nowrap;">${escapeHtml(u.email)}${u.isAdmin ? ' <span style="font-size: 0.68rem; font-weight: 700; color: #fff; background: var(--brand-blue); padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.3rem;">ADMIN</span>' : ''}</td>
-          <td style="padding: 0.7rem 1rem; color: var(--text-muted);">${escapeHtml(u.name || '-')}</td>
-          <td style="padding: 0.7rem 1rem;">${escapeHtml(typeLabel[u.type] || u.type)}</td>
-          <td style="padding: 0.7rem 1rem; color: var(--text-muted); white-space: nowrap;">${formatDate(u.paymentExpiredAt)}</td>
-          <td style="padding: 0.7rem 1rem;">${u.isVerified ? '<span style="color: #16a34a;">Ya</span>' : '<span style="color: var(--text-muted);">Belum</span>'}</td>
-          <td style="padding: 0.7rem 1rem; color: var(--text-muted); white-space: nowrap;">${formatDate(u.createdAt)}</td>
-        </tr>
-      `).join('');
+      renderAdminUsersTable();
     } catch (err) {
       tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #dc2626;">Gagal terhubung ke server.</td></tr>';
     }
@@ -187,6 +254,40 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el) el.addEventListener('input', renderAdminBlastEmailPreview);
     });
     renderAdminBlastEmailPreview();
+
+    // Upload gambar begitu file dipilih (bukan nunggu tombol Kirim) - hasilnya
+    // (URL absolut dari server) langsung ditaruh di adminBlastImageUrl (hidden
+    // input, tetap "sumber kebenaran" yang dibaca preview & handler kirim)
+    // supaya preview langsung ke-update begitu upload selesai.
+    const imageFileEl = document.getElementById('adminBlastImageFile');
+    const imageUrlHiddenEl = document.getElementById('adminBlastImageUrl');
+    const imageUploadStatusEl = document.getElementById('adminBlastImageUploadStatus');
+    if (imageFileEl) {
+      imageFileEl.addEventListener('change', async () => {
+        const file = imageFileEl.files && imageFileEl.files[0];
+        if (!file) return;
+        if (imageUploadStatusEl) imageUploadStatusEl.textContent = 'Mengunggah...';
+        if (imageUrlHiddenEl) imageUrlHiddenEl.value = '';
+        renderAdminBlastEmailPreview();
+        try {
+          const formData = new FormData();
+          formData.append('image', file);
+          const res = await fetch('/api/admin/email-blast/upload-image', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (!data.ok) {
+            if (imageUploadStatusEl) imageUploadStatusEl.textContent = data.message || 'Gagal mengunggah gambar.';
+            imageFileEl.value = '';
+            return;
+          }
+          if (imageUrlHiddenEl) imageUrlHiddenEl.value = data.url;
+          if (imageUploadStatusEl) imageUploadStatusEl.textContent = 'Gambar berhasil diunggah.';
+          renderAdminBlastEmailPreview();
+        } catch (err) {
+          if (imageUploadStatusEl) imageUploadStatusEl.textContent = 'Gagal terhubung ke server.';
+          imageFileEl.value = '';
+        }
+      });
+    }
 
     sendBtn.addEventListener('click', async () => {
       const segment = segmentEl.value;
