@@ -4450,6 +4450,14 @@
 
     <div class="sidebar-scroll-region" id="sidebarScrollRegion">
       <nav class="sidebar-nav" style="flex-grow: 0; padding-right: 1rem;">
+        <!-- Link mandiri di posisi paling atas (bukan di dalam flyout grup
+             manapun) - sengaja dipisah dari grup "Riset Lanjutan" tempatnya
+             semula karena ini fitur andalan/flagship, bukan tool pelengkap,
+             jadi aksesnya harus 1 klik langsung dari sidebar utama, dekat
+             JurnalHub Intelligence (tombol "Percakapan Baru" di atasnya). -->
+        <a href="#" class="sidebar-link" data-tab="cowork">
+          <i class="fa-solid fa-robot"></i> <span>Co-Work Agent</span> <span class="new-badge">Baru</span>
+        </a>
         <a href="#" class="sidebar-link sidebar-group-trigger" data-group="cari-jelajah">
           <i class="fa-solid fa-compass"></i> <span>Cari &amp; Jelajah</span> <i class="fa-solid fa-chevron-right sidebar-group-caret"></i>
         </a>
@@ -4578,9 +4586,6 @@
     </a>
     <a href="#" class="sidebar-link" data-tab="patent-search">
       <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
-    </a>
-    <a href="#" class="sidebar-link" data-tab="cowork">
-      <i class="fa-solid fa-robot"></i> <span>Co-Work Agent</span> <span class="new-badge">Baru</span>
     </a>
   </div>
 
@@ -6985,7 +6990,7 @@
       const SIDEBAR_GROUPS = {
         'cari-jelajah': ['database-jurnal', 'cari-referensi', 'citation-graph'],
         'tulis-review': ['notebook', 'ai-research', 'peer-reviewer', 'templates', 'prompt-bank'],
-        'riset-lanjutan': ['slr', 'patent-search', 'cowork'],
+        'riset-lanjutan': ['slr', 'patent-search'],
         'koleksi-saya': ['koleksi-saya']
       };
       const sidebar = document.getElementById('sidebar');
