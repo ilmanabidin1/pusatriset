@@ -19,7 +19,7 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse');
-const { Document, Packer, Paragraph, HeadingLevel, TextRun } = require('docx');
+const { Document, Packer, Paragraph, HeadingLevel, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } = require('docx');
 
 // SMTP Configuration for Hostinger
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.hostinger.com';
@@ -846,6 +846,451 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
     emailBlastStatus.inProgress = false;
     emailBlastStatus.finishedAt = new Date().toISOString();
   })();
+});
+
+// --- CO-WORK AGENT (asisten riset otonom background, via OpenRouter GLM 5.2) ---
+// Fitur bundel di paket Ultimate (tanpa biaya tambahan), kuota 5x run/bulan.
+// TIDAK ada job queue sungguhan (Redis/BullMQ dsb) di app ini - pola yang
+// dipakai sama seperti Email Blast di atas: request submit langsung dibalas
+// begitu task tercatat di cowork-tasks.json, lalu eksekusi sungguhan (panggil
+// GLM 5.2 -> convert markdown ke .docx -> kirim email) jalan async TANPA
+// di-await, di-poll progressnya lewat GET /api/cowork/status/:id. Kalau server
+// redeploy di tengah proses (Railway auto-deploy tiap push ke main), task yang
+// sedang 'processing' TIDAK otomatis lanjut - akan tersangkut di status itu
+// selamanya (keterbatasan yang sama, tidak ada resume mechanism).
+const COWORK_MONTHLY_QUOTA = 5;
+const COWORK_TASKS_FILE = path.join(DATA_DIR, 'cowork-tasks.json');
+const COWORK_OUTPUTS_DIR = path.join(DATA_DIR, 'uploads', 'cowork-outputs');
+const OPENROUTER_MODEL = 'z-ai/glm-5.2';
+const COWORK_SYSTEM_PROMPT = `Anda adalah "JurnalHub Co-Work Agent", Asisten Peneliti Senior Otonom berbasis AI untuk akademisi Indonesia.
+
+TUGAS UTAMA: Jalankan instruksi akademis pengguna secara mandiri, mendalam, kualitatif, ilmiah, dan terstruktur tanpa memotong kalimat.
+
+ATURAN FORMAT:
+1. Gunakan Bahasa Indonesia akademis standar (Ragam Bahasa Baku / PUEBI / EYD) kecuali jika pengguna meminta Bahasa Inggris.
+2. Gunakan format Markdown yang sangat jelas (Heading 1 (#), Heading 2 (##), Heading 3 (###), Bullet Points, dan Tabel Markdown jika diperlukan).
+3. Jangan menyingkat pembahasan. Jika diminta menyusun bab atau jurnal, tuliskan secara lengkap, komprehensif, dan lugas.
+4. Semua rujukan/sitasi harus ditulis dengan format akademik konsisten (misal: APA 7th Style).
+5. Jika dilampirkan teks dokumen pendukung, lakukan analisis kritis, perbandingan, dan sintesis terhadap dokumen tersebut.`;
+
+function getCoworkTasks() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(COWORK_TASKS_FILE)) fs.writeFileSync(COWORK_TASKS_FILE, '[]');
+    return JSON.parse(fs.readFileSync(COWORK_TASKS_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca cowork-tasks.json:', error);
+    return [];
+  }
+}
+function saveCoworkTasks(tasks) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(COWORK_TASKS_FILE, JSON.stringify(tasks, null, 2));
+  } catch (error) {
+    console.error('Gagal menyimpan cowork-tasks.json:', error);
+  }
+}
+
+// Reset otomatis begitu ganti bulan kalender, sama seperti pola kuota fitur
+// lain (lihat resetMonthlyQuotasOnUpgrade) - dipanggil SEBELUM merespons submit
+// (bukan di worker async) supaya dua submit paralel dari user yang sama tidak
+// bisa berdua lolos kuota (race condition) begitu saja.
+function checkAndConsumeCoworkQuota(user) {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  if (user.lastCoworkMonth !== currentMonth) {
+    user.lastCoworkMonth = currentMonth;
+    user.coworkCountThisMonth = 0;
+  }
+  if (user.coworkCountThisMonth >= COWORK_MONTHLY_QUOTA) {
+    return false;
+  }
+  user.coworkCountThisMonth += 1;
+  return true;
+}
+
+async function callOpenRouterGLM(userPrompt, attachedContext) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENROUTER_API_KEY belum dikonfigurasi di server.');
+  }
+  const fetchFn = globalThis.fetch || require('node-fetch');
+  const userContent = attachedContext
+    ? `${userPrompt}\n\n--- DOKUMEN PENDUKUNG YANG DILAMPIRKAN ---\n${attachedContext}`
+    : userPrompt;
+
+  const controller = new AbortController();
+  // 10 menit, sesuai spesifikasi - task Co-Work bisa menghasilkan draf sangat
+  // panjang (sampai 12.000 kata) yang makan waktu lama di sisi model.
+  const timeoutId = setTimeout(() => controller.abort(), 600000);
+  try {
+    const openRouterUrl = process.env.OPENROUTER_API_URL || 'https://openrouter.ai/api/v1/chat/completions';
+    const response = await fetchFn(openRouterUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://jurnalhub.id',
+        'X-Title': 'JurnalHub Co-Work Agent'
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        temperature: 0.3,
+        max_tokens: 16000,
+        messages: [
+          { role: 'system', content: COWORK_SYSTEM_PROMPT },
+          { role: 'user', content: userContent }
+        ]
+      }),
+      signal: controller.signal
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error ${response.status}: ${(data && data.error && data.error.message) || 'Tidak ada detail error.'}`);
+    }
+    const text = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+    const tokensUsed = (data && data.usage && data.usage.total_tokens) || 0;
+    if (!text.trim()) {
+      throw new Error('GLM 5.2 mengembalikan respons kosong.');
+    }
+    return { text, tokensUsed };
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Waktu tunggu respons GLM 5.2 habis (lebih dari 10 menit). Coba lagi dengan instruksi yang lebih sederhana.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// --- Konversi Markdown (keluaran GLM 5.2) -> elemen docx native ---
+// Sengaja parser sederhana (bukan library markdown umum) - cukup untuk subset
+// Markdown yang diminta dihasilkan lewat COWORK_SYSTEM_PROMPT di atas
+// (heading #/##/###, bullet, list bernomor, **bold**, tabel pipe-delimited).
+function parseInlineRuns(text) {
+  const runs = [];
+  const regex = /\*\*(.+?)\*\*/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      runs.push(new TextRun({ text: text.slice(lastIndex, match.index) }));
+    }
+    runs.push(new TextRun({ text: match[1], bold: true }));
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    runs.push(new TextRun({ text: text.slice(lastIndex) }));
+  }
+  return runs.length ? runs : [new TextRun({ text: '' })];
+}
+
+function markdownTableToDocxTable(tableLines) {
+  const rows = tableLines
+    .map(l => l.trim())
+    .filter(l => !/^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/.test(l))
+    .map(l => l.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()));
+
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: rows.map((cells, rowIdx) => new TableRow({
+      children: cells.map(cellText => new TableCell({
+        width: { size: Math.floor(100 / Math.max(cells.length, 1)), type: WidthType.PERCENTAGE },
+        shading: rowIdx === 0 ? { fill: 'E8F1FB' } : undefined,
+        children: [new Paragraph({ children: parseInlineRuns(cellText) })]
+      }))
+    }))
+  });
+}
+
+function markdownToDocxChildren(markdown) {
+  const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
+  const children = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+
+    if (!trimmed) { i++; continue; }
+
+    if (trimmed.startsWith('|')) {
+      let j = i;
+      const tableLines = [];
+      while (j < lines.length && lines[j].trim().startsWith('|')) {
+        tableLines.push(lines[j]);
+        j++;
+      }
+      if (tableLines.length >= 2) {
+        children.push(markdownTableToDocxTable(tableLines));
+        children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
+        i = j;
+        continue;
+      }
+      // Bukan tabel valid (cuma 1 baris) - biarkan lolos ke penanganan paragraf biasa di bawah.
+    }
+
+    const h3 = trimmed.match(/^###\s+(.*)$/);
+    const h2 = !h3 && trimmed.match(/^##\s+(.*)$/);
+    const h1 = !h3 && !h2 && trimmed.match(/^#\s+(.*)$/);
+    if (h1) {
+      children.push(new Paragraph({ children: parseInlineRuns(h1[1]), heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }));
+      i++; continue;
+    }
+    if (h2) {
+      children.push(new Paragraph({ children: parseInlineRuns(h2[1]), heading: HeadingLevel.HEADING_2, spacing: { before: 350, after: 150 } }));
+      i++; continue;
+    }
+    if (h3) {
+      children.push(new Paragraph({ children: parseInlineRuns(h3[1]), heading: HeadingLevel.HEADING_3, spacing: { before: 300, after: 100 } }));
+      i++; continue;
+    }
+
+    const bulletMatch = trimmed.match(/^[-*]\s+(.*)$/);
+    if (bulletMatch) {
+      children.push(new Paragraph({ children: parseInlineRuns(bulletMatch[1]), bullet: { level: 0 }, spacing: { after: 80 } }));
+      i++; continue;
+    }
+
+    const numberedMatch = trimmed.match(/^(\d+)[.)]\s+(.*)$/);
+    if (numberedMatch) {
+      children.push(new Paragraph({ children: parseInlineRuns(`${numberedMatch[1]}. ${numberedMatch[2]}`), spacing: { after: 80 }, indent: { left: 360 } }));
+      i++; continue;
+    }
+
+    children.push(new Paragraph({ children: parseInlineRuns(trimmed), spacing: { after: 200 }, alignment: AlignmentType.JUSTIFIED }));
+    i++;
+  }
+
+  if (children.length === 0) {
+    children.push(new Paragraph({ text: '(Tidak ada konten dihasilkan.)' }));
+  }
+  return children;
+}
+
+const coworkUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024, files: 5 }, // 8MB/file, maks 5 file (total wajar di bawah batas 20MB di spesifikasi)
+  fileFilter: (req, file, cb) => {
+    const originalName = (file.originalname || '').toLowerCase();
+    const isAllowedExt = originalName.endsWith('.pdf') || originalName.endsWith('.docx') || originalName.endsWith('.txt') || originalName.endsWith('.csv');
+    const allowedMime = [
+      'application/pdf', 'application/x-pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain', 'text/csv', 'application/vnd.ms-excel', 'application/octet-stream'
+    ];
+    if (allowedMime.includes(file.mimetype) || isAllowedExt) {
+      cb(null, true);
+    } else {
+      cb(new Error('Format file tidak didukung. Gunakan PDF, DOCX, TXT, atau CSV.'));
+    }
+  }
+});
+
+app.post('/api/cowork/submit', requireAccess, (req, res) => {
+  coworkUpload.array('files', 5)(req, res, async (err) => {
+    if (err) {
+      const message = err.code === 'LIMIT_FILE_SIZE' ? 'Ukuran file maksimal 8MB per file.' : (err.message || 'Gagal mengunggah file.');
+      return res.status(400).json({ ok: false, message });
+    }
+
+    const prompt = String((req.body && req.body.prompt) || '').trim();
+    if (!prompt) {
+      return res.status(400).json({ ok: false, message: 'Instruksi/prompt wajib diisi.' });
+    }
+    if (prompt.length > 8000) {
+      return res.status(400).json({ ok: false, message: 'Instruksi maksimal 8000 karakter.' });
+    }
+
+    const files = req.files || [];
+    const totalSize = files.reduce((sum, f) => sum + f.buffer.length, 0);
+    if (totalSize > 20 * 1024 * 1024) {
+      return res.status(400).json({ ok: false, message: 'Total ukuran seluruh file yang diunggah maksimal 20MB.' });
+    }
+
+    const users = getUsers();
+    const user = users.find(u => u.id === req.session.userId);
+    if (!user) {
+      return res.status(401).json({ ok: false, message: 'Sesi tidak valid.' });
+    }
+
+    const userType = computeEffectiveUserType(user);
+    if (!isAdminReq(req) && userType !== 'ultimate') {
+      return res.status(403).json({ ok: false, message: 'Fitur Co-Work Agent khusus akun Ultimate.' });
+    }
+
+    if (!isAdminReq(req) && !checkAndConsumeCoworkQuota(user)) {
+      return res.status(403).json({ ok: false, message: `Kuota Co-Work Agent bulan ini sudah habis (maksimal ${COWORK_MONTHLY_QUOTA}x/bulan). Kuota akan reset di awal bulan berikutnya.` });
+    }
+    saveUsers(users);
+
+    // Ekstrak teks tiap file lampiran SEBELUM merespons - kalau ada file yang
+    // gagal dibaca, user tahu langsung lewat respons ini (bukan lewat email
+    // gagal tanpa konteks nanti), dan kuota yang sudah kepakai di atas
+    // dikembalikan karena tasknya batal total.
+    const MAX_CONTEXT_CHARS = 60000;
+    let attachedContext = '';
+    try {
+      for (const file of files) {
+        if (attachedContext.length >= MAX_CONTEXT_CHARS) break;
+        const filename = (file.originalname || '').toLowerCase();
+        let text;
+        if (filename.endsWith('.csv')) {
+          text = file.buffer.toString('utf-8').trim();
+          if (!text) throw new Error(`File ${file.originalname} kosong.`);
+        } else {
+          text = await extractTextFromDocument(file);
+        }
+        attachedContext += `\n\n=== Dokumen: ${file.originalname} ===\n${text.slice(0, 20000)}`;
+      }
+      if (attachedContext.length > MAX_CONTEXT_CHARS) {
+        attachedContext = attachedContext.slice(0, MAX_CONTEXT_CHARS) + '\n\n[...dipotong karena terlalu panjang...]';
+      }
+    } catch (extractErr) {
+      if (!isAdminReq(req)) {
+        user.coworkCountThisMonth = Math.max(0, (user.coworkCountThisMonth || 0) - 1);
+        saveUsers(users);
+      }
+      return res.status(400).json({ ok: false, message: extractErr.message || 'Gagal memproses file lampiran.' });
+    }
+
+    const task = {
+      id: uuidv4(),
+      userId: user.id,
+      prompt,
+      inputFiles: files.map(f => f.originalname),
+      status: 'pending',
+      statusLog: 'Menunggu diproses...',
+      resultText: null,
+      outputFileUrl: null,
+      tokensUsed: 0,
+      errorMessage: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const tasks = getCoworkTasks();
+    tasks.push(task);
+    saveCoworkTasks(tasks);
+
+    res.json({ ok: true, taskId: task.id });
+
+    // Eksekusi sungguhan jalan async TANPA await di sini - respons HTTP sudah
+    // dikirim di atas supaya browser user tidak menggantung menunggu GLM 5.2
+    // yang bisa makan waktu beberapa menit. Progress dipoll lewat
+    // GET /api/cowork/status/:id (lihat catatan besar di awal blok ini soal
+    // keterbatasan kalau server redeploy di tengah proses).
+    (async () => {
+      const updateTask = (patch) => {
+        const currentTasks = getCoworkTasks();
+        const idx = currentTasks.findIndex(t => t.id === task.id);
+        if (idx === -1) return;
+        Object.assign(currentTasks[idx], patch, { updatedAt: new Date().toISOString() });
+        saveCoworkTasks(currentTasks);
+      };
+
+      try {
+        updateTask({ status: 'processing', statusLog: 'Menjalankan analisis dengan GLM 5.2...' });
+        const { text, tokensUsed } = await callOpenRouterGLM(prompt, attachedContext);
+
+        updateTask({ statusLog: 'Menyusun dokumen Word (.docx)...' });
+        const children = markdownToDocxChildren(text);
+        const doc = new Document({ sections: [{ children }] });
+        const buffer = await Packer.toBuffer(doc);
+
+        fs.mkdirSync(COWORK_OUTPUTS_DIR, { recursive: true });
+        fs.writeFileSync(path.join(COWORK_OUTPUTS_DIR, `${task.id}.docx`), buffer);
+
+        updateTask({
+          status: 'completed',
+          statusLog: 'Selesai.',
+          resultText: text,
+          outputFileUrl: `/api/cowork/download/${task.id}`,
+          tokensUsed
+        });
+
+        const openUrl = `https://jurnalhub.id/?opencowork=${task.id}`;
+        const promptSummary = prompt.length > 120 ? prompt.slice(0, 120) + '...' : prompt;
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a202c;">
+            <div style="padding: 1.5rem 0; border-bottom: 2px solid #0787dc;">
+              <span style="font-weight: 800; font-size: 1.1rem; color: #0787dc;">JurnalHub</span>
+            </div>
+            <div style="padding: 1.5rem 0;">
+              <h2 style="margin: 0 0 1rem;">Tugas Co-Work Anda telah selesai ditulis!</h2>
+              <p style="line-height: 1.6;">Halo${user.name ? ' ' + escapeHtmlServer(user.name) : ''}, agen Co-Work JurnalHub sudah menyelesaikan tugas berikut:</p>
+              <p style="background: #f7fafc; border-radius: 8px; padding: 1rem; font-style: italic; color: #4a5568;">"${escapeHtmlServer(promptSummary)}"</p>
+              <p style="line-height: 1.6;">Status: <strong>Berhasil</strong> &middot; Format file: <strong>.DOCX</strong></p>
+              <div style="text-align: center; margin: 1.5rem 0;">
+                <a href="${openUrl}" style="display: inline-block; background: #0787dc; color: #ffffff; padding: 0.75rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Buka & Unduh File Word (.docx)</a>
+              </div>
+              <p style="font-size: 0.85rem; color: #718096;">Catatan: File disimpan aman di dashboard JurnalHub Anda, tab Co-Work.</p>
+            </div>
+          </div>`;
+        await sendMailHelper(user.email, '[JurnalHub] Tugas Co-Work Anda Telah Selesai Ditulis! 📄', emailHtml);
+      } catch (taskErr) {
+        console.error('[Co-Work Agent] Task gagal:', task.id, taskErr.message);
+        updateTask({ status: 'failed', statusLog: 'Gagal.', errorMessage: taskErr.message || 'Terjadi kesalahan saat memproses tugas.' });
+
+        // Kembalikan kuota - task gagal di tengah jalan bukan salah user,
+        // jangan sampai mereka rugi kuota untuk tugas yang tidak menghasilkan apa-apa.
+        if (!isAdminReq(req)) {
+          const usersNow = getUsers();
+          const userNow = usersNow.find(u => u.id === user.id);
+          if (userNow) {
+            userNow.coworkCountThisMonth = Math.max(0, (userNow.coworkCountThisMonth || 0) - 1);
+            saveUsers(usersNow);
+          }
+        }
+
+        try {
+          await sendMailHelper(user.email, '[JurnalHub] Tugas Co-Work Anda Gagal Diproses', `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a202c;"><p>Maaf, tugas Co-Work Anda gagal diproses: ${escapeHtmlServer(taskErr.message || 'Kesalahan tidak diketahui.')}</p><p>Kuota Anda untuk tugas ini sudah dikembalikan. Silakan coba lagi lewat dashboard.</p></div>`);
+        } catch (mailErr) {
+          console.error('[Co-Work Agent] Gagal kirim email notifikasi kegagalan:', mailErr.message);
+        }
+      }
+    })();
+  });
+});
+
+app.get('/api/cowork/history', requireAccess, (req, res) => {
+  const tasks = getCoworkTasks()
+    .filter(t => t.userId === req.session.userId)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .map(t => ({
+      id: t.id, prompt: t.prompt, inputFiles: t.inputFiles, status: t.status, statusLog: t.statusLog,
+      outputFileUrl: t.outputFileUrl, errorMessage: t.errorMessage, createdAt: t.createdAt, updatedAt: t.updatedAt
+    }));
+  res.json({ ok: true, tasks });
+});
+
+app.get('/api/cowork/status/:id', requireAccess, (req, res) => {
+  const task = getCoworkTasks().find(t => t.id === req.params.id);
+  if (!task || (task.userId !== req.session.userId && !isAdminReq(req))) {
+    return res.status(404).json({ ok: false, message: 'Task tidak ditemukan.' });
+  }
+  res.json({ ok: true, task: {
+    id: task.id, status: task.status, statusLog: task.statusLog, outputFileUrl: task.outputFileUrl,
+    errorMessage: task.errorMessage, createdAt: task.createdAt, updatedAt: task.updatedAt
+  }});
+});
+
+// Ownership dicek lewat task.userId (bukan cuma requireAccess) - file hasil
+// kerja Co-Work adalah dokumen PRIBADI user (beda dari gambar blast yang
+// sengaja publik), jadi HARUS login sebagai pemilik task (atau admin) untuk
+// bisa mengunduhnya.
+app.get('/api/cowork/download/:id', requireAccess, (req, res) => {
+  const task = getCoworkTasks().find(t => t.id === req.params.id);
+  if (!task || (task.userId !== req.session.userId && !isAdminReq(req))) {
+    return res.status(404).json({ ok: false, message: 'Task tidak ditemukan.' });
+  }
+  if (task.status !== 'completed') {
+    return res.status(400).json({ ok: false, message: 'File belum siap diunduh.' });
+  }
+  const filePath = path.join(COWORK_OUTPUTS_DIR, `${task.id}.docx`);
+  const safeFileName = 'CoWork_' + task.prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') + '.docx';
+  res.download(filePath, safeFileName, (err) => {
+    if (err && !res.headersSent) res.status(404).json({ ok: false, message: 'File tidak ditemukan di server.' });
+  });
 });
 
 // User Authentication API Endpoints

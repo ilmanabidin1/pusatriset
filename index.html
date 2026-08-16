@@ -4579,6 +4579,9 @@
     <a href="#" class="sidebar-link" data-tab="patent-search">
       <i class="fa-solid fa-lightbulb"></i> <span>Pencarian Paten</span>
     </a>
+    <a href="#" class="sidebar-link" data-tab="cowork">
+      <i class="fa-solid fa-robot"></i> <span>Co-Work Agent</span> <span class="new-badge">Baru</span>
+    </a>
   </div>
 
   <!-- Flyout "Koleksi Saya" - beda dari flyout grup lain, isinya BUKAN daftar
@@ -6876,6 +6879,59 @@
         </div>
       </div>
 
+      <!-- Co-Work Agent: asisten riset otonom background via GLM 5.2 (OpenRouter).
+           Bundel di paket Ultimate, kuota 5x run/bulan - lihat initCoworkTab di
+           app.js untuk logic submit/poll/render riwayat. -->
+      <div id="tabContentCowork" class="tab-content">
+        <div style="max-width: 800px; margin: 0 auto;">
+
+          <!-- Upsell - ditampilkan kalau bukan Ultimate/admin (lihat applyAdminVisibility
+               & checkAuthState di app.js yang toggle display 2 blok ini). -->
+          <div id="coworkUpsell" class="filter-box-card" style="padding: 3rem 2rem; text-align: center; display: none;">
+            <i class="fa-solid fa-robot" style="font-size: 2.2rem; color: var(--brand-blue); margin-bottom: 1rem;"></i>
+            <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; color: var(--text-main); margin: 0 0 0.5rem;">Co-Work Agent khusus akun Ultimate</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 480px; margin: 0 auto 1.5rem;">Beri instruksi bebas (misal: susun draf paper 10.000 kata, sintesis beberapa PDF jurnal sekaligus), lampirkan dokumen pendukung, lalu biarkan agen bekerja di background. Hasilnya dikirim otomatis ke email Anda dalam format Word (.docx) - tidak perlu menunggu di depan layar.</p>
+            <button type="button" id="coworkUpsellBtn" class="upgrade-btn" style="width: auto; padding: 0.7rem 2rem;">Upgrade ke Ultimate</button>
+          </div>
+
+          <div id="coworkMain" style="display: none;">
+            <div class="filter-box-card" style="padding: 1.5rem 2rem; margin-bottom: 1.5rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.6rem;">
+                <i class="fa-solid fa-robot" style="color: var(--brand-blue);"></i> Co-Work Agent
+              </h3>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 1rem;">Jalankan tugas akademis berdurasi panjang di background. Anda akan menerima email begitu hasilnya (.docx) selesai ditulis.</p>
+              <p id="coworkQuotaText" style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 1rem;">-</p>
+
+              <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                <div>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Instruksi / Prompt</label>
+                  <textarea id="coworkPrompt" rows="6" maxlength="8000" placeholder="mis. Susun draf lengkap Bab 2 (Tinjauan Pustaka) sepanjang 3000 kata tentang dampak media sosial terhadap kesehatan mental remaja, berdasarkan dokumen yang saya lampirkan..." style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main); resize: vertical;"></textarea>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Lampiran Dokumen (opsional - PDF/DOCX/TXT/CSV, maks 20MB total)</label>
+                  <input type="file" id="coworkFiles" accept=".pdf,.docx,.txt,.csv" multiple style="width: 100%; font-size: 0.85rem;">
+                  <p id="coworkFilesInfo" style="font-size: 0.76rem; color: var(--text-muted); margin: 0.4rem 0 0;"></p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                  <button type="button" id="coworkSubmitBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.5rem;">
+                    <i class="fa-solid fa-play"></i> Jalankan Co-Work
+                  </button>
+                  <span id="coworkSubmitStatus" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-box-card" style="padding: 1.5rem 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-main); margin-bottom: 1rem;">Riwayat Tugas</h3>
+              <div id="coworkHistoryList">
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Memuat...</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -6895,7 +6951,7 @@
       const SIDEBAR_GROUPS = {
         'cari-jelajah': ['database-jurnal', 'cari-referensi', 'citation-graph'],
         'tulis-review': ['notebook', 'ai-research', 'peer-reviewer', 'templates', 'prompt-bank'],
-        'riset-lanjutan': ['slr', 'patent-search'],
+        'riset-lanjutan': ['slr', 'patent-search', 'cowork'],
         'koleksi-saya': ['koleksi-saya']
       };
       const sidebar = document.getElementById('sidebar');
@@ -7015,6 +7071,10 @@
         // datanya perlu selalu terkini, bukan tab yang sering dibuka juga)
         if (tabName === 'admin' && window.loadAdminUsers) {
           window.loadAdminUsers();
+        }
+
+        if (tabName === 'cowork' && window.loadCoworkTab) {
+          window.loadCoworkTab();
         }
       }
       window.switchTab = switchTab;

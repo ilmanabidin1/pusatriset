@@ -354,6 +354,181 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
+  // --- CO-WORK AGENT (asisten riset otonom background via GLM 5.2/OpenRouter) ---
+  // Bundel di paket Ultimate (lihat applyCoworkVisibility di checkAuthState),
+  // kuota 5x run/bulan. Tidak ada push/websocket dari server - progress task
+  // yang masih pending/processing dipoll berkala (lihat window.loadCoworkTab).
+  function applyCoworkVisibility(user) {
+    const upsell = document.getElementById('coworkUpsell');
+    const main = document.getElementById('coworkMain');
+    if (!upsell || !main) return;
+    const isEligible = !!(user && (user.type === 'ultimate' || user.isAdmin));
+    upsell.style.display = isEligible ? 'none' : 'block';
+    main.style.display = isEligible ? 'block' : 'none';
+  }
+
+  function formatCoworkDate(iso) {
+    if (!iso) return '-';
+    try { return new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    catch (e) { return '-'; }
+  }
+
+  const COWORK_STATUS_META = {
+    pending: { label: 'Menunggu', color: '#a0aec0', icon: 'fa-clock' },
+    processing: { label: 'Diproses', color: '#0787dc', icon: 'fa-spinner fa-spin' },
+    completed: { label: 'Selesai', color: '#16a34a', icon: 'fa-circle-check' },
+    failed: { label: 'Gagal', color: '#dc2626', icon: 'fa-circle-exclamation' }
+  };
+
+  // Perkiraan kuota terpakai dihitung dari riwayat task client-side (bukan
+  // field baru dari server) - task yang gagal TIDAK dihitung karena kuotanya
+  // otomatis dikembalikan server (lihat catatan rollback di POST
+  // /api/cowork/submit), jadi logikanya sengaja dicocokkan persis di sini.
+  function updateCoworkQuotaText(tasks) {
+    const el = document.getElementById('coworkQuotaText');
+    if (!el) return;
+    if (window.currentUser && window.currentUser.user && window.currentUser.user.isAdmin) {
+      el.textContent = 'Akun admin: tanpa batas kuota.';
+      return;
+    }
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const usedThisMonth = tasks.filter(t => t.status !== 'failed' && (t.createdAt || '').slice(0, 7) === currentMonth).length;
+    el.textContent = `Kuota bulan ini: ${usedThisMonth} dari 5 kali dipakai.`;
+  }
+
+  function renderCoworkHistory(tasks) {
+    const listEl = document.getElementById('coworkHistoryList');
+    if (!listEl) return;
+    if (tasks.length === 0) {
+      listEl.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Belum ada tugas Co-Work yang dijalankan.</p>';
+      return;
+    }
+    listEl.innerHTML = tasks.map(t => {
+      const st = COWORK_STATUS_META[t.status] || COWORK_STATUS_META.pending;
+      const filesText = (t.inputFiles && t.inputFiles.length) ? ` · ${t.inputFiles.length} file lampiran` : '';
+      const downloadBtn = (t.status === 'completed' && t.outputFileUrl)
+        ? `<a href="${t.outputFileUrl}" style="font-size: 0.8rem; font-weight: 700; color: #fff; background: var(--brand-blue); padding: 0.4rem 0.9rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;"><i class="fa-solid fa-download"></i> Unduh .docx</a>`
+        : '';
+      const errorText = (t.status === 'failed' && t.errorMessage)
+        ? `<p style="font-size: 0.78rem; color: #dc2626; margin: 0.4rem 0 0;">${escapeHtml(t.errorMessage)}</p>`
+        : '';
+      return `
+        <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 0.75rem;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+              <p style="margin: 0 0 0.3rem; font-size: 0.88rem; color: var(--text-main); font-weight: 600;">${escapeHtml(truncate(t.prompt, 140))}</p>
+              <p style="margin: 0; font-size: 0.76rem; color: var(--text-muted);">
+                <i class="fa-solid ${st.icon}" style="color: ${st.color};"></i>
+                <span style="color: ${st.color}; font-weight: 600;">${st.label}</span>${t.status === 'processing' && t.statusLog ? ' · ' + escapeHtml(t.statusLog) : ''}${filesText} · ${formatCoworkDate(t.createdAt)}
+              </p>
+              ${errorText}
+            </div>
+            <div>${downloadBtn}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  let coworkPollTimer = null;
+  window.loadCoworkTab = async function loadCoworkTab() {
+    const listEl = document.getElementById('coworkHistoryList');
+    try {
+      const res = await fetch('/api/cowork/history');
+      const data = await res.json();
+      if (!data.ok) {
+        if (listEl) listEl.innerHTML = `<p style="color: #dc2626; font-size: 0.85rem;">${escapeHtml(data.message || 'Gagal memuat riwayat.')}</p>`;
+        return;
+      }
+      const tasks = data.tasks || [];
+      renderCoworkHistory(tasks);
+      updateCoworkQuotaText(tasks);
+
+      clearInterval(coworkPollTimer);
+      const hasActive = tasks.some(t => t.status === 'pending' || t.status === 'processing');
+      if (hasActive) {
+        coworkPollTimer = setInterval(async () => {
+          try {
+            const r = await fetch('/api/cowork/history');
+            const d = await r.json();
+            if (!d.ok) return;
+            const freshTasks = d.tasks || [];
+            renderCoworkHistory(freshTasks);
+            updateCoworkQuotaText(freshTasks);
+            if (!freshTasks.some(t => t.status === 'pending' || t.status === 'processing')) {
+              clearInterval(coworkPollTimer);
+            }
+          } catch (err) {
+            // diamkan - polling berikutnya akan coba lagi
+          }
+        }, 5000);
+      }
+    } catch (err) {
+      if (listEl) listEl.innerHTML = '<p style="color: #dc2626; font-size: 0.85rem;">Gagal terhubung ke server.</p>';
+    }
+  };
+
+  (function initCoworkTab() {
+    const upsellBtn = document.getElementById('coworkUpsellBtn');
+    if (upsellBtn) {
+      upsellBtn.addEventListener('click', () => {
+        const upgradeModal = document.getElementById('upgradeModal');
+        if (upgradeModal) upgradeModal.classList.add('active');
+      });
+    }
+
+    const filesEl = document.getElementById('coworkFiles');
+    const filesInfoEl = document.getElementById('coworkFilesInfo');
+    if (filesEl) {
+      filesEl.addEventListener('change', () => {
+        const files = Array.from(filesEl.files || []);
+        if (!filesInfoEl) return;
+        if (files.length === 0) { filesInfoEl.textContent = ''; return; }
+        const totalMb = (files.reduce((sum, f) => sum + f.size, 0) / (1024 * 1024)).toFixed(1);
+        filesInfoEl.textContent = `${files.length} file dipilih (total ${totalMb}MB).`;
+      });
+    }
+
+    const submitBtn = document.getElementById('coworkSubmitBtn');
+    if (!submitBtn) return;
+    submitBtn.addEventListener('click', async () => {
+      const promptEl = document.getElementById('coworkPrompt');
+      const statusEl = document.getElementById('coworkSubmitStatus');
+      const prompt = promptEl ? promptEl.value.trim() : '';
+      if (!prompt) {
+        alert('Instruksi/prompt wajib diisi.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      const files = Array.from((filesEl && filesEl.files) || []);
+      files.forEach(f => formData.append('files', f));
+
+      submitBtn.disabled = true;
+      if (statusEl) statusEl.textContent = 'Mengirim tugas...';
+      try {
+        const res = await fetch('/api/cowork/submit', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!data.ok) {
+          alert(data.message || 'Gagal menjalankan Co-Work.');
+          submitBtn.disabled = false;
+          if (statusEl) statusEl.textContent = '';
+          return;
+        }
+        if (promptEl) promptEl.value = '';
+        if (filesEl) filesEl.value = '';
+        if (filesInfoEl) filesInfoEl.textContent = '';
+        if (statusEl) statusEl.textContent = 'Tugas mulai dijalankan di background. Anda akan menerima email begitu selesai.';
+        submitBtn.disabled = false;
+        window.loadCoworkTab();
+      } catch (err) {
+        alert('Gagal terhubung ke server.');
+        submitBtn.disabled = false;
+        if (statusEl) statusEl.textContent = '';
+      }
+    });
+  })();
+
   // Cache ringan berisi doi/judul paper yang sudah tersimpan di Koleksi Saya
   // (folder manapun) - dipakai supaya tombol "Simpan" di kartu Cari Referensi &
   // popover sitasi otomatis berubah jadi "Tersimpan" (dan tidak bisa diklik lagi)
@@ -1743,6 +1918,22 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           applyAdminVisibility(currentUser.user);
+          applyCoworkVisibility(currentUser.user);
+
+          // Deep-link dari tombol CTA di email notifikasi "Tugas Co-Work selesai"
+          // (?opencowork=<taskId>, lihat POST /api/cowork/submit di server.js) -
+          // buka langsung tab Co-Work saat pertama kali halaman dimuat. Ditandai
+          // sekali (window.__coworkDeepLinkHandled) supaya checkAuthState yang
+          // terpanggil ulang berikutnya (mis. setelah pembayaran) tidak memaksa
+          // pindah tab lagi kalau user sudah pindah ke tab lain.
+          if (!window.__coworkDeepLinkHandled) {
+            window.__coworkDeepLinkHandled = true;
+            const coworkDeepLinkParams = new URLSearchParams(window.location.search);
+            if (coworkDeepLinkParams.get('opencowork') && window.switchTab) {
+              window.switchTab('cowork');
+              window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+            }
+          }
 
           // Update settings fields
           const settingsEmail = document.getElementById('settingsEmail');
