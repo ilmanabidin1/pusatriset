@@ -9417,6 +9417,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let thinkingText = '';
         let contentText = '';
         let streamCitations = null;
+        // null = belum ada preferensi eksplisit dari user (pakai default
+        // otomatis: terbuka selagi masih berpikir, tertutup begitu jawaban
+        // mulai muncul) - true/false = user sudah klik summary card sendiri,
+        // preferensi itu HARUS dihormati di update berikutnya. Tanpa ini,
+        // assistantBubbleEl.innerHTML yang diganti total tiap chunk bakal
+        // membuat ulang elemen <details> dari nol tiap kali (mengikuti
+        // isOpen otomatis lagi), membatalkan fold manual user dalam hitungan
+        // milidetik - persis keluhan "card gabisa di-fold".
+        let thinkingUserOverride = null;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -9443,9 +9452,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
 
+          // Cek posisi scroll SEBELUM konten baru dipasang (bukan sesudah) -
+          // penting karena 1 chunk bisa membuat scrollHeight melompat cukup
+          // jauh dalam satu langkah (mis. chunk pertama yang langsung berisi
+          // beberapa kalimat thinking sekaligus). Kalau dicek SESUDAH, lompatan
+          // itu sendiri bisa membuat kondisi "dekat bawah" jadi salah dianggap
+          // false padahal user tidak pernah scroll manual sama sekali - efeknya
+          // auto-scroll berhenti mengikuti sejak chunk pertama. Dengan dicek
+          // SEBELUM, keputusannya murni berdasarkan ke mana user sendiri
+          // terakhir men-scroll, dilepas dari seberapa besar lompatan konten
+          // barunya.
+          const wasNearBottom = researchChatMessagesEl.scrollHeight - researchChatMessagesEl.scrollTop - researchChatMessagesEl.clientHeight < 60;
+
           let html = '';
           if (thinkingText) {
-            const isOpen = !contentText; // Tetap terbuka selama contentText belum mulai masuk
+            const autoOpen = !contentText; // Default: tetap terbuka selama contentText belum mulai masuk
+            const isOpen = thinkingUserOverride !== null ? thinkingUserOverride : autoOpen;
             html += `
               <details class="research-chat-thinking-block" ${isOpen ? 'open' : ''}>
                 <summary class="research-chat-thinking-summary">
@@ -9467,7 +9489,27 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           assistantBubbleEl.innerHTML = html || '<div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; padding: 0.25rem 0;"><i class="fa-solid fa-spinner fa-spin" style="color: var(--brand-blue); margin-right: 0.4rem;"></i> Menyiapkan jawaban...</div>';
-          researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+
+          // innerHTML di atas membuang elemen <details> lama beserta listener-nya -
+          // pasang ulang tiap chunk supaya toggle manual user (klik summary)
+          // selalu tertangkap & disimpan sbg preferensi eksplisit (lihat
+          // thinkingUserOverride di atas), bukan cuma di render pertama.
+          const thinkingDetailsEl = assistantBubbleEl.querySelector('.research-chat-thinking-block');
+          if (thinkingDetailsEl) {
+            thinkingDetailsEl.addEventListener('toggle', () => {
+              thinkingUserOverride = thinkingDetailsEl.open;
+            });
+          }
+
+          // Auto-scroll HANYA kalau user memang SUDAH berada di dekat bagian
+          // paling bawah SEBELUM chunk ini masuk - kalau tidak, ini "merebut"
+          // scroll position user tiap chunk (bisa puluhan kali/detik selama
+          // streaming), yang terasa seperti mouse wheel macet karena posisi
+          // scroll dipaksa balik ke bawah lagi hampir seketika setiap kali
+          // user coba scroll ke atas.
+          if (wasNearBottom) {
+            researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
+          }
         }
 
         if (!contentText && !thinkingText) {
