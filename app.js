@@ -518,12 +518,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Contoh prompt siap-klik - masalah UX yang diperbaiki di sini: fitur "bebas
+  // ketik apa saja" bikin user awam bingung harus nulis instruksi seperti apa
+  // supaya hasilnya maksimal. Klik salah satu langsung MENGISI textarea dgn
+  // template ini (bukan cuma placeholder yang hilang begitu mulai mengetik),
+  // tetap bisa diedit/disesuaikan user sebelum submit.
+  const COWORK_PROMPT_EXAMPLES = [
+    {
+      label: 'Draf Bab Tinjauan Pustaka',
+      icon: 'fa-file-lines',
+      prompt: 'Susun draf lengkap Bab 2 (Tinjauan Pustaka) sepanjang 3000 kata tentang [topik penelitian Anda], berdasarkan dokumen yang saya lampirkan. Gunakan format sitasi APA 7th.'
+    },
+    {
+      label: 'Sintesis Dokumen Lampiran',
+      icon: 'fa-layer-group',
+      prompt: 'Baca semua dokumen yang saya lampirkan, lalu buat sintesis kritis yang membandingkan temuan, metode, dan gap penelitian dari masing-masing sumber.'
+    },
+    {
+      label: 'Analisis Data',
+      icon: 'fa-chart-simple',
+      prompt: 'Analisis data yang saya lampirkan (format CSV), identifikasi pola/tren utama, lalu sajikan hasilnya dalam tabel ringkasan beserta interpretasinya.'
+    },
+    {
+      label: 'Ringkasan Multi-Dokumen',
+      icon: 'fa-clone',
+      prompt: 'Ringkas seluruh dokumen yang saya lampirkan menjadi satu tinjauan pustaka terpadu, urutkan berdasarkan tema, dan sertakan sitasi tiap sumber.'
+    }
+  ];
+
   (function initCoworkTab() {
     const upsellBtn = document.getElementById('coworkUpsellBtn');
     if (upsellBtn) {
       upsellBtn.addEventListener('click', () => {
         const upgradeModal = document.getElementById('upgradeModal');
         if (upgradeModal) upgradeModal.classList.add('active');
+      });
+    }
+
+    const promptExamplesEl = document.getElementById('coworkPromptExamples');
+    const coworkPromptEl = document.getElementById('coworkPrompt');
+    if (promptExamplesEl && coworkPromptEl) {
+      promptExamplesEl.innerHTML = COWORK_PROMPT_EXAMPLES.map((ex, i) => `
+        <button type="button" class="cowork-example-chip" data-example-index="${i}" style="font-size: 0.76rem; font-weight: 600; color: var(--brand-blue); background: rgba(7,135,220,0.08); border: 1px solid rgba(7,135,220,0.2); padding: 0.35rem 0.75rem; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap;">
+          <i class="fa-solid ${ex.icon}"></i> ${escapeHtml(ex.label)}
+        </button>
+      `).join('');
+
+      promptExamplesEl.addEventListener('click', (e) => {
+        const chip = e.target.closest('.cowork-example-chip');
+        if (!chip) return;
+        const idx = Number(chip.getAttribute('data-example-index'));
+        const example = COWORK_PROMPT_EXAMPLES[idx];
+        if (!example) return;
+        coworkPromptEl.value = example.prompt;
+        coworkPromptEl.focus();
+        // Auto-select bagian placeholder "[topik penelitian Anda]" kalau ada,
+        // supaya user tinggal langsung ketik topiknya tanpa perlu klik-klik
+        // pilih teks itu sendiri dulu.
+        const placeholderMatch = example.prompt.match(/\[.+?\]/);
+        if (placeholderMatch) {
+          coworkPromptEl.setSelectionRange(placeholderMatch.index, placeholderMatch.index + placeholderMatch[0].length);
+        }
       });
     }
 

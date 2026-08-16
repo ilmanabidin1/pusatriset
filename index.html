@@ -6934,6 +6934,11 @@
               <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                 <div>
                   <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Instruksi / Prompt</label>
+                  <!-- Chip contoh prompt - klik langsung isi textarea dengan template
+                       siap-edit (bukan cuma placeholder yang hilang begitu mulai
+                       ngetik), supaya user awam langsung dapat gambaran format
+                       instruksi yang bagus. Lihat COWORK_PROMPT_EXAMPLES di app.js. -->
+                  <div id="coworkPromptExamples" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem;"></div>
                   <textarea id="coworkPrompt" rows="6" maxlength="8000" placeholder="mis. Susun draf lengkap Bab 2 (Tinjauan Pustaka) sepanjang 3000 kata tentang dampak media sosial terhadap kesehatan mental remaja, berdasarkan dokumen yang saya lampirkan..." style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main); resize: vertical;"></textarea>
                 </div>
                 <div>
