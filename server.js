@@ -849,7 +849,11 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
 });
 
 // --- CO-WORK AGENT (asisten riset otonom background, via OpenRouter GLM 5.2) ---
-// Fitur bundel di paket Ultimate (tanpa biaya tambahan), kuota 5x run/bulan.
+// Fitur bundel di paket Premium & Ultimate (tanpa biaya tambahan) - free TIDAK
+// bisa akses sama sekali. Kuota beda per tier (lihat COWORK_MONTHLY_QUOTA_BY_TIER)
+// dan SENGAJA tidak ditampilkan ke user di UI (permintaan eksplisit) - begitu
+// kuota bulan itu habis, submit berikutnya langsung ditolak 403 dgn pesan
+// error, tanpa indikator sisa kuota di mana pun sebelumnya.
 // TIDAK ada job queue sungguhan (Redis/BullMQ dsb) di app ini - pola yang
 // dipakai sama seperti Email Blast di atas: request submit langsung dibalas
 // begitu task tercatat di cowork-tasks.json, lalu eksekusi sungguhan (panggil
@@ -858,7 +862,7 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
 // redeploy di tengah proses (Railway auto-deploy tiap push ke main), task yang
 // sedang 'processing' TIDAK otomatis lanjut - akan tersangkut di status itu
 // selamanya (keterbatasan yang sama, tidak ada resume mechanism).
-const COWORK_MONTHLY_QUOTA = 5;
+const COWORK_MONTHLY_QUOTA_BY_TIER = { premium: 3, ultimate: 5 };
 const COWORK_TASKS_FILE = path.join(DATA_DIR, 'cowork-tasks.json');
 const COWORK_OUTPUTS_DIR = path.join(DATA_DIR, 'uploads', 'cowork-outputs');
 const OPENROUTER_MODEL = 'z-ai/glm-5.2';
@@ -896,13 +900,14 @@ function saveCoworkTasks(tasks) {
 // lain (lihat resetMonthlyQuotasOnUpgrade) - dipanggil SEBELUM merespons submit
 // (bukan di worker async) supaya dua submit paralel dari user yang sama tidak
 // bisa berdua lolos kuota (race condition) begitu saja.
-function checkAndConsumeCoworkQuota(user) {
+function checkAndConsumeCoworkQuota(user, tier) {
   const currentMonth = new Date().toISOString().slice(0, 7);
   if (user.lastCoworkMonth !== currentMonth) {
     user.lastCoworkMonth = currentMonth;
     user.coworkCountThisMonth = 0;
   }
-  if (user.coworkCountThisMonth >= COWORK_MONTHLY_QUOTA) {
+  const limit = COWORK_MONTHLY_QUOTA_BY_TIER[tier] || 0;
+  if (user.coworkCountThisMonth >= limit) {
     return false;
   }
   user.coworkCountThisMonth += 1;
@@ -1124,12 +1129,12 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
     }
 
     const userType = computeEffectiveUserType(user);
-    if (!isAdminReq(req) && userType !== 'ultimate') {
-      return res.status(403).json({ ok: false, message: 'Fitur Co-Work Agent khusus akun Ultimate.' });
+    if (!isAdminReq(req) && userType !== 'premium' && userType !== 'ultimate') {
+      return res.status(403).json({ ok: false, message: 'Fitur Co-Work Agent khusus akun Premium & Ultimate.' });
     }
 
-    if (!isAdminReq(req) && !checkAndConsumeCoworkQuota(user)) {
-      return res.status(403).json({ ok: false, message: `Kuota Co-Work Agent bulan ini sudah habis (maksimal ${COWORK_MONTHLY_QUOTA}x/bulan). Kuota akan reset di awal bulan berikutnya.` });
+    if (!isAdminReq(req) && !checkAndConsumeCoworkQuota(user, userType)) {
+      return res.status(403).json({ ok: false, message: 'Kuota Co-Work Agent bulan ini sudah habis. Kuota akan reset di awal bulan berikutnya.' });
     }
     saveUsers(users);
 

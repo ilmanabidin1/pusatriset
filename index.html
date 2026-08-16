@@ -6880,8 +6880,10 @@
       </div>
 
       <!-- Co-Work Agent: asisten riset otonom background via GLM 5.2 (OpenRouter).
-           Bundel di paket Ultimate, kuota 5x run/bulan - lihat initCoworkTab di
-           app.js untuk logic submit/poll/render riwayat. -->
+           Bundel di paket Premium & Ultimate (free tidak bisa akses), kuota
+           beda per tier (Premium 3x, Ultimate 5x/bulan, tidak ditampilkan ke
+           user) - lihat initCoworkTab di app.js untuk logic submit/poll/render
+           riwayat. -->
       <style>
         .cowork-progress-track {
           width: 100%;
@@ -6909,13 +6911,17 @@
       <div id="tabContentCowork" class="tab-content">
         <div style="max-width: 800px; margin: 0 auto;">
 
-          <!-- Upsell - ditampilkan kalau bukan Ultimate/admin (lihat applyAdminVisibility
-               & checkAuthState di app.js yang toggle display 2 blok ini). -->
+          <!-- Upsell - ditampilkan kalau free (bukan Premium/Ultimate/admin, lihat
+               applyCoworkVisibility & checkAuthState di app.js yang toggle display
+               2 blok ini). Kuota (Premium 3x, Ultimate 5x/bulan - lihat
+               COWORK_MONTHLY_QUOTA_BY_TIER di server.js) sengaja TIDAK ditampilkan
+               di mana pun di tab ini (permintaan eksplisit) - habis kuota cukup
+               ditangani lewat pesan error 403 saat submit, bukan indikator sisa. -->
           <div id="coworkUpsell" class="filter-box-card" style="padding: 3rem 2rem; text-align: center; display: none;">
             <i class="fa-solid fa-robot" style="font-size: 2.2rem; color: var(--brand-blue); margin-bottom: 1rem;"></i>
-            <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; color: var(--text-main); margin: 0 0 0.5rem;">Co-Work Agent khusus akun Ultimate</h3>
+            <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; color: var(--text-main); margin: 0 0 0.5rem;">Co-Work Agent khusus akun Premium & Ultimate</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 480px; margin: 0 auto 1.5rem;">Beri instruksi bebas (misal: susun draf paper 10.000 kata, sintesis beberapa PDF jurnal sekaligus), lampirkan dokumen pendukung, lalu biarkan agen bekerja di background. Hasilnya dikirim otomatis ke email Anda dalam format Word (.docx) - tidak perlu menunggu di depan layar.</p>
-            <button type="button" id="coworkUpsellBtn" class="upgrade-btn" style="width: auto; padding: 0.7rem 2rem;">Upgrade ke Ultimate</button>
+            <button type="button" id="coworkUpsellBtn" class="upgrade-btn" style="width: auto; padding: 0.7rem 2rem;">Upgrade Sekarang</button>
           </div>
 
           <div id="coworkMain" style="display: none;">
@@ -6924,7 +6930,6 @@
                 <i class="fa-solid fa-robot" style="color: var(--brand-blue);"></i> Co-Work Agent
               </h3>
               <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 1rem;">Jalankan tugas akademis berdurasi panjang di background. Anda akan menerima email begitu hasilnya (.docx) selesai ditulis.</p>
-              <p id="coworkQuotaText" style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 1rem;">-</p>
 
               <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                 <div>

@@ -355,14 +355,19 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   // --- CO-WORK AGENT (asisten riset otonom background via GLM 5.2/OpenRouter) ---
-  // Bundel di paket Ultimate (lihat applyCoworkVisibility di checkAuthState),
-  // kuota 5x run/bulan. Tidak ada push/websocket dari server - progress task
-  // yang masih pending/processing dipoll berkala (lihat window.loadCoworkTab).
+  // Bundel di paket Premium & Ultimate (free tidak bisa akses sama sekali) -
+  // lihat applyCoworkVisibility di checkAuthState. Kuotanya beda per tier
+  // (Premium 3x, Ultimate 5x/bulan, lihat COWORK_MONTHLY_QUOTA_BY_TIER di
+  // server.js) dan SENGAJA TIDAK ditampilkan ke user di sini (permintaan
+  // eksplisit) - begitu kuota habis, submit berikutnya langsung ditolak
+  // server dengan pesan error, tanpa indikator sisa kuota di UI mana pun.
+  // Tidak ada push/websocket dari server - progress task yang masih
+  // pending/processing dipoll berkala (lihat window.loadCoworkTab).
   function applyCoworkVisibility(user) {
     const upsell = document.getElementById('coworkUpsell');
     const main = document.getElementById('coworkMain');
     if (!upsell || !main) return;
-    const isEligible = !!(user && (user.type === 'ultimate' || user.isAdmin));
+    const isEligible = !!(user && (user.type === 'premium' || user.type === 'ultimate' || user.isAdmin));
     upsell.style.display = isEligible ? 'none' : 'block';
     main.style.display = isEligible ? 'block' : 'none';
   }
@@ -379,22 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
     completed: { label: 'Selesai', color: '#16a34a', icon: 'fa-circle-check' },
     failed: { label: 'Gagal', color: '#dc2626', icon: 'fa-circle-exclamation' }
   };
-
-  // Perkiraan kuota terpakai dihitung dari riwayat task client-side (bukan
-  // field baru dari server) - task yang gagal TIDAK dihitung karena kuotanya
-  // otomatis dikembalikan server (lihat catatan rollback di POST
-  // /api/cowork/submit), jadi logikanya sengaja dicocokkan persis di sini.
-  function updateCoworkQuotaText(tasks) {
-    const el = document.getElementById('coworkQuotaText');
-    if (!el) return;
-    if (window.currentUser && window.currentUser.user && window.currentUser.user.isAdmin) {
-      el.textContent = 'Akun admin: tanpa batas kuota.';
-      return;
-    }
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const usedThisMonth = tasks.filter(t => t.status !== 'failed' && (t.createdAt || '').slice(0, 7) === currentMonth).length;
-    el.textContent = `Kuota bulan ini: ${usedThisMonth} dari 5 kali dipakai.`;
-  }
 
   // Timer elapsed utk task 'processing' - JALAN TERPISAH dari poll 5 detik
   // (lihat window.loadCoworkTab) supaya angkanya update tiap detik tanpa
@@ -491,7 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const tasks = data.tasks || [];
       renderCoworkHistory(tasks);
-      updateCoworkQuotaText(tasks);
 
       clearInterval(coworkPollTimer);
       const hasActive = tasks.some(t => t.status === 'pending' || t.status === 'processing');
@@ -503,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!d.ok) return;
             const freshTasks = d.tasks || [];
             renderCoworkHistory(freshTasks);
-            updateCoworkQuotaText(freshTasks);
             if (!freshTasks.some(t => t.status === 'pending' || t.status === 'processing')) {
               clearInterval(coworkPollTimer);
             }
