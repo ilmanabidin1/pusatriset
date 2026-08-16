@@ -862,7 +862,7 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
 // redeploy di tengah proses (Railway auto-deploy tiap push ke main), task yang
 // sedang 'processing' TIDAK otomatis lanjut - akan tersangkut di status itu
 // selamanya (keterbatasan yang sama, tidak ada resume mechanism).
-const COWORK_MONTHLY_QUOTA_BY_TIER = { premium: 3, ultimate: 5 };
+const COWORK_MONTHLY_QUOTA_BY_TIER = { premium: 5, ultimate: 10 };
 const COWORK_TASKS_FILE = path.join(DATA_DIR, 'cowork-tasks.json');
 const COWORK_OUTPUTS_DIR = path.join(DATA_DIR, 'uploads', 'cowork-outputs');
 const OPENROUTER_MODEL = 'z-ai/glm-5.2';
