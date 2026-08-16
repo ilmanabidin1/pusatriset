@@ -987,17 +987,26 @@ async function callOpenRouterGLM(userPrompt, attachedContext) {
 // --- Konversi Markdown (keluaran GLM 5.2) -> elemen docx native ---
 // Sengaja parser sederhana (bukan library markdown umum) - cukup untuk subset
 // Markdown yang diminta dihasilkan lewat COWORK_SYSTEM_PROMPT di atas
-// (heading #/##/###, bullet, list bernomor, **bold**, tabel pipe-delimited).
+// (heading #/##/###, bullet, list bernomor, **bold**/*italic*, tabel
+// pipe-delimited). Regex ini SENGAJA coba pola **bold** dulu baru *italic*
+// sebagai alternatif di posisi yang sama - sebelumnya cuma **bold** yang
+// ditangani, jadi *italic* tunggal (mis. nama jurnal di sitasi APA, keterangan
+// tabel) lolos apa adanya dgn tanda bintang literal ke docx hasil akhir
+// (terlihat jelek, bukan benar-benar miring).
 function parseInlineRuns(text) {
   const runs = [];
-  const regex = /\*\*(.+?)\*\*/g;
+  const regex = /\*\*(.+?)\*\*|\*(.+?)\*/g;
   let lastIndex = 0;
   let match;
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
       runs.push(new TextRun({ text: text.slice(lastIndex, match.index) }));
     }
-    runs.push(new TextRun({ text: match[1], bold: true }));
+    if (match[1] !== undefined) {
+      runs.push(new TextRun({ text: match[1], bold: true }));
+    } else {
+      runs.push(new TextRun({ text: match[2], italics: true }));
+    }
     lastIndex = regex.lastIndex;
   }
   if (lastIndex < text.length) {
@@ -1214,7 +1223,9 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
         // timer elapsed selama proses (lihat renderCoworkHistory di app.js),
         // supaya waktu tunggu di antrean (biasanya nyaris nol di app ini,
         // tapi tetap) tidak ikut ke-hitung sebagai "sedang diproses".
-        updateTask({ status: 'processing', statusLog: 'Menjalankan analisis dengan GLM 5.2...', startedAt: new Date().toISOString() });
+        // statusLog SENGAJA tidak menyebut nama model/vendor AI di baliknya -
+        // ditampilkan ke user sebagai brand JurnalHub Co-Work saja.
+        updateTask({ status: 'processing', statusLog: 'JurnalHub Co-Work sedang memproses tugas Anda...', startedAt: new Date().toISOString() });
         const { text, tokensUsed } = await callOpenRouterGLM(prompt, attachedContext);
 
         updateTask({ statusLog: 'Menyusun dokumen Word (.docx)...' });
@@ -1317,6 +1328,28 @@ app.get('/api/cowork/download/:id', requireAccess, (req, res) => {
   res.download(filePath, safeFileName, (err) => {
     if (err && !res.headersSent) res.status(404).json({ ok: false, message: 'File tidak ditemukan di server.' });
   });
+});
+
+// Hapus 1 riwayat task Co-Work milik user sendiri (atau admin). Aman dipanggil
+// utk task apapun statusnya (termasuk 'processing') - kalau worker async-nya
+// masih jalan di background, updateTask() di dalamnya sudah punya guard
+// `if (idx === -1) return;` sendiri, jadi begitu task ini dihapus dari
+// cowork-tasks.json, update status berikutnya dari worker itu otomatis
+// jadi no-op, tidak error.
+app.delete('/api/cowork/task/:id', requireAccess, (req, res) => {
+  const tasks = getCoworkTasks();
+  const task = tasks.find(t => t.id === req.params.id);
+  if (!task || (task.userId !== req.session.userId && !isAdminReq(req))) {
+    return res.status(404).json({ ok: false, message: 'Task tidak ditemukan.' });
+  }
+  const remaining = tasks.filter(t => t.id !== req.params.id);
+  saveCoworkTasks(remaining);
+  try {
+    fs.unlinkSync(path.join(COWORK_OUTPUTS_DIR, `${task.id}.docx`));
+  } catch (err) {
+    // File mungkin belum pernah dibuat (task belum selesai/gagal) - aman diabaikan.
+  }
+  res.json({ ok: true });
 });
 
 // User Authentication API Endpoints

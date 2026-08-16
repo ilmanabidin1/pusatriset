@@ -446,6 +446,13 @@ document.addEventListener('DOMContentLoaded', () => {
              </p>
            </div>`
         : '';
+      // Durasi total setelah selesai/gagal - dihitung sekali dari
+      // startedAt->updatedAt (updatedAt tidak berubah lagi setelah task
+      // mencapai status akhir, jadi angkanya statis, bukan ticking).
+      const durationText = (t.status === 'completed' || t.status === 'failed') && t.startedAt
+        ? `${t.status === 'completed' ? 'Selesai' : 'Gagal'} dalam ${formatCoworkElapsed(new Date(t.updatedAt) - new Date(t.startedAt))}`
+        : '';
+      const deleteBtn = `<button type="button" class="cowork-delete-btn" data-task-id="${escapeHtml(t.id)}" title="Hapus riwayat ini" style="font-size: 0.8rem; color: var(--text-muted); background: transparent; padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--border-light-hover); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-regular fa-trash-can"></i></button>`;
       return `
         <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 0.75rem;">
           <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
@@ -453,12 +460,12 @@ document.addEventListener('DOMContentLoaded', () => {
               <p style="margin: 0 0 0.3rem; font-size: 0.88rem; color: var(--text-main); font-weight: 600;">${escapeHtml(truncate(t.prompt, 140))}</p>
               <p style="margin: 0; font-size: 0.76rem; color: var(--text-muted);">
                 <i class="fa-solid ${st.icon}" style="color: ${st.color};"></i>
-                <span style="color: ${st.color}; font-weight: 600;">${st.label}</span>${t.status === 'processing' && t.statusLog ? ' · ' + escapeHtml(t.statusLog) : ''}${filesText} · ${formatCoworkDate(t.createdAt)}
+                <span style="color: ${st.color}; font-weight: 600;">${st.label}</span>${t.status === 'processing' && t.statusLog ? ' · ' + escapeHtml(t.statusLog) : ''}${filesText} · ${formatCoworkDate(t.createdAt)}${durationText ? ' · ' + durationText : ''}
               </p>
               ${errorText}
               ${progressBlock}
             </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">${previewBtn}${downloadBtn}</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">${previewBtn}${downloadBtn}${deleteBtn}</div>
           </div>
         </div>`;
     }).join('');
@@ -522,12 +529,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // dgn yang akan diunduh, bukan renderer markdown terpisah yang bisa beda.
     const coworkHistoryListEl = document.getElementById('coworkHistoryList');
     if (coworkHistoryListEl) {
-      coworkHistoryListEl.addEventListener('click', (e) => {
-        const btn = e.target.closest('.cowork-preview-btn');
-        if (!btn) return;
-        const url = btn.getAttribute('data-url');
-        const title = btn.getAttribute('data-title');
-        if (url) openDocxViewer('Hasil Co-Work: ' + (title || ''), url, url);
+      coworkHistoryListEl.addEventListener('click', async (e) => {
+        const previewBtn = e.target.closest('.cowork-preview-btn');
+        if (previewBtn) {
+          const url = previewBtn.getAttribute('data-url');
+          const title = previewBtn.getAttribute('data-title');
+          if (url) openDocxViewer('Hasil Co-Work: ' + (title || ''), url, url);
+          return;
+        }
+
+        const deleteBtn = e.target.closest('.cowork-delete-btn');
+        if (deleteBtn) {
+          const taskId = deleteBtn.getAttribute('data-task-id');
+          if (!taskId) return;
+          if (!confirm('Hapus riwayat tugas ini? Aksi ini tidak bisa dibatalkan.')) return;
+          deleteBtn.disabled = true;
+          try {
+            const res = await fetch(`/api/cowork/task/${taskId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!data.ok) {
+              alert(data.message || 'Gagal menghapus riwayat.');
+              deleteBtn.disabled = false;
+              return;
+            }
+            window.loadCoworkTab();
+          } catch (err) {
+            alert('Gagal terhubung ke server.');
+            deleteBtn.disabled = false;
+          }
+        }
       });
     }
 
