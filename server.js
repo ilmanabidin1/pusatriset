@@ -1797,6 +1797,14 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
+// --- Popup pengumuman fitur baru (tampil sekali per user, permanen setelah
+// ditutup) - desain generik lewat ID string, bukan cuma dikhususkan utk
+// Co-Work: ganti nilai ini kalau nanti ada pengumuman fitur baru lagi, user
+// lama yang sudah dismiss pengumuman LAMA otomatis akan lihat yang BARU
+// (ID beda -> belum ada di dismissedAnnouncements mereka), tapi tidak akan
+// lihat pengumuman yang SAMA dua kali walau reload berkali-kali.
+const CURRENT_ANNOUNCEMENT_ID = 'cowork-agent-2026-08';
+
 app.get('/api/me', (req, res) => {
   if (hasAccess(req)) {
     const users = getUsers();
@@ -2042,12 +2050,38 @@ app.get('/api/me', (req, res) => {
         researchChatCountThisMonth: user ? (user.researchChatCountThisMonth || 0) : 0,
         planId: user ? (user.planId || null) : null,
         paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null,
-        hasPassword: user ? !!user.password : false
+        hasPassword: user ? !!user.password : false,
+        shouldShowAnnouncement: (user && !(Array.isArray(user.dismissedAnnouncements) && user.dismissedAnnouncements.includes(CURRENT_ANNOUNCEMENT_ID)))
+          ? CURRENT_ANNOUNCEMENT_ID
+          : null
       }
     });
   } else {
     res.json({ loggedIn: false });
   }
+});
+
+// Tandai 1 pengumuman sudah ditutup user - permanen (tidak akan muncul lagi
+// utk user ini walau login ulang), tersimpan per-user di users.json, bukan
+// sekadar localStorage di browser (supaya konsisten lintas device/browser).
+app.post('/api/announcements/dismiss', requireAccess, (req, res) => {
+  const id = String((req.body && req.body.id) || '').trim();
+  if (!id) {
+    return res.status(400).json({ ok: false, message: 'ID pengumuman wajib diisi.' });
+  }
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  if (!user) {
+    return res.status(401).json({ ok: false, message: 'Sesi tidak valid.' });
+  }
+  if (!Array.isArray(user.dismissedAnnouncements)) {
+    user.dismissedAnnouncements = [];
+  }
+  if (!user.dismissedAnnouncements.includes(id)) {
+    user.dismissedAnnouncements.push(id);
+    saveUsers(users);
+  }
+  res.json({ ok: true });
 });
 
 // Endpoint fungsional untuk ganti password di tab Pengaturan

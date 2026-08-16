@@ -650,6 +650,68 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
+  // --- POPUP PENGUMUMAN FITUR BARU (sekali per user, permanen setelah
+  // ditutup - lihat CURRENT_ANNOUNCEMENT_ID & POST /api/announcements/dismiss
+  // di server.js) ---
+  let featureAnnouncementShownThisPageLoad = false;
+  function showFeatureAnnouncementIfNeeded(user) {
+    if (featureAnnouncementShownThisPageLoad) return;
+    if (!user || !user.shouldShowAnnouncement) return;
+    const modal = document.getElementById('featureAnnouncementModal');
+    if (!modal) return;
+    // ID di server (shouldShowAnnouncement) HARUS cocok persis dgn ID di modal
+    // ini - kalau beda (mis. server sudah ganti ke pengumuman baru tapi
+    // markup video belum ikut diperbarui), jangan tampilkan apa-apa daripada
+    // menampilkan video LAMA yang nanti di-dismiss pakai ID yang salah.
+    const announcementId = modal.getAttribute('data-announcement-id');
+    if (user.shouldShowAnnouncement !== announcementId) return;
+
+    featureAnnouncementShownThisPageLoad = true;
+    modal.style.display = 'flex';
+    const video = document.getElementById('featureAnnouncementVideo');
+    if (video) {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }
+  }
+
+  async function dismissFeatureAnnouncement() {
+    const modal = document.getElementById('featureAnnouncementModal');
+    if (!modal) return;
+    const announcementId = modal.getAttribute('data-announcement-id');
+    modal.style.display = 'none';
+    const video = document.getElementById('featureAnnouncementVideo');
+    if (video) video.pause();
+    try {
+      await fetch('/api/announcements/dismiss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: announcementId })
+      });
+    } catch (err) {
+      // Diamkan - kegagalan di sini paling parah cuma bikin popup ini muncul
+      // lagi 1x di sesi berikutnya, bukan sesuatu yang fatal.
+    }
+  }
+
+  (function initFeatureAnnouncement() {
+    const modal = document.getElementById('featureAnnouncementModal');
+    const closeBtn = document.getElementById('featureAnnouncementCloseBtn');
+    const ctaBtn = document.getElementById('featureAnnouncementCtaBtn');
+    if (!modal) return;
+
+    if (closeBtn) closeBtn.addEventListener('click', dismissFeatureAnnouncement);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) dismissFeatureAnnouncement();
+    });
+    if (ctaBtn) {
+      ctaBtn.addEventListener('click', () => {
+        dismissFeatureAnnouncement();
+        if (window.switchTab) window.switchTab('cowork');
+      });
+    }
+  })();
+
   // Cache ringan berisi doi/judul paper yang sudah tersimpan di Koleksi Saya
   // (folder manapun) - dipakai supaya tombol "Simpan" di kartu Cari Referensi &
   // popover sitasi otomatis berubah jadi "Tersimpan" (dan tidak bisa diklik lagi)
@@ -2040,6 +2102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           applyAdminVisibility(currentUser.user);
           applyCoworkVisibility(currentUser.user);
+          showFeatureAnnouncementIfNeeded(currentUser.user);
 
           // Deep-link dari tombol CTA di email notifikasi "Tugas Co-Work selesai"
           // (?opencowork=<taskId>, lihat POST /api/cowork/submit di server.js) -
