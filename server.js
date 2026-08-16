@@ -1033,6 +1033,23 @@ function markdownTableToDocxTable(tableLines) {
   });
 }
 
+// Judul dokumen buat nama file unduhan & preview - diambil dari heading H1
+// pertama hasil GLM (baris "# ..." pertama yang tidak kosong), BUKAN dari
+// prompt user apa adanya (yang seringkali berupa instruksi panjang, bukan
+// judul yang pantas jadi nama file). Fallback ke baris pertama non-heading
+// kalau modelnya entah kenapa tidak mulai dgn heading, dan ke string kosong
+// (dipakai pemanggil sbg sinyal utk fallback lagi ke prompt) kalau teksnya
+// benar-benar kosong.
+function extractTitleFromMarkdown(markdown) {
+  const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    return trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
+  }
+  return '';
+}
+
 function markdownToDocxChildren(markdown) {
   const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
   const children = [];
@@ -1187,6 +1204,7 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
       id: uuidv4(),
       userId: user.id,
       prompt,
+      title: null,
       inputFiles: files.map(f => f.originalname),
       status: 'pending',
       statusLog: 'Menunggu diproses...',
@@ -1232,6 +1250,7 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
         const children = markdownToDocxChildren(text);
         const doc = new Document({ sections: [{ children }] });
         const buffer = await Packer.toBuffer(doc);
+        const title = extractTitleFromMarkdown(text) || prompt;
 
         fs.mkdirSync(COWORK_OUTPUTS_DIR, { recursive: true });
         fs.writeFileSync(path.join(COWORK_OUTPUTS_DIR, `${task.id}.docx`), buffer);
@@ -1239,6 +1258,7 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
         updateTask({
           status: 'completed',
           statusLog: 'Selesai.',
+          title,
           resultText: text,
           outputFileUrl: `/api/cowork/download/${task.id}`,
           tokensUsed
@@ -1293,7 +1313,7 @@ app.get('/api/cowork/history', requireAccess, (req, res) => {
     .filter(t => t.userId === req.session.userId)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .map(t => ({
-      id: t.id, prompt: t.prompt, inputFiles: t.inputFiles, status: t.status, statusLog: t.statusLog,
+      id: t.id, prompt: t.prompt, title: t.title, inputFiles: t.inputFiles, status: t.status, statusLog: t.statusLog,
       outputFileUrl: t.outputFileUrl, errorMessage: t.errorMessage, startedAt: t.startedAt,
       createdAt: t.createdAt, updatedAt: t.updatedAt
     }));
@@ -1306,7 +1326,7 @@ app.get('/api/cowork/status/:id', requireAccess, (req, res) => {
     return res.status(404).json({ ok: false, message: 'Task tidak ditemukan.' });
   }
   res.json({ ok: true, task: {
-    id: task.id, status: task.status, statusLog: task.statusLog, outputFileUrl: task.outputFileUrl,
+    id: task.id, status: task.status, title: task.title, statusLog: task.statusLog, outputFileUrl: task.outputFileUrl,
     errorMessage: task.errorMessage, startedAt: task.startedAt, createdAt: task.createdAt, updatedAt: task.updatedAt
   }});
 });
@@ -1324,7 +1344,12 @@ app.get('/api/cowork/download/:id', requireAccess, (req, res) => {
     return res.status(400).json({ ok: false, message: 'File belum siap diunduh.' });
   }
   const filePath = path.join(COWORK_OUTPUTS_DIR, `${task.id}.docx`);
-  const safeFileName = 'CoWork_' + task.prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_') + '.docx';
+  // Nama file dari JUDUL hasil (heading H1 pertama dari teks yang dihasilkan
+  // GLM, lihat extractTitleFromMarkdown), bukan dari prompt user apa adanya -
+  // prompt biasanya berupa instruksi panjang, bukan judul yang pantas jadi
+  // nama file. Fallback ke prompt cuma kalau title entah kenapa belum tersimpan
+  // (task lama dari sebelum field ini ada).
+  const safeFileName = 'CoWork_' + (task.title || task.prompt).slice(0, 60).replace(/[^a-zA-Z0-9]/g, '_') + '.docx';
   res.download(filePath, safeFileName, (err) => {
     if (err && !res.headersSent) res.status(404).json({ ok: false, message: 'File tidak ditemukan di server.' });
   });

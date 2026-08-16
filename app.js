@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const st = COWORK_STATUS_META[t.status] || COWORK_STATUS_META.pending;
       const filesText = (t.inputFiles && t.inputFiles.length) ? ` · ${t.inputFiles.length} file lampiran` : '';
       const previewBtn = (t.status === 'completed' && t.outputFileUrl)
-        ? `<button type="button" class="cowork-preview-btn" data-url="${escapeHtml(t.outputFileUrl)}" data-title="${escapeHtml(truncate(t.prompt, 60))}" style="font-size: 0.8rem; font-weight: 700; color: var(--brand-blue); background: rgba(7,135,220,0.1); padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;"><i class="fa-regular fa-eye"></i> Lihat Hasil</button>`
+        ? `<button type="button" class="cowork-preview-btn" data-url="${escapeHtml(t.outputFileUrl)}" data-title="${escapeHtml(truncate(t.title || t.prompt, 60))}" style="font-size: 0.8rem; font-weight: 700; color: var(--brand-blue); background: rgba(7,135,220,0.1); padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;"><i class="fa-regular fa-eye"></i> Lihat Hasil</button>`
         : '';
       const downloadBtn = (t.status === 'completed' && t.outputFileUrl)
         ? `<a href="${t.outputFileUrl}" style="font-size: 0.8rem; font-weight: 700; color: #fff; background: var(--brand-blue); padding: 0.4rem 0.9rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;"><i class="fa-solid fa-download"></i> Unduh .docx</a>`
@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 0.75rem;">
           <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
-              <p style="margin: 0 0 0.3rem; font-size: 0.88rem; color: var(--text-main); font-weight: 600;">${escapeHtml(truncate(t.prompt, 140))}</p>
+              <p style="margin: 0 0 0.3rem; font-size: 0.88rem; color: var(--text-main); font-weight: 600;">${escapeHtml(truncate(t.title || t.prompt, 140))}</p>
               <p style="margin: 0; font-size: 0.76rem; color: var(--text-muted);">
                 <i class="fa-solid ${st.icon}" style="color: ${st.color};"></i>
                 <span style="color: ${st.color}; font-weight: 600;">${st.label}</span>${t.status === 'processing' && t.statusLog ? ' · ' + escapeHtml(t.statusLog) : ''}${filesText} · ${formatCoworkDate(t.createdAt)}${durationText ? ' · ' + durationText : ''}
