@@ -942,13 +942,19 @@ async function callOpenRouterGLM(userPrompt, attachedContext) {
         model: OPENROUTER_MODEL,
         temperature: 0.3,
         max_tokens: 16000,
-        // Dipin ke Baidu Qianfan (lagi promo di OpenRouter saat ini) -
-        // allow_fallbacks:false SENGAJA supaya request GAGAL kalau provider ini
-        // tidak tersedia (bukan diam-diam nyasar ke provider lain yang mungkin
-        // sudah tidak promo) - task Co-Work akan tercatat 'failed' dgn pesan
-        // errornya, bukan berhasil tapi kena biaya provider yang tidak diduga.
+        // Dipin ke provider Baidu (lagi promo di OpenRouter saat ini) - nama
+        // provider di sini HARUS persis "Baidu" (dicek langsung lewat
+        // GET /api/v1/models/z-ai/glm-5.2/endpoints di OpenRouter, provider_name
+        // = "Baidu", BUKAN "Baidu Qianfan" - nama itu salah, itu sebabnya
+        // sempat muncul error "No endpoints found for z-ai/glm-5.2": dengan
+        // allow_fallbacks:false, nama yang tidak cocok persis = dianggap tidak
+        // ada endpoint sama sekali). allow_fallbacks:false tetap dipertahankan
+        // SENGAJA supaya request GAGAL kalau provider ini tidak tersedia
+        // (bukan diam-diam nyasar ke provider lain yang mungkin sudah tidak
+        // promo) - task Co-Work akan tercatat 'failed' dgn pesan errornya,
+        // bukan berhasil tapi kena biaya provider yang tidak diduga.
         provider: {
-          order: ['Baidu Qianfan'],
+          order: ['Baidu'],
           allow_fallbacks: false
         },
         messages: [
