@@ -567,6 +567,114 @@ function isAdminReq(req) {
   return !!(req.session && req.session.isAdmin);
 }
 
+// --- DEEPSEEK SHARED CREDIT POOL (kuota token mingguan lintas fitur) ---
+// Menggantikan kuota kaku per-fitur (3x/bulan, 5x/bulan, dst) untuk SEMUA
+// fitur berbasis DeepSeek (Match, Lit Review, SLR, Peer Review, Research
+// Chat, Notebook Continue Writing/AI Draft Action, Citation Graph TL;DR,
+// Folder Chat, AI Disclosure Generator) - TIDAK termasuk Humanizer
+// (StealthGPT) dan Co-Work Agent (OpenRouter GLM 5.2), yang tetap dijatah
+// terpisah seperti sebelumnya karena API-nya jauh lebih mahal per-panggilan.
+// 1 kredit = 1000 token, dihitung dari usage.total_tokens ASLI di respons
+// DeepSeek (bukan estimasi/bobot manual per fitur) - reset tiap Senin 00:00
+// UTC. Pola gate-lalu-catat: cek akses SEBELUM memanggil DeepSeek (biner,
+// tidak tahu biaya pasti di muka), lalu tambahkan token yang benar-benar
+// terpakai SETELAH respons selesai - artinya 1 panggilan terakhir seorang
+// user bisa sedikit melebihi limit sebelum panggilan berikutnya ditolak,
+// ini perilaku normal untuk rate limiting berbasis token.
+const DEEPSEEK_POOL_WEEKLY_CREDITS = { free: 10, premium: 600, ultimate: 1500 };
+const DEEPSEEK_CREDIT_TOKEN_SIZE = 1000;
+const DEEPSEEK_POOL_HISTORY_DAYS = 30;
+
+function getCurrentWeekStartISO() {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Minggu, 1=Senin, ..., 6=Sabtu
+  const diffToMonday = (day === 0 ? -6 : 1) - day;
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + diffToMonday));
+  return monday.toISOString().slice(0, 10);
+}
+
+function ensureDeepSeekPoolFresh(user) {
+  const weekStart = getCurrentWeekStartISO();
+  if (user.deepseekPoolWeekStart !== weekStart) {
+    user.deepseekPoolWeekStart = weekStart;
+    user.deepseekPoolTokensUsedThisWeek = 0;
+  }
+  if (!user.deepseekPoolTokensUsedThisWeek) user.deepseekPoolTokensUsedThisWeek = 0;
+}
+
+function getDeepSeekPoolLimitTokens(user) {
+  const tier = (user && user.type) || 'free';
+  const credits = DEEPSEEK_POOL_WEEKLY_CREDITS[tier] ?? DEEPSEEK_POOL_WEEKLY_CREDITS.free;
+  return credits * DEEPSEEK_CREDIT_TOKEN_SIZE;
+}
+
+function hasDeepSeekPoolAccess(user) {
+  if (!user) return false;
+  ensureDeepSeekPoolFresh(user);
+  return user.deepseekPoolTokensUsedThisWeek < getDeepSeekPoolLimitTokens(user);
+}
+
+function getDeepSeekPoolStatus(user) {
+  if (!user) {
+    return {
+      usedTokens: 0,
+      limitTokens: DEEPSEEK_POOL_WEEKLY_CREDITS.free * DEEPSEEK_CREDIT_TOKEN_SIZE,
+      weekStart: getCurrentWeekStartISO(),
+      dailyUsage: {}
+    };
+  }
+  ensureDeepSeekPoolFresh(user);
+  return {
+    usedTokens: user.deepseekPoolTokensUsedThisWeek || 0,
+    limitTokens: getDeepSeekPoolLimitTokens(user),
+    weekStart: user.deepseekPoolWeekStart,
+    dailyUsage: (user.deepseekPoolDailyUsage && typeof user.deepseekPoolDailyUsage === 'object') ? user.deepseekPoolDailyUsage : {}
+  };
+}
+
+// Dipanggil SETELAH panggilan DeepSeek sukses & usage.total_tokens diketahui.
+// Baca ulang users.json sendiri (bukan pakai array `users` yang mungkin sudah
+// dimuat route pemanggil) supaya tidak ketimpa oleh saveUsers() lain dari
+// route yang sama yang jalan lebih dulu/belakangan - pola yang sama dengan
+// re-read di increment /api/research-chat.
+function recordDeepSeekPoolUsage(userId, tokens) {
+  const tokenCount = Number(tokens) || 0;
+  if (!userId || tokenCount <= 0) return;
+  const users = getUsers();
+  const user = users.find(u => u.id === userId);
+  if (!user) return;
+  ensureDeepSeekPoolFresh(user);
+  user.deepseekPoolTokensUsedThisWeek += tokenCount;
+
+  const today = new Date().toISOString().slice(0, 10);
+  if (!user.deepseekPoolDailyUsage || typeof user.deepseekPoolDailyUsage !== 'object') {
+    user.deepseekPoolDailyUsage = {};
+  }
+  user.deepseekPoolDailyUsage[today] = (user.deepseekPoolDailyUsage[today] || 0) + tokenCount;
+  const cutoff = new Date(Date.now() - DEEPSEEK_POOL_HISTORY_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  Object.keys(user.deepseekPoolDailyUsage).forEach(date => {
+    if (date < cutoff) delete user.deepseekPoolDailyUsage[date];
+  });
+
+  saveUsers(users);
+}
+
+// Gate biner dipanggil sebelum tiap panggilan DeepSeek di rute yang masuk
+// pool bersama. Admin selalu lolos (konsisten dengan isAdminReq di rute
+// lain). Mengirim balasan 403 sendiri kalau habis - panggil SEBELUM mulai
+// respons streaming (sebelum header terkirim).
+function requireDeepSeekPoolAccess(req, res, user) {
+  if (isAdminReq(req)) return true;
+  if (!hasDeepSeekPoolAccess(user)) {
+    res.status(403).json({
+      error: 'Kuota mingguan JurnalHub Intelligence Anda sudah habis. Kuota akan direset otomatis setiap hari Senin (lihat detail di Pengaturan > Usage).',
+      poolLimitReached: true
+    });
+    return false;
+  }
+  return true;
+}
+
 function requireAccess(req, res, next) {
   if (hasAccess(req)) {
     next();
@@ -2002,6 +2110,31 @@ app.get('/api/me', (req, res) => {
       }
     }
 
+    // Fitur berbasis DeepSeek (Match, Lit Review, SLR, Peer Review, Research
+    // Chat, Notebook Continue Writing/AI Draft Action) sekarang dijatah lewat
+    // DEEPSEEK POOL bersama (kredit/minggu) - override angka di atas yang
+    // masih dihitung dari counter bulanan lama per-fitur. Nama field lama
+    // TETAP dipertahankan (dipakai banyak tempat di frontend untuk badge/lock
+    // icon) supaya UI existing tidak perlu diubah, cuma sumber datanya yang
+    // sekarang jadi pool bersama. Draft, Patent Search, Cari Referensi,
+    // Citation Graph (/expand), dan Humanizer TIDAK termasuk pool ini.
+    const deepseekPoolStatus = getDeepSeekPoolStatus(user);
+    if (user) {
+      const poolOk = hasDeepSeekPoolAccess(user);
+      isLimitReached = !poolOk;
+      isLitReviewLimitReached = !poolOk;
+      litReviewsRemaining = poolOk ? (isFree ? 3 : (isPremium ? 15 : 999)) : 0;
+      isSlrLimitReached = !poolOk;
+      slrRemaining = poolOk ? (isFree ? 1 : (isPremium ? 5 : 999)) : 0;
+      isPeerReviewLimitReached = !poolOk;
+      peerReviewRemaining = poolOk ? (isFree ? 2 : (isPremium ? 15 : 999)) : 0;
+      isResearchChatLimitReached = !poolOk;
+      researchChatsRemaining = poolOk ? (isFree ? 20 : 999) : 0;
+      researchChatLimit = isFree ? 20 : 999;
+      isNotebookContinueLimitReached = !poolOk;
+      notebookContinueRemaining = poolOk ? (isFree ? 10 : (isPremium ? 50 : 999)) : 0;
+    }
+
     // Admin: timpa SEMUA flag "limit reached" jadi false & tampilkan angka
     // "sisa" yang jelas-jelas besar (bukan cuma bypass di titik generate-nya
     // saja) - supaya badge kuota di UI juga tidak nunjukin "hampir habis" ke
@@ -2072,12 +2205,50 @@ app.get('/api/me', (req, res) => {
         shouldShowAnnouncement: (user && !(Array.isArray(user.dismissedAnnouncements) && user.dismissedAnnouncements.includes(CURRENT_ANNOUNCEMENT_ID)))
           ? CURRENT_ANNOUNCEMENT_ID
           : null,
-        customInstructions: user ? (user.customInstructions || '') : ''
+        customInstructions: user ? (user.customInstructions || '') : '',
+        deepseekPool: {
+          usedCredits: Math.round(deepseekPoolStatus.usedTokens / DEEPSEEK_CREDIT_TOKEN_SIZE),
+          limitCredits: Math.round(deepseekPoolStatus.limitTokens / DEEPSEEK_CREDIT_TOKEN_SIZE),
+          weekStart: deepseekPoolStatus.weekStart
+        }
       }
     });
   } else {
     res.json({ loggedIn: false });
   }
+});
+
+// Detail pemakaian DEEPSEEK POOL bersama (kredit/minggu) buat grafik "Usage"
+// di Pengaturan, mirip halaman usage Claude - dipisah dari /api/me (yang cuma
+// kirim ringkasan usedCredits/limitCredits) supaya breakdown harian tidak
+// perlu selalu ikut terkirim di tiap panggilan /api/me.
+app.get('/api/usage', requireAccess, (req, res) => {
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  const status = getDeepSeekPoolStatus(user);
+
+  const weekStartDate = new Date(status.weekStart + 'T00:00:00Z');
+  const resetsAt = new Date(weekStartDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  // 30 hari terakhir TERMASUK hari tanpa pemakaian (0 kredit) supaya bar
+  // chart-nya berurutan rapi, bukan cuma tanggal yang kebetulan ada datanya.
+  const days = [];
+  for (let i = DEEPSEEK_POOL_HISTORY_DAYS - 1; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const dateStr = d.toISOString().slice(0, 10);
+    const tokens = status.dailyUsage[dateStr] || 0;
+    days.push({ date: dateStr, credits: Math.round((tokens / DEEPSEEK_CREDIT_TOKEN_SIZE) * 10) / 10 });
+  }
+
+  res.json({
+    ok: true,
+    tier: (user && user.type) || 'free',
+    weekStart: status.weekStart,
+    resetsAt,
+    usedCredits: Math.round((status.usedTokens / DEEPSEEK_CREDIT_TOKEN_SIZE) * 10) / 10,
+    limitCredits: Math.round(status.limitTokens / DEEPSEEK_CREDIT_TOKEN_SIZE),
+    dailyUsage: days
+  });
 });
 
 // Tandai 1 pengumuman sudah ditutup user - permanen (tidak akan muncul lagi
@@ -2482,7 +2653,7 @@ async function getDeepSeekJournalRecommendations(articleTitle, articleKeywords, 
     console.error('[Match Score DeepSeek] Gagal parse JSON, raw content:', content.slice(0, 1500));
     throw parseError;
   }
-  return { review: parsed.review || null, items: parsed.recommendations || [] };
+  return { review: parsed.review || null, items: parsed.recommendations || [], usage: resData.usage || null };
 }
 
 async function getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates) {
@@ -2634,12 +2805,6 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
-    if (user.lastMatchMonth === currentMonth && user.matchCountThisMonth >= 1) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x pencocokan per bulan.' });
-    }
-  }
-
   const localCandidates = getLocalCandidates(articleTitle, articleKeywords, articleAbstract);
 
   // Perluas kandidat di luar 756 database lokal dengan jurnal live dari OpenAlex
@@ -2670,20 +2835,26 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     candidates
   );
 
-  const hasDeepSeekKey = !!getDeepSeekApiKey();
+  // Match pakai DeepSeek POOL bersama - kalau kuota mingguan habis, DEGRADE ke
+  // fallback Claude/Gemini/lokal (bukan diblokir keras) karena Match sudah
+  // punya jalur fallback bawaan dan biayanya relatif kecil dibanding fitur lain.
+  const hasDeepSeekKey = !!getDeepSeekApiKey() && (isAdminReq(req) || !user || hasDeepSeekPoolAccess(user));
   const hasClaudeKey = !!process.env.ANTHROPIC_API_KEY;
   const hasApiKey = !!process.env.GEMINI_API_KEY;
   const hasVertex = !!(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 
   if (!hasDeepSeekKey && !hasClaudeKey && !hasApiKey && !hasVertex) {
     const recommendations = localFallbackRecommendations();
+    const poolExhausted = !!getDeepSeekApiKey() && user && !isAdminReq(req) && !hasDeepSeekPoolAccess(user);
 
     addHistoryItem(req.session.userId, 'match', { title: articleTitle, keywords: articleKeywords, abstract: articleAbstract }, { recommendations, review: null });
 
     res.json({
       ok: true,
       source: 'local',
-      warning: 'Kredensial DeepSeek (DEEPSEEK_API_KEY), Claude, atau Gemini belum dikonfigurasi. Menggunakan kalkulasi kecocokan lokal.',
+      warning: poolExhausted
+        ? 'Kuota mingguan JurnalHub Intelligence Anda sudah habis. Menggunakan kalkulasi kecocokan lokal.'
+        : 'Kredensial DeepSeek (DEEPSEEK_API_KEY), Claude, atau Gemini belum dikonfigurasi. Menggunakan kalkulasi kecocokan lokal.',
       recommendations: recommendations
     });
     return;
@@ -2691,7 +2862,7 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
 
   try {
     // DeepSeek jadi provider utama (konsisten dengan fitur AI lain di JurnalHub);
-    // Claude/Gemini tetap jadi fallback kalau DeepSeek belum diset tapi salah satunya ada.
+    // Claude/Gemini tetap jadi fallback kalau DeepSeek belum diset/kuota pool habis.
     const aiResult = hasDeepSeekKey
       ? await getDeepSeekJournalRecommendations(articleTitle, articleKeywords, articleAbstract, candidates)
       : await getGeminiRecommendations(articleTitle, articleKeywords, articleAbstract, candidates);
@@ -2699,6 +2870,8 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
     const review = aiResult?.review || null;
     const recommendations = normalizeAiRecommendations(aiItems, candidates);
     const sourceName = hasDeepSeekKey ? 'deepseek' : (hasClaudeKey ? 'claude' : 'gemini');
+
+    if (hasDeepSeekKey && user) recordDeepSeekPoolUsage(user.id, aiResult?.usage?.total_tokens);
 
     // Increment usage for Free users
     if (user && (user.type || 'free') === 'free') {
@@ -3927,7 +4100,7 @@ class TldrError extends Error {
   }
 }
 
-async function generateBilingualTldr(rawTitle, rawAbstract) {
+async function generateBilingualTldr(rawTitle, rawAbstract, poolUserId, poolIsAdmin) {
   const title = String(rawTitle || '').trim().slice(0, 500);
   const abstract = String(rawAbstract || '').trim().slice(0, 1500);
   if (!title) {
@@ -3940,6 +4113,17 @@ async function generateBilingualTldr(rawTitle, rawAbstract) {
   const deepSeekKey = getDeepSeekApiKey();
   if (!deepSeekKey) {
     throw new TldrError('DeepSeek API Key belum dikonfigurasi di server.', 500);
+  }
+
+  // Dijatah lewat DEEPSEEK POOL bersama (kredit/minggu) - dipanggil dari 2 rute
+  // (Citation Graph TL;DR & simpan Koleksi Saya), poolUserId opsional supaya
+  // helper ini tetap bisa dites/dipakai tanpa konteks user kalau perlu.
+  if (poolUserId && !poolIsAdmin) {
+    const poolUsers = getUsers();
+    const poolUser = poolUsers.find(u => u.id === poolUserId);
+    if (poolUser && !hasDeepSeekPoolAccess(poolUser)) {
+      throw new TldrError('Kuota mingguan JurnalHub Intelligence Anda sudah habis. Kuota akan direset otomatis setiap hari Senin (lihat detail di Pengaturan > Usage).', 403);
+    }
   }
 
   const fetchFn = globalThis.fetch || require('node-fetch');
@@ -3983,6 +4167,7 @@ async function generateBilingualTldr(rawTitle, rawAbstract) {
   if (!parsed || !parsed.en || !parsed.id) {
     throw new TldrError('Format TL;DR dari AI tidak sesuai.', 500);
   }
+  if (poolUserId) recordDeepSeekPoolUsage(poolUserId, dsData?.usage?.total_tokens);
   return { en: parsed.en, id: parsed.id };
 }
 
@@ -3994,7 +4179,7 @@ async function generateBilingualTldr(rawTitle, rawAbstract) {
 // di /expand).
 app.post('/api/citation-graph/tldr', requireAccess, citationGraphLimiter, async (req, res) => {
   try {
-    const result = await generateBilingualTldr(req.body && req.body.title, req.body && req.body.abstract);
+    const result = await generateBilingualTldr(req.body && req.body.title, req.body && req.body.abstract, req.session.userId, isAdminReq(req));
     res.json({ ok: true, en: result.en, id: result.id });
   } catch (error) {
     console.error('[Citation Graph TLDR] Error:', error.message);
@@ -4301,15 +4486,8 @@ app.post('/api/documents/continue-writing', requireAccess, async (req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const userType = (user && user.type) || 'free';
 
-  if (!isAdminReq(req) && userType === 'free') {
-    if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 10) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 10x AI Continue Writing per bulan.' });
-    }
-  } else if (!isAdminReq(req) && userType === 'premium') {
-    if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 50) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 50x AI Continue Writing per bulan.' });
-    }
-  }
+  // Kuota AI Continue Writing sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
+  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
 
   const deepSeekKey = getDeepSeekApiKey();
   if (!deepSeekKey) {
@@ -4374,6 +4552,8 @@ ATURAN PENTING:
     if (!continuation) {
       throw new Error('Respons AI kosong.');
     }
+
+    if (user) recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
 
     if (userType === 'free' || userType === 'premium') {
       if (user.lastNotebookContinueMonth !== currentMonth) {
@@ -4501,15 +4681,8 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const userType = (user && user.type) || 'free';
 
-  if (!isAdminReq(req) && userType === 'free') {
-    if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 10) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 10x bantuan AI Notebook per bulan.' });
-    }
-  } else if (!isAdminReq(req) && userType === 'premium') {
-    if (user.lastNotebookContinueMonth === currentMonth && user.notebookContinueCountThisMonth >= 50) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 50x bantuan AI Notebook per bulan.' });
-    }
-  }
+  // Kuota bantuan AI Notebook sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
+  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
 
   const deepSeekKey = getDeepSeekApiKey();
   if (!deepSeekKey) {
@@ -4576,6 +4749,8 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
     if (actionConfig.isHtml) {
       result = result.replace(/^```html\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
     }
+
+    if (user) recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
 
     if (userType === 'free' || userType === 'premium') {
       if (user.lastNotebookContinueMonth !== currentMonth) {
@@ -4927,7 +5102,7 @@ app.post('/api/my-references', requireAccess, savedReferenceLimiter, async (req,
   let tldrId = null;
   if (abstract) {
     try {
-      const tldr = await generateBilingualTldr(title, abstract);
+      const tldr = await generateBilingualTldr(title, abstract, req.session.userId, isAdminReq(req));
       tldrEn = tldr.en;
       tldrId = tldr.id;
     } catch (error) {
@@ -5063,6 +5238,12 @@ app.post('/api/my-references/researches/:id/chat', requireAccess, requireFolderC
     return res.status(500).json({ ok: false, message: 'JurnalHub Intelligence belum dikonfigurasi di server.' });
   }
 
+  // Kuota Folder Chat sekarang juga dijatah lewat DEEPSEEK POOL bersama (dulu
+  // premium/ultimate unlimited tanpa batas sama sekali selain rate limiter menit)
+  const poolUsers = getUsers();
+  const poolUser = poolUsers.find(u => u.id === req.session.userId);
+  if (poolUser && !requireDeepSeekPoolAccess(req, res, poolUser)) return;
+
   // Coba ambil full-text PDF untuk paper open-access yang belum pernah dicoba
   // sebelumnya - dibatasi jumlah percobaan per request biar tidak memperlambat
   // respons chat kalau foldernya besar. Hasilnya (berhasil/gagal) di-cache
@@ -5150,6 +5331,8 @@ ${paperListText}`;
       throw new Error('Respons AI kosong.');
     }
 
+    if (poolUser) recordDeepSeekPoolUsage(poolUser.id, dsData?.usage?.total_tokens);
+
     const chats = getFolderChats();
     let chat = chats.find(c => c.researchId === researchId && c.userId === req.session.userId);
     const now = new Date().toISOString();
@@ -5228,16 +5411,9 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  // Check quota for Free and Premium users
-  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
-    if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 3) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 3x Literature Review per bulan.' });
-    }
-  } else if (!isAdminReq(req) && user && user.type === 'premium') {
-    if (user.lastLitReviewMonth === currentMonth && user.litReviewCountThisMonth >= 15) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x Literature Review per bulan.' });
-    }
-  }
+  // Kuota sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu) - bukan
+  // hitungan kaku 3x/15x per bulan lagi, lihat requireDeepSeekPoolAccess.
+  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
 
   const tier = user ? (user.type || 'free') : 'free';
   const isDeepTier = tier === 'ultimate' && requestedMode === 'pro';
@@ -5316,7 +5492,7 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
 
     const userPrompt = `Judul penelitian: ${title}\nKeyword/Bidang: ${keywords || '-'}\nAbstrak: ${abstract || '-'}\n\nDaftar paper ilmiah hasil pencarian (gunakan ini sebagai satu-satunya sumber):\n${paperListText}\n\n${depthInstructions}\n\nTulis tinjauan pustakanya sekarang (HTML mentah saja):`;
 
-    const review = (await streamDeepSeekCompletion(res, deepSeekKey, {
+    const litReviewStreamResult = await streamDeepSeekCompletion(res, deepSeekKey, {
       model: 'deepseek-v4-flash',
       max_tokens: 3000,
       thinking: { type: 'disabled' },
@@ -5325,7 +5501,9 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ]
-    })).trim();
+    });
+    const review = litReviewStreamResult.fullContent.trim();
+    if (user) recordDeepSeekPoolUsage(user.id, litReviewStreamResult.usage?.total_tokens);
 
     if (!review) {
       console.error('[Lit Review DeepSeek] Respons kosong dari DeepSeek.');
@@ -5538,16 +5716,8 @@ app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  // Check quota for SLR (Free: 1x, Premium: 5x, Ultimate: unlimited)
-  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
-    if (user.lastSlrMonth === currentMonth && user.slrCountThisMonth >= 1) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 1x coba Systematic Literature Review per bulan.' });
-    }
-  } else if (!isAdminReq(req) && user && user.type === 'premium') {
-    if (user.lastSlrMonth === currentMonth && user.slrCountThisMonth >= 5) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 5x Systematic Literature Review per bulan.' });
-    }
-  }
+  // Kuota SLR Synthesize sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
+  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
 
   const deepSeekKey = process.env.DEEPSEEK_API_KEY;
   if (!deepSeekKey) {
@@ -5672,6 +5842,8 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
       }
     }
 
+    if (user) recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
+
     // Update usage for Free & Premium users
     if (user && (user.type === 'free' || user.type === 'premium')) {
       if (user.lastSlrMonth !== currentMonth) {
@@ -5707,6 +5879,12 @@ app.post('/api/slr/generate-criteria', requireAccess, async (req, res) => {
   if (!deepSeekKey) {
     return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di Railway.' });
   }
+
+  // Sebelumnya sama sekali tidak dijatah (bukan hitungan bulanan, bukan rate
+  // limiter) - sekarang ikut DEEPSEEK POOL bersama seperti fitur lain.
+  const criteriaUsers = getUsers();
+  const criteriaUser = criteriaUsers.find(u => u.id === req.session.userId);
+  if (criteriaUser && !requireDeepSeekPoolAccess(req, res, criteriaUser)) return;
 
   const fetchFn = globalThis.fetch || require('node-fetch');
   const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
@@ -5753,6 +5931,8 @@ app.post('/api/slr/generate-criteria', requireAccess, async (req, res) => {
       content = String(choice.message.reasoning_content).trim();
     }
 
+    if (criteriaUser) recordDeepSeekPoolUsage(criteriaUser.id, dsData?.usage?.total_tokens);
+
     res.json({ ok: true, suggestions: content });
   } catch (error) {
     console.error('[SLR Generate Criteria] Error:', error);
@@ -5771,6 +5951,11 @@ app.post('/api/slr/auto-screen', requireAccess, async (req, res) => {
   if (!deepSeekKey) {
     return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di Railway.' });
   }
+
+  // Sebelumnya sama sekali tidak dijatah - sekarang ikut DEEPSEEK POOL bersama.
+  const screenUsers = getUsers();
+  const screenUser = screenUsers.find(u => u.id === req.session.userId);
+  if (screenUser && !requireDeepSeekPoolAccess(req, res, screenUser)) return;
 
   const fetchFn = globalThis.fetch || require('node-fetch');
   const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
@@ -5846,6 +6031,8 @@ Evaluasi masing-masing paper tersebut dan kembalikan array keputusan dalam JSON:
       throw new Error('Respons AI kosong saat melakukan auto-screening.');
     }
 
+    if (screenUser) recordDeepSeekPoolUsage(screenUser.id, dsData?.usage?.total_tokens);
+
     let cleanText = content.trim();
     if (cleanText.startsWith('```')) {
       cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
@@ -5879,16 +6066,8 @@ app.post('/api/peer-review', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  // Kuota AI Peer Reviewer (Free: 2x, Premium: 15x, Ultimate: unlimited)
-  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
-    if (user.lastPeerReviewMonth === currentMonth && user.peerReviewCountThisMonth >= 2) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 2x AI Peer Reviewer per bulan.' });
-    }
-  } else if (!isAdminReq(req) && user && user.type === 'premium') {
-    if (user.lastPeerReviewMonth === currentMonth && user.peerReviewCountThisMonth >= 15) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x AI Peer Reviewer per bulan.' });
-    }
-  }
+  // Kuota AI Peer Reviewer sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
+  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
 
   const deepSeekKey = getDeepSeekApiKey();
   if (!deepSeekKey) {
@@ -5923,7 +6102,7 @@ ${contentToReview.slice(0, 45000)}
 """`;
 
   try {
-    const reviewContent = (await streamDeepSeekCompletion(res, deepSeekKey, {
+    const peerReviewStreamResult = await streamDeepSeekCompletion(res, deepSeekKey, {
       model: 'deepseek-v4-flash',
       max_tokens: 3500,
       thinking: { type: 'disabled' },
@@ -5932,7 +6111,9 @@ ${contentToReview.slice(0, 45000)}
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ]
-    })).trim();
+    });
+    const reviewContent = peerReviewStreamResult.fullContent.trim();
+    if (user) recordDeepSeekPoolUsage(user.id, peerReviewStreamResult.usage?.total_tokens);
 
     res.end();
 
@@ -6185,7 +6366,10 @@ async function streamDeepSeekCompletion(res, apiKey, bodyPayload) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify(Object.assign({}, bodyPayload, { stream: true }))
+    // stream_options.include_usage - minta DeepSeek kirim chunk terakhir
+    // berisi usage.total_tokens (dipakai buat DEEPSEEK POOL, lihat di atas),
+    // tanpa ini chunk SSE tidak pernah membawa data usage sama sekali.
+    body: JSON.stringify(Object.assign({}, bodyPayload, { stream: true, stream_options: { include_usage: true } }))
   });
 
   if (!dsResponse.ok) {
@@ -6199,6 +6383,7 @@ async function streamDeepSeekCompletion(res, apiKey, bodyPayload) {
 
   let sseBuffer = '';
   let fullContent = '';
+  let usage = null;
   const reader = dsResponse.body.getReader();
   const decoder = new TextDecoder();
 
@@ -6222,13 +6407,14 @@ async function streamDeepSeekCompletion(res, apiKey, bodyPayload) {
           fullContent += delta;
           res.write(JSON.stringify({ type: 'content', content: delta }) + '\n');
         }
+        if (parsed?.usage) usage = parsed.usage;
       } catch (e) {
         // Baris SSE parsial/tidak valid - abaikan
       }
     }
   }
 
-  return fullContent;
+  return { fullContent, usage };
 }
 
 // --- AI Disclosure Statement Generator ---
@@ -6266,6 +6452,12 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Nama tool dan konteks penggunaan wajib disertakan.' });
   }
 
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  // Sengaja TIDAK dibatasi kuota/tier per-fitur (fitur etika/kepercayaan) -
+  // tapi tetap dijatah lewat DEEPSEEK POOL bersama seperti fitur lain.
+  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
+
   const apiKey = getDeepSeekApiKey();
   if (!apiKey) {
     return res.status(500).json({ ok: false, message: 'AI Disclosure Generator belum dikonfigurasi di server.' });
@@ -6277,7 +6469,7 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
       ? `Tool used: ${toolName}\nHow it was used: ${usageContext}\nResearch title/keywords to derive the Core Search String from: ${searchTerms}\n\nGenerate the AI disclosure statement followed by the Core Search String:`
       : `Tool used: ${toolName}\nHow it was used: ${usageContext}\n\nGenerate the AI disclosure statement:`;
 
-    const statement = (await streamDeepSeekCompletion(res, apiKey, {
+    const disclosureStreamResult = await streamDeepSeekCompletion(res, apiKey, {
       model: 'deepseek-v4-flash',
       max_tokens: 2000,
       thinking: { type: 'disabled' },
@@ -6286,7 +6478,9 @@ app.post('/api/generate-ai-disclosure', requireAccess, async (req, res) => {
         { role: 'system', content: includeSearchString ? AI_DISCLOSURE_SYSTEM_PROMPT_WITH_SEARCH_STRING : AI_DISCLOSURE_SYSTEM_PROMPT },
         { role: 'user', content: userContent }
       ]
-    })).trim();
+    });
+    const statement = disclosureStreamResult.fullContent.trim();
+    if (user) recordDeepSeekPoolUsage(user.id, disclosureStreamResult.usage?.total_tokens);
 
     res.end();
 
@@ -6627,12 +6821,10 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  if (!isAdminReq(req) && userType === 'free' && user) {
-    const chatUsed = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
-    if (chatUsed >= 20) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan JurnalHub Intelligence tercapai (20 pesan/bulan untuk akun Free). Upgrade ke Premium/Ultimate untuk akses tanpa batas.' });
-    }
-  }
+  // Kuota JurnalHub Intelligence sekarang berbasis DEEPSEEK POOL bersama
+  // (kredit/minggu, berlaku semua tier) - bukan hitungan 20 pesan/bulan
+  // khusus Free lagi.
+  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
 
   const incomingMessages = Array.isArray(req.body.messages) ? req.body.messages : [];
   if (incomingMessages.length === 0) {
@@ -6731,7 +6923,8 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
         ...sanitizedMessages
       ],
       max_tokens: 8000,
-      stream: true
+      stream: true,
+      stream_options: { include_usage: true }
     };
 
     if (thinkingEnabled) {
@@ -6768,6 +6961,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     res.setHeader('X-Accel-Buffering', 'no');
 
     let sseBuffer = '';
+    let dsUsage = null;
     const reader = dsResponse.body.getReader();
     const decoder = new TextDecoder();
 
@@ -6795,11 +6989,14 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
             fullReply += delta;
             res.write(JSON.stringify({ type: 'content', content: delta }) + '\n');
           }
+          if (parsed?.usage) dsUsage = parsed.usage;
         } catch (e) {
           // Baris SSE parsial/tidak valid - abaikan
         }
       }
     }
+
+    if (user) recordDeepSeekPoolUsage(user.id, dsUsage?.total_tokens);
 
     // Kirim daftar sitasi akademik (kalau ada) sebagai chunk terakhir - dipakai
     // frontend untuk kartu preview hover di marker [n] dalam jawaban.

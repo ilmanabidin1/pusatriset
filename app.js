@@ -5428,6 +5428,96 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // --- USAGE (grafik pemakaian kredit DEEPSEEK POOL bersama) - dimuat lazy
+    // saat tab Pengaturan dibuka (dipanggil dari switchTab di index.html),
+    // bukan saat login, biar tidak ada request tambahan yang tidak perlu di
+    // setiap page load kalau user tidak pernah buka tab Pengaturan. ---
+    function renderUsageChart(days) {
+      const svg = document.getElementById('usageChartSvg');
+      if (!svg || !Array.isArray(days) || days.length === 0) return;
+
+      const barWidth = 14;
+      const gap = 6;
+      const chartHeight = 100;
+      const labelHeight = 22;
+      const width = days.length * (barWidth + gap);
+      const maxCredits = Math.max(1, ...days.map(d => d.credits || 0));
+      const brandBlue = getComputedStyle(document.documentElement).getPropertyValue('--brand-blue').trim() || '#2563eb';
+
+      svg.setAttribute('width', width);
+      svg.setAttribute('viewBox', `0 0 ${width} ${chartHeight + labelHeight}`);
+      svg.innerHTML = '';
+
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const labelEvery = Math.max(1, Math.ceil(days.length / 8));
+
+      days.forEach((d, i) => {
+        const x = i * (barWidth + gap);
+        const credits = d.credits || 0;
+        const h = credits > 0 ? Math.max(3, (credits / maxCredits) * chartHeight) : 1.5;
+        const y = chartHeight - h;
+
+        const rect = document.createElementNS(svgNs, 'rect');
+        rect.setAttribute('x', x);
+        rect.setAttribute('y', y);
+        rect.setAttribute('width', barWidth);
+        rect.setAttribute('height', h);
+        rect.setAttribute('rx', 3);
+        rect.setAttribute('fill', brandBlue);
+        rect.setAttribute('opacity', credits > 0 ? '0.85' : '0.18');
+
+        const title = document.createElementNS(svgNs, 'title');
+        const dateLabel = new Date(d.date + 'T00:00:00Z').toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        title.textContent = `${dateLabel}: ${credits} kredit`;
+        rect.appendChild(title);
+        svg.appendChild(rect);
+
+        if (i % labelEvery === 0 || i === days.length - 1) {
+          const text = document.createElementNS(svgNs, 'text');
+          text.setAttribute('x', x + barWidth / 2);
+          text.setAttribute('y', chartHeight + 14);
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('font-size', '9');
+          text.setAttribute('fill', 'currentColor');
+          text.setAttribute('opacity', '0.55');
+          text.textContent = dateLabel;
+          svg.appendChild(text);
+        }
+      });
+    }
+
+    async function loadUsageData() {
+      const usedEl = document.getElementById('usageUsedCredits');
+      const limitEl = document.getElementById('usageLimitCredits');
+      const barEl = document.getElementById('usageProgressBar');
+      const resetEl = document.getElementById('usageResetInfo');
+      if (!usedEl) return;
+      try {
+        const res = await fetch('/api/usage');
+        const data = await res.json();
+        if (!data.ok) return;
+
+        usedEl.textContent = data.usedCredits;
+        limitEl.textContent = `/ ${data.limitCredits} kredit minggu ini`;
+
+        const pct = data.limitCredits > 0 ? Math.min(100, (data.usedCredits / data.limitCredits) * 100) : 0;
+        if (barEl) {
+          barEl.style.width = pct + '%';
+          barEl.style.background = pct >= 100 ? '#ef4444' : (pct >= 80 ? '#f59e0b' : 'var(--brand-blue)');
+        }
+
+        if (resetEl && data.resetsAt) {
+          const resetDate = new Date(data.resetsAt).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
+          resetEl.textContent = `Kuota akan direset otomatis pada ${resetDate}.`;
+        }
+
+        renderUsageChart(data.dailyUsage);
+      } catch (err) {
+        console.error('Gagal memuat data usage:', err);
+      }
+    }
+    window.loadUsageData = loadUsageData;
+
     // --- LOGIKA PROMPT BANK ---
     let promptBankData = null;
     let promptBankDataLang = null;
