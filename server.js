@@ -590,12 +590,13 @@ const DEEPSEEK_POOL_HISTORY_DAYS = 30;
 // juta token ada di rasio 6.1:1 (GLM 5.2 6.1x lebih mahal) - jadi 1 token
 // Co-Work "dihargai" 6.1 token DeepSeek saat ditambahkan ke pool bersama,
 // supaya kredit yang terpakai betul-betul proporsional dengan biaya API
-// asli, bukan dihitung token mentah apa adanya. CATATAN: provider GLM 5.2
-// pindah dari Baidu ke AkashML pada 2026-08-18 (lihat provider.order di
-// callOpenRouterGLM) karena promo Baidu sudah habis - rasio 6.1:1 ini BELUM
-// diverifikasi ulang terhadap harga AkashML, cek lagi kalau mau presisi.
-// Update angka ini kalau harga OpenRouter/
-// DeepSeek berubah signifikan.
+// asli, bukan dihitung token mentah apa adanya. CATATAN: sejak
+// callOpenRouterGLM dipindah ke provider.sort:"price" (2026-08-18),
+// provider GLM 5.2 yang benar-benar dipakai bisa BERUBAH-UBAH otomatis
+// (selalu yang termurah saat itu) - rasio 6.1:1 ini jadi perkiraan/rata-rata
+// kasar, bukan angka pasti dari 1 provider tetap lagi. Cukup akurat untuk
+// tujuan pemerataan kuota, tidak perlu presisi sampai desimal.
+// Update angka ini kalau harga OpenRouter/DeepSeek berubah signifikan.
 const COWORK_POOL_COST_MULTIPLIER = 6.1;
 
 function getCurrentWeekStartISO() {
@@ -1092,22 +1093,19 @@ async function callOpenRouterGLM(userPrompt, attachedContext, customInstructions
         model: OPENROUTER_MODEL,
         temperature: 0.3,
         max_tokens: 16000,
-        // Dipin ke provider AkashML (tag akashml/fp8, lagi promo ~45% off di
-        // OpenRouter saat ini) - pindah dari Baidu (2026-08-18) karena
-        // promonya sudah hilang (discount jadi 0, cek ulang lewat
-        // GET /api/v1/models/z-ai/glm-5.2/endpoints kalau mau verifikasi
-        // promo mana yang masih aktif). Nama provider di sini HARUS persis
-        // "AkashML" (provider_name di endpoint API di atas) - kalau meleset
-        // dikit (mis. beda kapitalisasi/spasi) dengan allow_fallbacks:false,
-        // dianggap tidak ada endpoint sama sekali ("No endpoints found").
-        // allow_fallbacks:false tetap dipertahankan SENGAJA supaya request
-        // GAGAL kalau provider ini tidak tersedia (bukan diam-diam nyasar ke
-        // provider lain yang mungkin sudah tidak promo) - task Co-Work akan
-        // tercatat 'failed' dgn pesan errornya, bukan berhasil tapi kena
-        // biaya provider yang tidak diduga.
+        // sort:"price" - OpenRouter otomatis rute ke provider TERMURAH yang
+        // sedang tersedia untuk model ini SAAT REQUEST (dicek ulang tiap
+        // panggilan, bukan dipin ke 1 nama provider tetap). Ini GANTI cara
+        // lama (pin manual ke provider.order + allow_fallbacks:false, sempat
+        // dipin ke Baidu lalu AkashML) yang selalu jebol ulang tiap kali promo
+        // provider itu habis - dengan sort:"price" tidak perlu dipantau/
+        // diganti manual lagi kalau promo pindah provider lain, OpenRouter
+        // yang urus otomatis (masih tetap ada fallback ke provider termurah
+        // berikutnya kalau yang paling murah lagi down, bukan hard-fail).
+        // Sumber: https://openrouter.ai/docs/features/provider-routing
+        // ("Floor Price Shortcut" / provider.sort:"price").
         provider: {
-          order: ['AkashML'],
-          allow_fallbacks: false
+          sort: 'price'
         },
         messages
       }),
