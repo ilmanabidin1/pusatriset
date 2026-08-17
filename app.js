@@ -714,6 +714,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
+  // --- TOGGLE CHAT / CO-WORK di dalam tab JurnalHub Intelligence - persis
+  // pola Claude (satu panel dengan switch, bukan tab sidebar terpisah).
+  // Co-Work TIDAK lagi punya tab/link sidebar sendiri (lihat riwayat commit) -
+  // diakses lewat toggle ini, tetap 1 klik dari mana pun karena tab
+  // "research-chat" adalah dashboard/home default aplikasi.
+  let researchChatActiveMode = 'chat';
+  function setResearchChatMode(mode) {
+    researchChatActiveMode = mode === 'cowork' ? 'cowork' : 'chat';
+    const chatView = document.getElementById('researchChatChatView');
+    const coworkView = document.getElementById('researchChatCoworkView');
+    const pillChat = document.getElementById('pillViewChat');
+    const pillCowork = document.getElementById('pillViewCowork');
+    const quotaDisclaimer = document.getElementById('researchChatQuotaDisclaimer');
+    const isCowork = researchChatActiveMode === 'cowork';
+
+    // #researchChatChatView pakai display:contents saat aktif (bukan 'block')
+    // supaya #researchChatMessages & .research-chat-composer-wrapper tetap
+    // jadi flex item LANGSUNG dari .research-chat-main - semua CSS flex/
+    // chat-empty yang sudah ada (lihat index.html) tetap berlaku apa adanya.
+    if (chatView) chatView.style.display = isCowork ? 'none' : 'contents';
+    if (coworkView) coworkView.style.display = isCowork ? 'block' : 'none';
+    if (pillChat) pillChat.classList.toggle('active', !isCowork);
+    if (pillCowork) pillCowork.classList.toggle('active', isCowork);
+    // Badge kuota chat tidak relevan di mode Co-Work (kuotanya sengaja tidak
+    // ditampilkan sebagai fitur terpisah, lihat applyCoworkVisibility).
+    if (quotaDisclaimer) quotaDisclaimer.style.display = isCowork ? 'none' : 'flex';
+
+    if (isCowork) {
+      if (currentUser && currentUser.user) applyCoworkVisibility(currentUser.user);
+      if (window.loadCoworkTab) window.loadCoworkTab();
+    }
+  }
+  window.setResearchChatMode = setResearchChatMode;
+
+  (function initResearchChatModeToggle() {
+    const pillChat = document.getElementById('pillViewChat');
+    const pillCowork = document.getElementById('pillViewCowork');
+    if (pillChat) pillChat.addEventListener('click', () => setResearchChatMode('chat'));
+    if (pillCowork) pillCowork.addEventListener('click', () => setResearchChatMode('cowork'));
+  })();
+
   // --- POPUP PENGUMUMAN FITUR BARU (sekali per user, permanen setelah
   // ditutup - lihat CURRENT_ANNOUNCEMENT_ID & POST /api/announcements/dismiss
   // di server.js) ---
@@ -771,7 +812,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ctaBtn) {
       ctaBtn.addEventListener('click', () => {
         dismissFeatureAnnouncement();
-        if (window.switchTab) window.switchTab('cowork');
+        if (window.switchTab) window.switchTab('research-chat');
+        setResearchChatMode('cowork');
       });
     }
   })();
@@ -2170,15 +2212,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Deep-link dari tombol CTA di email notifikasi "Tugas Co-Work selesai"
           // (?opencowork=<taskId>, lihat POST /api/cowork/submit di server.js) -
-          // buka langsung tab Co-Work saat pertama kali halaman dimuat. Ditandai
-          // sekali (window.__coworkDeepLinkHandled) supaya checkAuthState yang
+          // buka langsung tab JurnalHub Intelligence dalam mode Co-Work saat
+          // pertama kali halaman dimuat. Ditandai sekali
+          // (window.__coworkDeepLinkHandled) supaya checkAuthState yang
           // terpanggil ulang berikutnya (mis. setelah pembayaran) tidak memaksa
-          // pindah tab lagi kalau user sudah pindah ke tab lain.
+          // pindah tab/mode lagi kalau user sudah pindah ke tab lain.
           if (!window.__coworkDeepLinkHandled) {
             window.__coworkDeepLinkHandled = true;
             const coworkDeepLinkParams = new URLSearchParams(window.location.search);
             if (coworkDeepLinkParams.get('opencowork') && window.switchTab) {
-              window.switchTab('cowork');
+              window.switchTab('research-chat');
+              setResearchChatMode('cowork');
               window.history.replaceState({}, '', window.location.pathname + window.location.hash);
             }
           }
@@ -6920,6 +6964,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (id !== currentResearchChatId) loadResearchChatConversation(id);
         if (window.switchTab) window.switchTab('research-chat');
+        if (window.setResearchChatMode) window.setResearchChatMode('chat');
       }
     }
 
@@ -7003,6 +7048,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         if (window.switchTab) window.switchTab('research-chat');
+        if (window.setResearchChatMode) window.setResearchChatMode('chat');
         if (id !== currentResearchChatId) loadResearchChatConversation(id);
       }
 
@@ -9932,8 +9978,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderResearchChatMessages();
         renderResearchChatHistoryList();
         // Tombol ini sekarang persisten di sidebar utama (bisa diklik dari tab manapun),
-        // bukan cuma di dalam tab JurnalHub Intelligence - jadi pastikan pindah ke sana.
+        // bukan cuma di dalam tab JurnalHub Intelligence - jadi pastikan pindah ke sana
+        // (dan balik ke mode Chat, kalau sebelumnya sedang di mode Co-Work).
         if (window.switchTab) window.switchTab('research-chat');
+        if (window.setResearchChatMode) window.setResearchChatMode('chat');
       });
     }
 
