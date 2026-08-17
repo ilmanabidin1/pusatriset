@@ -586,11 +586,15 @@ function isAdminReq(req) {
 const DEEPSEEK_POOL_WEEKLY_CREDITS = { free: 10, premium: 600, ultimate: 1500 };
 const DEEPSEEK_CREDIT_TOKEN_SIZE = 1000;
 const DEEPSEEK_POOL_HISTORY_DAYS = 30;
-// Harga OpenRouter GLM 5.2 (Baidu) per 1 juta token vs DeepSeek v4 per 1 juta
-// token ada di rasio 6.1:1 (GLM 5.2 6.1x lebih mahal) - jadi 1 token Co-Work
-// "dihargai" 6.1 token DeepSeek saat ditambahkan ke pool bersama, supaya
-// kredit yang terpakai betul-betul proporsional dengan biaya API asli, bukan
-// dihitung token mentah apa adanya. Update angka ini kalau harga OpenRouter/
+// Harga OpenRouter GLM 5.2 (waktu itu provider Baidu) vs DeepSeek v4 per 1
+// juta token ada di rasio 6.1:1 (GLM 5.2 6.1x lebih mahal) - jadi 1 token
+// Co-Work "dihargai" 6.1 token DeepSeek saat ditambahkan ke pool bersama,
+// supaya kredit yang terpakai betul-betul proporsional dengan biaya API
+// asli, bukan dihitung token mentah apa adanya. CATATAN: provider GLM 5.2
+// pindah dari Baidu ke AkashML pada 2026-08-18 (lihat provider.order di
+// callOpenRouterGLM) karena promo Baidu sudah habis - rasio 6.1:1 ini BELUM
+// diverifikasi ulang terhadap harga AkashML, cek lagi kalau mau presisi.
+// Update angka ini kalau harga OpenRouter/
 // DeepSeek berubah signifikan.
 const COWORK_POOL_COST_MULTIPLIER = 6.1;
 
@@ -1088,19 +1092,21 @@ async function callOpenRouterGLM(userPrompt, attachedContext, customInstructions
         model: OPENROUTER_MODEL,
         temperature: 0.3,
         max_tokens: 16000,
-        // Dipin ke provider Baidu (lagi promo di OpenRouter saat ini) - nama
-        // provider di sini HARUS persis "Baidu" (dicek langsung lewat
-        // GET /api/v1/models/z-ai/glm-5.2/endpoints di OpenRouter, provider_name
-        // = "Baidu", BUKAN "Baidu Qianfan" - nama itu salah, itu sebabnya
-        // sempat muncul error "No endpoints found for z-ai/glm-5.2": dengan
-        // allow_fallbacks:false, nama yang tidak cocok persis = dianggap tidak
-        // ada endpoint sama sekali). allow_fallbacks:false tetap dipertahankan
-        // SENGAJA supaya request GAGAL kalau provider ini tidak tersedia
-        // (bukan diam-diam nyasar ke provider lain yang mungkin sudah tidak
-        // promo) - task Co-Work akan tercatat 'failed' dgn pesan errornya,
-        // bukan berhasil tapi kena biaya provider yang tidak diduga.
+        // Dipin ke provider AkashML (tag akashml/fp8, lagi promo ~45% off di
+        // OpenRouter saat ini) - pindah dari Baidu (2026-08-18) karena
+        // promonya sudah hilang (discount jadi 0, cek ulang lewat
+        // GET /api/v1/models/z-ai/glm-5.2/endpoints kalau mau verifikasi
+        // promo mana yang masih aktif). Nama provider di sini HARUS persis
+        // "AkashML" (provider_name di endpoint API di atas) - kalau meleset
+        // dikit (mis. beda kapitalisasi/spasi) dengan allow_fallbacks:false,
+        // dianggap tidak ada endpoint sama sekali ("No endpoints found").
+        // allow_fallbacks:false tetap dipertahankan SENGAJA supaya request
+        // GAGAL kalau provider ini tidak tersedia (bukan diam-diam nyasar ke
+        // provider lain yang mungkin sudah tidak promo) - task Co-Work akan
+        // tercatat 'failed' dgn pesan errornya, bukan berhasil tapi kena
+        // biaya provider yang tidak diduga.
         provider: {
-          order: ['Baidu'],
+          order: ['AkashML'],
           allow_fallbacks: false
         },
         messages
