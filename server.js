@@ -571,19 +571,28 @@ function isAdminReq(req) {
 // Menggantikan kuota kaku per-fitur (3x/bulan, 5x/bulan, dst) untuk SEMUA
 // fitur berbasis DeepSeek (Match, Lit Review, SLR, Peer Review, Research
 // Chat, Notebook Continue Writing/AI Draft Action, Citation Graph TL;DR,
-// Folder Chat, AI Disclosure Generator) - TIDAK termasuk Humanizer
-// (StealthGPT) dan Co-Work Agent (OpenRouter GLM 5.2), yang tetap dijatah
-// terpisah seperti sebelumnya karena API-nya jauh lebih mahal per-panggilan.
-// 1 kredit = 1000 token, dihitung dari usage.total_tokens ASLI di respons
-// DeepSeek (bukan estimasi/bobot manual per fitur) - reset tiap Senin 00:00
-// UTC. Pola gate-lalu-catat: cek akses SEBELUM memanggil DeepSeek (biner,
-// tidak tahu biaya pasti di muka), lalu tambahkan token yang benar-benar
-// terpakai SETELAH respons selesai - artinya 1 panggilan terakhir seorang
-// user bisa sedikit melebihi limit sebelum panggilan berikutnya ditolak,
-// ini perilaku normal untuk rate limiting berbasis token.
+// Folder Chat, AI Disclosure Generator) DAN Co-Work Agent (OpenRouter
+// GLM 5.2) - TIDAK termasuk Humanizer (StealthGPT), yang tetap dijatah
+// terpisah (unit kata, bukan token, API-nya beda konsep sama sekali).
+// 1 kredit = 1000 token DeepSeek, dihitung dari usage.total_tokens ASLI di
+// respons (bukan estimasi/bobot manual per fitur) - reset tiap Senin 00:00
+// UTC. Token Co-Work (GLM 5.2, vendor & harga beda) dikonversi ke "token
+// setara DeepSeek" pakai COWORK_POOL_COST_MULTIPLIER sebelum masuk pool yang
+// sama - lihat konstanta itu. Pola gate-lalu-catat: cek akses SEBELUM
+// memanggil AI (biner, tidak tahu biaya pasti di muka), lalu tambahkan token
+// yang benar-benar terpakai SETELAH respons selesai - artinya 1 panggilan
+// terakhir seorang user bisa sedikit melebihi limit sebelum panggilan
+// berikutnya ditolak, ini perilaku normal untuk rate limiting berbasis token.
 const DEEPSEEK_POOL_WEEKLY_CREDITS = { free: 10, premium: 600, ultimate: 1500 };
 const DEEPSEEK_CREDIT_TOKEN_SIZE = 1000;
 const DEEPSEEK_POOL_HISTORY_DAYS = 30;
+// Harga OpenRouter GLM 5.2 (Baidu) per 1 juta token vs DeepSeek v4 per 1 juta
+// token ada di rasio 6.1:1 (GLM 5.2 6.1x lebih mahal) - jadi 1 token Co-Work
+// "dihargai" 6.1 token DeepSeek saat ditambahkan ke pool bersama, supaya
+// kredit yang terpakai betul-betul proporsional dengan biaya API asli, bukan
+// dihitung token mentah apa adanya. Update angka ini kalau harga OpenRouter/
+// DeepSeek berubah signifikan.
+const COWORK_POOL_COST_MULTIPLIER = 6.1;
 
 function getCurrentWeekStartISO() {
   const now = new Date();
@@ -614,6 +623,19 @@ function hasDeepSeekPoolAccess(user) {
   return user.deepseekPoolTokensUsedThisWeek < getDeepSeekPoolLimitTokens(user);
 }
 
+// Tiap entri deepseekPoolDailyUsage[date] disimpan sebagai { direct, cowork }
+// (token setara-DeepSeek) - dipisah biar grafik Usage bisa nunjukin ke user
+// mana yang bikin kuotanya kepakai (JurnalHub Intelligence dkk vs Co-Work
+// Agent), meski keduanya berbagi 1 total pool yang sama untuk pengecekan
+// limit. normalizeDailyEntry jaga-jaga kalau ada data lama format angka
+// polos (sebelum pemisahan source ini ada).
+function normalizeDailyEntry(entry) {
+  if (entry && typeof entry === 'object') {
+    return { direct: entry.direct || 0, cowork: entry.cowork || 0 };
+  }
+  return { direct: Number(entry) || 0, cowork: 0 };
+}
+
 function getDeepSeekPoolStatus(user) {
   if (!user) {
     return {
@@ -624,20 +646,25 @@ function getDeepSeekPoolStatus(user) {
     };
   }
   ensureDeepSeekPoolFresh(user);
+  const rawDaily = (user.deepseekPoolDailyUsage && typeof user.deepseekPoolDailyUsage === 'object') ? user.deepseekPoolDailyUsage : {};
+  const dailyUsage = {};
+  Object.keys(rawDaily).forEach(date => { dailyUsage[date] = normalizeDailyEntry(rawDaily[date]); });
   return {
     usedTokens: user.deepseekPoolTokensUsedThisWeek || 0,
     limitTokens: getDeepSeekPoolLimitTokens(user),
     weekStart: user.deepseekPoolWeekStart,
-    dailyUsage: (user.deepseekPoolDailyUsage && typeof user.deepseekPoolDailyUsage === 'object') ? user.deepseekPoolDailyUsage : {}
+    dailyUsage
   };
 }
 
-// Dipanggil SETELAH panggilan DeepSeek sukses & usage.total_tokens diketahui.
-// Baca ulang users.json sendiri (bukan pakai array `users` yang mungkin sudah
+// Dipanggil SETELAH panggilan AI sukses & jumlah token asli diketahui. Baca
+// ulang users.json sendiri (bukan pakai array `users` yang mungkin sudah
 // dimuat route pemanggil) supaya tidak ketimpa oleh saveUsers() lain dari
 // route yang sama yang jalan lebih dulu/belakangan - pola yang sama dengan
-// re-read di increment /api/research-chat.
-function recordDeepSeekPoolUsage(userId, tokens) {
+// re-read di increment /api/research-chat. `source` = 'cowork' untuk token
+// dari Co-Work Agent (sudah dikonversi pakai COWORK_POOL_COST_MULTIPLIER
+// oleh caller), default 'direct' untuk fitur DeepSeek biasa.
+function recordDeepSeekPoolUsage(userId, tokens, source) {
   const tokenCount = Number(tokens) || 0;
   if (!userId || tokenCount <= 0) return;
   const users = getUsers();
@@ -650,7 +677,11 @@ function recordDeepSeekPoolUsage(userId, tokens) {
   if (!user.deepseekPoolDailyUsage || typeof user.deepseekPoolDailyUsage !== 'object') {
     user.deepseekPoolDailyUsage = {};
   }
-  user.deepseekPoolDailyUsage[today] = (user.deepseekPoolDailyUsage[today] || 0) + tokenCount;
+  const entry = normalizeDailyEntry(user.deepseekPoolDailyUsage[today]);
+  const key = source === 'cowork' ? 'cowork' : 'direct';
+  entry[key] += tokenCount;
+  user.deepseekPoolDailyUsage[today] = entry;
+
   const cutoff = new Date(Date.now() - DEEPSEEK_POOL_HISTORY_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   Object.keys(user.deepseekPoolDailyUsage).forEach(date => {
     if (date < cutoff) delete user.deepseekPoolDailyUsage[date];
@@ -958,10 +989,15 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
 
 // --- CO-WORK AGENT (asisten riset otonom background, via OpenRouter GLM 5.2) ---
 // Fitur bundel di paket Premium & Ultimate (tanpa biaya tambahan) - free TIDAK
-// bisa akses sama sekali. Kuota beda per tier (lihat COWORK_MONTHLY_QUOTA_BY_TIER)
-// dan SENGAJA tidak ditampilkan ke user di UI (permintaan eksplisit) - begitu
-// kuota bulan itu habis, submit berikutnya langsung ditolak 403 dgn pesan
-// error, tanpa indikator sisa kuota di mana pun sebelumnya.
+// bisa akses sama sekali (gate tier, lihat submit di bawah). Kuotanya SUDAH
+// DIGABUNG ke DEEPSEEK POOL bersama (lihat komentar besar di atas) - token
+// GLM 5.2 dikonversi ke token setara-DeepSeek pakai COWORK_POOL_COST_MULTIPLIER
+// sebelum ditambahkan ke pool yang sama, jadi tidak ada kuota bulanan
+// terpisah lagi untuk Co-Work. SENGAJA tidak ditampilkan sebagai fitur
+// terpisah di UI (permintaan eksplisit) - tapi pemakaiannya tetap kelihatan
+// di grafik Usage (Pengaturan) sebagai porsi "Co-Work Agent" yang terpisah
+// dari porsi fitur DeepSeek langsung, supaya user tahu penyebab kuotanya
+// kepakai.
 // TIDAK ada job queue sungguhan (Redis/BullMQ dsb) di app ini - pola yang
 // dipakai sama seperti Email Blast di atas: request submit langsung dibalas
 // begitu task tercatat di cowork-tasks.json, lalu eksekusi sungguhan (panggil
@@ -970,7 +1006,6 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
 // redeploy di tengah proses (Railway auto-deploy tiap push ke main), task yang
 // sedang 'processing' TIDAK otomatis lanjut - akan tersangkut di status itu
 // selamanya (keterbatasan yang sama, tidak ada resume mechanism).
-const COWORK_MONTHLY_QUOTA_BY_TIER = { premium: 5, ultimate: 10 };
 const COWORK_TASKS_FILE = path.join(DATA_DIR, 'cowork-tasks.json');
 const COWORK_OUTPUTS_DIR = path.join(DATA_DIR, 'uploads', 'cowork-outputs');
 const OPENROUTER_MODEL = 'z-ai/glm-5.2';
@@ -1020,24 +1055,6 @@ function saveCoworkTasks(tasks) {
   } catch (error) {
     console.error('Gagal menyimpan cowork-tasks.json:', error);
   }
-}
-
-// Reset otomatis begitu ganti bulan kalender, sama seperti pola kuota fitur
-// lain (lihat resetMonthlyQuotasOnUpgrade) - dipanggil SEBELUM merespons submit
-// (bukan di worker async) supaya dua submit paralel dari user yang sama tidak
-// bisa berdua lolos kuota (race condition) begitu saja.
-function checkAndConsumeCoworkQuota(user, tier) {
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  if (user.lastCoworkMonth !== currentMonth) {
-    user.lastCoworkMonth = currentMonth;
-    user.coworkCountThisMonth = 0;
-  }
-  const limit = COWORK_MONTHLY_QUOTA_BY_TIER[tier] || 0;
-  if (user.coworkCountThisMonth >= limit) {
-    return false;
-  }
-  user.coworkCountThisMonth += 1;
-  return true;
 }
 
 async function callOpenRouterGLM(userPrompt, attachedContext, customInstructionsMessage) {
@@ -1291,15 +1308,17 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
       return res.status(403).json({ ok: false, message: 'Fitur Co-Work Agent khusus akun Premium & Ultimate.' });
     }
 
-    if (!isAdminReq(req) && !checkAndConsumeCoworkQuota(user, userType)) {
-      return res.status(403).json({ ok: false, message: 'Kuota Co-Work Agent bulan ini sudah habis. Kuota akan reset di awal bulan berikutnya.' });
-    }
-    saveUsers(users);
+    // Kuota Co-Work sekarang bagian dari DEEPSEEK POOL bersama (gate biner
+    // sebelum panggil, token GLM 5.2 dicatat SETELAH task selesai lewat
+    // recordDeepSeekPoolUsage(..., 'cowork') di bawah - lihat komentar besar
+    // di atas). Tidak ada lagi kuota bulanan terpisah untuk Co-Work, jadi
+    // tidak ada juga yang perlu "dikembalikan" kalau task gagal - beda dari
+    // pola lama yang pre-consume 1 hitungan lalu refund di catch block.
+    if (!requireDeepSeekPoolAccess(req, res, user)) return;
 
     // Ekstrak teks tiap file lampiran SEBELUM merespons - kalau ada file yang
     // gagal dibaca, user tahu langsung lewat respons ini (bukan lewat email
-    // gagal tanpa konteks nanti), dan kuota yang sudah kepakai di atas
-    // dikembalikan karena tasknya batal total.
+    // gagal tanpa konteks nanti).
     const MAX_CONTEXT_CHARS = 60000;
     let attachedContext = '';
     try {
@@ -1319,10 +1338,6 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
         attachedContext = attachedContext.slice(0, MAX_CONTEXT_CHARS) + '\n\n[...dipotong karena terlalu panjang...]';
       }
     } catch (extractErr) {
-      if (!isAdminReq(req)) {
-        user.coworkCountThisMonth = Math.max(0, (user.coworkCountThisMonth || 0) - 1);
-        saveUsers(users);
-      }
       return res.status(400).json({ ok: false, message: extractErr.message || 'Gagal memproses file lampiran.' });
     }
 
@@ -1372,6 +1387,11 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
         updateTask({ status: 'processing', statusLog: 'JurnalHub Co-Work sedang memproses tugas Anda...', startedAt: new Date().toISOString() });
         const { text, tokensUsed } = await callOpenRouterGLM(prompt, attachedContext, buildCustomInstructionsMessage(user));
 
+        // Token GLM 5.2 dikonversi ke token setara-DeepSeek (COWORK_POOL_COST_MULTIPLIER)
+        // sebelum masuk DEEPSEEK POOL bersama, ditandai source 'cowork' supaya
+        // grafik Usage bisa memisahkannya dari pemakaian fitur DeepSeek langsung.
+        recordDeepSeekPoolUsage(user.id, tokensUsed * COWORK_POOL_COST_MULTIPLIER, 'cowork');
+
         updateTask({ statusLog: 'Menyusun dokumen Word (.docx)...' });
         const children = markdownToDocxChildren(text);
         const doc = new Document({ sections: [{ children }] });
@@ -1413,19 +1433,13 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
         console.error('[Co-Work Agent] Task gagal:', task.id, taskErr.message);
         updateTask({ status: 'failed', statusLog: 'Gagal.', errorMessage: taskErr.message || 'Terjadi kesalahan saat memproses tugas.' });
 
-        // Kembalikan kuota - task gagal di tengah jalan bukan salah user,
-        // jangan sampai mereka rugi kuota untuk tugas yang tidak menghasilkan apa-apa.
-        if (!isAdminReq(req)) {
-          const usersNow = getUsers();
-          const userNow = usersNow.find(u => u.id === user.id);
-          if (userNow) {
-            userNow.coworkCountThisMonth = Math.max(0, (userNow.coworkCountThisMonth || 0) - 1);
-            saveUsers(usersNow);
-          }
-        }
+        // Tidak ada lagi kuota yang perlu "dikembalikan" - recordDeepSeekPoolUsage
+        // hanya dipanggil SETELAH callOpenRouterGLM sukses (di atas), jadi kalau
+        // taskErr terjadi SEBELUM itu (mis. GLM gagal total), tidak ada kredit
+        // yang sempat terpakai sama sekali.
 
         try {
-          await sendMailHelper(user.email, '[JurnalHub] Tugas Co-Work Anda Gagal Diproses', `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a202c;"><p>Maaf, tugas Co-Work Anda gagal diproses: ${escapeHtmlServer(taskErr.message || 'Kesalahan tidak diketahui.')}</p><p>Kuota Anda untuk tugas ini sudah dikembalikan. Silakan coba lagi lewat dashboard.</p></div>`);
+          await sendMailHelper(user.email, '[JurnalHub] Tugas Co-Work Anda Gagal Diproses', `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a202c;"><p>Maaf, tugas Co-Work Anda gagal diproses: ${escapeHtmlServer(taskErr.message || 'Kesalahan tidak diketahui.')}</p><p>Silakan coba lagi lewat dashboard.</p></div>`);
         } catch (mailErr) {
           console.error('[Co-Work Agent] Gagal kirim email notifikasi kegagalan:', mailErr.message);
         }
@@ -2232,12 +2246,17 @@ app.get('/api/usage', requireAccess, (req, res) => {
 
   // 30 hari terakhir TERMASUK hari tanpa pemakaian (0 kredit) supaya bar
   // chart-nya berurutan rapi, bukan cuma tanggal yang kebetulan ada datanya.
+  // directCredits = JurnalHub Intelligence dkk, coworkCredits = Co-Work Agent
+  // (sudah dikonversi ke token setara-DeepSeek) - dipisah biar user tahu
+  // penyebab kuotanya kepakai, walau limitnya 1 pool bersama.
   const days = [];
   for (let i = DEEPSEEK_POOL_HISTORY_DAYS - 1; i >= 0; i--) {
     const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
     const dateStr = d.toISOString().slice(0, 10);
-    const tokens = status.dailyUsage[dateStr] || 0;
-    days.push({ date: dateStr, credits: Math.round((tokens / DEEPSEEK_CREDIT_TOKEN_SIZE) * 10) / 10 });
+    const entry = status.dailyUsage[dateStr] || { direct: 0, cowork: 0 };
+    const directCredits = Math.round((entry.direct / DEEPSEEK_CREDIT_TOKEN_SIZE) * 10) / 10;
+    const coworkCredits = Math.round((entry.cowork / DEEPSEEK_CREDIT_TOKEN_SIZE) * 10) / 10;
+    days.push({ date: dateStr, directCredits, coworkCredits, credits: Math.round((directCredits + coworkCredits) * 10) / 10 });
   }
 
   res.json({

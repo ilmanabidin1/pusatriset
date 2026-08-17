@@ -356,11 +356,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- CO-WORK AGENT (asisten riset otonom background via GLM 5.2/OpenRouter) ---
   // Bundel di paket Premium & Ultimate (free tidak bisa akses sama sekali) -
-  // lihat applyCoworkVisibility di checkAuthState. Kuotanya beda per tier
-  // (Premium 3x, Ultimate 5x/bulan, lihat COWORK_MONTHLY_QUOTA_BY_TIER di
-  // server.js) dan SENGAJA TIDAK ditampilkan ke user di sini (permintaan
-  // eksplisit) - begitu kuota habis, submit berikutnya langsung ditolak
-  // server dengan pesan error, tanpa indikator sisa kuota di UI mana pun.
+  // lihat applyCoworkVisibility di checkAuthState. Kuotanya sudah digabung ke
+  // DEEPSEEK POOL bersama di server.js (token GLM 5.2 dikonversi ke token
+  // setara-DeepSeek) dan SENGAJA TIDAK ditampilkan sebagai fitur terpisah di
+  // sini (permintaan eksplisit) - begitu kuota habis, submit berikutnya
+  // langsung ditolak server dengan pesan error. Pemakaiannya tetap kelihatan
+  // di grafik Usage (Pengaturan) sebagai porsi terpisah dari fitur lain.
   // Tidak ada push/websocket dari server - progress task yang masih
   // pending/processing dipoll berkala (lihat window.loadCoworkTab).
   function applyCoworkVisibility(user) {
@@ -5441,8 +5442,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const chartHeight = 100;
       const labelHeight = 22;
       const width = days.length * (barWidth + gap);
-      const maxCredits = Math.max(1, ...days.map(d => d.credits || 0));
+      // Stack langsung (JurnalHub Intelligence dkk) + Co-Work Agent - total tinggi
+      // bar = jumlah keduanya, dipisah warna supaya user tahu penyebab kuotanya
+      // kepakai (lihat legenda di atas chart, dan komentar server.js soal
+      // recordDeepSeekPoolUsage source 'direct'/'cowork').
+      const maxCredits = Math.max(1, ...days.map(d => (d.directCredits || 0) + (d.coworkCredits || 0)));
       const brandBlue = getComputedStyle(document.documentElement).getPropertyValue('--brand-blue').trim() || '#2563eb';
+      const coworkColor = '#a855f7';
 
       svg.setAttribute('width', width);
       svg.setAttribute('viewBox', `0 0 ${width} ${chartHeight + labelHeight}`);
@@ -5453,24 +5459,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
       days.forEach((d, i) => {
         const x = i * (barWidth + gap);
-        const credits = d.credits || 0;
-        const h = credits > 0 ? Math.max(3, (credits / maxCredits) * chartHeight) : 1.5;
-        const y = chartHeight - h;
-
-        const rect = document.createElementNS(svgNs, 'rect');
-        rect.setAttribute('x', x);
-        rect.setAttribute('y', y);
-        rect.setAttribute('width', barWidth);
-        rect.setAttribute('height', h);
-        rect.setAttribute('rx', 3);
-        rect.setAttribute('fill', brandBlue);
-        rect.setAttribute('opacity', credits > 0 ? '0.85' : '0.18');
-
-        const title = document.createElementNS(svgNs, 'title');
+        const directCredits = d.directCredits || 0;
+        const coworkCredits = d.coworkCredits || 0;
+        const total = directCredits + coworkCredits;
         const dateLabel = new Date(d.date + 'T00:00:00Z').toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-        title.textContent = `${dateLabel}: ${credits} kredit`;
-        rect.appendChild(title);
-        svg.appendChild(rect);
+
+        if (total > 0) {
+          const directH = Math.max(0, (directCredits / maxCredits) * chartHeight);
+          const coworkH = Math.max(0, (coworkCredits / maxCredits) * chartHeight);
+
+          if (coworkCredits > 0) {
+            const coworkRect = document.createElementNS(svgNs, 'rect');
+            coworkRect.setAttribute('x', x);
+            coworkRect.setAttribute('y', chartHeight - directH - coworkH);
+            coworkRect.setAttribute('width', barWidth);
+            coworkRect.setAttribute('height', Math.max(2, coworkH));
+            coworkRect.setAttribute('rx', 3);
+            coworkRect.setAttribute('fill', coworkColor);
+            coworkRect.setAttribute('opacity', '0.85');
+            const coworkTitle = document.createElementNS(svgNs, 'title');
+            coworkTitle.textContent = `${dateLabel} - Co-Work Agent: ${coworkCredits} kredit`;
+            coworkRect.appendChild(coworkTitle);
+            svg.appendChild(coworkRect);
+          }
+          if (directCredits > 0) {
+            const directRect = document.createElementNS(svgNs, 'rect');
+            directRect.setAttribute('x', x);
+            directRect.setAttribute('y', chartHeight - directH);
+            directRect.setAttribute('width', barWidth);
+            directRect.setAttribute('height', Math.max(2, directH));
+            directRect.setAttribute('rx', 3);
+            directRect.setAttribute('fill', brandBlue);
+            directRect.setAttribute('opacity', '0.85');
+            const directTitle = document.createElementNS(svgNs, 'title');
+            directTitle.textContent = `${dateLabel} - JurnalHub Intelligence: ${directCredits} kredit`;
+            directRect.appendChild(directTitle);
+            svg.appendChild(directRect);
+          }
+        } else {
+          const emptyRect = document.createElementNS(svgNs, 'rect');
+          emptyRect.setAttribute('x', x);
+          emptyRect.setAttribute('y', chartHeight - 1.5);
+          emptyRect.setAttribute('width', barWidth);
+          emptyRect.setAttribute('height', 1.5);
+          emptyRect.setAttribute('rx', 3);
+          emptyRect.setAttribute('fill', brandBlue);
+          emptyRect.setAttribute('opacity', '0.18');
+          const emptyTitle = document.createElementNS(svgNs, 'title');
+          emptyTitle.textContent = `${dateLabel}: 0 kredit`;
+          emptyRect.appendChild(emptyTitle);
+          svg.appendChild(emptyRect);
+        }
 
         if (i % labelEvery === 0 || i === days.length - 1) {
           const text = document.createElementNS(svgNs, 'text');
