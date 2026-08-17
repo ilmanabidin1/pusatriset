@@ -2125,17 +2125,20 @@ app.get('/api/me', (req, res) => {
     }
 
     // Fitur berbasis DeepSeek (Match, Lit Review, SLR, Peer Review, Research
-    // Chat, Notebook Continue Writing/AI Draft Action) sekarang dijatah lewat
-    // DEEPSEEK POOL bersama (kredit/minggu) - override angka di atas yang
-    // masih dihitung dari counter bulanan lama per-fitur. Nama field lama
-    // TETAP dipertahankan (dipakai banyak tempat di frontend untuk badge/lock
-    // icon) supaya UI existing tidak perlu diubah, cuma sumber datanya yang
-    // sekarang jadi pool bersama. Draft, Patent Search, Cari Referensi,
-    // Citation Graph (/expand), dan Humanizer TIDAK termasuk pool ini.
+    // Chat, Notebook Continue Writing/AI Draft Action, Draft/Outline Generator)
+    // sekarang dijatah lewat DEEPSEEK POOL bersama (kredit/minggu) - override
+    // angka di atas yang masih dihitung dari counter bulanan lama per-fitur.
+    // Nama field lama TETAP dipertahankan (dipakai banyak tempat di frontend
+    // untuk badge/lock icon) supaya UI existing tidak perlu diubah, cuma
+    // sumber datanya yang sekarang jadi pool bersama. Cuma Patent Search,
+    // Cari Referensi, Citation Graph (/expand), dan Humanizer yang TIDAK
+    // termasuk pool ini (bukan LLM/bukan token-based).
     const deepseekPoolStatus = getDeepSeekPoolStatus(user);
     if (user) {
       const poolOk = hasDeepSeekPoolAccess(user);
       isLimitReached = !poolOk;
+      isDraftLimitReached = !poolOk;
+      draftsRemaining = poolOk ? (isFree ? 3 : (isPremium ? 15 : 999)) : 0;
       isLitReviewLimitReached = !poolOk;
       litReviewsRemaining = poolOk ? (isFree ? 3 : (isPremium ? 15 : 999)) : 0;
       isSlrLimitReached = !poolOk;
@@ -2970,19 +2973,14 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  if (!isAdminReq(req) && user && (user.type || 'free') === 'free') {
-    if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 3) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Free dibatasi 3x drafting per bulan.' });
-    }
-  } else if (!isAdminReq(req) && user && user.type === 'premium') {
-    if (user.lastDraftMonth === currentMonth && user.draftCountThisMonth >= 15) {
-      return res.status(403).json({ ok: false, message: 'Limit bulanan tercapai. Akun Premium dibatasi 15x drafting per bulan.' });
-    }
-  }
+  // Draft/Outline Generator dipindah dari Claude ke DeepSeek supaya biayanya
+  // ikut masuk DEEPSEEK POOL bersama (kredit/minggu) alih-alih kuota bulanan
+  // kaku 3x/15x per fitur - lihat requireDeepSeekPoolAccess.
+  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
 
-  const hasClaudeKey = !!process.env.ANTHROPIC_API_KEY;
-  if (!hasClaudeKey) {
-    // Fallback jika API key Claude tidak tersedia
+  const deepSeekKey = getDeepSeekApiKey();
+  if (!deepSeekKey) {
+    // Fallback jika API key DeepSeek tidak tersedia
     if (user && (user.type === 'free' || user.type === 'premium')) {
       if (user.lastDraftMonth !== currentMonth) {
         user.lastDraftMonth = currentMonth;
@@ -3016,30 +3014,31 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
 
   try {
     const fetchFn = globalThis.fetch || require('node-fetch');
-    const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022';
+    const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
 
     const segmentDescriptions = docConfig.segments.map(s => `- "${s.key}" (${s.label}): ${s.description}`).join('\n');
     const jsonExample = docConfig.segments.map(s => `"${s.key}": ["point 1", "point 2"]`).join(', ');
 
-    const response = await fetchFn('https://api.anthropic.com/v1/messages', {
+    const response = await fetchFn(deepSeekUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${deepSeekKey}`
       },
       body: JSON.stringify({
-        model: claudeModel,
+        model: 'deepseek-v4-flash',
         max_tokens: 4000,
-        system: `You are an expert academic writing advisor for Indonesian ${docConfig.label}. Based on the title and abstract provided, generate a highly structured outline of what the author must write in each segment of their manuscript. Here are the segments and what each one must cover:\n${segmentDescriptions}\n\nFor each segment, provide 3-4 specific, concrete, and highly customized points tailored directly to their research topic (do NOT output generic writing tips). Keep each point to ONE short sentence (max ~20 words) - conciseness matters more than exhaustiveness. Output ONLY a valid JSON object with exactly these keys: {${jsonExample}}. Do not wrap in markdown block.`,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
         messages: [
+          {
+            role: 'system',
+            content: `You are an expert academic writing advisor for Indonesian ${docConfig.label}. Based on the title and abstract provided, generate a highly structured outline of what the author must write in each segment of their manuscript. Here are the segments and what each one must cover:\n${segmentDescriptions}\n\nFor each segment, provide 3-4 specific, concrete, and highly customized points tailored directly to their research topic (do NOT output generic writing tips). Keep each point to ONE short sentence (max ~20 words) - conciseness matters more than exhaustiveness. Respond with ONLY a valid JSON object with exactly these keys: {${jsonExample}}. No markdown, no explanation, no text outside the JSON object.`
+          },
           {
             role: 'user',
             content: `Analisis judul dan abstrak berikut, lalu buat panduan outline pembahasan untuk masing-masing bagian ${docConfig.label}.\n\nJudul: ${title}\nAbstrak: ${abstract}\n\nBalas dengan JSON object persis seperti spesifikasi (tanpa penjelasan teks):`
-          },
-          {
-            role: 'assistant',
-            content: '{'
           }
         ]
       })
@@ -3047,18 +3046,27 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Claude API Error Status: ${response.status} - ${errText}`);
+      throw new Error(`DeepSeek API Error Status: ${response.status} - ${errText}`);
     }
 
     const resData = await response.json();
-    const rawText = resData?.content?.[0]?.text || '}';
+    const choice = resData?.choices?.[0];
+    let rawText = choice?.message?.content?.trim();
+    if (!rawText && choice?.message?.reasoning_content) {
+      rawText = String(choice.message.reasoning_content).trim();
+    }
+    if (!rawText) {
+      throw new Error('Respons AI kosong.');
+    }
     let parsed;
     try {
-      parsed = cleanAndParseAIResponse('{' + rawText, true);
+      parsed = cleanAndParseAIResponse(rawText, true);
     } catch (parseError) {
       console.error('[AI Draft Generator] Gagal parse JSON, raw text:', rawText.slice(0, 2000));
       throw parseError;
     }
+
+    if (user) recordDeepSeekPoolUsage(user.id, resData?.usage?.total_tokens);
 
     // Increment usage for Free & Premium users
     if (user && (user.type === 'free' || user.type === 'premium')) {
@@ -3074,7 +3082,7 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
 
     res.json({
       ok: true,
-      source: 'claude',
+      source: 'deepseek',
       docType,
       segments: docConfig.segments.map(s => ({ key: s.key, label: s.label })),
       draft: parsed
