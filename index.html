@@ -6653,6 +6653,22 @@
 
             </div>
 
+            <!-- Section 1b: Instruksi Kustom untuk AI - mirip "Instructions for
+                 Claude", berlaku di JurnalHub Intelligence & Co-Work Agent
+                 (2 fitur percakapan/agentic bebas) - lihat
+                 buildCustomInstructionsMessage di server.js. Sengaja section
+                 terpisah dari form Profil Akun (save-nya independen, sama
+                 seperti pola Preferensi Riset di bawah). -->
+            <div class="filter-box-card" style="padding: 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--brand-blue);"></i> <span id="settingsCustomInstructionsTitle">Instruksi Kustom untuk AI</span>
+              </h3>
+              <p id="settingsCustomInstructionsDesc" style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">JurnalHub Intelligence dan Co-Work Agent akan selalu memperhatikan instruksi ini di setiap percakapan/tugas Anda. Contoh: gaya bahasa yang disukai, aturan penulisan khusus, atau preferensi format.</p>
+              <textarea id="settingsCustomInstructions" rows="5" maxlength="3000" placeholder="mis. Selalu gunakan Bahasa Indonesia formal, hindari tanda baca em dash (—), dan sertakan analogi sederhana di setiap penjelasan konsep teknis." style="width: 100%; box-sizing: border-box; padding: 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; resize: vertical; background: var(--bg-card); color: var(--text-main);"></textarea>
+              <div id="customInstructionsMessage" style="font-size: 0.88rem; display: none; font-weight: 600; margin-top: 0.75rem;"></div>
+              <button type="button" class="btn btn-primary" id="btnSaveCustomInstructions" style="padding: 0.7rem 1.75rem; font-size: 0.88rem; margin-top: 1rem;">Simpan Instruksi</button>
+            </div>
+
             <!-- Section 2: Preferensi Pencarian -->
             <div class="filter-box-card" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">

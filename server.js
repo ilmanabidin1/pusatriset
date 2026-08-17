@@ -877,6 +877,24 @@ ATURAN FORMAT:
 4. Semua rujukan/sitasi harus ditulis dengan format akademik konsisten (misal: APA 7th Style).
 5. Jika dilampirkan teks dokumen pendukung, lakukan analisis kritis, perbandingan, dan sintesis terhadap dokumen tersebut.`;
 
+// Instruksi kustom user (mirip "Instructions for Claude") - dipakai BERSAMA
+// oleh JurnalHub Intelligence (POST /api/research-chat) & Co-Work Agent
+// (callOpenRouterGLM), SENGAJA cuma 2 fitur itu (bukan semua fitur AI di
+// app) - keduanya percakapan/agentic bebas mirip Claude, sementara fitur
+// lain (Draft, Peer Review, dll) outputnya terstruktur/format baku yang
+// bisa bentrok kalau instruksi bebas user ikut disuntikkan ke sana. Dikirim
+// sbg system message TERPISAH (bukan digabung ke system prompt utama)
+// supaya jelas asalnya dari preferensi user, bukan bagian dari
+// kepribadian/aturan dasar asisten itu sendiri.
+function buildCustomInstructionsMessage(user) {
+  const text = user && typeof user.customInstructions === 'string' ? user.customInstructions.trim() : '';
+  if (!text) return null;
+  return {
+    role: 'system',
+    content: `INSTRUKSI TAMBAHAN DARI PENGGUNA (ikuti selama tidak bertentangan dengan aturan format/keselamatan di atas):\n${text}`
+  };
+}
+
 function getCoworkTasks() {
   try {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -914,7 +932,7 @@ function checkAndConsumeCoworkQuota(user, tier) {
   return true;
 }
 
-async function callOpenRouterGLM(userPrompt, attachedContext) {
+async function callOpenRouterGLM(userPrompt, attachedContext, customInstructionsMessage) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY belum dikonfigurasi di server.');
@@ -923,6 +941,9 @@ async function callOpenRouterGLM(userPrompt, attachedContext) {
   const userContent = attachedContext
     ? `${userPrompt}\n\n--- DOKUMEN PENDUKUNG YANG DILAMPIRKAN ---\n${attachedContext}`
     : userPrompt;
+  const messages = [{ role: 'system', content: COWORK_SYSTEM_PROMPT }];
+  if (customInstructionsMessage) messages.push(customInstructionsMessage);
+  messages.push({ role: 'user', content: userContent });
 
   const controller = new AbortController();
   // 10 menit, sesuai spesifikasi - task Co-Work bisa menghasilkan draf sangat
@@ -957,10 +978,7 @@ async function callOpenRouterGLM(userPrompt, attachedContext) {
           order: ['Baidu'],
           allow_fallbacks: false
         },
-        messages: [
-          { role: 'system', content: COWORK_SYSTEM_PROMPT },
-          { role: 'user', content: userContent }
-        ]
+        messages
       }),
       signal: controller.signal
     });
@@ -1244,7 +1262,7 @@ app.post('/api/cowork/submit', requireAccess, (req, res) => {
         // statusLog SENGAJA tidak menyebut nama model/vendor AI di baliknya -
         // ditampilkan ke user sebagai brand JurnalHub Co-Work saja.
         updateTask({ status: 'processing', statusLog: 'JurnalHub Co-Work sedang memproses tugas Anda...', startedAt: new Date().toISOString() });
-        const { text, tokensUsed } = await callOpenRouterGLM(prompt, attachedContext);
+        const { text, tokensUsed } = await callOpenRouterGLM(prompt, attachedContext, buildCustomInstructionsMessage(user));
 
         updateTask({ statusLog: 'Menyusun dokumen Word (.docx)...' });
         const children = markdownToDocxChildren(text);
@@ -2053,7 +2071,8 @@ app.get('/api/me', (req, res) => {
         hasPassword: user ? !!user.password : false,
         shouldShowAnnouncement: (user && !(Array.isArray(user.dismissedAnnouncements) && user.dismissedAnnouncements.includes(CURRENT_ANNOUNCEMENT_ID)))
           ? CURRENT_ANNOUNCEMENT_ID
-          : null
+          : null,
+        customInstructions: user ? (user.customInstructions || '') : ''
       }
     });
   } else {
@@ -2185,7 +2204,7 @@ app.post('/api/account/delete', requireAccess, async (req, res) => {
 
 // Endpoint untuk memperbarui profil pengguna
 app.post('/api/update-profile', requireAccess, (req, res) => {
-  const { name, faculty, university, profilePic } = req.body;
+  const { name, faculty, university, profilePic, customInstructions } = req.body;
 
   const users = getUsers();
   const userIndex = users.findIndex(u => u.id === req.session.userId);
@@ -2198,6 +2217,12 @@ app.post('/api/update-profile', requireAccess, (req, res) => {
   if (faculty !== undefined) user.faculty = String(faculty).trim();
   if (university !== undefined) user.university = String(university).trim();
   if (profilePic !== undefined) user.profilePic = profilePic; // base64 data URL
+  // Instruksi kustom user - disuntikkan sbg system message tambahan di
+  // JurnalHub Intelligence & Co-Work Agent (lihat buildCustomInstructionsMessage),
+  // mirip fitur "Instructions for Claude" - dibatasi 3000 karakter, wajar utk
+  // preferensi gaya/aturan penulisan, bukan dokumen panjang (itu fungsinya
+  // lampiran dokumen, bukan field ini).
+  if (customInstructions !== undefined) user.customInstructions = String(customInstructions).trim().slice(0, 3000);
 
   users[userIndex] = user;
   saveUsers(users);
@@ -2211,7 +2236,8 @@ app.post('/api/update-profile', requireAccess, (req, res) => {
       name: user.name,
       faculty: user.faculty,
       university: user.university,
-      profilePic: user.profilePic
+      profilePic: user.profilePic,
+      customInstructions: user.customInstructions || ''
     }
   });
 });
@@ -6689,6 +6715,8 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     }
 
     const systemMessages = [{ role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT }];
+    const customInstructionsMsg = buildCustomInstructionsMessage(user);
+    if (customInstructionsMsg) systemMessages.push(customInstructionsMsg);
     if (webSearchContext) {
       systemMessages.push({ role: 'system', content: webSearchContext });
     }

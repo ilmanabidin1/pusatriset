@@ -2228,6 +2228,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (profileFacultyInput) profileFacultyInput.value = currentUser.user.faculty || '';
           if (profileUniversityInput) profileUniversityInput.value = currentUser.user.university || '';
 
+          const customInstructionsInput = document.getElementById('settingsCustomInstructions');
+          if (customInstructionsInput) customInstructionsInput.value = currentUser.user.customInstructions || '';
+
           if (currentUser.user.type === 'premium' || currentUser.user.type === 'ultimate') {
             const isUltimate = currentUser.user.type === 'ultimate';
             
@@ -5376,6 +5379,51 @@ document.addEventListener('DOMContentLoaded', () => {
           profileMessage.style.color = '#ef4444';
           profileMessage.textContent = 'Gagal memperbarui profil.';
           profileMessage.style.display = 'block';
+        }
+      });
+    }
+
+    // --- INSTRUKSI KUSTOM UNTUK AI (JurnalHub Intelligence & Co-Work Agent) ---
+    const btnSaveCustomInstructions = document.getElementById('btnSaveCustomInstructions');
+    if (btnSaveCustomInstructions) {
+      btnSaveCustomInstructions.addEventListener('click', async () => {
+        const textarea = document.getElementById('settingsCustomInstructions');
+        const messageEl = document.getElementById('customInstructionsMessage');
+        const value = textarea ? textarea.value : '';
+        const originalHtml = btnSaveCustomInstructions.innerHTML;
+        btnSaveCustomInstructions.disabled = true;
+        btnSaveCustomInstructions.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+        try {
+          const res = await fetch('/api/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customInstructions: value })
+          });
+          const data = await res.json();
+          if (messageEl) {
+            messageEl.style.display = 'block';
+            if (res.ok && data.ok) {
+              messageEl.style.color = '#10b981';
+              messageEl.textContent = 'Instruksi berhasil disimpan.';
+              // Patch field ini saja (bukan overwrite penuh currentUser.user) -
+              // supaya field lain di sesi ini (isAdmin, kuota, dsb) tidak ikut hilang.
+              if (currentUser && currentUser.user) {
+                currentUser.user.customInstructions = (data.user && data.user.customInstructions) || value;
+              }
+            } else {
+              messageEl.style.color = '#ef4444';
+              messageEl.textContent = data.message || 'Gagal menyimpan instruksi.';
+            }
+          }
+        } catch (err) {
+          if (messageEl) {
+            messageEl.style.display = 'block';
+            messageEl.style.color = '#ef4444';
+            messageEl.textContent = 'Gagal terhubung ke server.';
+          }
+        } finally {
+          btnSaveCustomInstructions.disabled = false;
+          btnSaveCustomInstructions.innerHTML = originalHtml;
         }
       });
     }
