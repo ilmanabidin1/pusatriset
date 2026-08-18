@@ -1026,6 +1026,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Kartu poster "Join Now" <-> kartu form OTP - flip di-simulasikan lewat 2
+  // rotasi CSS berurutan (bukan backface-visibility 1 elemen), supaya masing2
+  // kartu tetap pakai tinggi natural sesuai isinya (lihat komentar CSS
+  // .aff-flip-card di index.html).
+  (function initAffiliateFlipCard() {
+    const front = document.getElementById('affFlipFront');
+    const back = document.getElementById('affFlipBack');
+    const backBtn = document.getElementById('affFlipBackBtn');
+    if (!front || !back) return;
+
+    const FLIP_MS = 350;
+
+    function flipTo(hideEl, showEl) {
+      hideEl.classList.add('aff-flip-out');
+      setTimeout(() => {
+        hideEl.style.display = 'none';
+        hideEl.classList.remove('aff-flip-out');
+        showEl.style.display = 'block';
+        showEl.classList.add('aff-flip-in-start');
+        void showEl.offsetWidth; // force reflow biar transisi start dari state ini
+        showEl.classList.remove('aff-flip-in-start');
+      }, FLIP_MS);
+    }
+
+    front.addEventListener('click', () => flipTo(front, back));
+    front.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flipTo(front, back); }
+    });
+    if (backBtn) {
+      backBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        flipTo(back, front);
+      });
+    }
+  })();
+
   (function initAffiliateTab() {
     const sendOtpBtn = document.getElementById('affiliateSendOtpBtn');
     const verifyOtpBtn = document.getElementById('affiliateVerifyOtpBtn');
