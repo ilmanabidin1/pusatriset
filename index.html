@@ -4490,6 +4490,9 @@
         <a href="#" class="sidebar-link sidebar-group-trigger" data-group="koleksi-saya">
           <i class="fa-solid fa-bookmark"></i> <span>Koleksi Saya</span> <i class="fa-solid fa-chevron-right sidebar-group-caret"></i>
         </a>
+        <a href="#" class="sidebar-link" data-tab="afiliasi">
+          <i class="fa-solid fa-handshake"></i> <span>Afiliasi Kampus</span> <span class="new-badge">Baru</span>
+        </a>
       </nav>
 
       <div class="sidebar-divider" style="height: 1px; background: var(--border-light-hover); margin: 0.75rem 1rem 0.75rem 0;"></div>
@@ -6677,6 +6680,113 @@
         </div>
       </div>
 
+      <!-- TAB: AFILIASI KAMPUS - program afiliasi @*.ac.id, lihat komentar besar
+           Program Afiliasi Kampus di server.js. Terbuka untuk SEMUA user
+           (apapun tier-nya) - beda dari fitur premium lain di app ini, tidak ada
+           upsell lock di sini. 2 state: belum verifikasi (form email + OTP) vs
+           sudah verifikasi (dashboard lengkap) - di-toggle lewat JS
+           (initAffiliateTab di app.js), bukan 2 tab terpisah. -->
+      <div id="tabContentAfiliasi" class="tab-content">
+        <div style="max-width: 800px; margin: 0 auto;">
+
+          <!-- State: belum jadi affiliate - form verifikasi email kampus -->
+          <div id="affiliateUnverified" class="filter-box-card" style="padding: 2rem;">
+            <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;">
+              <i class="fa-solid fa-handshake" style="color: var(--brand-blue);"></i> Program Afiliasi Kampus
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.6;">
+              Punya email institusi (<code>@*.ac.id</code>)? Ajak rekan/mahasiswa lain berlangganan JurnalHub pakai kode/link referral Anda - mereka dapat <strong>diskon 10%</strong>, Anda dapat <strong>komisi 10% (Premium) / 20% (Ultimate) yang terus mengalir selama mereka berlangganan</strong>, bukan cuma sekali. Pendaftaran gratis, tanpa syarat berlangganan.
+            </p>
+
+            <div id="affiliateEmailStep">
+              <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Email Institusi (.ac.id)</label>
+              <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                <input type="email" id="affiliateCampusEmail" placeholder="nama@kampus.ac.id" style="flex: 1; min-width: 220px; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+                <button type="button" id="affiliateSendOtpBtn" class="upgrade-btn" style="width: auto; padding: 0.6rem 1.5rem;">Kirim Kode OTP</button>
+              </div>
+              <p id="affiliateEmailMessage" style="font-size: 0.82rem; margin: 0.6rem 0 0; display: none;"></p>
+            </div>
+
+            <div id="affiliateOtpStep" style="display: none; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border-light-hover);">
+              <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Kode OTP (6 digit, dikirim ke email institusi Anda)</label>
+              <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                <input type="text" id="affiliateOtpInput" inputmode="numeric" maxlength="6" placeholder="123456" style="width: 140px; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 1rem; letter-spacing: 0.2rem; background: var(--bg-card); color: var(--text-main);">
+                <button type="button" id="affiliateVerifyOtpBtn" class="upgrade-btn" style="width: auto; padding: 0.6rem 1.5rem;">Verifikasi</button>
+                <button type="button" id="affiliateResendOtpBtn" style="background: transparent; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;">Kirim Ulang</button>
+              </div>
+              <p id="affiliateOtpMessage" style="font-size: 0.82rem; margin: 0.6rem 0 0; display: none;"></p>
+            </div>
+          </div>
+
+          <!-- State: sudah jadi affiliate - dashboard performa -->
+          <div id="affiliateDashboard" style="display: none;">
+            <div class="filter-box-card" style="padding: 1.5rem 2rem; margin-bottom: 1.5rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;">
+                <i class="fa-solid fa-handshake" style="color: var(--brand-blue);"></i> Dashboard Afiliasi Kampus
+              </h3>
+              <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                <div>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Link Referral</label>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="affiliateReferralLink" readonly style="flex: 1; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+                    <button type="button" id="affiliateCopyLinkBtn" style="background: var(--brand-blue); color: #fff; border: none; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer;"><i class="fa-regular fa-copy"></i></button>
+                  </div>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Kode Referral</label>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="affiliateReferralCode" readonly style="flex: 1; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; font-weight: 700; background: var(--bg-card); color: var(--text-main);">
+                    <button type="button" id="affiliateCopyCodeBtn" style="background: var(--brand-blue); color: #fff; border: none; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer;"><i class="fa-regular fa-copy"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="filter-box-card" style="padding: 1.25rem; text-align: center;">
+                <div id="affiliateStatReferrals" style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); font-family: var(--font-outfit);">-</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Total Referral</div>
+              </div>
+              <div class="filter-box-card" style="padding: 1.25rem; text-align: center;">
+                <div id="affiliateStatTotalEarned" style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); font-family: var(--font-outfit);">-</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Total Komisi</div>
+              </div>
+              <div class="filter-box-card" style="padding: 1.25rem; text-align: center;">
+                <div id="affiliateStatBalance" style="font-size: 1.6rem; font-weight: 800; color: var(--brand-blue); font-family: var(--font-outfit);">-</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Saldo Dapat Dicairkan</div>
+              </div>
+            </div>
+
+            <div class="filter-box-card" style="padding: 1.5rem 2rem; margin-bottom: 1.5rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-main); margin-bottom: 1rem;">Riwayat Komisi</h3>
+              <div id="affiliateEarningsList">
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Memuat...</p>
+              </div>
+            </div>
+
+            <div class="filter-box-card" style="padding: 1.5rem 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-main); margin-bottom: 0.5rem;">Ajukan Penarikan Dana</h3>
+              <p id="affiliatePayoutHint" style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 1rem;">Saldo minimal Rp100.000 untuk dapat dicairkan.</p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Metode Pembayaran</label>
+                  <input type="text" id="affiliatePayoutMethod" placeholder="mis. Bank BCA / GoPay" style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">No. Rekening / E-Wallet & Nama</label>
+                  <input type="text" id="affiliatePayoutDetail" placeholder="mis. 1234567890 a.n. Nama Anda" style="width: 100%; box-sizing: border-box; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
+                </div>
+              </div>
+              <button type="button" id="affiliatePayoutBtn" class="upgrade-btn" style="width: auto; padding: 0.65rem 1.5rem;">Ajukan Pencairan</button>
+              <span id="affiliatePayoutStatus" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 0.75rem;"></span>
+
+              <div id="affiliatePayoutHistory" style="margin-top: 1.5rem;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       <!-- TAB 4: SETTINGS (PENGATURAN) -->
       <div id="tabContentPengaturan" class="tab-content">
         <div class="settings-container" style="max-width: 800px; margin: 0 auto;">
@@ -7003,6 +7113,67 @@
             </div>
           </div>
 
+          <!-- Affiliate Management - lihat komentar besar Program Afiliasi Kampus
+               di server.js. Dimuat lazy via window.loadAdminAffiliates saat tab
+               admin dibuka (lihat switchTab di bawah), sama pola dgn loadAdminUsers. -->
+          <div class="filter-box-card" style="padding: 1.5rem 2rem; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;">
+              <i class="fa-solid fa-handshake" style="color: var(--brand-blue);"></i> Affiliate Management
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+              <div style="text-align: center;">
+                <div id="adminAffStatTotal" style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); font-family: var(--font-outfit);">-</div>
+                <div style="font-size: 0.76rem; color: var(--text-muted);">Total Affiliate</div>
+              </div>
+              <div style="text-align: center;">
+                <div id="adminAffStatCommission" style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); font-family: var(--font-outfit);">-</div>
+                <div style="font-size: 0.76rem; color: var(--text-muted);">Total Komisi Terbayar</div>
+              </div>
+              <div style="text-align: center;">
+                <div id="adminAffStatOwed" style="font-size: 1.4rem; font-weight: 800; color: var(--brand-blue); font-family: var(--font-outfit);">-</div>
+                <div style="font-size: 0.76rem; color: var(--text-muted);">Total Saldo Belum Cair</div>
+              </div>
+            </div>
+
+            <div style="overflow-x: auto; margin-bottom: 1.5rem;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-light);">
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Pemilik</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Email Kampus</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Kode</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Referral</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Saldo</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Status</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="adminAffiliatesTableBody">
+                  <tr><td colspan="7" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Memuat...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.75rem;">Pengajuan Penarikan Dana</h4>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-light);">
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Pemilik</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Kode</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Nominal</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Tujuan</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Status</th>
+                    <th style="text-align: left; padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="adminAffPayoutsTableBody">
+                  <tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Memuat...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <!-- Kontrol pencarian/filter/sort tabel user - semuanya dihitung
                CLIENT-SIDE dari adminUsersCache yang sudah dimuat penuh (lihat
                renderAdminUsersTable di app.js), bukan query server baru tiap
@@ -7224,6 +7395,13 @@
         // datanya perlu selalu terkini, bukan tab yang sering dibuka juga)
         if (tabName === 'admin' && window.loadAdminUsers) {
           window.loadAdminUsers();
+        }
+        if (tabName === 'admin' && window.loadAdminAffiliates) {
+          window.loadAdminAffiliates();
+        }
+
+        if (tabName === 'afiliasi' && window.loadAffiliateTab) {
+          window.loadAffiliateTab();
         }
 
         // Co-Work Agent sekarang toggle DI DALAM tab research-chat (lihat
@@ -7563,6 +7741,18 @@
             applyPromoCode();
           }
         });
+
+        // Program Afiliasi Kampus: kalau field promo masih kosong tapi ada
+        // kode referral yang tersimpan (dari link ?ref=KODE, lihat
+        // captureReferralCodeFromUrl di app.js), isi otomatis & langsung
+        // terapkan - user yang datang dari link referral tidak perlu ketik
+        // manual. Kode dari PROMO_CODES manual (JHTHREADS dkk) tetap valid
+        // dipakai seperti biasa, ini cuma auto-fill kalau field kosong.
+        const referralCookieCode = window.getReferralCookieCode ? window.getReferralCookieCode() : null;
+        if (referralCookieCode && !promoCodeInput.value.trim()) {
+          promoCodeInput.value = referralCookieCode;
+          applyPromoCode();
+        }
       }
 
       // Helper to dynamically update buy buttons based on active subscription plan

@@ -518,6 +518,20 @@
 </footer>
 
 <script>
+  // Program Afiliasi Kampus: simpan kode referral dari link (?ref=KODE) ke
+  // cookie 30 hari - dibaca lagi saat checkout (lihat auto-fill kode promo di
+  // index.html) supaya user yang klik link referral tidak perlu ketik manual.
+  (function captureReferralCode() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref && /^[A-Za-z0-9-]{3,50}$/.test(ref)) {
+        const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+        document.cookie = `jh_ref_code=${encodeURIComponent(ref.toUpperCase())}; expires=${expires}; path=/; SameSite=Lax`;
+      }
+    } catch (e) {}
+  })();
+
   // Video demo autoplay muted saat masuk viewport (lazy) - TIDAK preload
   // sejak awal (lihat data-src, bukan src, di tiap tag <video>) supaya user
   // yang tidak scroll sampai bawah tidak ikut mengunduh video sama sekali.

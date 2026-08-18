@@ -16,6 +16,26 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;');
   }
 
+  // Program Afiliasi Kampus: tangkap kode referral dari link (?ref=KODE) ke
+  // cookie 30 hari kalau user langsung buka index.html (sudah login) lewat
+  // link referral - landing.html & auth.html punya salinan snippet yang sama
+  // untuk pengunjung yang belum login. getReferralCookieCode dipakai ulang
+  // oleh auto-fill kode promo di checkout (lihat index.html).
+  (function captureReferralCode() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref && /^[A-Za-z0-9-]{3,50}$/.test(ref)) {
+        const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+        document.cookie = `jh_ref_code=${encodeURIComponent(ref.toUpperCase())}; expires=${expires}; path=/; SameSite=Lax`;
+      }
+    } catch (e) {}
+  })();
+  window.getReferralCookieCode = function getReferralCookieCode() {
+    const match = document.cookie.match(/(?:^|; )jh_ref_code=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  };
+
   // Dipindah ke scope bersama ini (dari dalam initMyReferencesTab) supaya bisa
   // dipakai IIFE tab lain juga (mis. panel referensi Notebook) - sebelumnya
   // cuma terlihat oleh initMyReferencesTab sendiri, dipakai IIFE lain (mis.
@@ -363,6 +383,140 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   })();
+
+  // --- ADMIN: Program Afiliasi Kampus - panel "Affiliate Management" (lihat
+  // komentar besar Program Afiliasi Kampus di server.js). Dimuat lazy tiap
+  // kali tab admin dibuka (lihat switchTab di index.html), sama pola dengan
+  // loadAdminUsers - bukan cache, datanya perlu selalu terkini. ---
+  function formatRupiah(amount) {
+    return 'Rp' + Number(amount || 0).toLocaleString('id-ID');
+  }
+
+  window.loadAdminAffiliates = async function loadAdminAffiliates() {
+    const tbody = document.getElementById('adminAffiliatesTableBody');
+    const payoutsTbody = document.getElementById('adminAffPayoutsTableBody');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/admin/affiliates');
+      const data = await res.json();
+      if (!data.ok) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding: 1.5rem; text-align: center; color: #dc2626;">${escapeHtml(data.message || 'Gagal memuat daftar affiliate.')}</td></tr>`;
+        return;
+      }
+      const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setStat('adminAffStatTotal', data.summary.total);
+      setStat('adminAffStatCommission', formatRupiah(data.summary.totalCommissionPaid));
+      setStat('adminAffStatOwed', formatRupiah(data.summary.totalBalanceOwed));
+
+      if (data.affiliates.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Belum ada affiliate terdaftar.</td></tr>';
+      } else {
+        tbody.innerHTML = data.affiliates.map(a => `
+          <tr style="border-bottom: 1px solid var(--border-light);">
+            <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">${escapeHtml(a.ownerEmail)}</td>
+            <td style="padding: 0.6rem 0.75rem; color: var(--text-muted); white-space: nowrap;">${escapeHtml(a.campusEmail)}</td>
+            <td style="padding: 0.6rem 0.75rem; font-weight: 700; white-space: nowrap;">${escapeHtml(a.referralCode)}</td>
+            <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">${a.totalReferrals}</td>
+            <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">${formatRupiah(a.balance)}</td>
+            <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">${a.status === 'active' ? '<span style="color: #16a34a;">Aktif</span>' : '<span style="color: #dc2626;">Dibanned</span>'}</td>
+            <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">
+              <button type="button" class="admin-aff-toggle-btn" data-id="${escapeHtml(a.id)}" data-status="${a.status}" style="font-size: 0.76rem; padding: 0.3rem 0.7rem; border-radius: 6px; border: 1px solid var(--border-light-hover); background: transparent; color: var(--text-main); cursor: pointer;">${a.status === 'active' ? 'Ban' : 'Aktifkan'}</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      tbody.querySelectorAll('.admin-aff-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          btn.disabled = true;
+          try {
+            const r = await fetch(`/api/admin/affiliates/${id}/toggle-status`, { method: 'POST' });
+            const d = await r.json();
+            if (!d.ok) {
+              alert(d.message || 'Gagal mengubah status affiliate.');
+              btn.disabled = false;
+              return;
+            }
+            window.loadAdminAffiliates();
+          } catch (err) {
+            alert('Gagal terhubung ke server.');
+            btn.disabled = false;
+          }
+        });
+      });
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="7" style="padding: 1.5rem; text-align: center; color: #dc2626;">Gagal terhubung ke server.</td></tr>';
+    }
+
+    if (!payoutsTbody) return;
+    try {
+      const res2 = await fetch('/api/admin/affiliates/payouts');
+      const data2 = await res2.json();
+      if (!data2.ok) {
+        payoutsTbody.innerHTML = `<tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: #dc2626;">${escapeHtml(data2.message || 'Gagal memuat pengajuan payout.')}</td></tr>`;
+        return;
+      }
+      if (data2.payouts.length === 0) {
+        payoutsTbody.innerHTML = '<tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Belum ada pengajuan penarikan dana.</td></tr>';
+        return;
+      }
+      const statusLabel = { pending: '<span style="color: #d97706;">Menunggu</span>', approved: '<span style="color: #16a34a;">Disetujui</span>', rejected: '<span style="color: #dc2626;">Ditolak</span>' };
+      payoutsTbody.innerHTML = data2.payouts.map(p => `
+        <tr style="border-bottom: 1px solid var(--border-light);">
+          <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">${escapeHtml(p.ownerEmail)}</td>
+          <td style="padding: 0.6rem 0.75rem; font-weight: 700; white-space: nowrap;">${escapeHtml(p.referralCode)}</td>
+          <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">${formatRupiah(p.amount)}</td>
+          <td style="padding: 0.6rem 0.75rem; color: var(--text-muted);">${escapeHtml(p.paymentMethod)} - ${escapeHtml(p.accountDetail)}</td>
+          <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">${statusLabel[p.status] || p.status}</td>
+          <td style="padding: 0.6rem 0.75rem; white-space: nowrap;">
+            ${p.status === 'pending' ? `
+              <button type="button" class="admin-aff-payout-approve-btn" data-id="${escapeHtml(p.id)}" style="font-size: 0.76rem; padding: 0.3rem 0.7rem; border-radius: 6px; border: none; background: #16a34a; color: #fff; cursor: pointer; margin-right: 0.35rem;">Setujui</button>
+              <button type="button" class="admin-aff-payout-reject-btn" data-id="${escapeHtml(p.id)}" style="font-size: 0.76rem; padding: 0.3rem 0.7rem; border-radius: 6px; border: 1px solid var(--border-light-hover); background: transparent; color: var(--text-main); cursor: pointer;">Tolak</button>
+            ` : (p.adminNote ? `<span style="font-size: 0.76rem; color: var(--text-muted);">${escapeHtml(p.adminNote)}</span>` : '-')}
+          </td>
+        </tr>
+      `).join('');
+
+      payoutsTbody.querySelectorAll('.admin-aff-payout-approve-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          if (!confirm('Konfirmasi penarikan dana ini SUDAH ditransfer manual ke rekening/e-wallet tujuan?')) return;
+          btn.disabled = true;
+          try {
+            const r = await fetch(`/api/admin/affiliates/payouts/${id}/approve`, { method: 'POST' });
+            const d = await r.json();
+            if (!d.ok) { alert(d.message || 'Gagal menyetujui payout.'); btn.disabled = false; return; }
+            window.loadAdminAffiliates();
+          } catch (err) {
+            alert('Gagal terhubung ke server.');
+            btn.disabled = false;
+          }
+        });
+      });
+      payoutsTbody.querySelectorAll('.admin-aff-payout-reject-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          const note = prompt('Alasan penolakan (opsional, akan terlihat affiliate):') || '';
+          btn.disabled = true;
+          try {
+            const r = await fetch(`/api/admin/affiliates/payouts/${id}/reject`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note })
+            });
+            const d = await r.json();
+            if (!d.ok) { alert(d.message || 'Gagal menolak payout.'); btn.disabled = false; return; }
+            window.loadAdminAffiliates();
+          } catch (err) {
+            alert('Gagal terhubung ke server.');
+            btn.disabled = false;
+          }
+        });
+      });
+    } catch (err) {
+      payoutsTbody.innerHTML = '<tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: #dc2626;">Gagal terhubung ke server.</td></tr>';
+    }
+  };
 
   // --- CO-WORK AGENT (asisten riset otonom background via GLM 5.2/OpenRouter) ---
   // Bundel di paket Premium & Ultimate (free tidak bisa akses sama sekali) -
@@ -763,6 +917,257 @@ document.addEventListener('DOMContentLoaded', () => {
     const pillCowork = document.getElementById('pillViewCowork');
     if (pillChat) pillChat.addEventListener('click', () => setResearchChatMode('chat'));
     if (pillCowork) pillCowork.addEventListener('click', () => setResearchChatMode('cowork'));
+  })();
+
+  // --- PROGRAM AFILIASI KAMPUS (@*.ac.id, komisi recurring) - lihat komentar
+  // besar Program Afiliasi Kampus di server.js. Terbuka untuk SEMUA user
+  // (apapun tier-nya), tidak ada upsell lock di tab ini. 2 state: belum
+  // verifikasi (#affiliateUnverified) vs sudah verifikasi (#affiliateDashboard),
+  // ditoggle sesuai respons GET /api/affiliate/me tiap tab dibuka (bukan cache,
+  // lihat window.loadAffiliateTab dipanggil dari switchTab di index.html). ---
+  function renderAffiliateEarnings(earnings) {
+    const listEl = document.getElementById('affiliateEarningsList');
+    if (!listEl) return;
+    if (!earnings || earnings.length === 0) {
+      listEl.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Belum ada komisi tercatat.</p>';
+      return;
+    }
+    const tierLabel = { premium: 'Premium', ultimate: 'Ultimate' };
+    listEl.innerHTML = `
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <th style="text-align: left; padding: 0.5rem 0.6rem; color: var(--text-muted); white-space: nowrap;">Tanggal</th>
+              <th style="text-align: left; padding: 0.5rem 0.6rem; color: var(--text-muted); white-space: nowrap;">Referral</th>
+              <th style="text-align: left; padding: 0.5rem 0.6rem; color: var(--text-muted); white-space: nowrap;">Paket</th>
+              <th style="text-align: left; padding: 0.5rem 0.6rem; color: var(--text-muted); white-space: nowrap;">Komisi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${earnings.map(e => `
+              <tr style="border-bottom: 1px solid var(--border-light);">
+                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted); white-space: nowrap;">${formatCoworkDate(e.createdAt)}</td>
+                <td style="padding: 0.5rem 0.6rem; white-space: nowrap;">${escapeHtml(e.referredUserEmail)}</td>
+                <td style="padding: 0.5rem 0.6rem; white-space: nowrap;">${tierLabel[e.subscriptionTier] || e.subscriptionTier}</td>
+                <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #16a34a; white-space: nowrap;">+${formatRupiah(e.commissionAmount)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  function renderAffiliatePayoutHistory(payouts) {
+    const historyEl = document.getElementById('affiliatePayoutHistory');
+    if (!historyEl) return;
+    if (!payouts || payouts.length === 0) {
+      historyEl.innerHTML = '';
+      return;
+    }
+    const statusLabel = { pending: '<span style="color: #d97706;">Menunggu diproses</span>', approved: '<span style="color: #16a34a;">Sudah ditransfer</span>', rejected: '<span style="color: #dc2626;">Ditolak</span>' };
+    historyEl.innerHTML = `
+      <h4 style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.88rem; color: var(--text-main); margin-bottom: 0.75rem;">Riwayat Pengajuan</h4>
+      ${payouts.map(p => `
+        <div style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.6rem; font-size: 0.82rem;">
+          <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <span style="font-weight: 700;">${formatRupiah(p.amount)}</span>
+            <span>${statusLabel[p.status] || p.status}</span>
+          </div>
+          <div style="color: var(--text-muted); margin-top: 0.25rem;">${escapeHtml(p.paymentMethod)} - ${escapeHtml(p.accountDetail)} &middot; ${formatCoworkDate(p.requestedAt)}</div>
+          ${p.adminNote ? `<div style="color: #dc2626; margin-top: 0.25rem;">Catatan admin: ${escapeHtml(p.adminNote)}</div>` : ''}
+        </div>
+      `).join('')}`;
+  }
+
+  window.loadAffiliateTab = async function loadAffiliateTab() {
+    const unverifiedEl = document.getElementById('affiliateUnverified');
+    const dashboardEl = document.getElementById('affiliateDashboard');
+    if (!unverifiedEl || !dashboardEl) return;
+
+    try {
+      const res = await fetch('/api/affiliate/me');
+      const data = await res.json();
+      if (!data.ok) return;
+
+      if (!data.affiliate) {
+        unverifiedEl.style.display = 'block';
+        dashboardEl.style.display = 'none';
+        return;
+      }
+
+      unverifiedEl.style.display = 'none';
+      dashboardEl.style.display = 'block';
+
+      const linkEl = document.getElementById('affiliateReferralLink');
+      const codeEl = document.getElementById('affiliateReferralCode');
+      if (linkEl) linkEl.value = `${window.location.origin}/?ref=${data.affiliate.referralCode}`;
+      if (codeEl) codeEl.value = data.affiliate.referralCode;
+
+      const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setStat('affiliateStatReferrals', data.affiliate.totalReferrals);
+      setStat('affiliateStatTotalEarned', formatRupiah(data.affiliate.totalEarned));
+      setStat('affiliateStatBalance', formatRupiah(data.affiliate.balance));
+
+      const hintEl = document.getElementById('affiliatePayoutHint');
+      const payoutBtn = document.getElementById('affiliatePayoutBtn');
+      const canPayout = data.affiliate.balance >= data.affiliate.minPayout;
+      if (hintEl) {
+        hintEl.textContent = canPayout
+          ? `Saldo Anda ${formatRupiah(data.affiliate.balance)} sudah bisa dicairkan.`
+          : `Saldo minimal Rp${data.affiliate.minPayout.toLocaleString('id-ID')} untuk dapat dicairkan (saldo Anda sekarang: ${formatRupiah(data.affiliate.balance)}).`;
+      }
+      if (payoutBtn) payoutBtn.disabled = !canPayout;
+
+      renderAffiliateEarnings(data.earnings);
+      renderAffiliatePayoutHistory(data.payouts);
+    } catch (err) {
+      // diamkan - tab akan tetap di state terakhir, coba lagi lain kali dibuka
+    }
+  };
+
+  (function initAffiliateTab() {
+    const sendOtpBtn = document.getElementById('affiliateSendOtpBtn');
+    const verifyOtpBtn = document.getElementById('affiliateVerifyOtpBtn');
+    const resendOtpBtn = document.getElementById('affiliateResendOtpBtn');
+    if (!sendOtpBtn) return;
+
+    const emailInput = document.getElementById('affiliateCampusEmail');
+    const emailMsg = document.getElementById('affiliateEmailMessage');
+    const otpStep = document.getElementById('affiliateOtpStep');
+    const otpInput = document.getElementById('affiliateOtpInput');
+    const otpMsg = document.getElementById('affiliateOtpMessage');
+
+    async function sendOtp() {
+      const campusEmail = emailInput ? emailInput.value.trim() : '';
+      if (!campusEmail) {
+        alert('Masukkan email institusi Anda dulu.');
+        return;
+      }
+      sendOtpBtn.disabled = true;
+      const originalHtml = sendOtpBtn.innerHTML;
+      sendOtpBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      try {
+        const res = await fetch('/api/affiliate/send-otp', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ campusEmail })
+        });
+        const data = await res.json();
+        if (emailMsg) {
+          emailMsg.style.display = 'block';
+          emailMsg.style.color = data.ok ? '#10b981' : '#ef4444';
+          emailMsg.textContent = data.message || (data.ok ? 'Kode terkirim.' : 'Gagal mengirim kode.');
+        }
+        if (data.ok && otpStep) {
+          otpStep.style.display = 'block';
+          if (otpInput) otpInput.focus();
+        }
+      } catch (err) {
+        if (emailMsg) {
+          emailMsg.style.display = 'block';
+          emailMsg.style.color = '#ef4444';
+          emailMsg.textContent = 'Gagal terhubung ke server.';
+        }
+      } finally {
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.innerHTML = originalHtml;
+      }
+    }
+
+    sendOtpBtn.addEventListener('click', sendOtp);
+    if (resendOtpBtn) resendOtpBtn.addEventListener('click', sendOtp);
+
+    if (verifyOtpBtn) {
+      verifyOtpBtn.addEventListener('click', async () => {
+        const otp = otpInput ? otpInput.value.trim() : '';
+        if (!otp) {
+          alert('Masukkan kode OTP yang dikirim ke email Anda.');
+          return;
+        }
+        verifyOtpBtn.disabled = true;
+        const originalHtml = verifyOtpBtn.innerHTML;
+        verifyOtpBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        try {
+          const res = await fetch('/api/affiliate/verify-otp', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ otp })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            if (otpMsg) {
+              otpMsg.style.display = 'block';
+              otpMsg.style.color = '#ef4444';
+              otpMsg.textContent = data.message || 'Kode OTP salah.';
+            }
+            return;
+          }
+          window.loadAffiliateTab();
+        } catch (err) {
+          if (otpMsg) {
+            otpMsg.style.display = 'block';
+            otpMsg.style.color = '#ef4444';
+            otpMsg.textContent = 'Gagal terhubung ke server.';
+          }
+        } finally {
+          verifyOtpBtn.disabled = false;
+          verifyOtpBtn.innerHTML = originalHtml;
+        }
+      });
+    }
+
+    // Copy link/kode referral ke clipboard
+    const copyLinkBtn = document.getElementById('affiliateCopyLinkBtn');
+    const copyCodeBtn = document.getElementById('affiliateCopyCodeBtn');
+    function copyFieldValue(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input || !input.value) return;
+      navigator.clipboard.writeText(input.value).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        setTimeout(() => { btn.innerHTML = original; }, 1500);
+      }).catch(() => {});
+    }
+    if (copyLinkBtn) copyLinkBtn.addEventListener('click', () => copyFieldValue('affiliateReferralLink', copyLinkBtn));
+    if (copyCodeBtn) copyCodeBtn.addEventListener('click', () => copyFieldValue('affiliateReferralCode', copyCodeBtn));
+
+    // Form pengajuan payout
+    const payoutBtn = document.getElementById('affiliatePayoutBtn');
+    if (payoutBtn) {
+      payoutBtn.addEventListener('click', async () => {
+        const methodEl = document.getElementById('affiliatePayoutMethod');
+        const detailEl = document.getElementById('affiliatePayoutDetail');
+        const statusEl = document.getElementById('affiliatePayoutStatus');
+        const paymentMethod = methodEl ? methodEl.value.trim() : '';
+        const accountDetail = detailEl ? detailEl.value.trim() : '';
+        if (!paymentMethod || !accountDetail) {
+          alert('Isi metode pembayaran dan detail rekening/e-wallet dulu.');
+          return;
+        }
+        if (!confirm('Ajukan penarikan seluruh saldo Anda sekarang? Saldo akan direset ke 0 sampai admin memproses pengajuan ini.')) return;
+
+        payoutBtn.disabled = true;
+        if (statusEl) statusEl.textContent = 'Mengirim pengajuan...';
+        try {
+          const res = await fetch('/api/affiliate/payout', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentMethod, accountDetail })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            alert(data.message || 'Gagal mengajukan penarikan dana.');
+            payoutBtn.disabled = false;
+            if (statusEl) statusEl.textContent = '';
+            return;
+          }
+          if (methodEl) methodEl.value = '';
+          if (detailEl) detailEl.value = '';
+          if (statusEl) statusEl.textContent = 'Pengajuan berhasil dikirim, menunggu diproses admin.';
+          window.loadAffiliateTab();
+        } catch (err) {
+          alert('Gagal terhubung ke server.');
+        } finally {
+          payoutBtn.disabled = false;
+        }
+      });
+    }
   })();
 
   // --- POPUP PENGUMUMAN FITUR BARU (sekali per user, permanen setelah

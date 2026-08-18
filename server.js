@@ -527,6 +527,371 @@ function addTransaction(userId, referenceId, desc, amount, status) {
   return newTx;
 }
 
+// --- PROGRAM AFILIASI KAMPUS (@*.ac.id, komisi recurring) ---
+// User mana pun (apapun tier-nya sekarang) bisa daftar jadi affiliate GRATIS
+// dengan verifikasi 1 email institusi (@*.ac.id) via OTP 6-digit (lihat
+// sendMailHelper - Resend/SMTP). Begitu terverifikasi, dapat 1 referral_code
+// unik yang bisa dipakai SIAPA SAJA di kolom kode promo checkout yang SUDAH
+// ADA (field yang sama dengan PROMO_CODES manual, lihat applyPromoToItemDef
+// di bagian Faspay) - potongan tetap 10% harga bulanan untuk pembeli.
+// Affiliate dapat komisi recurring (10% Premium / 20% Ultimate) dari SETIAP
+// pembayaran sukses user yang mereka referensikan, SELAMANYA selama user itu
+// tetap berlangganan - bukan cuma transaksi pertama. Karena Faspay TIDAK
+// mendukung kartu kredit/auto-charge (setiap perpanjangan = transaksi baru
+// yang user bayar manual, lihat computeStackedExpiry), "recurring" di sini
+// diwujudkan lewat referredByAffiliateId yang ditulis PERMANEN ke akun
+// pembeli begitu 1 kode referral pertama kali berhasil dipakai (lihat webhook
+// Faspay) - renewal berikutnya TIDAK perlu masukkan kode lagi supaya
+// affiliate tetap dapat komisi (tapi diskon 10% ke pembeli sendiri HANYA
+// berlaku di transaksi yang benar-benar memakai kode, konsisten dengan UX
+// kode promo yang sudah ada - bukan diam-diam otomatis tiap renewal).
+const AFFILIATES_FILE = path.join(DATA_DIR, 'affiliates.json');
+const AFFILIATE_OTPS_FILE = path.join(DATA_DIR, 'affiliate-otps.json');
+const AFFILIATE_EARNINGS_FILE = path.join(DATA_DIR, 'affiliate-earnings.json');
+const AFFILIATE_PAYOUTS_FILE = path.join(DATA_DIR, 'affiliate-payouts.json');
+const AFFILIATE_MIN_PAYOUT = 100000; // Rp100.000, sesuai PRD
+const AFFILIATE_COMMISSION_RATE = { premium: 10, ultimate: 20 };
+const AFFILIATE_DISCOUNT_PERCENT = 10;
+
+function getAffiliates() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(AFFILIATES_FILE)) fs.writeFileSync(AFFILIATES_FILE, '[]');
+    return JSON.parse(fs.readFileSync(AFFILIATES_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca affiliates.json:', error);
+    return [];
+  }
+}
+function saveAffiliates(list) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(AFFILIATES_FILE, JSON.stringify(list, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan affiliates.json:', error);
+    return false;
+  }
+}
+
+function getAffiliateOtps() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(AFFILIATE_OTPS_FILE)) fs.writeFileSync(AFFILIATE_OTPS_FILE, '{}');
+    return JSON.parse(fs.readFileSync(AFFILIATE_OTPS_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca affiliate-otps.json:', error);
+    return {};
+  }
+}
+function saveAffiliateOtps(map) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(AFFILIATE_OTPS_FILE, JSON.stringify(map, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan affiliate-otps.json:', error);
+    return false;
+  }
+}
+
+function getAffiliateEarnings() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(AFFILIATE_EARNINGS_FILE)) fs.writeFileSync(AFFILIATE_EARNINGS_FILE, '[]');
+    return JSON.parse(fs.readFileSync(AFFILIATE_EARNINGS_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca affiliate-earnings.json:', error);
+    return [];
+  }
+}
+function saveAffiliateEarnings(list) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(AFFILIATE_EARNINGS_FILE, JSON.stringify(list, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan affiliate-earnings.json:', error);
+    return false;
+  }
+}
+
+function getAffiliatePayouts() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(AFFILIATE_PAYOUTS_FILE)) fs.writeFileSync(AFFILIATE_PAYOUTS_FILE, '[]');
+    return JSON.parse(fs.readFileSync(AFFILIATE_PAYOUTS_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca affiliate-payouts.json:', error);
+    return [];
+  }
+}
+function saveAffiliatePayouts(list) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(AFFILIATE_PAYOUTS_FILE, JSON.stringify(list, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Gagal menyimpan affiliate-payouts.json:', error);
+    return false;
+  }
+}
+
+// Kode referral: PREFIX-XXXX, PREFIX dari nama domain kampus (mis.
+// unpad.ac.id -> UNPAD), XXXX 4 karakter acak - diulang kalau bentrok
+// (harus UNIQUE lintas semua affiliate, dicek di kolom kode promo checkout
+// yang sama dengan PROMO_CODES manual).
+function generateReferralCode(campusEmail, existingAffiliates) {
+  const domain = campusEmail.split('@')[1] || 'kampus';
+  const prefix = domain.split('.')[0].toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12) || 'KAMPUS';
+  const existingCodes = new Set(existingAffiliates.map(a => a.referralCode));
+  let code;
+  let attempts = 0;
+  do {
+    const suffix = crypto.randomBytes(3).toString('hex').toUpperCase().slice(0, 4);
+    code = `${prefix}-${suffix}`;
+    attempts++;
+  } while (existingCodes.has(code) && attempts < 20);
+  return code;
+}
+
+function findAffiliateByReferralCode(code) {
+  if (!code) return null;
+  const normalized = String(code).trim().toUpperCase();
+  const affiliates = getAffiliates();
+  return affiliates.find(a => a.referralCode === normalized && a.status === 'active') || null;
+}
+
+// Dipanggil dari webhook Faspay SETELAH pembayaran sukses & user.type/paymentExpiredAt
+// sudah diupdate - mencatat 1 baris earning + menambah balance/totalEarned affiliate.
+// netAmount = tagihan bersih yang BENAR-BENAR dibayar user (record.amount di
+// faspay-pending, sudah termasuk diskon kalau ada) - komisi dihitung dari angka ini,
+// bukan harga normal, konsisten dengan definisi PRD ("dihitung dari tagihan bersih").
+function recordAffiliateCommission(affiliateId, buyerUser, planId, netAmount, billNo) {
+  const affiliates = getAffiliates();
+  const affiliate = affiliates.find(a => a.id === affiliateId);
+  if (!affiliate || affiliate.status !== 'active') return;
+
+  const tier = planId.startsWith('ultimate') ? 'ultimate' : 'premium';
+  const rate = AFFILIATE_COMMISSION_RATE[tier] || 0;
+  const commissionAmount = Math.round(netAmount * (rate / 100));
+  if (commissionAmount <= 0) return;
+
+  const earnings = getAffiliateEarnings();
+  earnings.unshift({
+    id: uuidv4(),
+    affiliateId,
+    referredUserId: buyerUser.id,
+    referredUserEmail: buyerUser.email,
+    billNo,
+    subscriptionTier: tier,
+    planId,
+    netAmount,
+    commissionRate: rate,
+    commissionAmount,
+    status: 'confirmed',
+    createdAt: new Date().toISOString()
+  });
+  saveAffiliateEarnings(earnings);
+
+  affiliate.balance = (affiliate.balance || 0) + commissionAmount;
+  affiliate.totalEarned = (affiliate.totalEarned || 0) + commissionAmount;
+  saveAffiliates(affiliates);
+}
+
+// Rate limit OTP afiliasi - per akun (bukan per IP), cegah spam kirim ulang OTP.
+const affiliateOtpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => (req.session && req.session.userId) || rateLimit.ipKeyGenerator(req.ip),
+  message: { ok: false, message: 'Terlalu banyak permintaan kode OTP. Tunggu beberapa menit lalu coba lagi.' }
+});
+
+app.post('/api/affiliate/send-otp', requireAccess, affiliateOtpLimiter, async (req, res) => {
+  const campusEmail = String((req.body && req.body.campusEmail) || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.ac\.id$/i.test(campusEmail)) {
+    return res.status(400).json({ ok: false, message: 'Masukkan email institusi yang valid, berakhiran .ac.id.' });
+  }
+
+  const affiliates = getAffiliates();
+  if (affiliates.find(a => a.userId === req.session.userId)) {
+    return res.status(400).json({ ok: false, message: 'Akun Anda sudah terdaftar sebagai affiliate.' });
+  }
+  if (affiliates.find(a => a.campusEmail.toLowerCase() === campusEmail)) {
+    return res.status(400).json({ ok: false, message: 'Email institusi ini sudah dipakai akun affiliate lain.' });
+  }
+
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const otps = getAffiliateOtps();
+  otps[req.session.userId] = {
+    campusEmail,
+    otp,
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    attempts: 0
+  };
+  saveAffiliateOtps(otps);
+
+  const html = `<div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1a202c;">
+    <div style="padding: 1.5rem 0; border-bottom: 2px solid #0787dc;"><span style="font-weight: 800; font-size: 1.1rem; color: #0787dc;">JurnalHub</span></div>
+    <div style="padding: 1.5rem 0;">
+      <h2 style="margin: 0 0 1rem;">Kode Verifikasi Program Afiliasi Kampus</h2>
+      <p style="line-height: 1.6;">Gunakan kode berikut untuk memverifikasi email institusi Anda (berlaku 10 menit):</p>
+      <p style="font-size: 2rem; font-weight: 800; letter-spacing: 0.3rem; text-align: center; color: #0787dc; margin: 1.5rem 0;">${otp}</p>
+      <p style="font-size: 0.85rem; color: #718096;">Kalau Anda tidak meminta kode ini, abaikan email ini.</p>
+    </div>
+  </div>`;
+  const sent = await sendMailHelper(campusEmail, '[JurnalHub] Kode Verifikasi Afiliasi Kampus', html);
+  if (!sent) {
+    return res.status(500).json({ ok: false, message: 'Gagal mengirim email OTP. Coba lagi nanti.' });
+  }
+  res.json({ ok: true, message: 'Kode OTP telah dikirim ke email institusi Anda.' });
+});
+
+app.post('/api/affiliate/verify-otp', requireAccess, affiliateOtpLimiter, async (req, res) => {
+  const otpInput = String((req.body && req.body.otp) || '').trim();
+  if (!otpInput) {
+    return res.status(400).json({ ok: false, message: 'Kode OTP wajib diisi.' });
+  }
+
+  const otps = getAffiliateOtps();
+  const record = otps[req.session.userId];
+  if (!record) {
+    return res.status(400).json({ ok: false, message: 'Tidak ada permintaan OTP aktif. Kirim ulang kode.' });
+  }
+  if (new Date(record.expiresAt) < new Date()) {
+    delete otps[req.session.userId];
+    saveAffiliateOtps(otps);
+    return res.status(400).json({ ok: false, message: 'Kode OTP sudah kedaluwarsa. Kirim ulang kode.' });
+  }
+  if (record.attempts >= 5) {
+    delete otps[req.session.userId];
+    saveAffiliateOtps(otps);
+    return res.status(400).json({ ok: false, message: 'Terlalu banyak percobaan salah. Kirim ulang kode.' });
+  }
+  if (record.otp !== otpInput) {
+    record.attempts += 1;
+    saveAffiliateOtps(otps);
+    return res.status(400).json({ ok: false, message: 'Kode OTP salah.' });
+  }
+
+  delete otps[req.session.userId];
+  saveAffiliateOtps(otps);
+
+  const affiliates = getAffiliates();
+  // Jaga-jaga race condition (2 request verify hampir bersamaan).
+  if (affiliates.find(a => a.userId === req.session.userId)) {
+    return res.status(400).json({ ok: false, message: 'Akun Anda sudah terdaftar sebagai affiliate.' });
+  }
+  const referralCode = generateReferralCode(record.campusEmail, affiliates);
+  const newAffiliate = {
+    id: uuidv4(),
+    userId: req.session.userId,
+    campusEmail: record.campusEmail,
+    referralCode,
+    balance: 0,
+    totalEarned: 0,
+    status: 'active',
+    createdAt: new Date().toISOString()
+  };
+  affiliates.push(newAffiliate);
+  saveAffiliates(affiliates);
+
+  res.json({ ok: true, affiliate: newAffiliate });
+});
+
+app.get('/api/affiliate/me', requireAccess, (req, res) => {
+  const affiliates = getAffiliates();
+  const affiliate = affiliates.find(a => a.userId === req.session.userId);
+  if (!affiliate) {
+    return res.json({ ok: true, affiliate: null });
+  }
+
+  const earnings = getAffiliateEarnings().filter(e => e.affiliateId === affiliate.id);
+  const totalReferrals = new Set(earnings.map(e => e.referredUserId)).size;
+  const payouts = getAffiliatePayouts().filter(p => p.affiliateId === affiliate.id)
+    .sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt));
+
+  res.json({
+    ok: true,
+    affiliate: {
+      referralCode: affiliate.referralCode,
+      campusEmail: affiliate.campusEmail,
+      balance: affiliate.balance || 0,
+      totalEarned: affiliate.totalEarned || 0,
+      totalReferrals,
+      status: affiliate.status,
+      minPayout: AFFILIATE_MIN_PAYOUT
+    },
+    earnings: earnings.slice(0, 50).map(e => ({
+      referredUserEmail: e.referredUserEmail,
+      subscriptionTier: e.subscriptionTier,
+      commissionAmount: e.commissionAmount,
+      createdAt: e.createdAt
+    })),
+    payouts: payouts.map(p => ({
+      id: p.id,
+      amount: p.amount,
+      paymentMethod: p.paymentMethod,
+      accountDetail: p.accountDetail,
+      status: p.status,
+      requestedAt: p.requestedAt,
+      processedAt: p.processedAt,
+      adminNote: p.adminNote
+    }))
+  });
+});
+
+app.post('/api/affiliate/payout', requireAccess, async (req, res) => {
+  const paymentMethod = String((req.body && req.body.paymentMethod) || '').trim().slice(0, 50);
+  const accountDetail = String((req.body && req.body.accountDetail) || '').trim().slice(0, 200);
+  if (!paymentMethod || !accountDetail) {
+    return res.status(400).json({ ok: false, message: 'Metode pembayaran dan detail rekening/e-wallet wajib diisi.' });
+  }
+
+  let result = null;
+  await withLock('affiliates', async () => {
+    const affiliates = getAffiliates();
+    const affiliate = affiliates.find(a => a.userId === req.session.userId);
+    if (!affiliate) {
+      result = { status: 404, body: { ok: false, message: 'Anda belum terdaftar sebagai affiliate.' } };
+      return;
+    }
+    if ((affiliate.balance || 0) < AFFILIATE_MIN_PAYOUT) {
+      result = { status: 400, body: { ok: false, message: `Saldo minimal untuk penarikan adalah Rp${AFFILIATE_MIN_PAYOUT.toLocaleString('id-ID')}.` } };
+      return;
+    }
+
+    // Saldo langsung "direservasi" (dinolkan) saat pengajuan - bukan nunggu admin
+    // approve - supaya tidak bisa ajukan payout dobel dari saldo yang sama sebelum
+    // diproses. Kalau admin reject, saldo dikembalikan (lihat
+    // POST /api/admin/affiliates/payouts/:id/reject).
+    const amount = affiliate.balance;
+    affiliate.balance = 0;
+    saveAffiliates(affiliates);
+
+    const payouts = getAffiliatePayouts();
+    const newPayout = {
+      id: uuidv4(),
+      affiliateId: affiliate.id,
+      amount,
+      paymentMethod,
+      accountDetail,
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+      processedAt: null,
+      adminNote: null
+    };
+    payouts.push(newPayout);
+    saveAffiliatePayouts(payouts);
+
+    result = { status: 200, body: { ok: true, payout: newPayout } };
+  });
+
+  res.status(result.status).json(result.body);
+});
+
 function parseCookies(cookieHeader = '') {
   return cookieHeader.split(';').reduce((cookies, item) => {
     const [key, ...valueParts] = item.trim().split('=');
@@ -781,6 +1146,125 @@ app.get('/api/admin/users', requireAccess, requireAdmin, (req, res) => {
   };
 
   res.json({ ok: true, users: list, summary });
+});
+
+// --- ADMIN: Program Afiliasi Kampus - panel "Affiliate Management" (lihat
+// komentar besar Program Afiliasi Kampus di dekat definisi getAffiliates). ---
+app.get('/api/admin/affiliates', requireAccess, requireAdmin, (req, res) => {
+  const affiliates = getAffiliates();
+  const earnings = getAffiliateEarnings();
+  const users = getUsers();
+  const userById = new Map(users.map(u => [u.id, u]));
+
+  const list = affiliates.map(a => {
+    const ownEarnings = earnings.filter(e => e.affiliateId === a.id);
+    const totalReferrals = new Set(ownEarnings.map(e => e.referredUserId)).size;
+    const owner = userById.get(a.userId);
+    return {
+      id: a.id,
+      ownerEmail: owner ? owner.email : '(user dihapus)',
+      campusEmail: a.campusEmail,
+      referralCode: a.referralCode,
+      balance: a.balance || 0,
+      totalEarned: a.totalEarned || 0,
+      totalReferrals,
+      status: a.status,
+      createdAt: a.createdAt
+    };
+  }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  res.json({
+    ok: true,
+    affiliates: list,
+    summary: {
+      total: list.length,
+      totalCommissionPaid: earnings.reduce((sum, e) => sum + e.commissionAmount, 0),
+      totalBalanceOwed: list.reduce((sum, a) => sum + a.balance, 0)
+    }
+  });
+});
+
+// Ban/unban - affiliate yang di-ban kode referralnya berhenti berfungsi
+// (findAffiliateByReferralCode cuma cocokkan status 'active') & recordAffiliateCommission
+// berhenti mencatat komisi baru untuknya, TAPI histori earning/balance yang SUDAH ada
+// tidak dihapus/di-nolkan - cuma menutup pintu penyalahgunaan lebih lanjut.
+app.post('/api/admin/affiliates/:id/toggle-status', requireAccess, requireAdmin, (req, res) => {
+  const affiliates = getAffiliates();
+  const affiliate = affiliates.find(a => a.id === req.params.id);
+  if (!affiliate) {
+    return res.status(404).json({ ok: false, message: 'Affiliate tidak ditemukan.' });
+  }
+  affiliate.status = affiliate.status === 'active' ? 'banned' : 'active';
+  saveAffiliates(affiliates);
+  res.json({ ok: true, status: affiliate.status });
+});
+
+app.get('/api/admin/affiliates/payouts', requireAccess, requireAdmin, (req, res) => {
+  const payouts = getAffiliatePayouts();
+  const affiliates = getAffiliates();
+  const affiliateById = new Map(affiliates.map(a => [a.id, a]));
+  const users = getUsers();
+  const userById = new Map(users.map(u => [u.id, u]));
+
+  const list = payouts.map(p => {
+    const affiliate = affiliateById.get(p.affiliateId);
+    const owner = affiliate ? userById.get(affiliate.userId) : null;
+    return {
+      id: p.id,
+      ownerEmail: owner ? owner.email : '(user dihapus)',
+      referralCode: affiliate ? affiliate.referralCode : '-',
+      amount: p.amount,
+      paymentMethod: p.paymentMethod,
+      accountDetail: p.accountDetail,
+      status: p.status,
+      requestedAt: p.requestedAt,
+      processedAt: p.processedAt,
+      adminNote: p.adminNote
+    };
+  }).sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt));
+
+  res.json({ ok: true, payouts: list });
+});
+
+app.post('/api/admin/affiliates/payouts/:id/approve', requireAccess, requireAdmin, (req, res) => {
+  const payouts = getAffiliatePayouts();
+  const payout = payouts.find(p => p.id === req.params.id);
+  if (!payout) {
+    return res.status(404).json({ ok: false, message: 'Pengajuan payout tidak ditemukan.' });
+  }
+  if (payout.status !== 'pending') {
+    return res.status(400).json({ ok: false, message: 'Pengajuan ini sudah diproses sebelumnya.' });
+  }
+  payout.status = 'approved';
+  payout.processedAt = new Date().toISOString();
+  saveAffiliatePayouts(payouts);
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/affiliates/payouts/:id/reject', requireAccess, requireAdmin, (req, res) => {
+  const note = String((req.body && req.body.note) || '').trim().slice(0, 300);
+  const payouts = getAffiliatePayouts();
+  const payout = payouts.find(p => p.id === req.params.id);
+  if (!payout) {
+    return res.status(404).json({ ok: false, message: 'Pengajuan payout tidak ditemukan.' });
+  }
+  if (payout.status !== 'pending') {
+    return res.status(400).json({ ok: false, message: 'Pengajuan ini sudah diproses sebelumnya.' });
+  }
+  payout.status = 'rejected';
+  payout.processedAt = new Date().toISOString();
+  payout.adminNote = note || null;
+  saveAffiliatePayouts(payouts);
+
+  // Kembalikan saldo yang sempat "direservasi" saat pengajuan (lihat POST /api/affiliate/payout).
+  const affiliates = getAffiliates();
+  const affiliate = affiliates.find(a => a.id === payout.affiliateId);
+  if (affiliate) {
+    affiliate.balance = (affiliate.balance || 0) + payout.amount;
+    saveAffiliates(affiliates);
+  }
+
+  res.json({ ok: true });
 });
 
 // --- EMAIL BLAST (konversi Free -> berbayar, dsb) ---
@@ -7562,36 +8046,77 @@ app.use('/templates', requireAccess, (req, res, next) => {
 // Kode promo cuma boleh dipakai untuk paket bulanan - kalau valid, harga & deskripsi
 // item yang dikirim ke Faspay (jadi yang benar-benar ditagih) sudah didiskon di sini,
 // bukan cuma tampilan di frontend.
-function applyPromoToItemDef(plan, planId, promoCode) {
-  if (!promoCode) return { itemDef: plan, error: null };
+// promoCode di sini kolomnya SAMA dipakai untuk 2 hal: kode promo manual
+// (PROMO_CODES) DAN kode referral Program Afiliasi Kampus (affiliates.json)
+// - dicoba PROMO_CODES dulu, kalau tidak cocok baru dicoba sebagai kode
+// referral. affiliateId dikembalikan kalau yang cocok kode referral, dipakai
+// createFaspayTransaction buat mencatat siapa yang harus dapat komisi nanti
+// (lihat webhook Faspay).
+function applyPromoToItemDef(plan, planId, promoCode, buyerUserId) {
+  if (!promoCode) return { itemDef: plan, error: null, affiliateId: null };
+
   const promo = getPromoDiscount(promoCode);
-  if (!promo) {
-    return { itemDef: null, error: 'Kode promo tidak valid atau sudah tidak berlaku.' };
+  if (promo) {
+    if (!planId.endsWith('_monthly')) {
+      return { itemDef: null, error: 'Kode promo hanya berlaku untuk paket bulanan.', affiliateId: null };
+    }
+    const discountedPrice = Math.round(plan.price * (1 - promo.discountPercent / 100));
+    return {
+      itemDef: {
+        ...plan,
+        price: discountedPrice,
+        desc: `${plan.desc} Promo ${String(promoCode).trim().toUpperCase()} potongan ${promo.discountPercent} persen`
+      },
+      error: null,
+      affiliateId: null
+    };
   }
-  if (!planId.endsWith('_monthly')) {
-    return { itemDef: null, error: 'Kode promo hanya berlaku untuk paket bulanan.' };
+
+  const affiliate = findAffiliateByReferralCode(promoCode);
+  if (affiliate) {
+    if (affiliate.userId === buyerUserId) {
+      return { itemDef: null, error: 'Anda tidak bisa memakai kode referral Anda sendiri.', affiliateId: null };
+    }
+    if (!planId.endsWith('_monthly')) {
+      return { itemDef: null, error: 'Kode referral hanya berlaku untuk paket bulanan.', affiliateId: null };
+    }
+    const discountedPrice = Math.round(plan.price * (1 - AFFILIATE_DISCOUNT_PERCENT / 100));
+    return {
+      itemDef: {
+        ...plan,
+        price: discountedPrice,
+        desc: `${plan.desc} Referral ${affiliate.referralCode} potongan ${AFFILIATE_DISCOUNT_PERCENT} persen`
+      },
+      error: null,
+      affiliateId: affiliate.id
+    };
   }
-  const discountedPrice = Math.round(plan.price * (1 - promo.discountPercent / 100));
-  return {
-    itemDef: {
-      ...plan,
-      price: discountedPrice,
-      desc: `${plan.desc} Promo ${String(promoCode).trim().toUpperCase()} potongan ${promo.discountPercent} persen`
-    },
-    error: null
-  };
+
+  return { itemDef: null, error: 'Kode promo tidak valid atau sudah tidak berlaku.', affiliateId: null };
 }
 
 app.post('/api/promo/validate', requireAccess, (req, res) => {
   const { code, planId } = req.body;
   const promo = getPromoDiscount(code);
-  if (!promo) {
-    return res.status(400).json({ ok: false, message: 'Kode promo tidak valid atau sudah tidak berlaku.' });
+  if (promo) {
+    if (planId && !String(planId).endsWith('_monthly')) {
+      return res.status(400).json({ ok: false, message: 'Kode promo hanya berlaku untuk paket bulanan.' });
+    }
+    return res.json({ ok: true, discountPercent: promo.discountPercent });
   }
-  if (planId && !String(planId).endsWith('_monthly')) {
-    return res.status(400).json({ ok: false, message: 'Kode promo hanya berlaku untuk paket bulanan.' });
+
+  const affiliate = findAffiliateByReferralCode(code);
+  if (affiliate) {
+    if (affiliate.userId === req.session.userId) {
+      return res.status(400).json({ ok: false, message: 'Anda tidak bisa memakai kode referral Anda sendiri.' });
+    }
+    if (planId && !String(planId).endsWith('_monthly')) {
+      return res.status(400).json({ ok: false, message: 'Kode referral hanya berlaku untuk paket bulanan.' });
+    }
+    return res.json({ ok: true, discountPercent: AFFILIATE_DISCOUNT_PERCENT });
   }
-  res.json({ ok: true, discountPercent: promo.discountPercent });
+
+  return res.status(400).json({ ok: false, message: 'Kode promo tidak valid atau sudah tidak berlaku.' });
 });
 
 app.post('/api/payment/create', requireAccess, async (req, res) => {
@@ -7605,12 +8130,12 @@ app.post('/api/payment/create', requireAccess, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Plan ID tidak valid.' });
   }
 
-  const { itemDef, error } = applyPromoToItemDef(plan, planId, promoCode);
+  const { itemDef, error, affiliateId } = applyPromoToItemDef(plan, planId, promoCode, req.session.userId);
   if (error) {
     return res.status(400).json({ ok: false, message: error });
   }
 
-  return createFaspayTransaction(req, res, { kind: 'subscription', itemId: planId, itemDef, userId: req.session.userId });
+  return createFaspayTransaction(req, res, { kind: 'subscription', itemId: planId, itemDef, userId: req.session.userId, affiliateId });
 });
 
 app.post('/api/payment/topup/create', requireAccess, async (req, res) => {
@@ -7730,7 +8255,7 @@ const FASPAY_TOPUP_PACKAGES = {
   thesis: { price: 299000, name: 'Humanizer Thesis Pack', desc: 'Topup Kuota Kata Humanizer 40000 Kata', words: 40000 }
 };
 
-async function createFaspayTransaction(req, res, { kind, itemId, itemDef, userId }) {
+async function createFaspayTransaction(req, res, { kind, itemId, itemDef, userId, affiliateId }) {
   if (!FASPAY_MERCHANT_ID || !FASPAY_USER_ID || !FASPAY_PASSWORD) {
     return res.status(500).json({ ok: false, message: 'Kredensial Faspay belum dikonfigurasi di server.' });
   }
@@ -7799,6 +8324,7 @@ async function createFaspayTransaction(req, res, { kind, itemId, itemDef, userId
           itemId, // planId atau packageId
           amount: billTotal,
           name: itemDef.name,
+          affiliateId: affiliateId || null, // Program Afiliasi Kampus, lihat webhook Faspay
           createdAt: now.toISOString()
         };
         saveFaspayPending(pending);
@@ -7916,6 +8442,16 @@ app.post('/api/payment/faspay/callback', async (req, res) => {
           users[userIndex].planId = planId;
           users[userIndex].paymentExpiredAt = expiredAt;
           resetMonthlyQuotasOnUpgrade(users[userIndex]);
+
+          // Program Afiliasi Kampus: kode referral yang berhasil dipakai PERTAMA
+          // KALI "mengikat" user ini ke affiliate itu SELAMANYA
+          // (referredByAffiliateId) - supaya SEMUA pembayaran berikutnya
+          // (termasuk renewal tanpa masukkan kode lagi) tetap menghasilkan komisi
+          // recurring buat affiliate itu. Lihat komentar besar di
+          // recordAffiliateCommission.
+          if (!users[userIndex].referredByAffiliateId && record.affiliateId) {
+            users[userIndex].referredByAffiliateId = record.affiliateId;
+          }
         }
 
         persisted = saveUsers(users);
@@ -7927,6 +8463,18 @@ app.post('/api/payment/faspay/callback', async (req, res) => {
       }
 
       addTransaction(record.userId, billNo, record.name, record.amount, 'success');
+
+      // Catat komisi affiliate SETELAH users.json tersimpan (baca ulang dari
+      // disk, bukan pakai array `users` di dalam withLock di atas yang mungkin
+      // sudah basi) - referredByAffiliateId sudah pasti ke-set di titik ini
+      // kalau memang ada kode referral yang berlaku di transaksi ini.
+      if (record.kind !== 'topup') {
+        const freshUsers = getUsers();
+        const buyerUser = freshUsers.find(u => u.id === record.userId);
+        if (buyerUser && buyerUser.referredByAffiliateId) {
+          recordAffiliateCommission(buyerUser.referredByAffiliateId, buyerUser, record.itemId, record.amount, billNo);
+        }
+      }
 
       await withLock('faspay_pending', async () => {
         const p = getFaspayPending();
