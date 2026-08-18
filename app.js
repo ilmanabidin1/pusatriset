@@ -53,15 +53,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // permintaan berhenti berlangganan eksplisit dari user sendiri.
   function renderAdminBlastPreview() {
     const segmentEl = document.getElementById('adminBlastSegment');
+    const academicOnlyEl = document.getElementById('adminBlastAcademicOnly');
     const previewEl = document.getElementById('adminBlastPreviewCount');
     if (!segmentEl || !previewEl) return;
     const segment = segmentEl.value;
-    const segmentUsers = adminUsersCache.filter(u => segment === 'all' || u.type === segment);
+    const academicOnly = !!(academicOnlyEl && academicOnlyEl.checked);
+    let segmentUsers = adminUsersCache.filter(u => segment === 'all' || u.type === segment);
+    const excludedNonAcademic = academicOnly ? segmentUsers.filter(u => !(u.email || '').toLowerCase().endsWith('.ac.id')).length : 0;
+    if (academicOnly) segmentUsers = segmentUsers.filter(u => (u.email || '').toLowerCase().endsWith('.ac.id'));
     const eligible = segmentUsers.filter(u => !u.emailOptOut);
     const excludedOptOut = segmentUsers.filter(u => u.emailOptOut).length;
-    let text = `${eligible.length} dari ${segmentUsers.length} user di segmen ini akan menerima email ini.`;
+    let text = `${eligible.length} user akan menerima email ini.`;
     const reasons = [];
     if (excludedOptOut > 0) reasons.push(`${excludedOptOut} sudah unsubscribe`);
+    if (excludedNonAcademic > 0) reasons.push(`${excludedNonAcademic} bukan email .ac.id`);
     if (reasons.length > 0) text += ` (dikecualikan: ${reasons.join(', ')})`;
     previewEl.textContent = text;
   }
@@ -248,6 +253,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!segmentEl || !sendBtn) return;
 
     segmentEl.addEventListener('change', renderAdminBlastPreview);
+    const academicOnlyEl = document.getElementById('adminBlastAcademicOnly');
+    if (academicOnlyEl) academicOnlyEl.addEventListener('change', renderAdminBlastPreview);
 
     ['adminBlastBody', 'adminBlastImageUrl', 'adminBlastCtaText', 'adminBlastCtaUrl'].forEach(id => {
       const el = document.getElementById(id);
@@ -291,6 +298,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sendBtn.addEventListener('click', async () => {
       const segment = segmentEl.value;
+      const academicOnlyEl = document.getElementById('adminBlastAcademicOnly');
+      const academicOnly = !!(academicOnlyEl && academicOnlyEl.checked);
       const subjectEl = document.getElementById('adminBlastSubject');
       const bodyEl = document.getElementById('adminBlastBody');
       const imageUrlEl = document.getElementById('adminBlastImageUrl');
@@ -319,15 +328,16 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Link tombol harus diawali http:// atau https://.');
         return;
       }
-      const eligibleCount = adminUsersCache.filter(u => !u.emailOptOut && (segment === 'all' || u.type === segment)).length;
+      const eligibleCount = adminUsersCache.filter(u => !u.emailOptOut && (segment === 'all' || u.type === segment) && (!academicOnly || (u.email || '').toLowerCase().endsWith('.ac.id'))).length;
       if (eligibleCount === 0) {
-        alert('Tidak ada penerima di segmen ini.');
+        alert('Tidak ada penerima yang cocok dengan filter ini.');
         return;
       }
       // Konfirmasi eksplisit - ini aksi yang TIDAK BISA dibatalkan setelah
       // terkirim (beda dari kebanyakan aksi lain di app ini), jadi sengaja
       // tidak langsung kirim begitu tombol diklik.
-      if (!confirm(`Kirim email ini ke ${eligibleCount} user (segmen: ${segment})? Aksi ini tidak bisa dibatalkan setelah dikirim.`)) {
+      const filterDesc = `segmen: ${segment}${academicOnly ? ', hanya .ac.id' : ''}`;
+      if (!confirm(`Kirim email ini ke ${eligibleCount} user (${filterDesc})? Aksi ini tidak bisa dibatalkan setelah dikirim.`)) {
         return;
       }
 
@@ -337,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/admin/email-blast', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ segment, subject, bodyText, imageUrl, ctaText, ctaUrl })
+          body: JSON.stringify({ segment, academicOnly, subject, bodyText, imageUrl, ctaText, ctaUrl })
         });
         const data = await res.json();
         if (!data.ok) {

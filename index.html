@@ -6944,6 +6944,14 @@
                   <option value="ultimate">Ultimate</option>
                   <option value="all">Semua</option>
                 </select>
+                <!-- Filter tambahan independen dari segmen tier - dipakai buat
+                     kampanye khusus akademisi (mis. "Semua" + centang ini =
+                     semua user ber-email .ac.id apapun tier langganannya).
+                     Lihat academicOnly di POST /api/admin/email-blast. -->
+                <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; font-size: 0.82rem; color: var(--text-main); cursor: pointer;">
+                  <input type="checkbox" id="adminBlastAcademicOnly" style="width: 16px; height: 16px; cursor: pointer;">
+                  Hanya email domain akademik (<code>.ac.id</code>)
+                </label>
                 <p id="adminBlastPreviewCount" style="font-size: 0.78rem; color: var(--text-muted); margin: 0.4rem 0 0;">-</p>
               </div>
               <div>

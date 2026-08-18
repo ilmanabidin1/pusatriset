@@ -908,6 +908,10 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
   }
 
   const segment = String((req.body && req.body.segment) || '').trim();
+  // Filter tambahan: cuma email domain akademik (.ac.id) - dipakai buat
+  // kampanye penawaran khusus akademisi, independen dari segmen tier
+  // (mis. "Semua" + academicOnly = semua user ber-email .ac.id apapun tier-nya).
+  const academicOnly = !!(req.body && req.body.academicOnly);
   const subject = String((req.body && req.body.subject) || '').trim().slice(0, 200);
   const bodyText = String((req.body && req.body.bodyText) || '').trim().slice(0, 20000);
   // imageUrl/ctaText/ctaUrl semua opsional - user paste link gambar yang
@@ -945,12 +949,13 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
   const users = getUsers();
   const recipients = users.filter(u => {
     if (!u.email || u.emailOptOut) return false;
+    if (academicOnly && !u.email.toLowerCase().endsWith('.ac.id')) return false;
     if (segment === 'all') return true;
     return computeEffectiveUserType(u) === segment;
   });
 
   if (recipients.length === 0) {
-    return res.status(400).json({ ok: false, message: 'Tidak ada penerima di segmen ini (sudah dikurangi yang sudah unsubscribe).' });
+    return res.status(400).json({ ok: false, message: 'Tidak ada penerima yang cocok dengan filter ini (sudah dikurangi yang sudah unsubscribe).' });
   }
 
   emailBlastStatus = { inProgress: true, total: recipients.length, sent: 0, failed: 0, startedAt: new Date().toISOString(), finishedAt: null, subject };
