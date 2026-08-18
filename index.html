@@ -6711,19 +6711,32 @@
             .aff-faq-item p { margin: 0 0 0.9rem; color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
 
             /* Kartu depan (poster "Join Now") <-> kartu belakang (hero + form OTP) -
-               di-flip lewat JS (initAffiliateFlipCard di app.js) yang gonta-ganti
-               class .aff-flip-out / .aff-flip-in-start di 2 elemen terpisah secara
-               berurutan (bukan 1 elemen 3D beneran pakai backface-visibility),
-               supaya tinggi tiap kartu tetap natural mengikuti isinya masing-masing. */
-            .aff-flip-card { perspective: 1600px; max-width: 380px; margin: 0 auto 1.5rem; }
-            .aff-flip-front, .aff-flip-back { transition: transform 0.35s ease, opacity 0.35s ease; transform-origin: center; }
-            .aff-flip-front { border-radius: var(--card-radius); overflow: hidden; cursor: pointer; box-shadow: 0 8px 24px rgba(8,34,64,0.12); }
-            .aff-flip-front img { width: 100%; display: block; }
+               flip 3D asli (backface-visibility), bukan animasi 2 tahap - supaya
+               kedua sisi otomatis SAMA PERSIS ukurannya (satu box yang sama,
+               tinggal diputar). Lebar mengikuti kartu-kartu lain di bawahnya
+               (max-width 800px dari wrapper tab), tinggi mengikuti rasio asli
+               foto poster (1800x942) lewat aspect-ratio, jadi foto tidak pernah
+               ke-crop. Sisi belakang dikasih overflow-y:auto sebagai jaring
+               pengaman kalau di layar sempit kontennya lebih tinggi dari box. */
+            .aff-flip-card { perspective: 1600px; margin: 0 auto 1.5rem; aspect-ratio: 1800 / 942; }
+            .aff-flip-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+            .aff-flip-card.flipped .aff-flip-inner { transform: rotateY(180deg); }
+            .aff-flip-front, .aff-flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--card-radius); }
+            .aff-flip-front { overflow: hidden; cursor: pointer; box-shadow: 0 8px 24px rgba(8,34,64,0.12); }
+            .aff-flip-front img { width: 100%; height: 100%; display: block; object-fit: cover; }
             .aff-flip-front:hover { filter: brightness(1.04); }
-            .aff-flip-front.aff-flip-out, .aff-flip-back.aff-flip-out { transform: rotateY(90deg); opacity: 0; }
-            .aff-flip-front.aff-flip-in-start, .aff-flip-back.aff-flip-in-start { transform: rotateY(-90deg); opacity: 0; }
-            .aff-flip-back { position: relative; border-radius: var(--card-radius); }
+            .aff-flip-back { transform: rotateY(180deg); overflow-y: auto; overflow-x: hidden; }
             .aff-flip-back-btn { position: absolute; top: 1rem; left: 1rem; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.15); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; z-index: 2; }
+            /* Di layar sempit, rasio asli fotonya (~1.9:1) jadi ketinggian
+               < 220px - kepotong parah buat form OTP di sisi belakang. Kasih
+               tinggi minimum yang lebih manusiawi disini (berlaku ke kedua sisi
+               karena satu box yang sama), sisa konten yang belum muat tetap
+               bisa di-scroll lewat overflow-y:auto di atas. */
+            @media (max-width: 640px) {
+              .aff-flip-card { aspect-ratio: auto; height: 440px; }
+              .aff-flip-front { background: linear-gradient(135deg, var(--brand-blue) 0%, #0a2540 100%); display: flex; align-items: center; }
+              .aff-flip-front img { height: auto; object-fit: contain; }
+            }
             .aff-flip-back-btn:hover { background: rgba(255,255,255,0.28); }
           </style>
           <div id="affiliateUnverified">
@@ -6731,43 +6744,45 @@
             <!-- Kartu depan (poster "Join Now") + kartu belakang (hero + form OTP
                  inline) - kartu depan flip ke belakang saat diklik. -->
             <div class="aff-flip-card" id="affFlipCard">
-              <div class="aff-flip-front" id="affFlipFront" role="button" tabindex="0" aria-label="Join Now - daftar jadi Campus Ambassador">
-                <img src="assets/campus-ambassador-poster.webp" alt="JurnalHub Campus Ambassador - Join Now">
-              </div>
-
-              <div class="aff-flip-back" id="affFlipBack" style="display: none; background: linear-gradient(135deg, var(--brand-blue) 0%, #0a2540 100%); padding: 2.25rem 1.25rem; text-align: center; color: #ffffff;">
-                <button type="button" id="affFlipBackBtn" class="aff-flip-back-btn" title="Kembali" aria-label="Kembali ke poster">
-                  <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.1rem;">
-                  <i class="fa-solid fa-graduation-cap" style="font-size: 1.3rem;"></i>
+              <div class="aff-flip-inner">
+                <div class="aff-flip-front" id="affFlipFront" role="button" tabindex="0" aria-label="Join Now - daftar jadi Campus Ambassador">
+                  <img src="assets/campus-ambassador-poster.webp" alt="JurnalHub Campus Ambassador - Join Now">
                 </div>
-                <h1 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; margin: 0 0 0.5rem;">JurnalHub Campus Ambassador</h1>
-                <p style="margin: 0 0 1.5rem; font-size: 0.85rem; opacity: 0.9; line-height: 1.6;">
-                  Ajak rekan dosen dan mahasiswa di kampusmu berlangganan JurnalHub, mereka dapat <strong>diskon 10%</strong> dan kamu dapat <strong>komisi 10-20% yang terus mengalir</strong> selama mereka berlangganan - bukan cuma sekali.
-                </p>
 
-                <div style="background: var(--bg-card); border-radius: 12px; padding: 1.1rem; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.18);">
-                  <div id="affiliateEmailStep">
-                    <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">Daftar Pakai Email Institusi (.ac.id)</label>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                      <input type="email" id="affiliateCampusEmail" placeholder="nama@kampus.ac.id" style="flex: 1; min-width: 180px; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
-                      <button type="button" id="affiliateSendOtpBtn" class="upgrade-btn" style="width: auto; padding: 0.6rem 1.25rem; white-space: nowrap;">Kirim OTP</button>
-                    </div>
-                    <p id="affiliateEmailMessage" style="font-size: 0.8rem; margin: 0.6rem 0 0; display: none;"></p>
+                <div class="aff-flip-back" id="affFlipBack" style="background: linear-gradient(135deg, var(--brand-blue) 0%, #0a2540 100%); padding: 1.75rem 2rem; text-align: center; color: #ffffff;">
+                  <button type="button" id="affFlipBackBtn" class="aff-flip-back-btn" title="Kembali" aria-label="Kembali ke poster">
+                    <i class="fa-solid fa-arrow-left"></i>
+                  </button>
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                    <i class="fa-solid fa-graduation-cap" style="font-size: 1.1rem;"></i>
                   </div>
+                  <h1 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.2rem; margin: 0 0 0.4rem;">JurnalHub Campus Ambassador</h1>
+                  <p style="max-width: 520px; margin: 0 auto 1rem; font-size: 0.8rem; opacity: 0.9; line-height: 1.45;">
+                    Ajak rekan dosen dan mahasiswa di kampusmu berlangganan JurnalHub, mereka dapat <strong>diskon 10%</strong> dan kamu dapat <strong>komisi 10-20% yang terus mengalir</strong> - bukan cuma sekali.
+                  </p>
 
-                  <div id="affiliateOtpStep" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-light-hover);">
-                    <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">Kode OTP (6 digit, dikirim ke email institusi Anda)</label>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                      <input type="text" id="affiliateOtpInput" inputmode="numeric" maxlength="6" placeholder="123456" style="width: 120px; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 1rem; letter-spacing: 0.2rem; background: var(--bg-card); color: var(--text-main);">
-                      <button type="button" id="affiliateVerifyOtpBtn" class="upgrade-btn" style="width: auto; padding: 0.6rem 1.1rem;">Verifikasi</button>
-                      <button type="button" id="affiliateResendOtpBtn" style="background: transparent; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">Kirim Ulang</button>
+                  <div style="max-width: 440px; margin: 0 auto; background: var(--bg-card); border-radius: 12px; padding: 0.9rem 1rem; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.18);">
+                    <div id="affiliateEmailStep">
+                      <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">Daftar Pakai Email Institusi (.ac.id)</label>
+                      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="email" id="affiliateCampusEmail" placeholder="nama@kampus.ac.id" style="flex: 1; min-width: 180px; padding: 0.5rem 0.7rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.82rem; background: var(--bg-card); color: var(--text-main);">
+                        <button type="button" id="affiliateSendOtpBtn" class="upgrade-btn" style="width: auto; padding: 0.5rem 1.1rem; white-space: nowrap;">Kirim OTP</button>
+                      </div>
+                      <p id="affiliateEmailMessage" style="font-size: 0.78rem; margin: 0.5rem 0 0; display: none;"></p>
                     </div>
-                    <p id="affiliateOtpMessage" style="font-size: 0.8rem; margin: 0.6rem 0 0; display: none;"></p>
-                  </div>
 
-                  <p style="margin: 0.75rem 0 0; font-size: 0.72rem; color: var(--text-muted); text-align: center;">Gratis, tanpa syarat berlangganan JurnalHub terlebih dahulu.</p>
+                    <div id="affiliateOtpStep" style="display: none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-light-hover);">
+                      <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">Kode OTP (6 digit, dikirim ke email institusi Anda)</label>
+                      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="text" id="affiliateOtpInput" inputmode="numeric" maxlength="6" placeholder="123456" style="width: 110px; padding: 0.5rem 0.7rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.95rem; letter-spacing: 0.2rem; background: var(--bg-card); color: var(--text-main);">
+                        <button type="button" id="affiliateVerifyOtpBtn" class="upgrade-btn" style="width: auto; padding: 0.5rem 1rem;">Verifikasi</button>
+                        <button type="button" id="affiliateResendOtpBtn" style="background: transparent; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.5rem 0.85rem; font-size: 0.75rem; color: var(--text-muted); cursor: pointer;">Kirim Ulang</button>
+                      </div>
+                      <p id="affiliateOtpMessage" style="font-size: 0.78rem; margin: 0.5rem 0 0; display: none;"></p>
+                    </div>
+
+                    <p style="margin: 0.6rem 0 0; font-size: 0.68rem; color: var(--text-muted); text-align: center;">Gratis, tanpa syarat berlangganan JurnalHub terlebih dahulu.</p>
+                  </div>
                 </div>
               </div>
             </div>
