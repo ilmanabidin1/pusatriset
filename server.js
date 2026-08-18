@@ -411,21 +411,18 @@ function saveUsers(users) {
   }
 }
 
-// Reset semua counter kuota bulanan saat user upgrade tier lewat pembayaran -
-// supaya user langsung dapat kuota penuh sesuai paket barunya, bukan
-// melanjutkan sisa pemakaian dari tier sebelumnya.
+// Reset counter kuota bulanan saat user upgrade tier lewat pembayaran - supaya
+// user langsung dapat kuota penuh sesuai paket barunya, bukan melanjutkan
+// sisa pemakaian dari tier sebelumnya. Match/Draft/Lit Review/Research Chat
+// sudah pindah total ke DEEPSEEK POOL (kredit/minggu, otomatis penuh lagi
+// tiap upgrade karena dihitung dari tier saat ini, bukan counter tersimpan)
+// jadi tidak perlu di-reset manual disini lagi - cuma Humanizer yang masih
+// pakai kuota kata bulanan asli (bukan LLM/token-based, lihat komentar di
+// /api/me).
 function resetMonthlyQuotasOnUpgrade(user) {
   const currentMonth = new Date().toISOString().slice(0, 7);
-  user.lastMatchMonth = currentMonth;
-  user.matchCountThisMonth = 0;
-  user.lastDraftMonth = currentMonth;
-  user.draftCountThisMonth = 0;
-  user.lastLitReviewMonth = currentMonth;
-  user.litReviewCountThisMonth = 0;
   user.lastHumanizerMonth = currentMonth;
   user.humanizerWordsUsedThisMonth = 0;
-  user.lastResearchChatMonth = currentMonth;
-  user.researchChatCountThisMonth = 0;
 }
 
 const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
@@ -2537,52 +2534,27 @@ app.get('/api/me', (req, res) => {
     const isPremium = userType === 'premium';
     const isUltimate = userType === 'ultimate';
 
+    // Patent Search, Cari Referensi, Citation Graph, dan Humanizer BUKAN
+    // panggilan DeepSeek/LLM (API eksternal terpisah dengan biaya/rate-limit
+    // sendiri) jadi TETAP pakai kuota bulanan asli per-tier disini - beda
+    // dari Draft/Lit Review/SLR/Peer Review/Research Chat/Notebook Continue/
+    // Match yang sudah pindah total ke DEEPSEEK POOL (lihat blok di bawah).
     if (isFree && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
-      isLimitReached = (user.lastMatchMonth === currentMonth) && (user.matchCountThisMonth >= 1);
-      
-      isDraftLimitReached = (user.lastDraftMonth === currentMonth) && (user.draftCountThisMonth >= 3);
-      draftsRemaining = Math.max(0, 3 - (user.lastDraftMonth === currentMonth ? user.draftCountThisMonth : 0));
-
-      isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 3);
-      litReviewsRemaining = Math.max(0, 3 - (user.lastLitReviewMonth === currentMonth ? user.litReviewCountThisMonth : 0));
-
       isHumanizerLimitReached = true;
       humanizerWordsRemaining = 0;
       humanizerWordsLimit = 0;
 
-      researchChatLimit = 20;
-      const chatUsedFree = (user.lastResearchChatMonth === currentMonth) ? (user.researchChatCountThisMonth || 0) : 0;
-      researchChatsRemaining = Math.max(0, researchChatLimit - chatUsedFree);
-      isResearchChatLimitReached = researchChatsRemaining <= 0;
-
-      isSlrLimitReached = (user.lastSlrMonth === currentMonth) && (user.slrCountThisMonth >= 1);
-      slrRemaining = Math.max(0, 1 - (user.lastSlrMonth === currentMonth ? user.slrCountThisMonth : 0));
-
       isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 1);
       patentSearchRemaining = Math.max(0, 1 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
-
-      isPeerReviewLimitReached = (user.lastPeerReviewMonth === currentMonth) && (user.peerReviewCountThisMonth >= 2);
-      peerReviewRemaining = Math.max(0, 2 - (user.lastPeerReviewMonth === currentMonth ? user.peerReviewCountThisMonth : 0));
 
       isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 5);
       citationGraphRemaining = Math.max(0, 5 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
 
       isCariReferensiLimitReached = (user.lastCariReferensiMonth === currentMonth) && (user.cariReferensiCountThisMonth >= 5);
       cariReferensiRemaining = Math.max(0, 5 - (user.lastCariReferensiMonth === currentMonth ? user.cariReferensiCountThisMonth : 0));
-
-      isNotebookContinueLimitReached = (user.lastNotebookContinueMonth === currentMonth) && (user.notebookContinueCountThisMonth >= 10);
-      notebookContinueRemaining = Math.max(0, 10 - (user.lastNotebookContinueMonth === currentMonth ? user.notebookContinueCountThisMonth : 0));
     } else if (isPremium && user) {
       const currentMonth = new Date().toISOString().slice(0, 7);
-      isLimitReached = false;
-      
-      isDraftLimitReached = (user.lastDraftMonth === currentMonth) && (user.draftCountThisMonth >= 15);
-      draftsRemaining = Math.max(0, 15 - (user.lastDraftMonth === currentMonth ? user.draftCountThisMonth : 0));
-
-      isLitReviewLimitReached = (user.lastLitReviewMonth === currentMonth) && (user.litReviewCountThisMonth >= 15);
-      litReviewsRemaining = Math.max(0, 15 - (user.lastLitReviewMonth === currentMonth ? user.litReviewCountThisMonth : 0));
-
       if (user.lastHumanizerMonth !== currentMonth) {
         user.lastHumanizerMonth = currentMonth;
         user.humanizerWordsUsedThisMonth = 0;
@@ -2594,48 +2566,21 @@ app.get('/api/me', (req, res) => {
       humanizerWordsRemaining = Math.max(0, humanizerWordsLimit - wordsUsed);
       isHumanizerLimitReached = humanizerWordsRemaining <= 0;
 
-      isResearchChatLimitReached = false;
-      researchChatsRemaining = 999;
-      researchChatLimit = 999;
-
-      isSlrLimitReached = (user.lastSlrMonth === currentMonth) && (user.slrCountThisMonth >= 5);
-      slrRemaining = Math.max(0, 5 - (user.lastSlrMonth === currentMonth ? user.slrCountThisMonth : 0));
-
       isPatentSearchLimitReached = (user.lastPatentSearchMonth === currentMonth) && (user.patentSearchCountThisMonth >= 5);
       patentSearchRemaining = Math.max(0, 5 - (user.lastPatentSearchMonth === currentMonth ? user.patentSearchCountThisMonth : 0));
-
-      isPeerReviewLimitReached = (user.lastPeerReviewMonth === currentMonth) && (user.peerReviewCountThisMonth >= 15);
-      peerReviewRemaining = Math.max(0, 15 - (user.lastPeerReviewMonth === currentMonth ? user.peerReviewCountThisMonth : 0));
 
       isCitationGraphLimitReached = (user.lastCitationGraphMonth === currentMonth) && (user.citationGraphCountThisMonth >= 20);
       citationGraphRemaining = Math.max(0, 20 - (user.lastCitationGraphMonth === currentMonth ? user.citationGraphCountThisMonth : 0));
 
       isCariReferensiLimitReached = false;
       cariReferensiRemaining = 999;
-
-      isNotebookContinueLimitReached = (user.lastNotebookContinueMonth === currentMonth) && (user.notebookContinueCountThisMonth >= 50);
-      notebookContinueRemaining = Math.max(0, 50 - (user.lastNotebookContinueMonth === currentMonth ? user.notebookContinueCountThisMonth : 0));
     } else {
-      isLimitReached = false;
-      isDraftLimitReached = false;
-      draftsRemaining = 999;
-      isLitReviewLimitReached = false;
-      litReviewsRemaining = 999;
-      isResearchChatLimitReached = false;
-      researchChatsRemaining = 999;
-      researchChatLimit = 999;
-      isSlrLimitReached = false;
-      slrRemaining = 999;
       isPatentSearchLimitReached = false;
       patentSearchRemaining = 20;
       isCariReferensiLimitReached = false;
       cariReferensiRemaining = 999;
-      isPeerReviewLimitReached = false;
-      peerReviewRemaining = 999;
       isCitationGraphLimitReached = false;
       citationGraphRemaining = 100;
-      isNotebookContinueLimitReached = false;
-      notebookContinueRemaining = 999;
 
       if (user) {
         const currentMonth = new Date().toISOString().slice(0, 7);
@@ -2660,15 +2605,13 @@ app.get('/api/me', (req, res) => {
       }
     }
 
-    // Fitur berbasis DeepSeek (Match, Lit Review, SLR, Peer Review, Research
-    // Chat, Notebook Continue Writing/AI Draft Action, Draft/Outline Generator)
-    // sekarang dijatah lewat DEEPSEEK POOL bersama (kredit/minggu) - override
-    // angka di atas yang masih dihitung dari counter bulanan lama per-fitur.
-    // Nama field lama TETAP dipertahankan (dipakai banyak tempat di frontend
-    // untuk badge/lock icon) supaya UI existing tidak perlu diubah, cuma
-    // sumber datanya yang sekarang jadi pool bersama. Cuma Patent Search,
-    // Cari Referensi, Citation Graph (/expand), dan Humanizer yang TIDAK
-    // termasuk pool ini (bukan LLM/bukan token-based).
+    // Draft/Outline Generator, Lit Review, SLR, Peer Review, JurnalHub
+    // Intelligence (Research Chat), Notebook Continue Writing, dan AI Match -
+    // semuanya panggilan DeepSeek, jadi dijatah lewat DEEPSEEK POOL bersama
+    // (kredit/minggu), BUKAN kuota bulanan per-fitur lagi. Nama field lama
+    // TETAP dipertahankan (dipakai banyak tempat di frontend untuk badge/
+    // lock icon) supaya UI existing tidak perlu diubah, cuma sumber datanya
+    // yang sekarang jadi pool bersama.
     const deepseekPoolStatus = getDeepSeekPoolStatus(user);
     if (user) {
       const poolOk = hasDeepSeekPoolAccess(user);
@@ -2727,16 +2670,11 @@ app.get('/api/me', (req, res) => {
         humanizerWordsLimit: humanizerWordsLimit,
         humanizerTopupCredits: user ? (user.humanizerTopupCredits || 0) : 0,
         humanizerWordsUsedThisMonth: user ? (user.humanizerWordsUsedThisMonth || 0) : 0,
-        matchCountThisMonth: user ? (user.matchCountThisMonth || 0) : 0,
-        draftCountThisMonth: user ? (user.draftCountThisMonth || 0) : 0,
-        litReviewCountThisMonth: user ? (user.litReviewCountThisMonth || 0) : 0,
-        slrCountThisMonth: user ? (user.slrCountThisMonth || 0) : 0,
         isSlrLimitReached: isSlrLimitReached,
         slrRemaining: slrRemaining,
         patentSearchCountThisMonth: user ? (user.patentSearchCountThisMonth || 0) : 0,
         isPatentSearchLimitReached: isPatentSearchLimitReached,
         patentSearchRemaining: patentSearchRemaining,
-        peerReviewCountThisMonth: user ? (user.peerReviewCountThisMonth || 0) : 0,
         isPeerReviewLimitReached: isPeerReviewLimitReached,
         peerReviewRemaining: peerReviewRemaining,
         citationGraphCountThisMonth: user ? (user.citationGraphCountThisMonth || 0) : 0,
@@ -2745,13 +2683,11 @@ app.get('/api/me', (req, res) => {
         cariReferensiCountThisMonth: user ? (user.cariReferensiCountThisMonth || 0) : 0,
         isCariReferensiLimitReached: isCariReferensiLimitReached,
         cariReferensiRemaining: cariReferensiRemaining,
-        notebookContinueCountThisMonth: user ? (user.notebookContinueCountThisMonth || 0) : 0,
         isNotebookContinueLimitReached: isNotebookContinueLimitReached,
         notebookContinueRemaining: notebookContinueRemaining,
         isResearchChatLimitReached: isResearchChatLimitReached,
         researchChatsRemaining: researchChatsRemaining,
         researchChatLimit: researchChatLimit,
-        researchChatCountThisMonth: user ? (user.researchChatCountThisMonth || 0) : 0,
         planId: user ? (user.planId || null) : null,
         paymentExpiredAt: user ? (user.paymentExpiredAt || null) : null,
         hasPassword: user ? !!user.password : false,
@@ -3361,7 +3297,6 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const currentMonth = new Date().toISOString().slice(0, 7);
 
   const localCandidates = getLocalCandidates(articleTitle, articleKeywords, articleAbstract);
 
@@ -3431,16 +3366,6 @@ app.post('/api/match-journals-ai', requireAccess, async (req, res) => {
 
     if (hasDeepSeekKey && user) recordDeepSeekPoolUsage(user.id, aiResult?.usage?.total_tokens);
 
-    // Increment usage for Free users
-    if (user && (user.type || 'free') === 'free') {
-      if (user.lastMatchMonth !== currentMonth) {
-        user.lastMatchMonth = currentMonth;
-        user.matchCountThisMonth = 0;
-      }
-      user.matchCountThisMonth += 1;
-      saveUsers(users);
-    }
-
     addHistoryItem(req.session.userId, 'match', { title: articleTitle, keywords: articleKeywords, abstract: articleAbstract }, { recommendations, review });
 
     res.json({ ok: true, source: sourceName, review, recommendations });
@@ -3507,7 +3432,6 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Draft/Outline Generator dipindah dari Claude ke DeepSeek supaya biayanya
   // ikut masuk DEEPSEEK POOL bersama (kredit/minggu) alih-alih kuota bulanan
@@ -3516,16 +3440,6 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
 
   const deepSeekKey = getDeepSeekApiKey();
   if (!deepSeekKey) {
-    // Fallback jika API key DeepSeek tidak tersedia
-    if (user && (user.type === 'free' || user.type === 'premium')) {
-      if (user.lastDraftMonth !== currentMonth) {
-        user.lastDraftMonth = currentMonth;
-        user.draftCountThisMonth = 0;
-      }
-      user.draftCountThisMonth += 1;
-      saveUsers(users);
-    }
-
     // Fallback lokal generic - dibangun dari description tiap segmen di config,
     // supaya tetap masuk akal untuk jenis dokumen apa pun (bukan cuma jurnal).
     const localDraft = {};
@@ -3603,16 +3517,6 @@ app.post('/api/generate-template-draft', requireAccess, async (req, res) => {
     }
 
     if (user) recordDeepSeekPoolUsage(user.id, resData?.usage?.total_tokens);
-
-    // Increment usage for Free & Premium users
-    if (user && (user.type === 'free' || user.type === 'premium')) {
-      if (user.lastDraftMonth !== currentMonth) {
-        user.lastDraftMonth = currentMonth;
-        user.draftCountThisMonth = 0;
-      }
-      user.draftCountThisMonth += 1;
-      saveUsers(users);
-    }
 
     addHistoryItem(req.session.userId, 'draft', { title, abstract, docType }, { draft: parsed, docType });
 
@@ -5046,7 +4950,6 @@ app.post('/api/documents/continue-writing', requireAccess, async (req, res) => {
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const currentMonth = new Date().toISOString().slice(0, 7);
   const userType = (user && user.type) || 'free';
 
   // Kuota AI Continue Writing sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
@@ -5118,15 +5021,6 @@ ATURAN PENTING:
 
     if (user) recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
 
-    if (userType === 'free' || userType === 'premium') {
-      if (user.lastNotebookContinueMonth !== currentMonth) {
-        user.lastNotebookContinueMonth = currentMonth;
-        user.notebookContinueCountThisMonth = 0;
-      }
-      user.notebookContinueCountThisMonth += 1;
-      saveUsers(users);
-    }
-
     // continuation dikembalikan sudah dalam bentuk HTML aman (di-escape + sitasi
     // yang dipakai dibungkus <a href>) - BUKAN plain text lagi seperti sebelumnya,
     // supaya frontend bisa langsung dangerouslyPasteHTML tanpa memutus paragraf
@@ -5143,9 +5037,9 @@ ATURAN PENTING:
 // Write Introduction/Conclusion/Opposing Arguments (dikembalikan sbg HTML
 // sederhana supaya bisa langsung di-paste ke Quill lewat dangerouslyPasteHTML),
 // dan Critique Like a Reviewer (dikembalikan sbg teks polos, ditampilkan
-// client-side dengan warna merah). Berbagi kuota yang sama dengan Continue
-// Writing (lastNotebookContinueMonth/notebookContinueCountThisMonth) karena
-// sama-sama single-call AI assist ringan dalam 1 sesi menulis.
+// client-side dengan warna merah). Berbagi kredit DEEPSEEK POOL yang sama
+// dengan Continue Writing (lihat requireDeepSeekPoolAccess) karena sama-sama
+// single-call AI assist ringan dalam 1 sesi menulis.
 const NOTEBOOK_DRAFT_ACTIONS = {
   outline: {
     systemPrompt: `Anda adalah asisten penulisan akademis. Berdasarkan judul naskah dan isi yang sudah ditulis (jika ada), buat KERANGKA/OUTLINE terstruktur untuk membantu penulis melanjutkan naskahnya.
@@ -5241,7 +5135,6 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const currentMonth = new Date().toISOString().slice(0, 7);
   const userType = (user && user.type) || 'free';
 
   // Kuota bantuan AI Notebook sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
@@ -5314,15 +5207,6 @@ app.post('/api/documents/ai-draft-action', requireAccess, async (req, res) => {
     }
 
     if (user) recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
-
-    if (userType === 'free' || userType === 'premium') {
-      if (user.lastNotebookContinueMonth !== currentMonth) {
-        user.lastNotebookContinueMonth = currentMonth;
-        user.notebookContinueCountThisMonth = 0;
-      }
-      user.notebookContinueCountThisMonth += 1;
-      saveUsers(users);
-    }
 
     // "critique" (satu-satunya aksi non-HTML) TIDAK pernah punya apaContext
     // (dikecualikan dari pencarian sitasi di atas) - result-nya harus tetap
@@ -5972,7 +5856,6 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Kuota sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu) - bukan
   // hitungan kaku 3x/15x per bulan lagi, lihat requireDeepSeekPoolAccess.
@@ -5983,15 +5866,6 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
 
   const deepSeekKey = getDeepSeekApiKey();
   if (!deepSeekKey) {
-    // Fallback lokal jika DeepSeek API Key belum dikonfigurasi
-    if (user && (user.type === 'free' || user.type === 'premium')) {
-      if (user.lastLitReviewMonth !== currentMonth) {
-        user.lastLitReviewMonth = currentMonth;
-        user.litReviewCountThisMonth = 0;
-      }
-      user.litReviewCountThisMonth += 1;
-      saveUsers(users);
-    }
 
     const localReview = `<h3>Tinjauan Pustaka: ${title}</h3><p>Fitur AI Literature Review berjalan di server namun <code>DEEPSEEK_API_KEY</code> belum terpasang di Railway.</p><p>Berikut adalah simulasi draf Tinjauan Pustaka untuk topik Anda:</p><ul><li><strong>Kajian Teori:</strong> Menganalisis landasan teoritis utama yang mendasari permasalahan penelitian Anda.</li><li><strong>Studi Terdahulu:</strong> Meneliti bagaimana para peneliti lain telah mendekati masalah serupa dan hasil penelitian mereka.</li><li><strong>Celah Penelitian (Research Gap):</strong> Mengidentifikasi apa yang belum diteliti dan bagaimana penelitian Anda akan mengisi celah tersebut.</li></ul>`;
     const localCitations = [
@@ -6095,16 +5969,6 @@ app.post('/api/lit-review', requireAccess, async (req, res) => {
     }));
     res.write(JSON.stringify({ type: 'citations', citations }) + '\n');
     res.end();
-
-    // Update usage for Free & Premium users
-    if (user && (user.type === 'free' || user.type === 'premium')) {
-      if (user.lastLitReviewMonth !== currentMonth) {
-        user.lastLitReviewMonth = currentMonth;
-        user.litReviewCountThisMonth = 0;
-      }
-      user.litReviewCountThisMonth += 1;
-      saveUsers(users);
-    }
 
     addHistoryItem(req.session.userId, 'lit-review', { title, keywords, abstract }, { review, citations });
   } catch (error) {
@@ -6277,7 +6141,6 @@ app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Kuota SLR Synthesize sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
   if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
@@ -6406,16 +6269,6 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
     }
 
     if (user) recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
-
-    // Update usage for Free & Premium users
-    if (user && (user.type === 'free' || user.type === 'premium')) {
-      if (user.lastSlrMonth !== currentMonth) {
-        user.lastSlrMonth = currentMonth;
-        user.slrCountThisMonth = 0;
-      }
-      user.slrCountThisMonth += 1;
-      saveUsers(users);
-    }
 
     // Tambahkan item riwayat SLR
     addHistoryItem(req.session.userId, 'slr', {
@@ -6627,7 +6480,6 @@ app.post('/api/peer-review', requireAccess, async (req, res) => {
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
-  const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Kuota AI Peer Reviewer sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
   if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
@@ -6683,16 +6535,6 @@ ${contentToReview.slice(0, 45000)}
     if (!reviewContent) {
       console.error('[AI Peer Reviewer] Respons kosong dari DeepSeek.');
       return;
-    }
-
-    // Update usage for Free & Premium users (Ultimate unlimited, tidak dihitung)
-    if (user && (user.type === 'free' || user.type === 'premium')) {
-      if (user.lastPeerReviewMonth !== currentMonth) {
-        user.lastPeerReviewMonth = currentMonth;
-        user.peerReviewCountThisMonth = 0;
-      }
-      user.peerReviewCountThisMonth += 1;
-      saveUsers(users);
     }
   } catch (error) {
     console.error('[AI Peer Reviewer] Error:', error);
@@ -7382,8 +7224,6 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   const user = users.find(u => u.id === req.session.userId);
   const userType = (user && user.type) || 'free';
 
-  const currentMonth = new Date().toISOString().slice(0, 7);
-
   // Kuota JurnalHub Intelligence sekarang berbasis DEEPSEEK POOL bersama
   // (kredit/minggu, berlaku semua tier) - bukan hitungan 20 pesan/bulan
   // khusus Free lagi.
@@ -7571,19 +7411,6 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     if (!fullReply && !fullReasoning) {
       console.error('[Research Chat] Respons stream kosong dari DeepSeek.');
       return;
-    }
-
-    if (userType === 'free' && user) {
-      const latestUsers = getUsers();
-      const userIndex = latestUsers.findIndex(u => u.id === req.session.userId);
-      if (userIndex !== -1) {
-        if (latestUsers[userIndex].lastResearchChatMonth !== currentMonth) {
-          latestUsers[userIndex].lastResearchChatMonth = currentMonth;
-          latestUsers[userIndex].researchChatCountThisMonth = 0;
-        }
-        latestUsers[userIndex].researchChatCountThisMonth = (latestUsers[userIndex].researchChatCountThisMonth || 0) + 1;
-        saveUsers(latestUsers);
-      }
     }
 
     // Simpan/perbarui percakapan - percaya array `sanitizedMessages` yang dikirim

@@ -4796,31 +4796,25 @@
           </h3>
           
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
-            <!-- Column 1: Match & Draft -->
+            <!-- Column 1: Kredit AI Mingguan - gantiin kolom "Match & Draft" dan
+                 "Lit Review" yang dulu pakai kuota bulanan per-fitur sendiri2.
+                 Sekarang Match, Draft/Outline Generator, Lit Review, SLR, Peer
+                 Review, JurnalHub Intelligence, dan Notebook Continue Writing
+                 semua ditarik dari 1 kredit pool mingguan bersama ini (lihat
+                 GET /api/me -> deepseekPool, dihitung di getDeepSeekPoolStatus
+                 server.js) - rincian per hari ada di Pengaturan > Usage. -->
             <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 12px; padding: 1rem; text-align: left;">
               <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.5rem;">
-                <span style="color: var(--brand-blue);"><i class="fa-solid fa-magnifying-glass-chart"></i> Match & Draft</span>
-                <span id="txtQuotaMatchDraft">0 / 0</span>
+                <span style="color: var(--brand-blue);"><i class="fa-solid fa-bolt"></i> Kredit AI Mingguan</span>
+                <span id="txtQuotaAiPool">0 / 0</span>
               </div>
               <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 0.25rem;">
-                <div id="barQuotaMatchDraft" style="height: 100%; width: 0%; background: var(--brand-blue); border-radius: 4px; transition: width 0.4s;"></div>
+                <div id="barQuotaAiPool" style="height: 100%; width: 0%; background: var(--brand-blue); border-radius: 4px; transition: width 0.4s;"></div>
               </div>
-              <span style="font-size: 0.7rem; color: var(--text-muted);" id="lblMatchDraftLimitNote">Limit bulanan Claude</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted);" id="lblAiPoolLimitNote">Match, Outline, Lit Review, SLR, Peer Review, JurnalHub Intelligence, Notebook Continue</span>
             </div>
 
-            <!-- Column 2: Lit Review -->
-            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 12px; padding: 1rem; text-align: left;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.5rem;">
-                <span style="color: #8b5cf6;"><i class="fa-solid fa-book-open-reader"></i> Lit Review</span>
-                <span id="txtQuotaLitReview">0 / 0</span>
-              </div>
-              <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 0.25rem;">
-                <div id="barQuotaLitReview" style="height: 100%; width: 0%; background: #8b5cf6; border-radius: 4px; transition: width 0.4s;"></div>
-              </div>
-              <span style="font-size: 0.7rem; color: var(--text-muted);" id="lblLitReviewLimitNote">Limit bulanan Lit Review</span>
-            </div>
-
-            <!-- Column 3: Humanizer Words -->
+            <!-- Column 2: Humanizer Words -->
             <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 12px; padding: 1rem; text-align: left;">
               <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.5rem;">
                 <span style="color: #f59e0b;"><i class="fa-solid fa-wand-magic-sparkles"></i> Humanizer Words</span>
@@ -5006,8 +5000,8 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                   <!-- Quota Disclaimer for Match Score -->
-                  <div id="matchQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 1/1 Bulan Ini</span>
+                  <div id="matchQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: none; align-items: center; gap: 0.5rem;">
+                    <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>
                   </div>
                   <button id="clearMatch" class="reset-filter-btn" type="button" style="display: none;">
                     <i class="fa-solid fa-xmark"></i> Bersihkan Match
@@ -5232,9 +5226,9 @@
             <!-- Overlay Lock for Free User (Quota-based) -->
             <div id="draftPremiumLock" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: rgba(11, 26, 48, 0.96); border-radius: var(--card-radius); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; color: #ffffff; backdrop-filter: blur(4px);">
               <i class="fa-solid fa-lock" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
-              <h3>Limit Bulanan AI Outline Generator Tercapai</h3>
+              <h3>Kredit Mingguan Habis</h3>
               <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
-                Kuota gratis bulanan Anda untuk fitur generator outline penulisan telah habis. Harap tingkatkan ke PRO untuk mendapatkan akses penuh.
+                Kredit mingguan JurnalHub Intelligence Anda sudah habis (lihat Pengaturan &gt; Usage). Upgrade untuk kredit lebih besar, atau tunggu sampai direset hari Senin.
               </p>
               <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
                 <i class="fa-solid fa-crown"></i> Upgrade PRO
@@ -5249,8 +5243,8 @@
                   <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">AI Outline Generator</h3>
                 </div>
                 <!-- Quota Disclaimer -->
-                <div id="draftQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
-                  <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 1/1 Bulan Ini</span>
+                <div id="draftQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: none; align-items: center; gap: 0.5rem;">
+                  <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>
                 </div>
               </div>
 
@@ -5341,9 +5335,9 @@
             <!-- Overlay Lock for Free User (Quota-based) -->
             <div id="litReviewPremiumLock" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: rgba(11, 26, 48, 0.96); border-radius: var(--card-radius); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; color: #ffffff; backdrop-filter: blur(4px);">
               <i class="fa-solid fa-lock" style="font-size: 3rem; color: #fbbf24; margin-bottom: 1.25rem;"></i>
-              <h3>Limit Bulanan AI Lit Review Tercapai</h3>
+              <h3>Kredit Mingguan Habis</h3>
               <p style="color: rgba(255,255,255,0.6); max-width: 420px; margin-bottom: 1.5rem; line-height: 1.5;">
-                Kuota gratis bulanan Anda untuk fitur Literature Review & Citation Finder telah habis. Harap tingkatkan ke PRO untuk mendapatkan akses penuh.
+                Kredit mingguan JurnalHub Intelligence Anda sudah habis (lihat Pengaturan &gt; Usage). Upgrade untuk kredit lebih besar, atau tunggu sampai direset hari Senin.
               </p>
               <button class="upgrade-btn btn-upgrade-trigger" style="max-width: 220px; background: linear-gradient(135deg, #f59e0b, #d97706);">
                 <i class="fa-solid fa-crown"></i> Upgrade PRO
@@ -5358,8 +5352,8 @@
                   <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">AI Literature Review & Citation Finder</h3>
                 </div>
                 <!-- Quota Disclaimer -->
-                <div id="litReviewQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
-                  <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 1/1 Bulan Ini</span>
+                <div id="litReviewQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: none; align-items: center; gap: 0.5rem;">
+                  <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>
                 </div>
               </div>
 
@@ -5787,7 +5781,7 @@
                   <span class="banner-badge" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25); color: #059669;"><i class="fa-solid fa-clipboard-check"></i> Pre-Submission Evaluator</span>
                   <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-top: 0.5rem;">AI Peer Reviewer (Simulasi Reviewer Jurnal)</h3>
                 </div>
-                <div id="peerReviewerQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                <div id="peerReviewerQuotaDisclaimer" style="background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: none; align-items: center; gap: 0.5rem;">
                   <i class="fa-solid fa-bolt" style="color: #059669;"></i> <span>JurnalHub Intelligence Engine</span>
                 </div>
               </div>
@@ -5886,8 +5880,8 @@
 
             <!-- Kuota - floating di pojok kanan atas shell (di bawah toggle dark
                  mode di header), tidak lagi ikut alur normal top bar. -->
-            <div id="researchChatQuotaDisclaimer" style="position: absolute; top: 0; right: 0; z-index: 5; background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
-              <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kuota: 0/0 Bulan Ini</span>
+            <div id="researchChatQuotaDisclaimer" style="position: absolute; top: 0; right: 0; z-index: 5; background: #f8fafc; border: 1px solid rgba(8,34,64,0.06); padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); display: none; align-items: center; gap: 0.4rem; white-space: nowrap;">
+              <i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span id="researchChatQuotaText">Kredit mingguan habis - lihat Pengaturan &gt; Usage</span>
             </div>
 
             <!-- Toggle Chat / Co-Work - persis pola Claude (satu composer/panel,
@@ -7411,10 +7405,10 @@
       </div>
 
       <!-- Co-Work Agent: asisten riset otonom background via GLM 5.2 (OpenRouter).
-           Bundel di paket Premium & Ultimate (free tidak bisa akses), kuota
-           beda per tier (Premium 3x, Ultimate 5x/bulan, tidak ditampilkan ke
-           user) - lihat initCoworkTab di app.js untuk logic submit/poll/render
-           riwayat. -->
+           Bundel di paket Premium & Ultimate (free tidak bisa akses), dijatah
+           lewat kredit pool mingguan bersama yang sama dengan JurnalHub
+           Intelligence (bukan kuota bulanan terpisah per tier lagi) - lihat
+           initCoworkTab di app.js untuk logic submit/poll/render riwayat. -->
       <style>
         .cowork-progress-track {
           width: 100%;
@@ -8213,11 +8207,11 @@
                 </li>
                 <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
                   <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
-                  <span>Jatah <strong>15x/bulan</strong> AI Drafting, Literature Review &amp; Peer Reviewer</span>
+                  <span>AI Drafting, Literature Review, Peer Reviewer &amp; Systematic Lit Review tanpa batas</span>
                 </li>
                 <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
                   <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>
-                  <span>Jatah <strong>5x/bulan</strong> Systematic Lit Review &amp; Pencarian Paten</span>
+                  <span>Jatah <strong>5x/bulan</strong> Pencarian Paten</span>
                 </li>
                 <li style="display: flex; align-items: flex-start; gap: 0.35rem; line-height: 1.3;">
                   <i class="fa-solid fa-circle-check" style="color: #10b981; margin-top: 2px; flex-shrink: 0;"></i>

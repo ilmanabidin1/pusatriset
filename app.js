@@ -1879,7 +1879,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hist_desc_words: "kata",
       hist_btn_detail: "Lihat Detail",
       hist_btn_delete_title: "Hapus riwayat ini",
-      banner_slide0_free_btn: "Coba AI Match (Gratis 1x/Bulan)",
+      banner_slide0_free_btn: "Coba AI Match (Gratis)",
       // Pengaturan (Settings)
       settings_profile_title: "Profil & Keanggotaan",
       settings_membership_label: "Tipe Keanggotaan",
@@ -1937,8 +1937,7 @@ document.addEventListener('DOMContentLoaded', () => {
       patent_search_upgrade_suffix: "untuk kuota lebih besar.",
       patent_search_btn: "Cari Paten Serupa",
       peer_review_quota_unlimited: "Kuota Tanpa Batas",
-      peer_review_quota_remaining: "Sisa Kuota: {n}/{limit} bulan ini",
-      peer_review_quota_limit_reached: "Kuota bulan ini habis (batas {limit}/bulan)",
+      peer_review_quota_limit_reached: "Kredit mingguan JurnalHub Intelligence habis",
       peer_review_upgrade_link: "Upgrade",
       patent_search_searching: "Mencari paten serupa secara semantik...",
       patent_search_no_results: "Tidak ditemukan paten yang mirip.",
@@ -2039,8 +2038,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_export_error: "Gagal membuat file .docx.",
       notebook_continue_empty_alert: "Tulis beberapa kalimat dulu sebelum minta AI melanjutkan.",
       notebook_continue_error: "Gagal menghubungi AI untuk melanjutkan tulisan.",
-      notebook_continue_quota_limit_reached: "Limit {limit}/bulan AI Continue Writing tercapai.",
-      notebook_continue_quota_remaining: "Sisa {n}x AI Continue Writing bulan ini (limit {limit}/bulan)",
+      notebook_continue_quota_limit_reached: "Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan > Usage",
       notebook_slash_hint: 'Ketik "/" di editor untuk bantuan AI',
       notebook_slash_section_draft: "Tulis dengan AI",
       notebook_slash_section_generate: "Buat dari isi naskah",
@@ -2241,7 +2239,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hist_desc_words: "words",
       hist_btn_detail: "View Detail",
       hist_btn_delete_title: "Delete this entry",
-      banner_slide0_free_btn: "Try AI Match (Free 1x/Month)",
+      banner_slide0_free_btn: "Try AI Match (Free)",
       // Pengaturan (Settings)
       settings_profile_title: "Profile & Membership",
       settings_membership_label: "Membership Type",
@@ -2299,8 +2297,7 @@ document.addEventListener('DOMContentLoaded', () => {
       patent_search_upgrade_suffix: "for a larger quota.",
       patent_search_btn: "Search Similar Patents",
       peer_review_quota_unlimited: "Unlimited Quota",
-      peer_review_quota_remaining: "Remaining Quota: {n}/{limit} this month",
-      peer_review_quota_limit_reached: "Monthly quota reached (limit {limit}/month)",
+      peer_review_quota_limit_reached: "Weekly JurnalHub Intelligence credit exhausted",
       peer_review_upgrade_link: "Upgrade",
       patent_search_searching: "Searching for semantically similar patents...",
       patent_search_no_results: "No similar patents found.",
@@ -2401,8 +2398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notebook_export_error: "Failed to generate .docx file.",
       notebook_continue_empty_alert: "Write a few sentences first before asking AI to continue.",
       notebook_continue_error: "Failed to contact AI to continue writing.",
-      notebook_continue_quota_limit_reached: "Monthly limit of {limit} AI Continue Writing reached.",
-      notebook_continue_quota_remaining: "{n} AI Continue Writing left this month (limit {limit}/month)",
+      notebook_continue_quota_limit_reached: "Weekly JurnalHub Intelligence credit exhausted - see Settings > Usage",
       notebook_slash_hint: 'Type "/" in the editor for AI help',
       notebook_slash_section_draft: "Draft with AI",
       notebook_slash_section_generate: "Generate from page",
@@ -2823,22 +2819,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
 
-            // Reset drafting companion locks & disclaimer for premium/ultimate
+            // Match/Draft/Lit Review sekarang dijatah lewat kredit pool mingguan
+            // bersama (600 kredit Premium, 1500 Ultimate) - badge cuma muncul
+            // kalau kreditnya BENERAN habis (langka, tapi mungkin), bukan
+            // ditampilkan terus sebagai "Jatah 15x/Bulan" yang sudah tidak akurat.
             const matchQuotaDisclaimer = document.getElementById('matchQuotaDisclaimer');
             if (matchQuotaDisclaimer) {
-              matchQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate' : 'Premium'} (Akses Unlimited)`;
+              matchQuotaDisclaimer.style.display = currentUser.user.isLimitReached ? 'flex' : 'none';
+              matchQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>';
             }
             const draftPremiumLock = document.getElementById('draftPremiumLock');
             if (draftPremiumLock) draftPremiumLock.style.display = 'none';
             const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
             if (draftQuotaDisclaimer) {
-              draftQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
+              draftQuotaDisclaimer.style.display = currentUser.user.isDraftLimitReached ? 'flex' : 'none';
+              draftQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>';
             }
             const litReviewPremiumLock = document.getElementById('litReviewPremiumLock');
             if (litReviewPremiumLock) litReviewPremiumLock.style.display = 'none';
             const litReviewQuotaDisclaimer = document.getElementById('litReviewQuotaDisclaimer');
             if (litReviewQuotaDisclaimer) {
-              litReviewQuotaDisclaimer.innerHTML = `<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ${isUltimate ? 'Ultimate (Akses Unlimited)' : 'Premium (Jatah 15x/Bulan)'}`;
+              litReviewQuotaDisclaimer.style.display = currentUser.user.isLitReviewLimitReached ? 'flex' : 'none';
+              litReviewQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>';
             }
 
             // Kunci toggle mode "Pro" Lit Review hanya untuk akun Ultimate (unlimited, tanpa kuota bulanan)
@@ -2869,7 +2871,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateExportDraftDocxLock(false);
 
-            // Akses tab Match Score dibuka untuk Free User agar bisa mencoba 1x sebulan
+            // Akses tab Match Score dibuka untuk Free User (dijatah lewat kredit pool mingguan)
             if (matchPremiumLock) matchPremiumLock.style.display = 'none';
 
             // Ubah banner upgrade di beranda agar mengarahkan ke tab Match Score jika diklik
@@ -2889,12 +2891,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchQuotaDisclaimer = document.getElementById('matchQuotaDisclaimer');
             
             if (matchQuotaDisclaimer) {
-              matchQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.isLimitReached ? 0 : 1}/1 Bulan Ini</span>`;
+              matchQuotaDisclaimer.style.display = currentUser.user.isLimitReached ? 'flex' : 'none';
+              matchQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>';
             }
 
             if (currentUser.user.isLimitReached) {
               if (runMatchBtn) {
-                runMatchBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan Tercapai (Upgrade)';
+                runMatchBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Kredit Mingguan Habis (Upgrade)';
                 runMatchBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
                 runMatchBtn.classList.add('btn-upgrade-trigger');
               }
@@ -2912,7 +2915,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const runDraftGenerator = document.getElementById('runDraftGenerator');
             
             if (draftQuotaDisclaimer) {
-              draftQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.draftsRemaining !== undefined ? currentUser.user.draftsRemaining : 1}/1 Bulan Ini</span>`;
+              draftQuotaDisclaimer.style.display = currentUser.user.isDraftLimitReached ? 'flex' : 'none';
+              draftQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>';
             }
 
             if (currentUser.user.isDraftLimitReached) {
@@ -2920,7 +2924,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 draftPremiumLock.style.display = justGeneratedDraft ? 'none' : 'flex';
               }
               if (runDraftGenerator) {
-                runDraftGenerator.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Drafting Tercapai';
+                runDraftGenerator.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Kredit Mingguan Habis';
                 runDraftGenerator.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
                 runDraftGenerator.classList.add('btn-upgrade-trigger');
               }
@@ -2951,7 +2955,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (litReviewQuotaDisclaimer) {
-              litReviewQuotaDisclaimer.innerHTML = `<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: ${currentUser.user.litReviewsRemaining !== undefined ? currentUser.user.litReviewsRemaining : 1}/1 Bulan Ini</span>`;
+              litReviewQuotaDisclaimer.style.display = currentUser.user.isLitReviewLimitReached ? 'flex' : 'none';
+              litReviewQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kredit mingguan JurnalHub Intelligence habis - lihat Pengaturan &gt; Usage</span>';
             }
 
             if (currentUser.user.isLitReviewLimitReached) {
@@ -2959,7 +2964,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 litReviewPremiumLock.style.display = justGeneratedLitReview ? 'none' : 'flex';
               }
               if (runLitReviewBtn) {
-                runLitReviewBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Lit Review Tercapai';
+                runLitReviewBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Kredit Mingguan Habis';
                 runLitReviewBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
                 runLitReviewBtn.classList.add('btn-upgrade-trigger');
               }
@@ -3164,7 +3169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const quotaText = document.getElementById('researchChatQuotaText');
     if (!lock) return;
 
-    // Semua tier sekarang punya akses - Free dijatah 20 pesan/bulan, Premium & Ultimate unlimited
+    // Semua tier sekarang punya akses - dijatah lewat kredit pool mingguan bersama
     lock.style.display = 'none';
 
     isResearchChatProUser = user.type === 'premium' || user.type === 'ultimate';
@@ -3210,35 +3215,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    if (quotaText) {
-      if (user.type === 'ultimate' || user.type === 'premium') {
-        quotaText.textContent = window.currentLanguage === 'en' ? 'Unlimited' : 'Tanpa Batas';
-      } else {
-        const used = user.researchChatCountThisMonth || 0;
-        const limit = user.researchChatLimit || 20;
-        quotaText.textContent = window.currentLanguage === 'en'
-          ? `Quota: ${used}/${limit} This Month`
-          : `Kuota: ${used}/${limit} Bulan Ini`;
-      }
+    // Badge "Kuota: X/Y Bulan Ini" dihapus - JurnalHub Intelligence sekarang
+    // dijatah lewat kredit pool mingguan bersama (lihat Pengaturan > Usage
+    // untuk sisa kredit sesungguhnya), bukan kuota bulanan per-fitur lagi.
+    // Cuma muncul kalau kreditnya BENERAN habis, biar user tahu kenapa
+    // fiturnya terkunci.
+    const quotaDisclaimerEl = document.getElementById('researchChatQuotaDisclaimer');
+    if (quotaDisclaimerEl && quotaText) {
+      const poolExhausted = !!user.isResearchChatLimitReached && user.type !== 'ultimate' && user.type !== 'premium';
+      quotaDisclaimerEl.style.display = poolExhausted ? 'flex' : 'none';
+      quotaText.textContent = window.currentLanguage === 'en'
+        ? 'Weekly credit exhausted - see Settings > Usage'
+        : 'Kredit mingguan habis - lihat Pengaturan > Usage';
     }
 
-    // Kuota Outline Generator & Lit Review khusus akun Free (3x/bulan masing-masing) -
-    // dulu cuma tampil di panel form lama yang sekarang tidak lagi bisa diakses dari
-    // sidebar, jadi user Free tidak tahu sisa kuotanya sama sekali. Tampilkan lagi
-    // di bawah tombol quick-tool chat.
+    // Dulu nunjukin "Kuota Free: Outline Generator X/3 · Lit Review X/3 bulan
+    // ini" - sudah tidak relevan sejak kedua fitur itu pindah ke kredit pool
+    // mingguan bersama (sama seperti chat ini sendiri), jadi dihapus.
     const toolQuotaEl = document.getElementById('researchChatToolQuotaText');
-    if (toolQuotaEl) {
-      if (!isResearchChatProUser) {
-        const draftsLeft = user.draftsRemaining !== undefined ? user.draftsRemaining : 3;
-        const litReviewsLeft = user.litReviewsRemaining !== undefined ? user.litReviewsRemaining : 3;
-        toolQuotaEl.textContent = window.currentLanguage === 'en'
-          ? `Free quota: Outline Generator ${draftsLeft}/3 · Lit Review ${litReviewsLeft}/3 this month`
-          : `Kuota Free: Outline Generator ${draftsLeft}/3 · Lit Review ${litReviewsLeft}/3 bulan ini`;
-        toolQuotaEl.style.display = 'block';
-      } else {
-        toolQuotaEl.style.display = 'none';
-      }
-    }
+    if (toolQuotaEl) toolQuotaEl.style.display = 'none';
   }
 
   function updatePatentSearchAccess(user) {
@@ -3270,22 +3265,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!badgeEl || !user) return;
 
     const t = TRANSLATIONS[window.currentLanguage || 'id'];
-    const limitLabel = { free: '2x', premium: '15x' }[user.type];
-    const remaining = typeof user.peerReviewRemaining === 'number' ? user.peerReviewRemaining : null;
 
-    if (user.type === 'ultimate' || !limitLabel) {
-      badgeEl.innerHTML = `<i class="fa-solid fa-infinity" style="color: #059669;"></i> <span>${t.peer_review_quota_unlimited}</span>`;
-      if (btn) btn.disabled = false;
-      return;
-    }
-
+    // Peer Review sekarang dijatah lewat kredit pool mingguan bersama (lihat
+    // Pengaturan > Usage), bukan kuota bulanan per-fitur - badge cuma
+    // ditampilkan kalau kreditnya BENERAN habis.
     if (user.isPeerReviewLimitReached) {
-      const msg = t.peer_review_quota_limit_reached.replace('{limit}', limitLabel);
-      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> <span>${msg}</span> <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">${t.peer_review_upgrade_link}</a>`;
+      badgeEl.style.display = 'flex';
+      badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> <span>${t.peer_review_quota_limit_reached}</span> <a href="#" class="btn-upgrade-trigger" style="color: var(--brand-blue); font-weight: 700;">${t.peer_review_upgrade_link}</a>`;
       if (btn) btn.disabled = true;
     } else {
-      const msg = t.peer_review_quota_remaining.replace('{n}', remaining !== null ? remaining : '-').replace('{limit}', limitLabel);
-      badgeEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: #059669;"></i> <span>${msg}</span>`;
+      badgeEl.style.display = 'none';
       if (btn) btn.disabled = false;
     }
   }
@@ -3360,19 +3349,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const btnTextEl = document.getElementById('slrUpgradeBtnText');
 
       if (titleEl) {
-        titleEl.textContent = isEn ? 'SLR Quota Limit Reached' : 'Limit Kuota SLR Tercapai';
+        titleEl.textContent = isEn ? 'Weekly Credit Exhausted' : 'Kredit Mingguan Habis';
       }
 
       if (descEl) {
-        if (user.type === 'free') {
-          descEl.textContent = isEn
-            ? 'Free accounts are limited to 1 trial of Systematic Literature Review per month. Upgrade to Premium (5x/month) or Ultimate (Unlimited) to continue.'
-            : 'Akun Free dibatasi 1x coba Systematic Literature Review per bulan. Upgrade ke Premium (5/bulan) atau Ultimate (Tanpa Batas) untuk melanjutkan.';
-        } else {
-          descEl.textContent = isEn
-            ? 'Premium accounts are limited to 5 Systematic Literature Reviews per month. Upgrade to Ultimate for unlimited access.'
-            : 'Akun Premium dibatasi 5x Systematic Literature Review per bulan. Upgrade ke Ultimate (Tanpa Batas) untuk akses tidak terbatas.';
-        }
+        descEl.textContent = isEn
+          ? 'Systematic Literature Review draws from your shared weekly JurnalHub Intelligence credit (see Settings > Usage). Upgrade for a bigger credit pool, or wait for it to reset.'
+          : 'Systematic Literature Review memakai kredit mingguan JurnalHub Intelligence bersama (lihat Pengaturan > Usage). Upgrade untuk kredit lebih besar, atau tunggu sampai direset.';
       }
 
       if (btnTextEl) {
@@ -3396,55 +3379,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const typeLabel = user.type === 'ultimate' ? (isEn ? 'Ultimate Account' : 'Akun Ultimate') : (user.type === 'premium' ? (isEn ? 'Premium Account' : 'Akun Premium') : (isEn ? 'Free Account' : 'Akun Free'));
     document.getElementById('lblQuotaAccountType').textContent = (isEn ? 'Account Type: ' : 'Tipe Akun: ') + typeLabel;
 
-    // 1. Match & Draft (Claude limits) - Match dan Draft punya kuota terpisah,
-    // bukan kuota gabungan, jadi jangan dijumlahkan jadi satu angka.
-    const txtQuotaMatchDraft = document.getElementById('txtQuotaMatchDraft');
-    const barQuotaMatchDraft = document.getElementById('barQuotaMatchDraft');
-    const lblMatchDraftLimitNote = document.getElementById('lblMatchDraftLimitNote');
+    // 1. Kredit AI Mingguan - kredit pool bersama (lihat komentar di
+    // index.html) yang menggantikan kuota bulanan terpisah utk Match, Draft/
+    // Outline Generator, Lit Review, SLR, Peer Review, JurnalHub Intelligence,
+    // dan Notebook Continue Writing.
+    const txtQuotaAiPool = document.getElementById('txtQuotaAiPool');
+    const barQuotaAiPool = document.getElementById('barQuotaAiPool');
+    const pool = user.deepseekPool || { usedCredits: 0, limitCredits: 0 };
 
-    const matchUsed = user.matchCountThisMonth || 0;
-    const draftUsed = user.draftCountThisMonth || 0;
-
-    if (user.type === 'ultimate') {
-      txtQuotaMatchDraft.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
-      barQuotaMatchDraft.style.width = '100%';
-      barQuotaMatchDraft.style.background = '#10b981'; // Green for unlimited/success
-      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match & Draft unlimited' : 'Match & Draft tanpa batas';
-    } else if (user.type === 'premium') {
-      // Match tanpa batas untuk Premium, hanya Draft yang dijatah 15x/bulan
-      const draftLimit = 15;
-      txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
-      const pct = Math.min(100, (draftUsed / draftLimit) * 100);
-      barQuotaMatchDraft.style.width = `${pct}%`;
-      barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
-      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match unlimited · Outline 15x/month' : 'Match tanpa batas · Outline 15x/bulan';
+    txtQuotaAiPool.textContent = `${pool.usedCredits} / ${pool.limitCredits}`;
+    if (pool.limitCredits > 0) {
+      const pct = Math.min(100, (pool.usedCredits / pool.limitCredits) * 100);
+      barQuotaAiPool.style.width = `${pct}%`;
+      barQuotaAiPool.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
     } else {
-      const draftLimit = 1;
-      txtQuotaMatchDraft.textContent = `${draftUsed} / ${draftLimit}`;
-      const pct = Math.min(100, (draftUsed / draftLimit) * 100);
-      barQuotaMatchDraft.style.width = `${pct}%`;
-      barQuotaMatchDraft.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : 'var(--brand-blue)');
-      if (lblMatchDraftLimitNote) lblMatchDraftLimitNote.textContent = isEn ? 'Match 1x/month · Outline 1x/month' : 'Match 1x/bulan · Outline 1x/bulan';
+      barQuotaAiPool.style.width = '0%';
     }
 
-    // 2. Lit Review (Perplexity limits)
-    const txtQuotaLitReview = document.getElementById('txtQuotaLitReview');
-    const barQuotaLitReview = document.getElementById('barQuotaLitReview');
-    const litUsed = user.litReviewCountThisMonth || 0;
-
-    if (user.type === 'ultimate') {
-      txtQuotaLitReview.textContent = isEn ? 'Unlimited' : 'Tanpa Batas';
-      barQuotaLitReview.style.width = '100%';
-      barQuotaLitReview.style.background = '#10b981';
-    } else {
-      const limit = user.type === 'premium' ? 15 : 1;
-      txtQuotaLitReview.textContent = `${litUsed} / ${limit}`;
-      const pct = Math.min(100, (litUsed / limit) * 100);
-      barQuotaLitReview.style.width = `${pct}%`;
-      barQuotaLitReview.style.background = pct > 85 ? '#ef4444' : (pct > 60 ? '#f59e0b' : '#8b5cf6');
-    }
-
-    // 3. Humanizer Words
+    // 2. Humanizer Words
     const txtQuotaHumanizer = document.getElementById('txtQuotaHumanizer');
     const barQuotaHumanizer = document.getElementById('barQuotaHumanizer');
     const wordsUsed = user.humanizerWordsUsedThisMonth || 0;
@@ -3937,20 +3889,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Kunci tombol jika akun free setelah sukses pencocokan
-      if (currentUser.user && currentUser.user.type === 'free') {
-        currentUser.user.isLimitReached = true;
-        if (runMatchBtn) {
-          runMatchBtn.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan Tercapai (Upgrade)';
-          runMatchBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-          runMatchBtn.classList.add('btn-upgrade-trigger');
-        }
-        const matchQuotaDisclaimer = document.getElementById('matchQuotaDisclaimer');
-        if (matchQuotaDisclaimer) {
-          matchQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 0/1 Bulan Ini</span>';
-        }
-      }
-
+      // Dulu di sini dipaksa lock manual (1x pakai langsung habis) buat akun
+      // free - sekarang salah, karena kuotanya sudah jadi kredit pool
+      // mingguan bersama (bisa dipakai berkali-kali sampai kreditnya benar2
+      // habis). checkAuthState() di bawah sudah re-fetch /api/me dan
+      // mengunci UI HANYA kalau pool memang sudah habis.
       await checkAuthState();
 
       // Tampilkan panel review AI jika tersedia
@@ -5427,23 +5370,15 @@ document.addEventListener('DOMContentLoaded', () => {
           draftResultsPanel.style.display = 'block';
           draftResultsPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-          // Update kuota sisa di frontend jika akun free
+          // justGeneratedDraft dipakai checkAuthState() di bawah untuk TIDAK
+          // langsung nutup hasil draf yang baru saja jadi dengan overlay
+          // premium-lock, seandainya generate ini pas menghabiskan sisa
+          // kredit pool. Angka/status limit yang sebenarnya (bukan dipaksa
+          // "habis" manual disini) diambil ulang dari /api/me lewat
+          // checkAuthState() - kredit pool bisa dipakai berkali-kali per
+          // minggu, bukan cuma 1x seperti kuota bulanan yang lama.
           if (currentUser.user && currentUser.user.type === 'free') {
-            currentUser.user.isDraftLimitReached = true;
-            currentUser.user.draftsRemaining = 0;
-            justGeneratedDraft = true; // Set flag
-            
-            const draftQuotaDisclaimer = document.getElementById('draftQuotaDisclaimer');
-            if (draftQuotaDisclaimer) {
-              draftQuotaDisclaimer.innerHTML = '<i class="fa-regular fa-clock" style="color: var(--brand-blue);"></i> <span>Kuota Gratis: 0/1 Bulan Ini</span>';
-            }
-            
-            const draftPremiumLock = document.getElementById('draftPremiumLock');
-            if (draftPremiumLock) draftPremiumLock.style.display = 'none';
-            
-            runDraftGenerator.innerHTML = '<i class="fa-solid fa-lock" style="color: #fbbf24;"></i> Limit Bulanan AI Drafting Tercapai';
-            runDraftGenerator.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-            runDraftGenerator.classList.add('btn-upgrade-trigger');
+            justGeneratedDraft = true;
           }
 
           await checkAuthState();
@@ -9017,16 +8952,12 @@ document.addEventListener('DOMContentLoaded', () => {
         slashMenuListEl.innerHTML = html;
       }
 
+      // Notebook Continue Writing dijatah lewat kredit pool mingguan bersama -
+      // footer ini cuma muncul kalau kreditnya BENERAN habis.
       function renderSlashQuotaFooter(t) {
         const user = window.currentUser && window.currentUser.user;
-        if (!user || user.type === 'ultimate') return '';
-        const limitLabel = user.type === 'premium' ? '50x' : '10x';
-        const text = user.isNotebookContinueLimitReached
-          ? t.notebook_continue_quota_limit_reached.replace('{limit}', limitLabel)
-          : t.notebook_continue_quota_remaining
-              .replace('{n}', typeof user.notebookContinueRemaining === 'number' ? user.notebookContinueRemaining : '-')
-              .replace('{limit}', limitLabel);
-        return `<div class="notebook-slash-menu-quota">${text}</div>`;
+        if (!user || !user.isNotebookContinueLimitReached) return '';
+        return `<div class="notebook-slash-menu-quota">${t.notebook_continue_quota_limit_reached}</div>`;
       }
 
       function positionSlashMenu(editor) {
@@ -10419,8 +10350,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const researchChatToolLitReviewBtn = document.getElementById('researchChatToolLitReviewBtn');
     const researchChatToolDeepLitReviewBtn = document.getElementById('researchChatToolDeepLitReviewBtn');
     const researchChatToolChipRemoveBtn = document.getElementById('researchChatToolChipRemoveBtn');
-    // Outline Generator & Lit Review (standar) terbuka untuk semua tier (Free dijatah
-    // 3x/bulan lewat kuota server) - hanya Deep Lit Review yang eksklusif Ultimate.
+    // Outline Generator & Lit Review (standar) terbuka untuk semua tier (dijatah
+    // lewat kredit pool mingguan bersama di server) - hanya Deep Lit Review yang
+    // eksklusif Ultimate.
     function isDeepLitReviewLockedForUser() {
       return !(currentUser && currentUser.user && currentUser.user.type === 'ultimate');
     }
