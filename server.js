@@ -2065,11 +2065,16 @@ app.delete('/api/cowork/task/:id', requireAccess, (req, res) => {
 
 // User Authentication API Endpoints
 app.post('/api/register', authLimiter, async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, redirect } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ ok: false, message: 'Email dan password wajib diisi.' });
   }
+
+  // Target redirect pasca-verifikasi (mis. dari deep-link jurnalhub.id/campusambassador)
+  // divalidasi ketat disini juga - harus path relatif 1 slash, bukan URL absolut/
+  // protocol-relative, supaya tidak jadi celah open-redirect lewat body request.
+  const safeRedirect = typeof redirect === 'string' && /^\/(?!\/)/.test(redirect) ? redirect : null;
 
   try {
     const lockResult = await withLock('users', async () => {
@@ -2104,7 +2109,7 @@ app.post('/api/register', authLimiter, async (req, res) => {
     }
 
     const { newUser, token } = lockResult;
-    const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email?token=${token}`;
+    const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email?token=${token}${safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''}`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
         <h2 style="color: #0b1a30; text-align: center;">Selamat Datang di JurnalHub!</h2>
@@ -2197,7 +2202,9 @@ app.get('/api/auth/verify-email', (req, res) => {
   delete user.verificationToken;
   saveUsers(users);
 
-  res.redirect('/auth.html?verified=true');
+  const { redirect } = req.query;
+  const safeRedirect = typeof redirect === 'string' && /^\/(?!\/)/.test(redirect) ? redirect : null;
+  res.redirect(`/auth.html?verified=true${safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''}`);
 });
 
 // POST forgot password
@@ -8511,6 +8518,18 @@ app.get('/', (req, res) => {
   } else {
     res.sendFile(path.join(__dirname, 'landing.html'));
   }
+});
+
+// Link pendek yang gampang diketik/dibagikan lewat email/medsos (mis.
+// jurnalhub.id/campusambassador) untuk promosi Program Afiliasi Kampus -
+// diteruskan ke "/" dengan query ?opentab=afiliasi yang:
+// - kalau sudah login: dibaca app.js (mirip pola deep-link ?opencowork=) buat
+//   langsung buka tab JurnalHub Campus Ambassador.
+// - kalau belum login: landing.html mendeteksi query ini dan lempar ke
+//   /auth.html?redirect=... supaya user baru diarahkan daftar dulu, lalu
+//   otomatis balik ke tab ini setelah berhasil login (lihat auth.html).
+app.get('/campusambassador', (req, res) => {
+  res.redirect('/?opentab=afiliasi');
 });
 
 // PENTING: express.static(__dirname) sebelumnya menyerve SELURUH isi root folder

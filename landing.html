@@ -532,6 +532,20 @@
     } catch (e) {}
   })();
 
+  // Link pendek jurnalhub.id/campusambassador (lihat app.get di server.js)
+  // diteruskan kesini sebagai "/?opentab=afiliasi". Pengunjung yang belum
+  // login (makanya landing.html yang ke-serve, bukan index.html) langsung
+  // dilempar daftar dulu, dengan ?redirect= supaya auth.html otomatis balik
+  // kesini (dan tab-nya kebuka) begitu berhasil daftar/login.
+  (function redirectCampusAmbassadorDeepLink() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('opentab') === 'afiliasi') {
+        window.location.replace('/auth.html?redirect=' + encodeURIComponent('/?opentab=afiliasi'));
+      }
+    } catch (e) {}
+  })();
+
   // Video demo autoplay muted saat masuk viewport (lazy) - TIDAK preload
   // sejak awal (lihat data-src, bukan src, di tiap tag <video>) supaya user
   // yang tidak scroll sampai bawah tidak ikut mengunduh video sama sekali.

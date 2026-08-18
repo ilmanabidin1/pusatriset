@@ -758,13 +758,26 @@
       } catch (e) {}
     })();
 
+    // Deep-link ?redirect=<path> (lihat jurnalhub.id/campusambassador di
+    // server.js + landing.html) - kemana user dilempar setelah berhasil
+    // login/daftar, bukan selalu "/". Divalidasi ketat (harus path relatif
+    // 1 slash, bukan "//host" atau URL absolut) supaya tidak jadi celah
+    // open-redirect kalau ada yang iseng bikin link ?redirect=https://evil.com.
+    function getPostAuthRedirectTarget() {
+      try {
+        const target = new URLSearchParams(window.location.search).get('redirect');
+        if (target && /^\/(?!\/)/.test(target)) return target;
+      } catch (e) {}
+      return '/';
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       // Periksa apakah pengguna sudah login, jika ya, lempar ke beranda
       fetch('/api/me')
         .then(res => res.json())
         .then(data => {
           if (data.loggedIn) {
-            window.location.href = '/';
+            window.location.href = getPostAuthRedirectTarget();
           }
         });
 
@@ -806,6 +819,16 @@
           switchTab(tab.getAttribute('data-target'));
         });
       });
+
+      // Datang dari deep-link ?redirect= (mis. jurnalhub.id/campusambassador)
+      // berarti kemungkinan besar user baru yang belum punya akun - buka tab
+      // Daftar duluan, bukan Masuk (default). Kecuali kalau ini kunjungan balik
+      // habis klik link verifikasi email (?verified=true) - itu artinya akunnya
+      // sudah ada, harusnya ke tab Masuk (dengan pesan "berhasil diverifikasi").
+      const cameFromEmailVerification = new URLSearchParams(window.location.search).get('verified') === 'true';
+      if (getPostAuthRedirectTarget() !== '/' && !cameFromEmailVerification) {
+        switchTab('registerForm');
+      }
 
       // Links inside form switches
       document.getElementById('toRegisterLink').addEventListener('click', (e) => {
@@ -886,7 +909,7 @@
             const form = btnElement.closest('form');
             if (form) form.reset();
           } else {
-            window.location.href = '/';
+            window.location.href = getPostAuthRedirectTarget();
           }
         } catch (err) {
           errorElement.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Gagal menghubungi server. Periksa koneksi Anda.`;
@@ -918,7 +941,11 @@
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
         const btn = registerForm.querySelector('button[type="submit"]');
-        handleAuth('/api/register', { email, password }, document.getElementById('registerError'), btn, 'fa-solid fa-user-plus', 'Buat Akun Baru');
+        // Ikutkan target redirect (kalau ada) supaya link verifikasi email yang
+        // dikirim server juga membawanya balik - lihat getPostAuthRedirectTarget().
+        const redirectTarget = getPostAuthRedirectTarget();
+        const registerBody = redirectTarget !== '/' ? { email, password, redirect: redirectTarget } : { email, password };
+        handleAuth('/api/register', registerBody, document.getElementById('registerError'), btn, 'fa-solid fa-user-plus', 'Buat Akun Baru');
       });
 
       // Handle Forgot Password Form

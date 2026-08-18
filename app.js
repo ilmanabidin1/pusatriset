@@ -2664,6 +2664,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
 
+          // Deep-link jurnalhub.id/campusambassador (?opentab=afiliasi, lihat
+          // app.get('/campusambassador') di server.js) - buka langsung tab
+          // JurnalHub Campus Ambassador saat halaman pertama kali dimuat,
+          // baik user langsung sudah login maupun baru saja daftar/login
+          // lewat alur redirect di auth.html.
+          if (!window.__opentabDeepLinkHandled) {
+            window.__opentabDeepLinkHandled = true;
+            const opentabParams = new URLSearchParams(window.location.search);
+            if (opentabParams.get('opentab') === 'afiliasi' && window.switchTab) {
+              window.switchTab('afiliasi');
+              window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+            }
+          }
+
           // Update settings fields
           const settingsEmail = document.getElementById('settingsEmail');
           const settingsAccountType = document.getElementById('settingsAccountType');
