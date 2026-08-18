@@ -6895,19 +6895,32 @@
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;">
                 <i class="fa-solid fa-handshake" style="color: var(--brand-blue);"></i> Dashboard JurnalHub Campus Ambassador
               </h3>
-              <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+              <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
                 <div>
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Link Referral</label>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem;">Link Referral</label>
+                  <p style="margin: 0 0 0.5rem; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">Bagikan link ini langsung (WhatsApp, Instagram, email, dll) - siapa pun yang klik langsung terpasangi kode referralmu otomatis, tanpa perlu ketik kode manual.</p>
                   <div style="display: flex; gap: 0.5rem;">
                     <input type="text" id="affiliateReferralLink" readonly style="flex: 1; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main);">
                     <button type="button" id="affiliateCopyLinkBtn" style="background: var(--brand-blue); color: #fff; border: none; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer;"><i class="fa-regular fa-copy"></i></button>
                   </div>
                 </div>
                 <div>
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Kode Referral</label>
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem;">Kode Referral</label>
+                  <p style="margin: 0 0 0.5rem; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">Kode yang diketik manual temanmu sendiri di kolom "Kode Promo" saat checkout - dipakai kalau mereka tidak lewat link di atas (mis. kamu sebut lisan/di poster fisik).</p>
                   <div style="display: flex; gap: 0.5rem;">
                     <input type="text" id="affiliateReferralCode" readonly style="flex: 1; padding: 0.6rem 0.75rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; font-weight: 700; background: var(--bg-card); color: var(--text-main);">
                     <button type="button" id="affiliateCopyCodeBtn" style="background: var(--brand-blue); color: #fff; border: none; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer;"><i class="fa-regular fa-copy"></i></button>
+                    <button type="button" id="affiliateEditCodeBtn" title="Ubah kode referral" style="background: transparent; border: 1px solid var(--border-light-hover); color: var(--text-muted); border-radius: 8px; padding: 0.6rem 0.85rem; font-size: 0.82rem; cursor: pointer;"><i class="fa-solid fa-pen"></i></button>
+                  </div>
+
+                  <div id="affiliateEditCodeForm" style="display: none; margin-top: 0.75rem; padding: 0.9rem; border: 1px solid var(--border-light-hover); border-radius: 8px; background: var(--bg-body);">
+                    <p style="margin: 0 0 0.6rem; font-size: 0.76rem; color: #b45309; line-height: 1.5;"><i class="fa-solid fa-triangle-exclamation"></i> Link/kode lama yang sudah kamu bagikan akan langsung berhenti berfungsi begitu diganti - orang yang masih pakai kode lama tidak akan tercatat sebagai referralmu lagi.</p>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                      <input type="text" id="affiliateNewCodeInput" placeholder="KODE-BARU" maxlength="20" style="flex: 1; min-width: 160px; padding: 0.55rem 0.7rem; border: 1px solid var(--border-light-hover); border-radius: 8px; font-family: inherit; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; background: var(--bg-card); color: var(--text-main);">
+                      <button type="button" id="affiliateSaveCodeBtn" class="upgrade-btn" style="width: auto; padding: 0.55rem 1.1rem;">Simpan</button>
+                      <button type="button" id="affiliateCancelCodeBtn" style="background: transparent; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 0.55rem 0.9rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;">Batal</button>
+                    </div>
+                    <p id="affiliateCodeEditMessage" style="font-size: 0.78rem; margin: 0.5rem 0 0; display: none;"></p>
                   </div>
                 </div>
               </div>

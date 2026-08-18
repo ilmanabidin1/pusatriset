@@ -892,6 +892,42 @@ app.post('/api/affiliate/payout', requireAccess, async (req, res) => {
   res.status(result.status).json(result.body);
 });
 
+// Ganti kode referral bawaan (auto-generated, mis. UNISBA-8C36) dengan yang
+// dipilih sendiri affiliate - supaya lebih gampang diingat/dibagikan. Link
+// (bukan cuma kode) otomatis ikut berubah karena link dibentuk dari kode ini
+// (lihat window.location.origin + '/?ref=' + referralCode di app.js) - link
+// LAMA yang sudah disebar jadi mati begitu kode diganti, karena bukan alias,
+// murni rename di tempat (lihat findAffiliateByReferralCode: exact match ke
+// referralCode saat ini, tidak menyimpan riwayat kode lama).
+app.post('/api/affiliate/update-referral-code', requireAccess, async (req, res) => {
+  const rawCode = String((req.body && req.body.referralCode) || '').trim().toUpperCase();
+  if (!/^[A-Z0-9][A-Z0-9-]{2,18}[A-Z0-9]$/.test(rawCode)) {
+    return res.status(400).json({ ok: false, message: 'Kode harus 4-20 karakter, hanya huruf/angka/tanda hubung (tidak boleh diawali/diakhiri tanda hubung).' });
+  }
+
+  let result = null;
+  await withLock('affiliates', async () => {
+    const affiliates = getAffiliates();
+    const affiliate = affiliates.find(a => a.userId === req.session.userId);
+    if (!affiliate) {
+      result = { status: 404, body: { ok: false, message: 'Anda belum terdaftar sebagai affiliate.' } };
+      return;
+    }
+    const takenByOther = affiliates.some(a => a.id !== affiliate.id && a.referralCode === rawCode);
+    const clashesWithPromo = Object.prototype.hasOwnProperty.call(PROMO_CODES, rawCode);
+    if (takenByOther || clashesWithPromo) {
+      result = { status: 409, body: { ok: false, message: 'Kode referral ini sudah dipakai. Coba kode lain.' } };
+      return;
+    }
+
+    affiliate.referralCode = rawCode;
+    saveAffiliates(affiliates);
+    result = { status: 200, body: { ok: true, referralCode: rawCode } };
+  });
+
+  res.status(result.status).json(result.body);
+});
+
 function parseCookies(cookieHeader = '') {
   return cookieHeader.split(';').reduce((cookies, item) => {
     const [key, ...valueParts] = item.trim().split('=');

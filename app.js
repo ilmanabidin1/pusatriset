@@ -1150,6 +1150,54 @@ document.addEventListener('DOMContentLoaded', () => {
     if (copyLinkBtn) copyLinkBtn.addEventListener('click', () => copyFieldValue('affiliateReferralLink', copyLinkBtn));
     if (copyCodeBtn) copyCodeBtn.addEventListener('click', () => copyFieldValue('affiliateReferralCode', copyCodeBtn));
 
+    // Ganti kode referral sendiri (lihat POST /api/affiliate/update-referral-code
+    // di server.js) - link ikut berubah otomatis karena dibentuk dari kode ini.
+    const editCodeBtn = document.getElementById('affiliateEditCodeBtn');
+    const editCodeForm = document.getElementById('affiliateEditCodeForm');
+    const newCodeInput = document.getElementById('affiliateNewCodeInput');
+    const saveCodeBtn = document.getElementById('affiliateSaveCodeBtn');
+    const cancelCodeBtn = document.getElementById('affiliateCancelCodeBtn');
+    const codeEditMsg = document.getElementById('affiliateCodeEditMessage');
+    if (editCodeBtn && editCodeForm) {
+      editCodeBtn.addEventListener('click', () => {
+        const currentCode = document.getElementById('affiliateReferralCode');
+        if (newCodeInput) newCodeInput.value = currentCode ? currentCode.value : '';
+        if (codeEditMsg) { codeEditMsg.style.display = 'none'; codeEditMsg.textContent = ''; }
+        editCodeForm.style.display = 'block';
+        if (newCodeInput) newCodeInput.focus();
+      });
+    }
+    if (cancelCodeBtn && editCodeForm) {
+      cancelCodeBtn.addEventListener('click', () => { editCodeForm.style.display = 'none'; });
+    }
+    if (saveCodeBtn) {
+      saveCodeBtn.addEventListener('click', async () => {
+        const newCode = newCodeInput ? newCodeInput.value.trim().toUpperCase() : '';
+        if (!newCode) return;
+        if (!confirm(`Ganti kode referral jadi "${newCode}"? Link/kode lama akan langsung berhenti berfungsi.`)) return;
+
+        saveCodeBtn.disabled = true;
+        if (codeEditMsg) { codeEditMsg.style.display = 'none'; }
+        try {
+          const res = await fetch('/api/affiliate/update-referral-code', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ referralCode: newCode })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            if (codeEditMsg) { codeEditMsg.style.color = '#dc2626'; codeEditMsg.textContent = data.message || 'Gagal mengubah kode referral.'; codeEditMsg.style.display = 'block'; }
+            return;
+          }
+          if (editCodeForm) editCodeForm.style.display = 'none';
+          window.loadAffiliateTab();
+        } catch (err) {
+          if (codeEditMsg) { codeEditMsg.style.color = '#dc2626'; codeEditMsg.textContent = 'Gagal terhubung ke server.'; codeEditMsg.style.display = 'block'; }
+        } finally {
+          saveCodeBtn.disabled = false;
+        }
+      });
+    }
+
     // Form pengajuan payout
     const payoutBtn = document.getElementById('affiliatePayoutBtn');
     if (payoutBtn) {
