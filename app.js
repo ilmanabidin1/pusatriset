@@ -1258,11 +1258,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     featureAnnouncementShownThisPageLoad = true;
     modal.style.display = 'flex';
-    const video = document.getElementById('featureAnnouncementVideo');
-    if (video) {
-      video.currentTime = 0;
-      video.play().catch(() => {});
-    }
   }
 
   async function dismissFeatureAnnouncement() {
@@ -1270,8 +1265,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!modal) return;
     const announcementId = modal.getAttribute('data-announcement-id');
     modal.style.display = 'none';
-    const video = document.getElementById('featureAnnouncementVideo');
-    if (video) video.pause();
     try {
       await fetch('/api/announcements/dismiss', {
         method: 'POST',
@@ -1297,8 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ctaBtn) {
       ctaBtn.addEventListener('click', () => {
         dismissFeatureAnnouncement();
-        if (window.switchTab) window.switchTab('research-chat');
-        setResearchChatMode('cowork');
+        if (window.switchTab) window.switchTab('afiliasi');
       });
     }
   })();

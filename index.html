@@ -8460,21 +8460,19 @@
   </div>
 
   <!-- Popup pengumuman fitur baru - tampil OTOMATIS (bukan lewat klik) sekali
-       per user, lihat initFeatureAnnouncement di app.js. Video-nya sendiri
-       sudah berisi judul/deskripsi fitur (di-bake langsung ke frame video),
-       jadi di sini cukup video + tombol CTA + tombol tutup. data-announcement-id
+       per user, lihat initFeatureAnnouncement di app.js. Gambar poster-nya
+       sendiri sudah berisi judul/CTA fitur (di-bake langsung ke gambar),
+       jadi di sini cukup gambar + tombol CTA + tombol tutup. data-announcement-id
        HARUS sama persis dengan CURRENT_ANNOUNCEMENT_ID di server.js supaya
        dismiss-nya tercatat benar - kalau nanti ganti konten pengumuman baru,
-       ganti video src DAN data-announcement-id ini bersamaan. -->
-  <div id="featureAnnouncementModal" data-announcement-id="cowork-agent-2026-08" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(8, 34, 64, 0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: center; padding: 1rem;">
+       ganti gambar src DAN data-announcement-id ini bersamaan. -->
+  <div id="featureAnnouncementModal" data-announcement-id="campus-ambassador-2026-08" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(8, 34, 64, 0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: center; padding: 1rem;">
     <div style="max-width: 420px; width: 100%; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.35); position: relative;">
       <button type="button" id="featureAnnouncementCloseBtn" title="Tutup" style="position: absolute; top: 0.75rem; right: 0.75rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(0,0,0,0.45); color: #fff; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">&times;</button>
-      <video id="featureAnnouncementVideo" muted loop playsinline style="width: 100%; display: block; background: #0b1a30;">
-        <source src="assets/new-feature-cowork.mp4" type="video/mp4">
-      </video>
+      <img id="featureAnnouncementImage" src="assets/campus-ambassador-announcement.webp" alt="JurnalHub Campus Ambassador - Join Now" style="width: 100%; display: block; background: #0b1a30;">
       <div style="padding: 1.25rem 1.5rem 1.5rem;">
         <button type="button" id="featureAnnouncementCtaBtn" class="upgrade-btn" style="width: 100%; padding: 0.75rem;">
-          <i class="fa-solid fa-robot"></i> Coba Co-Work Agent Sekarang
+          <i class="fa-solid fa-handshake"></i> Gabung Campus Ambassador Sekarang
         </button>
       </div>
     </div>
