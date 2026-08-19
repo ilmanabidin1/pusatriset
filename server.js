@@ -8106,7 +8106,8 @@ const FASPAY_PLAN_PRICES = {
 const PROMO_CODES = {
   JHTHREADS: { discountPercent: 20 },
   JHTIKTOK: { discountPercent: 20 },
-  JH17AN: { discountPercent: 25, startsAt: '2026-08-16T00:00:00+07:00', endsAt: '2026-08-17T23:59:00+07:00' }
+  JH17AN: { discountPercent: 25, startsAt: '2026-08-16T00:00:00+07:00', endsAt: '2026-08-17T23:59:00+07:00' },
+  JHKOLABRISET: { discountPercent: 15 }
 };
 
 function getPromoDiscount(code) {
