@@ -934,6 +934,8 @@ function parseCookies(cookieHeader = '') {
   }, {});
 }
 
+const MAX_CONCURRENT_SESSIONS = 2;
+
 function hasAccess(req) {
   // Check if session exists and user is authenticated
   if (req.session && req.session.userId) {
@@ -941,11 +943,16 @@ function hasAccess(req) {
     const user = users.find(u => u.id === req.session.userId);
     if (user) {
       // Jika sessionToken di session kosong (race-condition write file store),
-      // isi dengan current token user agar tidak ter-logout secara paksa.
+      // anggap valid agar tidak ter-logout secara paksa (bisa jadi salah satu
+      // dari beberapa device yg sedang aktif, tidak bisa ditebak slot mana).
       if (!req.session.sessionToken) {
-        req.session.sessionToken = user.currentSessionToken;
+        return true;
       }
-      if (user.currentSessionToken === req.session.sessionToken) {
+      if (Array.isArray(user.activeSessionTokens) && user.activeSessionTokens.includes(req.session.sessionToken)) {
+        return true;
+      }
+      // Kompatibilitas mundur: user lama yg belum migrasi ke array.
+      if (!Array.isArray(user.activeSessionTokens) && user.currentSessionToken === req.session.sessionToken) {
         return true;
       }
     }
@@ -2199,7 +2206,10 @@ app.post('/api/login', authLimiter, async (req, res) => {
       const freshUsers = getUsers();
       const freshUser = freshUsers.find(u => u.id === user.id);
       if (freshUser) {
-        freshUser.currentSessionToken = sessionToken;
+        if (!Array.isArray(freshUser.activeSessionTokens)) freshUser.activeSessionTokens = [];
+        freshUser.activeSessionTokens.push(sessionToken);
+        while (freshUser.activeSessionTokens.length > MAX_CONCURRENT_SESSIONS) freshUser.activeSessionTokens.shift();
+        delete freshUser.currentSessionToken;
         saveUsers(freshUsers);
       }
     });
@@ -2335,7 +2345,10 @@ function loginOrCreateGoogleUser(email, googleId, name, picture) {
   }
 
   const sessionToken = crypto.randomUUID();
-  user.currentSessionToken = sessionToken;
+  if (!Array.isArray(user.activeSessionTokens)) user.activeSessionTokens = [];
+  user.activeSessionTokens.push(sessionToken);
+  while (user.activeSessionTokens.length > MAX_CONCURRENT_SESSIONS) user.activeSessionTokens.shift();
+  delete user.currentSessionToken;
   saveUsers(users);
 
   return { user, sessionToken };
@@ -2457,6 +2470,7 @@ app.post('/api/logout', (req, res) => {
     const users = getUsers();
     const user = users.find(u => u.id === req.session.userId);
     if (user) {
+      user.activeSessionTokens = (Array.isArray(user.activeSessionTokens) ? user.activeSessionTokens : []).filter(t => t !== req.session.sessionToken);
       delete user.currentSessionToken;
       saveUsers(users);
     }
