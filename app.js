@@ -2644,18 +2644,41 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   // --- 0. AUTHENTICATION & USER STATE ---
+  // Admin dapat bypass semua kuota/lock fitur DI BACKEND (lihat
+  // req.session.isAdmin di /api/me & tiap endpoint AI di server.js - sudah
+  // kirim angka "sisa" 999999 dkk), tapi elemen UI seperti overlay lock/badge
+  // upgrade di seluruh file ini dicabang berdasarkan STRING user.type
+  // ('free'/'premium'/'ultimate'), bukan flag angka itu - jadi tanpa ini,
+  // admin yang tier akun aslinya sudah balik ke free akan tetap lihat
+  // overlay terkunci walau request-nya sebenarnya akan lolos. Semua
+  // pemanggil /api/me (bukan cuma checkAuthState - ada beberapa titik lain
+  // yang refresh kuota badge setelah 1 aksi AI selesai) HARUS lewat sini,
+  // bukan fetch('/api/me') langsung, supaya override ini konsisten di mana pun.
+  async function fetchMe() {
+    const res = await fetch('/api/me');
+    if (!res.ok) {
+      const err = new Error('Auth check failed: HTTP ' + res.status);
+      err.httpStatus = res.status;
+      throw err;
+    }
+    const data = await res.json();
+    if (data.user && data.user.isAdmin) {
+      data.user.type = 'ultimate';
+    }
+    return data;
+  }
+
   async function checkAuthState() {
     try {
-      const response = await fetch('/api/me');
-      if (response.ok) {
-        const data = await response.json();
-        currentUser = data;
-        window.currentUser = currentUser;
+      const data = await fetchMe();
+      currentUser = data;
+      window.currentUser = currentUser;
 
-        if (!currentUser.loggedIn) {
-          window.location.href = '/auth.html';
-          return;
-        }
+      if (!currentUser.loggedIn) {
+        window.location.href = '/auth.html';
+        return;
+      }
+      {
 
         // Update UI based on user type (sidebar profile & locks)
         const profileEmail = document.getElementById('profileEmail');
@@ -3038,14 +3061,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
         }
-      } else {
-        // Response HTTP gagal (mis. 500) - ini bukan bukti user belum login,
-        // jadi jangan paksa redirect (mencegah loop redirect ping-pong dengan auth.html).
-        console.error('Auth check failed: HTTP', response.status);
       }
     } catch (error) {
-      // Kegagalan jaringan (mis. fetch gagal sesaat) juga bukan bukti user
-      // belum login - biarkan halaman tetap tampil, jangan paksa redirect.
+      // Kegagalan jaringan ATAU response HTTP gagal (mis. 500, dilempar dari
+      // fetchMe) - keduanya bukan bukti user belum login, jadi jangan paksa
+      // redirect (mencegah loop redirect ping-pong dengan auth.html).
       console.error('Auth check failed', error);
     }
   }
@@ -4397,7 +4417,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // Refresh badge kuota Cari Referensi (Free) setelah pencarian terpakai
-      fetch('/api/me').then(r => r.json()).then(meData => {
+      fetchMe().then(meData => {
         if (meData.loggedIn && meData.user) {
           window.currentUser = meData;
           if (window.updateCariReferensiAccess) window.updateCariReferensiAccess(meData.user);
@@ -4491,7 +4511,7 @@ document.addEventListener('DOMContentLoaded', () => {
         patentSearchResults.appendChild(card);
       });
 
-      fetch('/api/me').then(r => r.json()).then(meData => {
+      fetchMe().then(meData => {
         if (meData.loggedIn && meData.user) {
           currentUser = meData;
           window.currentUser = meData;
@@ -4760,7 +4780,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         cy.layout(Object.assign({}, COSE_LAYOUT_OPTIONS, { animate: true, animationDuration: 500 })).run();
 
-        fetch('/api/me').then(r => r.json()).then(meData => {
+        fetchMe().then(meData => {
           if (meData.loggedIn && meData.user) {
             window.currentUser = meData;
             if (window.updateCitationGraphAccess) window.updateCitationGraphAccess(meData.user);
@@ -6735,7 +6755,7 @@ document.addEventListener('DOMContentLoaded', () => {
             peerReviewContentEl.innerHTML = renderPeerReviewReportHtml(reviewText);
           }
 
-          fetch('/api/me').then(r => r.json()).then(meData => {
+          fetchMe().then(meData => {
             if (meData.loggedIn && meData.user) {
               currentUser = meData;
               window.currentUser = meData;
@@ -8710,7 +8730,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Refresh kuota (humanizerWordsRemaining dkk) supaya confirm dialog
             // berikutnya & badge kuota di tempat lain langsung akurat.
-            fetch('/api/me').then(r => r.json()).then(meData => {
+            fetchMe().then(meData => {
               if (meData.loggedIn && meData.user) window.currentUser = meData;
             }).catch(() => {});
           } catch (err) {
@@ -9126,7 +9146,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           // Refresh badge kuota AI Notebook (dipakai bersama semua aksi slash) setelah dipakai
-          fetch('/api/me').then(r => r.json()).then(meData => {
+          fetchMe().then(meData => {
             if (meData.loggedIn && meData.user) window.currentUser = meData;
           }).catch(() => {});
         } catch (err) {
@@ -10310,7 +10330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Refresh kuota tampilan setelah 1 pesan terpakai (khusus Premium)
-        fetch('/api/me').then(r => r.json()).then(meData => {
+        fetchMe().then(meData => {
           if (meData.loggedIn && meData.user) {
             currentUser = meData;
             updateResearchChatAccess(meData.user);
@@ -12118,8 +12138,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateStepUI();
 
           // Refresh user quota information after successful synthesis
-          fetch('/api/me')
-            .then(r => r.json())
+          fetchMe()
             .then(meData => {
               if (meData && meData.user) {
                 currentUser = meData;
