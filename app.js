@@ -3166,7 +3166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- ASISTEN RISET AI: akses & kuota ---
-  let isResearchChatProUser = false; // Premium/Ultimate - buka Model Pro, Deep Thinking, & lampiran dokumen
+  let isResearchChatProUser = false; // Premium/Ultimate - buka mode Mendalam & lampiran dokumen
 
   // Ekspor panduan outline ke .docx - khusus akun Ultimate
   function updateExportDraftDocxLock(isUltimate) {
@@ -3186,12 +3186,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     isResearchChatProUser = user.type === 'premium' || user.type === 'ultimate';
 
-    // Model Pro, Deep Thinking, Lampiran Dokumen, dan Shortcut Prompt Bank dikunci untuk akun Free
-    const pillModelPro = document.getElementById('pillModelPro');
-    const pillModeThinking = document.getElementById('pillModeThinking');
+    // Mode Mendalam, Lampiran Dokumen, dan Shortcut Prompt Bank dikunci untuk akun Free
+    const pillDepthDeep = document.getElementById('pillDepthDeep');
     const attachBtn = document.getElementById('researchChatAttachBtn');
     const promptShuffleBtn = document.getElementById('researchChatPromptShuffleBtn');
-    [pillModelPro, pillModeThinking, attachBtn, promptShuffleBtn].forEach(el => {
+    [pillDepthDeep, attachBtn, promptShuffleBtn].forEach(el => {
       if (!el) return;
       el.classList.toggle('composer-pill-locked', !isResearchChatProUser);
       el.classList.toggle('btn-upgrade-trigger', !isResearchChatProUser);
@@ -3208,18 +3207,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Kalau user baru saja downgrade (mis. langganan habis) sementara pilihan lama
-    // masih Pro/Thinking, paksa balik ke Lite/Standar supaya tidak nyangkut di mode terkunci.
+    // masih Mendalam, paksa balik ke Cepat supaya tidak nyangkut di mode terkunci.
     if (!isResearchChatProUser) {
-      const pillModelLite = document.getElementById('pillModelLite');
-      const pillModeBasic = document.getElementById('pillModeBasic');
-      if (pillModelPro && pillModelPro.classList.contains('active')) {
-        pillModelPro.classList.remove('active');
-        if (pillModelLite) pillModelLite.classList.add('active');
+      const pillDepthFast = document.getElementById('pillDepthFast');
+      if (pillDepthDeep && pillDepthDeep.classList.contains('active')) {
+        pillDepthDeep.classList.remove('active');
+        if (pillDepthFast) pillDepthFast.classList.add('active');
         if (typeof selectedResearchModel !== 'undefined') selectedResearchModel = 'lite';
-      }
-      if (pillModeThinking && pillModeThinking.classList.contains('active')) {
-        pillModeThinking.classList.remove('active');
-        if (pillModeBasic) pillModeBasic.classList.add('active');
         if (typeof selectedResearchMode !== 'undefined') selectedResearchMode = 'basic';
       }
       if (typeof window.removeResearchChatAttachment === 'function') {
@@ -10381,37 +10375,25 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Setup model and mode selection event listeners
-    const pillModelLite = document.getElementById('pillModelLite');
-    const pillModelPro = document.getElementById('pillModelPro');
-    const pillModeBasic = document.getElementById('pillModeBasic');
-    const pillModeThinking = document.getElementById('pillModeThinking');
+    // Setup depth selection event listeners - "Cepat" (Lite + Standar) vs
+    // "Mendalam" (Pro + Deep Thinking, otomatis sekaligus - lihat gating
+    // Model Pro + Deep Thinking untuk academic/web search di server.js).
+    const pillDepthFast = document.getElementById('pillDepthFast');
+    const pillDepthDeep = document.getElementById('pillDepthDeep');
 
-    if (pillModelLite && pillModelPro) {
-      pillModelLite.addEventListener('click', () => {
+    if (pillDepthFast && pillDepthDeep) {
+      pillDepthFast.addEventListener('click', () => {
         selectedResearchModel = 'lite';
-        pillModelLite.classList.add('active');
-        pillModelPro.classList.remove('active');
+        selectedResearchMode = 'basic';
+        pillDepthFast.classList.add('active');
+        pillDepthDeep.classList.remove('active');
       });
-      pillModelPro.addEventListener('click', () => {
+      pillDepthDeep.addEventListener('click', () => {
         if (!isResearchChatProUser) return; // terkunci - klik ditangkap oleh listener global .btn-upgrade-trigger
         selectedResearchModel = 'pro';
-        pillModelPro.classList.add('active');
-        pillModelLite.classList.remove('active');
-      });
-    }
-
-    if (pillModeBasic && pillModeThinking) {
-      pillModeBasic.addEventListener('click', () => {
-        selectedResearchMode = 'basic';
-        pillModeBasic.classList.add('active');
-        pillModeThinking.classList.remove('active');
-      });
-      pillModeThinking.addEventListener('click', () => {
-        if (!isResearchChatProUser) return; // terkunci - klik ditangkap oleh listener global .btn-upgrade-trigger
         selectedResearchMode = 'thinking';
-        pillModeThinking.classList.add('active');
-        pillModeBasic.classList.remove('active');
+        pillDepthDeep.classList.add('active');
+        pillDepthFast.classList.remove('active');
       });
     }
 

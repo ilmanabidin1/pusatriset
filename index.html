@@ -5860,40 +5860,23 @@
             <div class="research-chat-composer-wrapper">
               <!-- Composer Controls -->
               <div class="research-chat-composer-controls" style="display: flex; gap: 0.75rem; margin-bottom: 0.6rem; align-items: center; justify-content: flex-start; flex-wrap: wrap;">
-                <!-- Model Selection -->
+                <!-- Depth Selection: Cepat vs Mendalam (gabungan model + reasoning +
+                     pencarian referensi otomatis - dulu 2 toggle terpisah yg bikin
+                     bingung, sekarang 1 pilihan saja). -->
                 <div style="display: inline-flex; align-items: center; gap: 0.35rem;">
                   <div style="display: inline-flex; background: rgba(8,34,64,0.05); border: 1px solid rgba(8,34,64,0.08); border-radius: 20px; padding: 2px;">
-                    <button type="button" class="composer-pill active" id="pillModelLite" data-model="lite">
-                      <i class="fa-solid fa-bolt"></i> Lite (Cepat)
+                    <button type="button" class="composer-pill active" id="pillDepthFast" data-depth="fast">
+                      <i class="fa-solid fa-bolt"></i> Cepat
                     </button>
-                    <button type="button" class="composer-pill" id="pillModelPro" data-model="pro">
-                      <i class="fa-solid fa-crown"></i> Pro
-                    </button>
-                  </div>
-                  <span class="composer-info-tooltip-wrapper" style="position: relative; display: inline-flex;">
-                    <i class="fa-solid fa-circle-info composer-info-icon" tabindex="0" style="color: var(--text-muted); font-size: 0.85rem; cursor: help;"></i>
-                    <span class="composer-info-tooltip" style="display: none; position: absolute; bottom: 130%; left: 0; z-index: 20; width: 260px; background: #0b1a30; color: #ffffff; border-radius: 8px; padding: 0.7rem 0.85rem; font-size: 0.76rem; line-height: 1.5; font-weight: 500; box-shadow: 0 10px 30px rgba(8,34,64,0.25);">
-                      <strong>Lite:</strong> respons cepat & ringan, cocok untuk diskusi dan pertanyaan sehari-hari.<br>
-                      <strong>Pro:</strong> model lebih kuat untuk analisis yang lebih tajam dan mendalam, sedikit lebih lambat.
-                    </span>
-                  </span>
-                </div>
-
-                <!-- Mode Selection -->
-                <div style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                  <div style="display: inline-flex; background: rgba(8,34,64,0.05); border: 1px solid rgba(8,34,64,0.08); border-radius: 20px; padding: 2px;">
-                    <button type="button" class="composer-pill active" id="pillModeBasic" data-mode="basic">
-                      <i class="fa-solid fa-align-left"></i> Standar
-                    </button>
-                    <button type="button" class="composer-pill" id="pillModeThinking" data-mode="thinking">
-                      <i class="fa-solid fa-brain"></i> Deep Thinking
+                    <button type="button" class="composer-pill" id="pillDepthDeep" data-depth="deep">
+                      <i class="fa-solid fa-brain"></i> Mendalam
                     </button>
                   </div>
                   <span class="composer-info-tooltip-wrapper" style="position: relative; display: inline-flex;">
                     <i class="fa-solid fa-circle-info composer-info-icon" tabindex="0" style="color: var(--text-muted); font-size: 0.85rem; cursor: help;"></i>
                     <span class="composer-info-tooltip" style="display: none; position: absolute; bottom: 130%; left: 0; z-index: 20; width: 270px; background: #0b1a30; color: #ffffff; border-radius: 8px; padding: 0.7rem 0.85rem; font-size: 0.76rem; line-height: 1.5; font-weight: 500; box-shadow: 0 10px 30px rgba(8,34,64,0.25);">
-                      <strong>Standar:</strong> menjawab langsung tanpa proses berpikir tambahan, lebih cepat.<br>
-                      <strong>Deep Thinking:</strong> menalar lebih dalam sebelum menjawab, cocok untuk pertanyaan kompleks yang butuh analisis lebih matang.
+                      <strong>Cepat:</strong> menjawab langsung, cocok untuk diskusi dan pertanyaan sehari-hari.<br>
+                      <strong>Mendalam:</strong> model lebih kuat, menalar lebih dalam, dan otomatis mencari referensi ilmiah asli - cocok untuk analisis kompleks (Premium/Ultimate).
                     </span>
                   </span>
                 </div>
