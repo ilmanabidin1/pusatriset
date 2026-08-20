@@ -6779,6 +6779,101 @@ function getDeepSeekApiKey() {
   return process.env.DEEPSEEK_API_KEY;
 }
 
+// Endpoint Responses API DeepSeek (beda dari /chat/completions biasa) - dipakai
+// khusus mode Mendalam (Pro + Deep Thinking) di JurnalHub Intelligence, supaya
+// AI bisa browsing web ASLI lewat tool bawaan `web_search` yang dijalankan di
+// server DeepSeek sendiri, menggantikan Serper.dev yang sebelumnya kita panggil
+// manual (lihat riwayat: DeepSeek Anthropic/Responses-compatible endpoint sudah
+// mendukung server_tool_use/web_search tanpa biaya tambahan di luar token).
+// DEEPSEEK_RESPONSES_API_URL cuma untuk testing lokal (arahkan ke mock server) -
+// di production selalu pakai endpoint resmi DeepSeek.
+//
+// Melempar error kalau request AWAL gagal (status non-2xx) SEBELUM streaming
+// dimulai - supaya pemanggil bisa fallback ke /chat/completions biasa tanpa web
+// search kalau format request ini berubah/tidak didukung di sisi DeepSeek. Begitu
+// streaming sudah mulai (res.setHeader terpanggil), kegagalan di tengah jalan
+// TIDAK melempar lagi (cukup di-log) karena stream ke client sudah terlanjur
+// jalan dan tidak bisa lagi diganti jadi respons lain.
+async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, inputItems, reasoningEffort }) {
+  const fetchFn = globalThis.fetch;
+  const url = process.env.DEEPSEEK_RESPONSES_API_URL || 'https://api.deepseek.com/responses';
+
+  const bodyPayload = {
+    model,
+    instructions,
+    input: inputItems,
+    tools: [{ type: 'web_search' }],
+    stream: true
+  };
+  if (reasoningEffort) {
+    bodyPayload.reasoning = { effort: reasoningEffort };
+  }
+
+  const dsResponse = await fetchFn(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(bodyPayload)
+  });
+
+  if (!dsResponse.ok) {
+    const errText = await dsResponse.text();
+    throw new Error(`DeepSeek Responses API Error Status: ${dsResponse.status} - ${errText}`);
+  }
+
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('X-Accel-Buffering', 'no');
+
+  let sseBuffer = '';
+  let fullReply = '';
+  let fullReasoning = '';
+  let totalTokens = null;
+  const reader = dsResponse.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    sseBuffer += decoder.decode(value, { stream: true });
+    const lines = sseBuffer.split('\n');
+    sseBuffer = lines.pop();
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) continue;
+      const payload = trimmed.slice(5).trim();
+      if (!payload || payload === '[DONE]') continue;
+
+      let parsed;
+      try {
+        parsed = JSON.parse(payload);
+      } catch (e) {
+        continue; // baris SSE parsial - lewati, tunggu potongan berikutnya
+      }
+
+      if (parsed.type === 'response.output_text.delta' && typeof parsed.delta === 'string') {
+        fullReply += parsed.delta;
+        res.write(JSON.stringify({ type: 'content', content: parsed.delta }) + '\n');
+      } else if (parsed.type === 'response.reasoning_text.delta' && typeof parsed.delta === 'string') {
+        fullReasoning += parsed.delta;
+        res.write(JSON.stringify({ type: 'thinking', content: parsed.delta }) + '\n');
+      } else if (parsed.type === 'response.completed') {
+        const usage = parsed.response && parsed.response.usage;
+        if (usage) totalTokens = usage.total_tokens || ((usage.input_tokens || 0) + (usage.output_tokens || 0));
+      } else if (parsed.type === 'response.failed' || parsed.type === 'error') {
+        const msg = (parsed.response && parsed.response.error && parsed.response.error.message) || parsed.message || 'DeepSeek Responses API gagal di tengah stream.';
+        console.error('[Research Chat] Responses API gagal di tengah stream:', msg);
+      }
+    }
+  }
+
+  return { fullReply, fullReasoning, totalTokens };
+}
+
 // Helper streaming DeepSeek yang dipakai bareng oleh beberapa fitur teks-bebas
 // (Lit Review, Peer Reviewer, AI Disclosure, dst) - pola sama persis dengan
 // /api/research-chat: relay tiap potongan SSE ke client via res.write() begitu
@@ -6996,52 +7091,6 @@ app.delete('/api/research-chat/conversations/:id', requireAccess, (req, res) => 
   saveResearchChatConversations(filtered);
   res.json({ ok: true });
 });
-
-// Web search real-time untuk JurnalHub Intelligence, khusus mode Pro + Deep Thinking
-// (lihat pengecekan modelType/thinkingType di bawah). Pakai Serper.dev (Google Search API).
-async function searchWebForContext(query) {
-  const serperApiKey = process.env.SERPER_API_KEY;
-  if (!serperApiKey || !query) return null;
-
-  try {
-    const fetchFn = globalThis.fetch || require('node-fetch');
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-    let response;
-    try {
-      response = await fetchFn('https://google.serper.dev/search', {
-        method: 'POST',
-        headers: {
-          'X-API-KEY': serperApiKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ q: query, num: 5 }),
-        signal: controller.signal
-      });
-    } finally {
-      clearTimeout(timeoutId);
-    }
-
-    if (!response.ok) {
-      console.error('[Web Search] Serper API error status:', response.status);
-      return null;
-    }
-
-    const data = await response.json();
-    const organic = Array.isArray(data.organic) ? data.organic.slice(0, 5) : [];
-    if (organic.length === 0) return null;
-
-    const resultsText = organic.map((r, i) =>
-      `${i + 1}. ${r.title || '-'}\n${r.snippet || '-'}\nSumber: ${r.link || '-'}`
-    ).join('\n\n');
-
-    return `Berikut hasil pencarian web real-time untuk pertanyaan pengguna (gunakan sebagai referensi tambahan, tetap sebutkan bahwa ini berdasarkan hasil pencarian, dan sertakan sumber link yang relevan jika dipakai dalam jawaban):\n\n${resultsText}`;
-  } catch (error) {
-    console.error('[Web Search] Gagal mengambil hasil pencarian:', error.message);
-    return null;
-  }
-}
 
 // Backup/grounding jawaban Prof Juju dengan paper ilmiah asli dari OpenAlex (sama
 // seperti Lit Review) - supaya klaim/sitasi yang disebut di chat bisa dipercaya
@@ -7306,18 +7355,15 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
   const thinkingEnabled = thinkingType === 'thinking';
 
-  // Web search (Serper, berbayar) & academic search (OpenAlex) sama-sama
-  // dibatasi kombinasi Model Pro + Deep Thinking - di Lite/Standard,
-  // JurnalHub Intelligence jawab langsung dari pengetahuan model tanpa
-  // nunggu pencarian eksternal, supaya tetap terasa cepat.
-  let webSearchContext = null;
+  // Academic search (OpenAlex) dibatasi kombinasi Model Pro + Deep Thinking -
+  // di Lite/Standard, JurnalHub Intelligence jawab langsung dari pengetahuan
+  // model tanpa nunggu pencarian eksternal, supaya tetap terasa cepat.
   let academicResult = null;
   const lastUserMessage = [...sanitizedMessages].reverse().find(m => m.role === 'user');
-  if (lastUserMessage && modelType === 'pro' && thinkingEnabled) {
+  const isMendalamMode = modelType === 'pro' && thinkingEnabled;
+  if (lastUserMessage && isMendalamMode) {
     const query = lastUserMessage.content.slice(0, 400);
-    const results = await Promise.all([searchAcademicContext(query), searchWebForContext(query)]);
-    academicResult = results[0];
-    webSearchContext = results[1];
+    academicResult = await searchAcademicContext(query);
   }
   const academicCitations = academicResult ? academicResult.citations : null;
 
@@ -7327,98 +7373,128 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
   let fullReply = '';
   let fullReasoning = '';
+  let usedResponsesApi = false;
 
   try {
     if (typeof globalThis.fetch !== 'function') {
       throw new Error('Runtime Node ini tidak mendukung streaming fetch (butuh Node 18+).');
     }
 
-    const systemMessages = [{ role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT }];
     const customInstructionsMsg = buildCustomInstructionsMessage(user);
-    if (customInstructionsMsg) systemMessages.push(customInstructionsMsg);
-    if (webSearchContext) {
-      systemMessages.push({ role: 'system', content: webSearchContext });
-    }
-    if (academicResult) {
-      systemMessages.push({ role: 'system', content: academicResult.contextText });
-    }
-
-    const bodyPayload = {
-      model: dsModel,
-      messages: [
-        ...systemMessages,
-        ...sanitizedMessages
-      ],
-      max_tokens: 8000,
-      stream: true,
-      stream_options: { include_usage: true }
-    };
-
-    if (thinkingEnabled) {
-      bodyPayload.reasoning_effort = "high";
-      bodyPayload.extra_body = {
-        thinking: {
-          type: "enabled"
-        }
-      };
-    } else {
-      bodyPayload.extra_body = {
-        thinking: {
-          type: "disabled"
-        }
-      };
-    }
-
-    const dsResponse = await globalThis.fetch(deepSeekUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(bodyPayload)
-    });
-
-    if (!dsResponse.ok) {
-      const errText = await dsResponse.text();
-      throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
-    }
-
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('X-Accel-Buffering', 'no');
-
-    let sseBuffer = '';
     let dsUsage = null;
-    const reader = dsResponse.body.getReader();
-    const decoder = new TextDecoder();
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    // Mode Mendalam (Pro + Deep Thinking): pakai endpoint Responses API DeepSeek
+    // supaya AI browsing web ASLI lewat tool bawaan `web_search` mereka sendiri
+    // (gantiin Serper.dev). Kalau request awal ini gagal SEBELUM streaming mulai,
+    // fallback ke /chat/completions biasa (tanpa web search) di bawah - supaya
+    // chat tetap jalan walau formatnya berubah/tidak didukung di sisi DeepSeek.
+    if (isMendalamMode) {
+      try {
+        const instructionsParts = [RESEARCH_CHAT_SYSTEM_PROMPT];
+        if (customInstructionsMsg) instructionsParts.push(customInstructionsMsg.content);
+        if (academicResult) instructionsParts.push(academicResult.contextText);
 
-      sseBuffer += decoder.decode(value, { stream: true });
-      const lines = sseBuffer.split('\n');
-      sseBuffer = lines.pop();
+        const inputItems = sanitizedMessages.map(m => ({ role: m.role, content: m.content }));
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) continue;
-        const payload = trimmed.slice(5).trim();
-        if (payload === '[DONE]') continue;
-        try {
-          const parsed = JSON.parse(payload);
-          const delta = parsed?.choices?.[0]?.delta?.content;
-          const reasoning = parsed?.choices?.[0]?.delta?.reasoning_content;
-          if (reasoning) {
-            fullReasoning += reasoning;
-            res.write(JSON.stringify({ type: 'thinking', content: reasoning }) + '\n');
-          } else if (delta) {
-            fullReply += delta;
-            res.write(JSON.stringify({ type: 'content', content: delta }) + '\n');
+        const result = await streamDeepSeekResponsesApi(res, apiKey, {
+          model: dsModel,
+          instructions: instructionsParts.join('\n\n'),
+          inputItems,
+          reasoningEffort: 'high'
+        });
+        fullReply = result.fullReply;
+        fullReasoning = result.fullReasoning;
+        if (result.totalTokens) dsUsage = { total_tokens: result.totalTokens };
+        usedResponsesApi = true;
+      } catch (responsesApiError) {
+        if (res.headersSent) throw responsesApiError; // streaming sudah mulai - tidak bisa fallback lagi
+        console.warn('[Research Chat] Responses API gagal, fallback ke chat/completions tanpa web search:', responsesApiError.message);
+      }
+    }
+
+    if (!usedResponsesApi) {
+      const systemMessages = [{ role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT }];
+      if (customInstructionsMsg) systemMessages.push(customInstructionsMsg);
+      if (academicResult) {
+        systemMessages.push({ role: 'system', content: academicResult.contextText });
+      }
+
+      const bodyPayload = {
+        model: dsModel,
+        messages: [
+          ...systemMessages,
+          ...sanitizedMessages
+        ],
+        max_tokens: 8000,
+        stream: true,
+        stream_options: { include_usage: true }
+      };
+
+      if (thinkingEnabled) {
+        bodyPayload.reasoning_effort = "high";
+        bodyPayload.extra_body = {
+          thinking: {
+            type: "enabled"
           }
-          if (parsed?.usage) dsUsage = parsed.usage;
-        } catch (e) {
-          // Baris SSE parsial/tidak valid - abaikan
+        };
+      } else {
+        bodyPayload.extra_body = {
+          thinking: {
+            type: "disabled"
+          }
+        };
+      }
+
+      const dsResponse = await globalThis.fetch(deepSeekUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(bodyPayload)
+      });
+
+      if (!dsResponse.ok) {
+        const errText = await dsResponse.text();
+        throw new Error(`DeepSeek API Error Status: ${dsResponse.status} - ${errText}`);
+      }
+
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('X-Accel-Buffering', 'no');
+
+      let sseBuffer = '';
+      const reader = dsResponse.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split('\n');
+        sseBuffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          const payload = trimmed.slice(5).trim();
+          if (payload === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(payload);
+            const delta = parsed?.choices?.[0]?.delta?.content;
+            const reasoning = parsed?.choices?.[0]?.delta?.reasoning_content;
+            if (reasoning) {
+              fullReasoning += reasoning;
+              res.write(JSON.stringify({ type: 'thinking', content: reasoning }) + '\n');
+            } else if (delta) {
+              fullReply += delta;
+              res.write(JSON.stringify({ type: 'content', content: delta }) + '\n');
+            }
+            if (parsed?.usage) dsUsage = parsed.usage;
+          } catch (e) {
+            // Baris SSE parsial/tidak valid - abaikan
+          }
         }
       }
     }
