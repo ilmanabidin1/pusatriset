@@ -7387,42 +7387,45 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     const customInstructionsMsg = buildCustomInstructionsMessage(user);
     let dsUsage = null;
 
-    // Mode Mendalam (Pro + Deep Thinking): pakai endpoint Responses API DeepSeek
+    // SEMUA tier (termasuk Free) sekarang pakai endpoint Responses API DeepSeek
     // supaya AI browsing web ASLI lewat tool bawaan `web_search` mereka sendiri
-    // (gantiin Serper.dev). Kalau request awal ini gagal SEBELUM streaming mulai,
-    // fallback ke /chat/completions biasa (tanpa web search) di bawah - supaya
-    // chat tetap jalan walau formatnya berubah/tidak didukung di sisi DeepSeek.
-    if (isMendalamMode) {
-      try {
-        // Model DeepSeek punya prior kuat dari training "saya tidak bisa browsing
-        // internet" dan sering tetap bilang begitu walau tool web_search-nya
-        // TERSEDIA di request ini - kalau tidak ditegaskan di instructions, dia
-        // bisa jawab dari asumsi lama itu alih-alih benar-benar memakai tool-nya,
-        // terutama untuk pertanyaan meta ("bisa cari di internet?") bukan
-        // perintah langsung ("carikan ...").
-        const instructionsParts = [
-          RESEARCH_CHAT_SYSTEM_PROMPT,
-          'CATATAN KHUSUS MODE MENDALAM: Kamu punya akses tool `web_search` yang benar-benar bisa browsing internet real-time di request ini. JANGAN bilang "saya tidak bisa browsing internet" atau semacamnya - kamu BISA. Kalau pertanyaan pengguna butuh info terkini, paper/sumber asli, atau mereka minta dicarikan sesuatu, langsung pakai tool itu dan jawab berdasarkan hasil pencariannya, jangan cuma kasih saran cara mencari manual.'
-        ];
-        if (customInstructionsMsg) instructionsParts.push(customInstructionsMsg.content);
-        if (academicResult) instructionsParts.push(academicResult.contextText);
+    // (gantiin Serper.dev) - web search token-based (tidak ada biaya per-search
+    // terpisah), jadi cukup dijatah lewat kredit pool mingguan yang sudah ada,
+    // sama seperti fitur lain. Deep Thinking (reasoning) & sitasi OpenAlex tetap
+    // eksklusif mode Mendalam (Pro + Deep Thinking, Premium/Ultimate) - itu yang
+    // masih jadi pembeda tier, bukan akses browsing-nya. Kalau request awal ini
+    // gagal SEBELUM streaming mulai, fallback ke /chat/completions biasa (tanpa
+    // web search) di bawah - supaya chat tetap jalan walau formatnya berubah/
+    // tidak didukung di sisi DeepSeek.
+    try {
+      // Model DeepSeek punya prior kuat dari training "saya tidak bisa browsing
+      // internet" dan sering tetap bilang begitu walau tool web_search-nya
+      // TERSEDIA di request ini - kalau tidak ditegaskan di instructions, dia
+      // bisa jawab dari asumsi lama itu alih-alih benar-benar memakai tool-nya,
+      // terutama untuk pertanyaan meta ("bisa cari di internet?") bukan
+      // perintah langsung ("carikan ...").
+      const instructionsParts = [
+        RESEARCH_CHAT_SYSTEM_PROMPT,
+        'CATATAN: Kamu punya akses tool `web_search` yang benar-benar bisa browsing internet real-time di request ini. JANGAN bilang "saya tidak bisa browsing internet" atau semacamnya - kamu BISA. Kalau pertanyaan pengguna butuh info terkini, paper/sumber asli, atau mereka minta dicarikan sesuatu, langsung pakai tool itu dan jawab berdasarkan hasil pencariannya, jangan cuma kasih saran cara mencari manual.'
+      ];
+      if (customInstructionsMsg) instructionsParts.push(customInstructionsMsg.content);
+      if (academicResult) instructionsParts.push(academicResult.contextText);
 
-        const inputItems = sanitizedMessages.map(m => ({ role: m.role, content: m.content }));
+      const inputItems = sanitizedMessages.map(m => ({ role: m.role, content: m.content }));
 
-        const result = await streamDeepSeekResponsesApi(res, apiKey, {
-          model: dsModel,
-          instructions: instructionsParts.join('\n\n'),
-          inputItems,
-          reasoningEffort: 'high'
-        });
-        fullReply = result.fullReply;
-        fullReasoning = result.fullReasoning;
-        if (result.totalTokens) dsUsage = { total_tokens: result.totalTokens };
-        usedResponsesApi = true;
-      } catch (responsesApiError) {
-        if (res.headersSent) throw responsesApiError; // streaming sudah mulai - tidak bisa fallback lagi
-        console.warn('[Research Chat] Responses API gagal, fallback ke chat/completions tanpa web search:', responsesApiError.message);
-      }
+      const result = await streamDeepSeekResponsesApi(res, apiKey, {
+        model: dsModel,
+        instructions: instructionsParts.join('\n\n'),
+        inputItems,
+        reasoningEffort: thinkingEnabled ? 'high' : null
+      });
+      fullReply = result.fullReply;
+      fullReasoning = result.fullReasoning;
+      if (result.totalTokens) dsUsage = { total_tokens: result.totalTokens };
+      usedResponsesApi = true;
+    } catch (responsesApiError) {
+      if (res.headersSent) throw responsesApiError; // streaming sudah mulai - tidak bisa fallback lagi
+      console.warn('[Research Chat] Responses API gagal, fallback ke chat/completions tanpa web search:', responsesApiError.message);
     }
 
     if (!usedResponsesApi) {
