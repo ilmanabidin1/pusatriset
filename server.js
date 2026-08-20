@@ -7347,7 +7347,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   // andalkan UI) - dipaksa turun ke lite/basic kalau tetap dikirim dari client.
   let modelType = req.body.modelType || 'lite';
   let thinkingType = req.body.thinkingType || 'basic';
-  if (userType === 'free') {
+  if (userType === 'free' && !isAdminReq(req)) {
     modelType = 'lite';
     thinkingType = 'basic';
   }
