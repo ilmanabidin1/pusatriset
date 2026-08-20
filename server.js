@@ -3657,7 +3657,7 @@ function extractAuthorCountryCode(authorships) {
   return null;
 }
 
-async function searchOpenAlexWorks(query, perPage, extraFilter, sort) {
+async function searchOpenAlexWorks(query, perPage, extraFilter, sort, timeoutMs) {
   const fetchFn = globalThis.fetch || require('node-fetch');
   // "?" dan "*" dianggap wildcard oleh OpenAlex full-text search dan bikin request
   // 400 kalau dipakai di luar mode search.exact - buang dulu supaya pertanyaan user
@@ -3684,7 +3684,17 @@ async function searchOpenAlexWorks(query, perPage, extraFilter, sort) {
   if (mailto) params.set('mailto', mailto);
 
   const openAlexBase = process.env.OPENALEX_API_BASE || 'https://api.openalex.org';
-  const response = await fetchFn(`${openAlexBase}/works?${params.toString()}`);
+  // Timeout wajib - tanpa ini, OpenAlex yang lambat/hang bisa membuat pemanggil
+  // yang butuh respons cepat (mis. konteks sitasi JurnalHub Intelligence) ikut
+  // nge-freeze tanpa batas waktu.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs || 15000);
+  let response;
+  try {
+    response = await fetchFn(`${openAlexBase}/works?${params.toString()}`, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
   if (!response.ok) {
     const errText = await response.text();
     throw new Error(`OpenAlex API Error: ${response.status} - ${errText}`);
@@ -7039,7 +7049,11 @@ async function searchWebForContext(query) {
 async function searchAcademicContext(query) {
   if (!query) return null;
   try {
-    const papers = await searchOpenAlexWorks(query, 6);
+    // Timeout ketat (bukan default 15s) - ini jalan sebelum JurnalHub
+    // Intelligence mulai streaming jawaban untuk SEMUA pesan/tier, jadi kalau
+    // OpenAlex lambat, lebih baik lanjut tanpa sitasi daripada bikin chat
+    // terasa macet nunggu.
+    const papers = await searchOpenAlexWorks(query, 6, null, null, 3500);
     if (!papers || papers.length === 0) return null;
     const top = [...papers].sort((a, b) => b.citedByCount - a.citedByCount).slice(0, 5);
     const text = top.map((p, i) =>
