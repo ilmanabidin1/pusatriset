@@ -6843,6 +6843,13 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
     seenWebCitationUrls.add(citeUrl);
     webCitations.push({ url: citeUrl, title: citeTitle || citeUrl });
   }
+  // Debug sementara: nama event/shape annotation yg didokumentasikan (ditiru
+  // dari OpenAI Responses API, DeepSeek belum konfirmasi persis sama) ternyata
+  // tidak pernah cocok di produksi (sumber selalu 0 walau webSearchInvoked
+  // true) - log semua tipe event unik yg benar-benar dikirim DeepSeek supaya
+  // sekali lihat production log, langsung ketahuan nama/shape yg benar. Hapus
+  // blok ini setelah ketemu.
+  const seenEventTypes = new Set();
   const reader = dsResponse.body.getReader();
   const decoder = new TextDecoder();
 
@@ -6867,6 +6874,8 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
         continue; // baris SSE parsial - lewati, tunggu potongan berikutnya
       }
 
+      if (parsed.type) seenEventTypes.add(parsed.type);
+
       if (parsed.type === 'response.output_text.delta' && typeof parsed.delta === 'string') {
         fullReply += parsed.delta;
         res.write(JSON.stringify({ type: 'content', content: parsed.delta }) + '\n');
@@ -6884,6 +6893,25 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
         // Fallback: kalau server tidak kirim event annotation per-delta, coba scan
         // langsung dari payload lengkap di event completed ini.
         const outputItems = (parsed.response && Array.isArray(parsed.response.output)) ? parsed.response.output : [];
+        // Debug sementara (lihat komentar di atas soal seenEventTypes) - dump
+        // struktur output items (bukan isi teksnya) supaya ketahuan field apa
+        // saja yg sebenarnya dikirim DeepSeek utk item message & web_search_call.
+        try {
+          const structureDump = outputItems.map(item => {
+            const base = { type: item.type, keys: Object.keys(item) };
+            if (item.type === 'message' && Array.isArray(item.content)) {
+              base.contentItems = item.content.map(c => ({ type: c.type, keys: Object.keys(c), annotationsCount: Array.isArray(c.annotations) ? c.annotations.length : null }));
+            }
+            if (item.type === 'web_search_call') {
+              base.actionKeys = item.action ? Object.keys(item.action) : null;
+            }
+            return base;
+          });
+          console.log('[Research Chat][DEBUG] event types:', JSON.stringify([...seenEventTypes]));
+          console.log('[Research Chat][DEBUG] output structure:', JSON.stringify(structureDump));
+        } catch (dumpErr) {
+          console.warn('[Research Chat][DEBUG] gagal dump struktur:', dumpErr.message);
+        }
         for (const item of outputItems) {
           if (item.type !== 'message' || !Array.isArray(item.content)) continue;
           for (const c of item.content) {
