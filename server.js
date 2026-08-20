@@ -6831,6 +6831,7 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
   let fullReply = '';
   let fullReasoning = '';
   let totalTokens = null;
+  let webSearchInvoked = false;
   const reader = dsResponse.body.getReader();
   const decoder = new TextDecoder();
 
@@ -6861,6 +6862,8 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
       } else if (parsed.type === 'response.reasoning_text.delta' && typeof parsed.delta === 'string') {
         fullReasoning += parsed.delta;
         res.write(JSON.stringify({ type: 'thinking', content: parsed.delta }) + '\n');
+      } else if (parsed.type && parsed.type.startsWith('response.web_search_call.')) {
+        webSearchInvoked = true;
       } else if (parsed.type === 'response.completed') {
         const usage = parsed.response && parsed.response.usage;
         if (usage) totalTokens = usage.total_tokens || ((usage.input_tokens || 0) + (usage.output_tokens || 0));
@@ -6871,7 +6874,8 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
     }
   }
 
-  return { fullReply, fullReasoning, totalTokens };
+  console.log(`[Research Chat] Responses API selesai - webSearchInvoked=${webSearchInvoked}, panjang balasan=${fullReply.length} char`);
+  return { fullReply, fullReasoning, totalTokens, webSearchInvoked };
 }
 
 // Helper streaming DeepSeek yang dipakai bareng oleh beberapa fitur teks-bebas
@@ -7390,7 +7394,16 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     // chat tetap jalan walau formatnya berubah/tidak didukung di sisi DeepSeek.
     if (isMendalamMode) {
       try {
-        const instructionsParts = [RESEARCH_CHAT_SYSTEM_PROMPT];
+        // Model DeepSeek punya prior kuat dari training "saya tidak bisa browsing
+        // internet" dan sering tetap bilang begitu walau tool web_search-nya
+        // TERSEDIA di request ini - kalau tidak ditegaskan di instructions, dia
+        // bisa jawab dari asumsi lama itu alih-alih benar-benar memakai tool-nya,
+        // terutama untuk pertanyaan meta ("bisa cari di internet?") bukan
+        // perintah langsung ("carikan ...").
+        const instructionsParts = [
+          RESEARCH_CHAT_SYSTEM_PROMPT,
+          'CATATAN KHUSUS MODE MENDALAM: Kamu punya akses tool `web_search` yang benar-benar bisa browsing internet real-time di request ini. JANGAN bilang "saya tidak bisa browsing internet" atau semacamnya - kamu BISA. Kalau pertanyaan pengguna butuh info terkini, paper/sumber asli, atau mereka minta dicarikan sesuatu, langsung pakai tool itu dan jawab berdasarkan hasil pencariannya, jangan cuma kasih saran cara mencari manual.'
+        ];
         if (customInstructionsMsg) instructionsParts.push(customInstructionsMsg.content);
         if (academicResult) instructionsParts.push(academicResult.contextText);
 
