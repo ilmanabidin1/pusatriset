@@ -9330,6 +9330,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hasCitations) {
           bodyHtml = wrapCitationMarkers(bodyHtml, m.citations);
         }
+        if (Array.isArray(m.webSources) && m.webSources.length > 0) {
+          bodyHtml += renderWebSourcesRow(m.webSources);
+        }
         return `
           <div class="research-chat-assistant-block">
             <div class="research-chat-bubble assistant" id="researchChatMsgBody${idx}">${bodyHtml}</div>
@@ -9785,6 +9788,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Baris chip "Sumber" di bawah jawaban mode Mendalam - daftar situs asli yang
+    // dikunjungi tool web_search DeepSeek (beda dari sitasi [n] paper OpenAlex di
+    // atas: ini link web umum, tanpa metadata jurnal, jadi cukup chip+tooltip
+    // sederhana ala Gemini, bukan kartu popover akademik penuh.
+    function renderWebSourcesRow(sources) {
+      const chips = sources.map(s => {
+        let domain = s.url;
+        try { domain = new URL(s.url).hostname.replace(/^www\./, ''); } catch (e) { /* biarkan url mentah */ }
+        const title = s.title || domain;
+        return `<a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer" class="web-source-chip" title="${escapeHtml(title)}"><i class="fa-solid fa-globe"></i> ${escapeHtml(domain)}</a>`;
+      }).join('');
+      return `<div class="research-chat-web-sources"><span class="web-sources-label">Sumber:</span>${chips}</div>`;
+    }
+
     // Kartu preview sitasi (satu elemen dipakai ulang untuk semua marker) - muncul
     // saat hover/focus ke marker [n], mirip Consensus/Elicit.
     let litCitePopoverEl = null;
@@ -10191,6 +10208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let thinkingText = '';
         let contentText = '';
         let streamCitations = null;
+        let streamWebSources = null;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -10211,6 +10229,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 contentText += data.content;
               } else if (data.type === 'citations') {
                 streamCitations = data.citations;
+              } else if (data.type === 'web_sources') {
+                streamWebSources = data.sources;
               }
             } catch (e) {
               // Abaikan line parsial yang corrupt
@@ -10271,6 +10291,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (streamCitations && streamCitations.length > 0) {
           newAssistantMsg.citations = streamCitations;
+        }
+        if (streamWebSources && streamWebSources.length > 0) {
+          newAssistantMsg.webSources = streamWebSources;
         }
         researchChatMessages.push(newAssistantMsg);
         // Re-render penuh supaya bubble sementara diganti struktur final (dengan tombol salin)

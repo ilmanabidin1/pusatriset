@@ -6832,6 +6832,16 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
   let fullReasoning = '';
   let totalTokens = null;
   let webSearchInvoked = false;
+  // Sumber web asli yang dikutip model (annotation url_citation) - dipakai
+  // frontend utk baris "Sumber:" di bawah jawaban, mirip Gemini. Dedup by URL
+  // karena model bisa mengutip sumber yang sama beberapa kali dalam 1 jawaban.
+  const webCitations = [];
+  const seenWebCitationUrls = new Set();
+  function addWebCitation(citeUrl, citeTitle) {
+    if (!citeUrl || seenWebCitationUrls.has(citeUrl)) return;
+    seenWebCitationUrls.add(citeUrl);
+    webCitations.push({ url: citeUrl, title: citeTitle || citeUrl });
+  }
   const reader = dsResponse.body.getReader();
   const decoder = new TextDecoder();
 
@@ -6864,9 +6874,24 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
         res.write(JSON.stringify({ type: 'thinking', content: parsed.delta }) + '\n');
       } else if (parsed.type && parsed.type.startsWith('response.web_search_call.')) {
         webSearchInvoked = true;
+      } else if (parsed.type === 'response.output_text.annotation.added' && parsed.annotation) {
+        const ann = parsed.annotation;
+        if (ann.type === 'url_citation' && ann.url) addWebCitation(ann.url, ann.title);
       } else if (parsed.type === 'response.completed') {
         const usage = parsed.response && parsed.response.usage;
         if (usage) totalTokens = usage.total_tokens || ((usage.input_tokens || 0) + (usage.output_tokens || 0));
+        // Fallback: kalau server tidak kirim event annotation per-delta, coba scan
+        // langsung dari payload lengkap di event completed ini.
+        const outputItems = (parsed.response && Array.isArray(parsed.response.output)) ? parsed.response.output : [];
+        for (const item of outputItems) {
+          if (item.type !== 'message' || !Array.isArray(item.content)) continue;
+          for (const c of item.content) {
+            if (!Array.isArray(c.annotations)) continue;
+            for (const ann of c.annotations) {
+              if (ann.type === 'url_citation' && ann.url) addWebCitation(ann.url, ann.title);
+            }
+          }
+        }
       } else if (parsed.type === 'response.failed' || parsed.type === 'error') {
         const msg = (parsed.response && parsed.response.error && parsed.response.error.message) || parsed.message || 'DeepSeek Responses API gagal di tengah stream.';
         console.error('[Research Chat] Responses API gagal di tengah stream:', msg);
@@ -6874,8 +6899,8 @@ async function streamDeepSeekResponsesApi(res, apiKey, { model, instructions, in
     }
   }
 
-  console.log(`[Research Chat] Responses API selesai - webSearchInvoked=${webSearchInvoked}, panjang balasan=${fullReply.length} char`);
-  return { fullReply, fullReasoning, totalTokens, webSearchInvoked };
+  console.log(`[Research Chat] Responses API selesai - webSearchInvoked=${webSearchInvoked}, sumber=${webCitations.length}, panjang balasan=${fullReply.length} char`);
+  return { fullReply, fullReasoning, totalTokens, webSearchInvoked, webCitations };
 }
 
 // Helper streaming DeepSeek yang dipakai bareng oleh beberapa fitur teks-bebas
@@ -7378,6 +7403,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
   let fullReply = '';
   let fullReasoning = '';
   let usedResponsesApi = false;
+  let webCitations = null;
 
   try {
     if (typeof globalThis.fetch !== 'function') {
@@ -7422,6 +7448,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
       fullReply = result.fullReply;
       fullReasoning = result.fullReasoning;
       if (result.totalTokens) dsUsage = { total_tokens: result.totalTokens };
+      if (result.webCitations && result.webCitations.length > 0) webCitations = result.webCitations;
       usedResponsesApi = true;
     } catch (responsesApiError) {
       if (res.headersSent) throw responsesApiError; // streaming sudah mulai - tidak bisa fallback lagi
@@ -7522,6 +7549,11 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     if (fullReply && academicCitations && academicCitations.length > 0) {
       res.write(JSON.stringify({ type: 'citations', citations: academicCitations }) + '\n');
     }
+    // Sumber web asli (url_citation dari tool web_search DeepSeek) - dipakai
+    // frontend utk baris chip "Sumber:" di bawah jawaban, mirip Gemini.
+    if (fullReply && webCitations && webCitations.length > 0) {
+      res.write(JSON.stringify({ type: 'web_sources', sources: webCitations }) + '\n');
+    }
     res.end();
 
     if (!fullReply && !fullReasoning) {
@@ -7540,6 +7572,9 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     }
     if (academicCitations && academicCitations.length > 0) {
       assistantMsg.citations = academicCitations;
+    }
+    if (webCitations && webCitations.length > 0) {
+      assistantMsg.webSources = webCitations;
     }
     const updatedMessages = [...sanitizedMessages, assistantMsg];
     const now = new Date().toISOString();
