@@ -9332,23 +9332,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return `<div class="research-chat-bubble user">${escapeHtml(m.content)}</div>`;
         }
         let bodyHtml = `<div class="chat-main-content">${renderMarkdownSafe(m.content)}</div>`;
-        if (m.reasoning || m.thinking) {
-          const thinkingText = m.reasoning || m.thinking;
-          bodyHtml = `
-            <details class="research-chat-thinking-block">
-              <summary class="research-chat-thinking-summary">
-                <span style="display: flex; align-items: center; gap: 0.4rem;">
-                  <i class="fa-solid fa-brain" style="color: #8b5cf6;"></i>
-                  <span>Proses Berpikir AI</span>
-                </span>
-                <i class="fa-solid fa-chevron-down thinking-chevron"></i>
-              </summary>
-              <div class="research-chat-thinking-body">
-                ${renderMarkdownSafe(thinkingText)}
-              </div>
-            </details>
-          ` + bodyHtml;
-        }
         const hasCitations = Array.isArray(m.citations) && m.citations.length > 0;
         if (hasCitations) {
           bodyHtml = wrapCitationMarkers(bodyHtml, m.citations);
@@ -10208,15 +10191,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let thinkingText = '';
         let contentText = '';
         let streamCitations = null;
-        // null = belum ada preferensi eksplisit dari user (pakai default
-        // otomatis: terbuka selagi masih berpikir, tertutup begitu jawaban
-        // mulai muncul) - true/false = user sudah klik summary card sendiri,
-        // preferensi itu HARUS dihormati di update berikutnya. Tanpa ini,
-        // assistantBubbleEl.innerHTML yang diganti total tiap chunk bakal
-        // membuat ulang elemen <details> dari nol tiap kali (mengikuti
-        // isOpen otomatis lagi), membatalkan fold manual user dalam hitungan
-        // milidetik - persis keluhan "card gabisa di-fold".
-        let thinkingUserOverride = null;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -10256,41 +10230,20 @@ document.addEventListener('DOMContentLoaded', () => {
           const wasNearBottom = researchChatMessagesEl.scrollHeight - researchChatMessagesEl.scrollTop - researchChatMessagesEl.clientHeight < 60;
 
           let html = '';
-          if (thinkingText) {
-            const autoOpen = !contentText; // Default: tetap terbuka selama contentText belum mulai masuk
-            const isOpen = thinkingUserOverride !== null ? thinkingUserOverride : autoOpen;
-            html += `
-              <details class="research-chat-thinking-block" ${isOpen ? 'open' : ''}>
-                <summary class="research-chat-thinking-summary">
-                  <span style="display: flex; align-items: center; gap: 0.4rem;">
-                    <i class="fa-solid fa-brain ${isOpen ? 'fa-pulse' : ''}" style="color: #8b5cf6;"></i>
-                    <span>${isOpen ? 'Proses Berpikir AI (Sedang Menganalisis...)' : 'Proses Berpikir AI'}</span>
-                  </span>
-                  <i class="fa-solid fa-chevron-down thinking-chevron"></i>
-                </summary>
-                <div class="research-chat-thinking-body">
-                  ${renderMarkdownSafe(thinkingText)}
-                </div>
-              </details>
-            `;
-          }
-
           if (contentText) {
-            html += `<div class="chat-main-content">${renderMarkdownSafe(contentText)}</div>`;
+            html = `<div class="chat-main-content">${renderMarkdownSafe(contentText)}</div>`;
+          } else if (thinkingText) {
+            // Reasoning model DeepSeek bisa "berpikir" lama sebelum mulai
+            // mengeluarkan jawaban - user tidak peduli isi teks berpikirnya
+            // (panjang & teknis), cukup tahu prosesnya masih berjalan. Teks
+            // reasoning tetap disimpan (jadi jangan ${renderMarkdownSafe} di
+            // sini) supaya tidak render ulang konten besar tiap chunk.
+            html = '<div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; padding: 0.25rem 0;"><i class="fa-solid fa-brain fa-pulse" style="color: #8b5cf6; margin-right: 0.4rem;"></i> AI sedang menganalisis pertanyaan Anda...</div>';
+          } else {
+            html = '<div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; padding: 0.25rem 0;"><i class="fa-solid fa-spinner fa-spin" style="color: var(--brand-blue); margin-right: 0.4rem;"></i> Menyiapkan jawaban...</div>';
           }
 
-          assistantBubbleEl.innerHTML = html || '<div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; padding: 0.25rem 0;"><i class="fa-solid fa-spinner fa-spin" style="color: var(--brand-blue); margin-right: 0.4rem;"></i> Menyiapkan jawaban...</div>';
-
-          // innerHTML di atas membuang elemen <details> lama beserta listener-nya -
-          // pasang ulang tiap chunk supaya toggle manual user (klik summary)
-          // selalu tertangkap & disimpan sbg preferensi eksplisit (lihat
-          // thinkingUserOverride di atas), bukan cuma di render pertama.
-          const thinkingDetailsEl = assistantBubbleEl.querySelector('.research-chat-thinking-block');
-          if (thinkingDetailsEl) {
-            thinkingDetailsEl.addEventListener('toggle', () => {
-              thinkingUserOverride = thinkingDetailsEl.open;
-            });
-          }
+          assistantBubbleEl.innerHTML = html;
 
           // Auto-scroll HANYA kalau user memang SUDAH berada di dekat bagian
           // paling bawah SEBELUM chunk ini masuk - kalau tidak, ini "merebut"
