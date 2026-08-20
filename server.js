@@ -7306,22 +7306,18 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
   const thinkingEnabled = thinkingType === 'thinking';
 
-  // Web search (Serper, berbayar) tetap dibatasi kombinasi Model Pro + Deep Thinking
-  // demi kontrol biaya. Academic search (OpenAlex, gratis) sekarang berlaku untuk
-  // SEMUA tier & mode, supaya jawaban JurnalHub Intelligence selalu bisa di-backup
-  // sitasi nyata, bukan cuma di mode paling mahal.
+  // Web search (Serper, berbayar) & academic search (OpenAlex) sama-sama
+  // dibatasi kombinasi Model Pro + Deep Thinking - di Lite/Standard,
+  // JurnalHub Intelligence jawab langsung dari pengetahuan model tanpa
+  // nunggu pencarian eksternal, supaya tetap terasa cepat.
   let webSearchContext = null;
   let academicResult = null;
   const lastUserMessage = [...sanitizedMessages].reverse().find(m => m.role === 'user');
-  if (lastUserMessage) {
+  if (lastUserMessage && modelType === 'pro' && thinkingEnabled) {
     const query = lastUserMessage.content.slice(0, 400);
-    const tasks = [searchAcademicContext(query)];
-    if (modelType === 'pro' && thinkingEnabled) {
-      tasks.push(searchWebForContext(query));
-    }
-    const results = await Promise.all(tasks);
+    const results = await Promise.all([searchAcademicContext(query), searchWebForContext(query)]);
     academicResult = results[0];
-    if (tasks.length > 1) webSearchContext = results[1];
+    webSearchContext = results[1];
   }
   const academicCitations = academicResult ? academicResult.citations : null;
 
