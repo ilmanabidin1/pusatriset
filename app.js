@@ -10108,11 +10108,17 @@ document.addEventListener('DOMContentLoaded', () => {
       researchChatMessagesEl.appendChild(loadingBubble);
       researchChatMessagesEl.scrollTop = researchChatMessagesEl.scrollHeight;
 
-      const chatStatusList = [
+      // Mode Cepat tidak memanggil OpenAlex/web search maupun reasoning eksplisit
+      // di server (lihat gating Model Pro + Deep Thinking) - status yg ditampilkan
+      // harus mencerminkan itu, bukan pesan generik yg sama utk semua mode.
+      const isDeepMode = selectedResearchModel === 'pro' && selectedResearchMode === 'thinking';
+      const chatStatusList = isDeepMode ? [
         '🔍 Mencari referensi & paper ilmiah di OpenAlex...',
         '🌐 Memetakan konteks & publikasi terkait...',
         '🧠 Melakukan analisis & penalaran mendalam...',
         '✍️ Menyusun balasan berstandar akademik...'
+      ] : [
+        '✍️ Menyusun jawaban...'
       ];
       if (typeof researchChatAttachment !== 'undefined' && researchChatAttachment) {
         chatStatusList.unshift(`📄 Membaca & mengekstraksi isi dokumen (${researchChatAttachment.fileName})...`);
