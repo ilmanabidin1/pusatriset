@@ -4381,8 +4381,10 @@
     [data-theme="dark"] .dashboard-body {
       background-color: #0d1117;
     }
-    /* History modal inner content */
-    [data-theme="dark"] #historyDetailModal .modal-body > div {
+    /* History modal inner content - dikecualikan untuk bubble chat (Lit Review
+       ditampilkan sebagai bubble seperti di JurnalHub Intelligence, bukan kartu
+       putih polos, jadi jangan dipaksa warna kartu gelap di sini) */
+    [data-theme="dark"] #historyDetailModal .modal-body > div:not(.research-chat-bubble):not(.research-chat-assistant-block) {
       background: #0d1117 !important;
       border-color: rgba(255,255,255,0.08) !important;
     }

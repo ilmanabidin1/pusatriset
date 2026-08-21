@@ -10951,30 +10951,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
       } else if (item.type === 'lit-review') {
         const citations = item.output.citations || [];
+        // Ditampilkan sebagai bubble chat (persis seperti tampilan pertama kali di
+        // JurnalHub Intelligence: bubble biru untuk prompt user, teks polos mengalir
+        // tanpa dibungkus kartu putih untuk jawaban AI) - bukan "kartu" formulir
+        // input/output terpisah seperti sebelumnya, supaya konsisten & tidak
+        // terkesan kaku waktu dibuka lagi dari Riwayat.
         historyDetailBody.innerHTML = `
-          <div>
-            <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.5rem;">INPUT METADATA</h5>
-            <div style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
-              <div><strong>Topik/Judul Penelitian:</strong> ${escapeHtml(item.input.title) || '-'}</div>
-            </div>
+          <div class="research-chat-bubble user" style="align-self: flex-end;">
+            Buatkan literature review untuk topik: ${escapeHtml(item.input.title) || '-'}
           </div>
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-              <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">HASIL LITERATURE REVIEW</h5>
-              <div style="display: flex; gap: 0.5rem;">
-                <button id="copyHistoryLitReviewBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.75rem; background: #8b5cf6; color: white;" type="button">
-                  <i class="fa-regular fa-copy"></i> Salin Review
-                </button>
-                <button id="exportHistoryLitReviewPdfBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.7rem; font-size: 0.72rem; background: #ef4444; color: white;" type="button">
-                  <i class="fa-solid fa-file-pdf"></i> PDF
-                </button>
-                <button id="exportHistoryLitReviewDocxBtn" class="upgrade-btn" style="width: auto; padding: 0.35rem 0.7rem; font-size: 0.72rem; background: #2563eb; color: white;" type="button">
-                  <i class="fa-solid fa-file-word"></i> DOCX
-                </button>
-              </div>
-            </div>
-            <div id="historyLitReviewTextWrapper" style="border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1.25rem; font-size: 0.85rem; background: #ffffff; line-height: 1.6; max-height: 300px; overflow-y: auto; color: var(--text-main);">
+          <div class="research-chat-assistant-block">
+            <div id="historyLitReviewTextWrapper" class="research-chat-bubble assistant chat-md-block">
               ${wrapCitationMarkers(item.output.review, citations)}
+            </div>
+            <div class="research-chat-msg-actions">
+              <button id="copyHistoryLitReviewBtn" class="research-chat-copy-btn" type="button">
+                <i class="fa-regular fa-copy"></i> <span>Salin</span>
+              </button>
+              <button id="exportHistoryLitReviewPdfBtn" class="research-chat-export-btn" type="button">
+                <i class="fa-solid fa-file-pdf"></i> <span>PDF</span>
+              </button>
+              <button id="exportHistoryLitReviewDocxBtn" class="research-chat-export-btn" type="button">
+                <i class="fa-solid fa-file-word"></i> <span>DOCX</span>
+              </button>
             </div>
           </div>
           <div>
