@@ -11805,6 +11805,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // fetchedPapers) - urutannya inilah yang jadi acuan [Paper N]/paperIndex dari AI,
       // BUKAN fetchedPapers (yang berisi semua hasil pencarian, termasuk yang tidak dicentang).
       let lastSynthesizedPapers = [];
+      let selectedSlrLanguage = 'id';
 
       // Sitasi di Laporan Naratif & Matriks Sintesis ditulis AI sebagai teks bebas
       // "Nama et al. (Tahun)" (bukan marker angka [n] seperti Lit Review biasa),
@@ -11901,6 +11902,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const nextBtn = document.getElementById('slrNextBtn');
       const loader = document.getElementById('slrStepLoader');
       const loaderText = document.getElementById('slrLoaderText');
+
+      // Bahasa laporan SLR - narasi akademik dalam Bahasa Indonesia sering terasa
+      // janggal (istilah metodologi/statistik lebih natural dalam English), jadi
+      // biarkan user pilih sebelum sintesis Langkah 3->4.
+      const slrLangIdBtn = document.getElementById('slrLangIdBtn');
+      const slrLangEnBtn = document.getElementById('slrLangEnBtn');
+      if (slrLangIdBtn && slrLangEnBtn) {
+        slrLangIdBtn.addEventListener('click', () => {
+          selectedSlrLanguage = 'id';
+          slrLangIdBtn.classList.add('active');
+          slrLangEnBtn.classList.remove('active');
+        });
+        slrLangEnBtn.addEventListener('click', () => {
+          selectedSlrLanguage = 'en';
+          slrLangEnBtn.classList.add('active');
+          slrLangIdBtn.classList.remove('active');
+        });
+      }
 
       const steps = [
         document.getElementById('slrStep1'),
@@ -12089,7 +12108,8 @@ document.addEventListener('DOMContentLoaded', () => {
               papers: selectedPapers,
               researchQuestions,
               inclusionCriteria,
-              exclusionCriteria
+              exclusionCriteria,
+              language: selectedSlrLanguage
             })
           });
           const data = await res.json();

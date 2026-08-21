@@ -6348,12 +6348,21 @@
                 </div>
               </div>
               
-              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
-                <button type="button" id="slrCheckAllBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); transition: all 0.2s;">Pilih Semua</button>
-                <button type="button" id="slrUncheckAllBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); transition: all 0.2s;">Hapus Semua</button>
-                <button type="button" id="slrAiScreenBtn" style="border: 1px solid rgba(7,135,220,0.3); background: var(--bg-sidebar-hover); color: #ffffff; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="slrAiScreenBtnText">AI Auto-Screen</span>
-                </button>
+              <div style="display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                  <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">Bahasa Laporan:</label>
+                  <div style="display: inline-flex; background: rgba(8,34,64,0.05); border: 1px solid rgba(8,34,64,0.08); border-radius: 20px; padding: 2px;">
+                    <button type="button" class="composer-pill active" id="slrLangIdBtn" data-lang="id">Indonesia</button>
+                    <button type="button" class="composer-pill" id="slrLangEnBtn" data-lang="en">English</button>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                  <button type="button" id="slrCheckAllBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); transition: all 0.2s;">Pilih Semua</button>
+                  <button type="button" id="slrUncheckAllBtn" style="border: 1px solid rgba(8,34,64,0.15); background: transparent; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); transition: all 0.2s;">Hapus Semua</button>
+                  <button type="button" id="slrAiScreenBtn" style="border: 1px solid rgba(7,135,220,0.3); background: var(--bg-sidebar-hover); color: #ffffff; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="slrAiScreenBtnText">AI Auto-Screen</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Papers selection list container -->

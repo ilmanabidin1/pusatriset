@@ -6162,6 +6162,10 @@ app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
   if (!Array.isArray(papers) || papers.length === 0) {
     return res.status(400).json({ ok: false, message: 'Daftar paper kosong atau tidak valid.' });
   }
+  // Narasi SLR akademik sering terasa janggal dalam Bahasa Indonesia (istilah
+  // metodologi/statistik lebih natural dalam English) - default tetap Bahasa
+  // Indonesia (perilaku lama, backward-compatible), tapi user bisa pilih English.
+  const outputLanguage = req.body.language === 'en' ? 'en' : 'id';
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
@@ -6220,7 +6224,12 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
       }
     }
   ],
-  "narrative": "Teks analisis naratif SLR lengkap berstandar PRISMA 2020 dalam Bahasa Indonesia (berisi subbab: 1. Karakteristik Umum Studi, 2. Analisis Metodologi & Penilaian Risiko Bias (Risk of Bias), 3. Sintesis Temuan Utama per Pertanyaan Penelitian, 4. Celah Penelitian (Research Gaps) & Implikasi Riset Masa Depan). Gunakan format HTML untuk penulisan teks ini (tag h4/h5, p, ul/li, strong) dan wajib menyertakan sitasi dalam teks format (Penulis, Tahun)."
+  "narrative": "Teks analisis naratif SLR lengkap berstandar PRISMA 2020 (berisi subbab: 1. Karakteristik Umum Studi, 2. Analisis Metodologi & Penilaian Risiko Bias (Risk of Bias), 3. Sintesis Temuan Utama per Pertanyaan Penelitian, 4. Celah Penelitian (Research Gaps) & Implikasi Riset Masa Depan). Gunakan format HTML untuk penulisan teks ini (tag h4/h5, p, ul/li, strong) dan wajib menyertakan sitasi dalam teks format (Penulis, Tahun) / (Author, Year)."
+}
+
+${outputLanguage === 'en'
+  ? 'BAHASA OUTPUT: Tulis SELURUH teks konten (reason, methodology, findings, gap, riskOfBias.reason, dan khususnya narrative) dalam ACADEMIC ENGLISH. Jangan campur dengan Bahasa Indonesia sama sekali - ini penting karena istilah metodologi/statistik akademik lebih natural dan diterima secara internasional dalam Bahasa Inggris.'
+  : 'BAHASA OUTPUT: Tulis SELURUH teks konten (reason, methodology, findings, gap, riskOfBias.reason, dan khususnya narrative) dalam Bahasa Indonesia akademik. Jangan campur dengan Bahasa Inggris.'
 }`;
 
     const userPrompt = `Daftar Paper:\n${paperListText}\n\nPertanyaan Penelitian (Research Questions):\n${researchQuestions || '-'}\n\nKriteria Inklusi:\n${inclusionCriteria || '-'}\n\nKriteria Eksklusi:\n${exclusionCriteria || '-'}\n\nLakukan analisis screening, hitung diagram PRISMA, bangun tabel matriks sintesis, dan tulis narasi SLR lengkap sekarang. Kembalikan HANYA dalam format JSON sesuai spesifikasi system prompt:`;
