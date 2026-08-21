@@ -2723,6 +2723,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
 
+          // Deep-link dari tombol CTA di email notifikasi "Sintesis SLR Anda
+          // Sudah Siap" (?openslr=<taskId>, lihat POST /api/slr/synthesize di
+          // server.js) - buka langsung Langkah 4 wizard SLR dgn hasil task
+          // tsb saat halaman pertama kali dimuat. window.resumeSlrTask
+          // didefinisikan di dalam initSlrWizard() - checkAuthState() (di
+          // mana blok ini berjalan) bisa saja resolve LEBIH DULU daripada
+          // initSlrWizard() sempat jalan (race kondisi normal antar dua
+          // alur async yang independen), jadi coba beberapa kali dgn jeda
+          // singkat drpd langsung menyerah begitu window.resumeSlrTask belum
+          // ada di percobaan pertama.
+          if (!window.__slrDeepLinkHandled) {
+            window.__slrDeepLinkHandled = true;
+            const slrDeepLinkParams = new URLSearchParams(window.location.search);
+            const slrTaskId = slrDeepLinkParams.get('openslr');
+            if (slrTaskId) {
+              window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+              const tryResumeSlrTask = (attemptsLeft) => {
+                if (window.resumeSlrTask) {
+                  window.resumeSlrTask(slrTaskId);
+                } else if (attemptsLeft > 0) {
+                  setTimeout(() => tryResumeSlrTask(attemptsLeft - 1), 200);
+                } else {
+                  console.error('[SLR deep-link] resumeSlrTask tidak pernah siap setelah beberapa detik.');
+                }
+              };
+              tryResumeSlrTask(25);
+            }
+          }
+
           // Deep-link jurnalhub.id/campusambassador (?opentab=afiliasi, lihat
           // app.get('/campusambassador') di server.js) - buka langsung tab
           // JurnalHub Campus Ambassador saat halaman pertama kali dimuat,
@@ -12092,8 +12121,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         lastSynthesizedPapers = selectedPapers;
 
+        const banner = document.getElementById('slrSynthesisBanner');
         if (loader) {
-          loaderText.textContent = 'Menyusun ulasan sistematis dengan AI...';
+          loaderText.textContent = 'Mengirim tugas sintesis...';
           loader.style.display = 'flex';
         }
         if (nextBtn) nextBtn.disabled = true;
@@ -12115,7 +12145,23 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = await res.json();
           if (!data.ok) throw new Error(data.message);
 
-          slrResult = data.result;
+          // Sintesis 100 paper bisa makan beberapa menit (server proses async
+          // di background, lihat POST /api/slr/synthesize di server.js) -
+          // jangan tahan koneksi, poll status-nya sampai selesai/gagal. User
+          // boleh tinggalkan halaman (banner "boleh ditinggal" di bawah) dan
+          // dapat email begitu selesai (link email membawa balik ke sini via
+          // ?openslr=<taskId>, lihat resumeSlrTaskFromDeepLink).
+          if (banner) banner.style.display = 'flex';
+          if (loaderText) loaderText.textContent = 'Menganalisis dan mensintesis artikel dengan AI...';
+
+          const finalTask = await pollSlrTask(data.taskId);
+          if (banner) banner.style.display = 'none';
+
+          if (finalTask.status === 'failed') {
+            throw new Error(finalTask.errorMessage || 'Sintesis SLR gagal diproses.');
+          }
+
+          slrResult = finalTask.result;
           renderSynthesisOutput();
 
           currentStep = 4;
@@ -12140,9 +12186,38 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
           alert('Error: ' + err.message);
         } finally {
+          if (banner) banner.style.display = 'none';
           if (loader) loader.style.display = 'none';
           if (nextBtn) nextBtn.disabled = false;
         }
+      }
+
+      // Poll GET /api/slr/synthesize/status/:id tiap 5 detik sampai task
+      // berstatus 'completed'/'failed' - dipakai baik di alur normal
+      // (runSynthesis, user tetap di halaman) maupun resume dari deep-link
+      // email (kalau task ternyata masih diproses saat link diklik).
+      function pollSlrTask(taskId) {
+        return new Promise((resolve, reject) => {
+          const check = async () => {
+            try {
+              const res = await fetch(`/api/slr/synthesize/status/${taskId}`);
+              const data = await res.json();
+              if (!data.ok) {
+                reject(new Error(data.message || 'Gagal memeriksa status sintesis SLR.'));
+                return;
+              }
+              const task = data.task;
+              if (task.status === 'completed' || task.status === 'failed') {
+                resolve(task);
+                return;
+              }
+              setTimeout(check, 5000);
+            } catch (err) {
+              setTimeout(check, 5000); // gangguan jaringan sesaat - coba lagi, jangan gagalkan seluruh polling
+            }
+          };
+          check();
+        });
       }
 
       function renderSynthesisOutput() {
@@ -12583,6 +12658,50 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStepUI();
       };
       window.updateSlrAccess = updateSlrAccess;
+
+      // Resume dari deep-link email "Sintesis SLR Anda Sudah Siap"
+      // (?openslr=<taskId>, lihat POST /api/slr/synthesize di server.js) -
+      // dipanggil sekali saat halaman dimuat (lihat checkAuthState). Kalau
+      // task ternyata masih diproses (user klik link sebelum email terkirim
+      // krn buka tab lama), tetap poll sampai selesai - bukan langsung gagal.
+      window.resumeSlrTask = async function(taskId) {
+        if (window.switchTab) window.switchTab('slr');
+        try {
+          const res = await fetch(`/api/slr/synthesize/status/${taskId}`);
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.message);
+          let task = data.task;
+
+          if (task.status === 'pending' || task.status === 'processing') {
+            currentStep = 3;
+            updateStepUI();
+            const banner = document.getElementById('slrSynthesisBanner');
+            if (banner) banner.style.display = 'flex';
+            task = await pollSlrTask(taskId);
+            if (banner) banner.style.display = 'none';
+          }
+
+          if (task.status === 'failed') {
+            alert('Sintesis SLR gagal diproses: ' + (task.errorMessage || 'Kesalahan tidak diketahui.'));
+            return;
+          }
+
+          const qEl = document.getElementById('slrQuestions');
+          const incEl = document.getElementById('slrInclusion');
+          const excEl = document.getElementById('slrExclusion');
+          if (qEl) qEl.value = task.researchQuestions || '';
+          if (incEl) incEl.value = task.inclusionCriteria || '';
+          if (excEl) excEl.value = task.exclusionCriteria || '';
+
+          lastSynthesizedPapers = task.papers || [];
+          slrResult = task.result;
+          renderSynthesisOutput();
+          currentStep = 4;
+          updateStepUI();
+        } catch (err) {
+          alert('Gagal memuat hasil sintesis SLR: ' + err.message);
+        }
+      };
     }
   }
 

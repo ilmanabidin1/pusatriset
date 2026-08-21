@@ -1542,6 +1542,7 @@ app.post('/api/admin/email-blast', requireAccess, requireAdmin, async (req, res)
 // selamanya (keterbatasan yang sama, tidak ada resume mechanism).
 const COWORK_TASKS_FILE = path.join(DATA_DIR, 'cowork-tasks.json');
 const COWORK_OUTPUTS_DIR = path.join(DATA_DIR, 'uploads', 'cowork-outputs');
+const SLR_TASKS_FILE = path.join(DATA_DIR, 'slr-tasks.json');
 const OPENROUTER_MODEL = 'z-ai/glm-5.2';
 const COWORK_SYSTEM_PROMPT = `Anda adalah "JurnalHub Co-Work Agent", Asisten Peneliti Senior Otonom berbasis AI untuk akademisi Indonesia.
 
@@ -1588,6 +1589,30 @@ function saveCoworkTasks(tasks) {
     fs.writeFileSync(COWORK_TASKS_FILE, JSON.stringify(tasks, null, 2));
   } catch (error) {
     console.error('Gagal menyimpan cowork-tasks.json:', error);
+  }
+}
+
+// Task SLR Synthesize - pola sama persis dengan Co-Work (submit langsung
+// respons taskId, proses AI sesungguhnya jalan async di background, di-poll
+// lewat GET status, user boleh tinggalkan halaman krn dapat notifikasi email
+// begitu selesai) - dipisah dari 100+ paper yang bisa makan waktu beberapa
+// menit utk digenerate (lihat max_tokens 32000 di bawah).
+function getSlrTasks() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(SLR_TASKS_FILE)) fs.writeFileSync(SLR_TASKS_FILE, '[]');
+    return JSON.parse(fs.readFileSync(SLR_TASKS_FILE, 'utf8'));
+  } catch (error) {
+    console.error('Gagal membaca slr-tasks.json:', error);
+    return [];
+  }
+}
+function saveSlrTasks(tasks) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(SLR_TASKS_FILE, JSON.stringify(tasks, null, 2));
+  } catch (error) {
+    console.error('Gagal menyimpan slr-tasks.json:', error);
   }
 }
 
@@ -6169,18 +6194,58 @@ app.post('/api/slr/synthesize', requireAccess, async (req, res) => {
 
   const users = getUsers();
   const user = users.find(u => u.id === req.session.userId);
+  if (!user) {
+    return res.status(401).json({ ok: false, message: 'Sesi tidak valid.' });
+  }
 
   // Kuota SLR Synthesize sekarang berbasis DEEPSEEK POOL bersama (kredit/minggu)
-  if (user && !requireDeepSeekPoolAccess(req, res, user)) return;
+  if (!requireDeepSeekPoolAccess(req, res, user)) return;
 
   const deepSeekKey = process.env.DEEPSEEK_API_KEY;
   if (!deepSeekKey) {
     return res.status(500).json({ ok: false, message: 'DeepSeek API Key belum dikonfigurasi di Railway.' });
   }
 
+  // Sintesis 100 paper bisa makan waktu beberapa menit (max_tokens 32000) -
+  // jangan tahan koneksi HTTP user selama itu. Simpan task, balas taskId
+  // SEGERA, proses sesungguhnya jalan async di bawah tanpa di-await di sini
+  // (pola sama seperti Co-Work Agent) - user boleh tinggalkan halaman, hasil
+  // dipoll lewat GET /api/slr/synthesize/status/:id dan dikirim ke email
+  // begitu selesai.
+  const task = {
+    id: uuidv4(),
+    userId: user.id,
+    papers,
+    researchQuestions,
+    inclusionCriteria,
+    exclusionCriteria,
+    language: outputLanguage,
+    status: 'pending',
+    statusLog: 'Menunggu diproses...',
+    result: null,
+    errorMessage: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  const tasks = getSlrTasks();
+  tasks.push(task);
+  saveSlrTasks(tasks);
+
+  res.json({ ok: true, taskId: task.id });
+
+  const updateTask = (patch) => {
+    const currentTasks = getSlrTasks();
+    const idx = currentTasks.findIndex(t => t.id === task.id);
+    if (idx === -1) return;
+    Object.assign(currentTasks[idx], patch, { updatedAt: new Date().toISOString() });
+    saveSlrTasks(currentTasks);
+  };
+
   const fetchFn = globalThis.fetch || require('node-fetch');
 
   try {
+    updateTask({ status: 'processing', statusLog: 'Menganalisis dan mensintesis artikel dengan AI...' });
+
     // Bangun teks daftar paper
     const paperListText = papers.map((p, idx) => {
       return `[Paper ${idx + 1}]
@@ -6305,7 +6370,7 @@ ${outputLanguage === 'en'
       }
     }
 
-    if (user) recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
+    recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
 
     // Tambahkan item riwayat SLR
     addHistoryItem(req.session.userId, 'slr', {
@@ -6314,11 +6379,46 @@ ${outputLanguage === 'en'
       criteria: { inclusion: inclusionCriteria, exclusion: exclusionCriteria }
     }, parsedResult);
 
-    res.json({ ok: true, result: parsedResult });
+    updateTask({ status: 'completed', statusLog: 'Selesai.', result: parsedResult });
+
+    const openUrl = `https://jurnalhub.id/?openslr=${task.id}`;
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a202c;">
+        <div style="padding: 1.5rem 0; border-bottom: 2px solid #0787dc;">
+          <span style="font-weight: 800; font-size: 1.1rem; color: #0787dc;">JurnalHub</span>
+        </div>
+        <div style="padding: 1.5rem 0;">
+          <h2 style="margin: 0 0 1rem;">Sintesis SLR Anda telah selesai!</h2>
+          <p style="line-height: 1.6;">Halo${user.name ? ' ' + escapeHtmlServer(user.name) : ''}, hasil Systematic Literature Review untuk ${papers.length} artikel yang Anda kirim sudah selesai dianalisis dan disintesis oleh AI.</p>
+          <div style="text-align: center; margin: 1.5rem 0;">
+            <a href="${openUrl}" style="display: inline-block; background: #0787dc; color: #ffffff; padding: 0.75rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Lihat Hasil Sintesis SLR</a>
+          </div>
+          <p style="font-size: 0.85rem; color: #718096;">Catatan: Hasil disimpan aman di dashboard JurnalHub Anda, tab Riset Lanjutan (SLR).</p>
+        </div>
+      </div>`;
+    await sendMailHelper(user.email, '[JurnalHub] Sintesis SLR Anda Sudah Siap! 📊', emailHtml);
   } catch (error) {
-    console.error('[SLR Synthesize] Error:', error);
-    res.status(500).json({ ok: false, message: 'Gagal melakukan sintesis SLR: ' + error.message });
+    console.error('[SLR Synthesize] Error:', task.id, error.message);
+    updateTask({ status: 'failed', statusLog: 'Gagal.', errorMessage: error.message || 'Terjadi kesalahan saat memproses sintesis SLR.' });
+    try {
+      await sendMailHelper(user.email, '[JurnalHub] Sintesis SLR Anda Gagal Diproses', `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a202c;"><p>Maaf, sintesis SLR Anda (${papers.length} artikel) gagal diproses: ${escapeHtmlServer(error.message || 'Kesalahan tidak diketahui.')}</p><p>Silakan coba lagi lewat dashboard.</p></div>`);
+    } catch (mailErr) {
+      console.error('[SLR Synthesize] Gagal kirim email notifikasi kegagalan:', mailErr.message);
+    }
   }
+});
+
+app.get('/api/slr/synthesize/status/:id', requireAccess, (req, res) => {
+  const task = getSlrTasks().find(t => t.id === req.params.id);
+  if (!task || (task.userId !== req.session.userId && !isAdminReq(req))) {
+    return res.status(404).json({ ok: false, message: 'Task tidak ditemukan.' });
+  }
+  res.json({ ok: true, task: {
+    id: task.id, status: task.status, statusLog: task.statusLog, result: task.result,
+    papers: task.papers, researchQuestions: task.researchQuestions,
+    inclusionCriteria: task.inclusionCriteria, exclusionCriteria: task.exclusionCriteria,
+    errorMessage: task.errorMessage, createdAt: task.createdAt, updatedAt: task.updatedAt
+  }});
 });
 
 // Endpoint untuk generate kriteria & research questions otomatis dengan DeepSeek
