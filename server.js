@@ -6243,7 +6243,11 @@ ${outputLanguage === 'en'
       },
       body: JSON.stringify({
         model: 'deepseek-v4-flash',
-        max_tokens: 8192,
+        // 8192 sebelumnya kepotong di tengah generate kalau paper-nya banyak
+        // (mis. 100 paper -> screenedPapers + matrix + narrative lengkap bisa
+        // butuh 25-40rb token) - DeepSeek sendiri dukung output sampai 384K,
+        // jadi naikkan jauh di atas kebutuhan wajar supaya tidak kepotong lagi.
+        max_tokens: 32000,
         stream: false,
         thinking: { type: 'disabled' },
         extra_body: { thinking: { type: 'disabled' } },
