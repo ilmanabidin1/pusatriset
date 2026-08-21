@@ -16,6 +16,32 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;');
   }
 
+  // Banyak elemen (diagram PRISMA, matriks sintesis SLR, tabel, dsb) hanya bisa
+  // di-scroll horizontal lewat scrollbar drag. Di layar sempit (window di-minimize)
+  // mouse wheel biasa cuma scroll vertikal, jadi konten yang overflow-x tidak
+  // terjangkau. Dengarkan wheel di seluruh dokumen: kalau target ada di dalam
+  // container yang overflow-x tapi tidak butuh scroll vertikal sendiri, alihkan
+  // delta vertikal jadi scroll horizontal.
+  document.addEventListener('wheel', (e) => {
+    if (e.deltaY === 0 || e.ctrlKey) return;
+    let el = e.target;
+    while (el && el !== document.body && el !== document.documentElement) {
+      if (el.scrollWidth > el.clientWidth) {
+        const style = window.getComputedStyle(el);
+        if (style.overflowX === 'auto' || style.overflowX === 'scroll') {
+          const scrollsVertically = el.scrollHeight > el.clientHeight &&
+            (style.overflowY === 'auto' || style.overflowY === 'scroll');
+          if (!scrollsVertically) {
+            el.scrollLeft += e.deltaY;
+            e.preventDefault();
+            return;
+          }
+        }
+      }
+      el = el.parentElement;
+    }
+  }, { passive: false });
+
   // Program Afiliasi Kampus: tangkap kode referral dari link (?ref=KODE) ke
   // cookie 30 hari kalau user langsung buka index.html (sudah login) lewat
   // link referral - landing.html & auth.html punya salinan snippet yang sama
