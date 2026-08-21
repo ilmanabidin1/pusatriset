@@ -6260,7 +6260,7 @@ Abstrak: ${p.abstract}`;
 
     const systemPrompt = `Anda adalah pakar Systematic Literature Review (SLR) akademik berstandar PRISMA 2020. Tugas Anda adalah melakukan evaluasi metodologi, penilaian Risiko Bias (Risk of Bias Assessment), dan sintesis secara komprehensif terhadap daftar paper yang diberikan berdasarkan kriteria inklusi, eksklusi, dan pertanyaan penelitian.
 
-Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markdown seperti \`\`\`json ... \`\`\`, TANPA penjelasan tambahan). JSON harus memiliki struktur persis seperti berikut:
+Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markdown seperti \`\`\`json ... \`\`\`, TANPA penjelasan tambahan). ATURAN PALING PENTING supaya JSON tidak rusak: JANGAN PERNAH memakai tanda kutip dua (") di DALAM isi teks/string manapun (misal untuk mengutip istilah, judul, atau frasa) - kalau perlu mengutip sesuatu di dalam teks, gunakan tanda kutip tunggal (') sebagai gantinya. Satu karakter tanda kutip dua yang tidak di-escape di tengah isi teks akan membuat SELURUH JSON gagal di-parse. JSON harus memiliki struktur persis seperti berikut:
 {
   "screenedPapers": [
     {
@@ -6327,6 +6327,11 @@ ${outputLanguage === 'en'
         stream: false,
         thinking: { type: 'disabled' },
         extra_body: { thinking: { type: 'disabled' } },
+        // Paksa decoder DeepSeek supaya HANYA bisa menghasilkan JSON yang valid
+        // secara sintaksis (mencegah kelas bug "tanda kutip tidak di-escape di
+        // tengah teks bikin JSON.parse gagal") - tidak menjamin skema field-nya
+        // benar, tapi menjamin string-nya selalu bisa di-parse.
+        response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
