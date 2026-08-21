@@ -291,7 +291,13 @@
       font-family: var(--font-primary);
       min-height: 100vh;
       display: flex;
-      overflow-x: hidden;
+      /* auto (bukan hidden) - kalau window di-shrink ke rasio sangat sempit
+         (mis. 9:16) dan konten dashboard belum sempat reflow rapi, tetap ada
+         scrollbar/gesture (drag, trackpad swipe, shift+wheel) buat mengakses
+         bagian yang overflow, bukan dipotong tanpa cara melihatnya sama sekali.
+         Tombol wheel listener di app.js sengaja skip body/html jadi ini TIDAK
+         membajak scroll vertikal biasa. */
+      overflow-x: auto;
     }
 
     /* Sidebar Layout */
