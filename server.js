@@ -1573,6 +1573,145 @@ function buildCustomInstructionsMessage(user) {
   };
 }
 
+// --- Memori otomatis JurnalHub Intelligence -----------------------------
+// Beda dengan customInstructions (di atas - user isi manual), ini catatan
+// yang DIPELAJARI SENDIRI oleh sistem dari histori percakapan user (mirip
+// fitur "memory" ChatGPT/Claude), supaya JH Intelligence lebih paham siapa
+// user-nya (pekerjaan/level akademik, bidang & topik riset, gaya bahasa)
+// tanpa user perlu setting apa pun. Disimpan di user.aiMemory:
+//   { summary, updatedAt, lastProcessedAt, processedMessageCount }
+// User bisa lihat/opt-out/hapus lewat GET/POST /api/memory di Pengaturan.
+function buildAiMemoryMessage(user) {
+  if (!user || user.aiMemoryOptOut) return null;
+  const summary = user.aiMemory && typeof user.aiMemory.summary === 'string' ? user.aiMemory.summary.trim() : '';
+  if (!summary) return null;
+  return {
+    role: 'system',
+    content: `CATATAN TENTANG PENGGUNA INI (dipelajari otomatis dari percakapan-percakapan sebelumnya - gunakan untuk membuat jawaban lebih relevan/personal, TAPI JANGAN menyebut eksplisit bahwa kamu "mengingat"/"mempelajari" ini kecuali pengguna bertanya langsung soal itu, dan JANGAN berasumsi lebih jauh dari yang tertulis di sini):\n${summary}`
+  };
+}
+
+// Ambang minimal supaya tidak nge-trigger 1 API call ekstra tiap satu pesan
+// (boros kredit pool) - cukup update tiap beberapa giliran pesan baru, atau
+// tiap 24 jam kalau ada aktivitas baru sama sekali (biar user yang jarang
+// chat juga akhirnya ke-update).
+const AI_MEMORY_MIN_NEW_MESSAGES = 8;
+const AI_MEMORY_MIN_HOURS_ELAPSED = 24;
+const AI_MEMORY_MAX_SAMPLE_CHARS = 12000;
+
+// Fire-and-forget, sengaja TIDAK di-await di caller - kegagalan di sini tidak
+// boleh mengganggu respons chat utama. Backfill histori lama otomatis terjadi
+// di jalan pertama fungsi ini dipanggil untuk seorang user (lastProcessedAt
+// belum ada -> semua percakapan lama ikut diproses), tidak perlu migrasi
+// terpisah.
+async function maybeUpdateUserMemory(userId) {
+  try {
+    const users = getUsers();
+    const user = users.find(u => u.id === userId);
+    if (!user || user.aiMemoryOptOut) return;
+
+    const conversations = getResearchChatConversations()
+      .filter(c => c.userId === userId)
+      .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+    const currentTotalMessages = conversations.reduce((sum, c) => sum + (Array.isArray(c.messages) ? c.messages.length : 0), 0);
+    if (currentTotalMessages === 0) return;
+
+    const mem = user.aiMemory || null;
+    const processedCount = mem ? (mem.processedMessageCount || 0) : 0;
+    const newMessageDelta = currentTotalMessages - processedCount;
+
+    if (mem) {
+      const hoursSinceLastProcessed = (Date.now() - new Date(mem.lastProcessedAt || 0).getTime()) / (1000 * 60 * 60);
+      const enoughNewMessages = newMessageDelta >= AI_MEMORY_MIN_NEW_MESSAGES;
+      const enoughTimeElapsed = hoursSinceLastProcessed >= AI_MEMORY_MIN_HOURS_ELAPSED && newMessageDelta > 0;
+      if (!enoughNewMessages && !enoughTimeElapsed) return;
+    }
+    // mem === null -> pertama kali diproses, jalan terus (backfill semua histori lama).
+
+    const deepSeekKey = process.env.DEEPSEEK_API_KEY;
+    if (!deepSeekKey) return;
+
+    // Kumpulkan pesan user (paling revealing soal siapa mereka/topik risetnya)
+    // dari percakapan yang belum diproses - dibatasi ukurannya biar hemat token.
+    const relevantConvos = mem ? conversations.filter(c => new Date(c.updatedAt) > new Date(mem.lastProcessedAt || 0)) : conversations;
+    let sampleText = '';
+    for (const conv of relevantConvos) {
+      const userMsgs = (conv.messages || []).filter(m => m.role === 'user').map(m => m.content.slice(0, 400));
+      const chunk = `[Percakapan: ${conv.title || 'Tanpa judul'}]\n${userMsgs.join('\n')}\n\n`;
+      if (sampleText.length + chunk.length > AI_MEMORY_MAX_SAMPLE_CHARS) break;
+      sampleText += chunk;
+    }
+    if (!sampleText.trim()) return;
+
+    const fetchFn = globalThis.fetch || require('node-fetch');
+    const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
+
+    const systemPrompt = `Anda bertugas menyusun "profil riset" ringkas tentang seorang pengguna platform akademik JurnalHub, berdasarkan potongan pertanyaan yang pernah mereka ajukan ke asisten AI riset. Tujuannya supaya asisten AI di masa depan bisa memberi jawaban yang lebih relevan dan personal untuk orang ini (mis. bidang/level akademik - mahasiswa S1/S2/S3/dosen/peneliti, topik riset yang sedang digarap, gaya bahasa yang disukai).
+
+ATURAN PENTING:
+- HANYA simpulkan dari yang benar-benar tersirat/tersurat di pesan-pesan berikut - JANGAN mengarang detail yang tidak didukung data.
+- Kalau info yang tersedia terlalu sedikit/ambigu untuk suatu poin, lewati poin itu saja, jangan dipaksakan.
+- Ringkas: maksimal 4-6 kalimat.
+- Kalau ada catatan sebelumnya, GABUNGKAN dengan info baru jadi satu catatan yang konsisten (perbarui, jangan sekadar ditempel jadi kontradiktif atau kepanjangan).
+- Tulis dalam Bahasa Indonesia.
+
+Kembalikan HANYA JSON mentah (TANPA markdown, TANPA penjelasan) dengan struktur: {"summary": "isi catatan di sini"}`;
+
+    const userPrompt = `Catatan yang sudah ada sebelumnya tentang pengguna ini:\n${mem && mem.summary ? mem.summary : '(belum ada catatan)'}\n\nPotongan pesan-pesan pengguna dari beberapa percakapan (kronologis lama ke baru):\n${sampleText}\n\nSusun/perbarui catatan profil riset pengguna ini sekarang, kembalikan HANYA JSON sesuai spesifikasi.`;
+
+    const dsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${deepSeekKey}` },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 800,
+        stream: false,
+        thinking: { type: 'disabled' },
+        extra_body: { thinking: { type: 'disabled' } },
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+    if (!dsResponse.ok) {
+      console.error('[AI Memory] DeepSeek error status:', dsResponse.status);
+      return;
+    }
+    const dsData = await dsResponse.json();
+    const content = dsData?.choices?.[0]?.message?.content?.trim();
+    if (!content) return;
+
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
+      console.warn('[AI Memory] Gagal parse JSON hasil ekstraksi, dilewati:', e.message);
+      return;
+    }
+    const newSummary = typeof parsed.summary === 'string' ? parsed.summary.trim() : '';
+    if (!newSummary) return;
+
+    // Simpan - baca ulang users.json (bukan pakai `users` lama) supaya tidak
+    // menimpa perubahan lain yang mungkin terjadi selagi request DeepSeek ini
+    // berlangsung (fire-and-forget, jalan paralel dengan request lain).
+    const freshUsers = getUsers();
+    const freshUser = freshUsers.find(u => u.id === userId);
+    if (!freshUser) return;
+    freshUser.aiMemory = {
+      summary: newSummary,
+      updatedAt: new Date().toISOString(),
+      lastProcessedAt: new Date().toISOString(),
+      processedMessageCount: currentTotalMessages
+    };
+    saveUsers(freshUsers);
+    recordDeepSeekPoolUsage(userId, dsData?.usage?.total_tokens);
+  } catch (error) {
+    console.error('[AI Memory] Gagal update memori:', error.message);
+  }
+}
+
 function getCoworkTasks() {
   try {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -2944,6 +3083,44 @@ app.post('/api/update-profile', requireAccess, (req, res) => {
       customInstructions: user.customInstructions || ''
     }
   });
+});
+
+// Profil "memori" JH Intelligence yang dipelajari otomatis dari histori
+// percakapan (lihat maybeUpdateUserMemory/buildAiMemoryMessage) - user bisa
+// lihat, opt-out, atau hapus catatannya sendiri lewat sini (transparansi,
+// bukan cuma diam-diam mengumpulkan data tentang mereka).
+app.get('/api/memory', requireAccess, (req, res) => {
+  const users = getUsers();
+  const user = users.find(u => u.id === req.session.userId);
+  if (!user) return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
+  res.json({
+    ok: true,
+    summary: (user.aiMemory && user.aiMemory.summary) || '',
+    updatedAt: (user.aiMemory && user.aiMemory.updatedAt) || null,
+    optedOut: !!user.aiMemoryOptOut
+  });
+});
+
+app.post('/api/memory/reset', requireAccess, (req, res) => {
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === req.session.userId);
+  if (userIndex === -1) return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
+  delete users[userIndex].aiMemory;
+  saveUsers(users);
+  res.json({ ok: true, message: 'Catatan profil riset Anda sudah dihapus.' });
+});
+
+app.post('/api/memory/opt-out', requireAccess, (req, res) => {
+  const { optedOut } = req.body;
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === req.session.userId);
+  if (userIndex === -1) return res.status(404).json({ ok: false, message: 'User tidak ditemukan.' });
+  users[userIndex].aiMemoryOptOut = !!optedOut;
+  // Kalau user opt-out, hapus juga catatan yang sudah ada - bukan cuma
+  // berhenti memperbarui tapi diam-diam masih menyimpan yang lama.
+  if (optedOut) delete users[userIndex].aiMemory;
+  saveUsers(users);
+  res.json({ ok: true, optedOut: !!users[userIndex].aiMemoryOptOut });
 });
 
 // Endpoint untuk mendapatkan daftar template jurnal internasional (.docx)
@@ -7649,6 +7826,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     }
 
     const customInstructionsMsg = buildCustomInstructionsMessage(user);
+    const aiMemoryMsg = buildAiMemoryMessage(user);
     let dsUsage = null;
 
     // SEMUA tier (termasuk Free) sekarang pakai endpoint Responses API DeepSeek
@@ -7676,6 +7854,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
         ? 'CATATAN: Kamu punya akses tool `web_search` yang benar-benar bisa browsing internet real-time di request ini. JANGAN bilang "saya tidak bisa browsing internet" atau semacamnya - kamu BISA. Kalau pertanyaan pengguna butuh info terkini, paper/sumber asli, atau mereka minta dicarikan sesuatu, langsung pakai tool itu dan jawab berdasarkan hasil pencariannya, jangan cuma kasih saran cara mencari manual.'
         : 'PROTOKOL PENCARIAN (MODE CEPAT): Secara default JANGAN pakai tool `web_search` - andalkan pengetahuanmu sendiri dulu supaya jawaban tetap instan. Cuma pakai tool ini kalau MINIMAL SATU syarat ini terpenuhi: (1) pengguna eksplisit minta dicarikan/di-browsing-kan sesuatu, mis. "carikan di internet", "cari berita", "cek update terbaru"; (2) butuh data real-time/sensitif-waktu (harga saham, cuaca, berita hari ini); (3) menanyakan event/publikasi/entitas spesifik yang kemungkinan terjadi setelah batas pengetahuanmu. JANGAN cari untuk konsep akademik/ilmiah umum, prinsip hukum umum, bantuan menulis/edit teks, logika/matematika standar, atau klarifikasi ulang dari yang sudah ada di riwayat percakapan - kalau ragu, jawab langsung dari pengetahuanmu tanpa memicu pencarian.';
       const instructionsParts = [RESEARCH_CHAT_SYSTEM_PROMPT, searchInstruction];
+      if (aiMemoryMsg) instructionsParts.push(aiMemoryMsg.content);
       if (customInstructionsMsg) instructionsParts.push(customInstructionsMsg.content);
       if (academicResult) instructionsParts.push(academicResult.contextText);
 
@@ -7699,6 +7878,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
 
     if (!usedResponsesApi) {
       const systemMessages = [{ role: 'system', content: RESEARCH_CHAT_SYSTEM_PROMPT }];
+      if (aiMemoryMsg) systemMessages.push(aiMemoryMsg);
       if (customInstructionsMsg) systemMessages.push(customInstructionsMsg);
       if (academicResult) {
         systemMessages.push({ role: 'system', content: academicResult.contextText });
@@ -7837,6 +8017,12 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
       });
     }
     saveResearchChatConversations(conversations);
+
+    // Fire-and-forget: perbarui memori otomatis user ini di background (tidak
+    // di-await, tidak boleh menunda/menggagalkan respons chat yang sudah selesai
+    // dikirim). Fungsi ini sendiri yang memutuskan apakah perlu benar-benar
+    // memanggil DeepSeek atau cukup dilewati (lihat AI_MEMORY_MIN_* di atas).
+    maybeUpdateUserMemory(req.session.userId).catch(() => {});
   } catch (error) {
     console.error('[Research Chat] Error:', error.message);
     if (!res.headersSent) {

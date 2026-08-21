@@ -7069,6 +7069,32 @@
               <button type="button" class="btn btn-primary" id="btnSaveCustomInstructions" style="padding: 0.7rem 1.75rem; font-size: 0.88rem; margin-top: 1rem;">Simpan Instruksi</button>
             </div>
 
+            <!-- Section 1b-2: Memori otomatis JH Intelligence - beda dengan Instruksi
+                 Kustom di atas (user isi manual), ini catatan yang DIPELAJARI SENDIRI
+                 oleh sistem dari histori percakapan (lihat maybeUpdateUserMemory di
+                 server.js). Dimuat lazy lewat GET /api/memory saat tab Pengaturan
+                 dibuka, sama seperti pola Usage di bawah. -->
+            <div class="filter-box-card" style="padding: 2rem;">
+              <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-brain" style="color: var(--brand-blue);"></i> <span id="settingsMemoryTitle">Profil Riset Anda (Dipelajari Otomatis)</span>
+              </h3>
+              <p id="settingsMemoryDesc" style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">JurnalHub Intelligence secara bertahap mempelajari bidang, level akademik, dan topik riset Anda dari percakapan sebelumnya, supaya jawabannya makin relevan. Anda bisa lihat catatannya di sini, hapus kapan saja, atau matikan sepenuhnya.</p>
+              <div id="memorySummaryBox" style="background: #f8fafc; border: 1px solid var(--border-light-hover); border-radius: 8px; padding: 1rem; font-size: 0.88rem; line-height: 1.6; color: var(--text-main); margin-bottom: 0.75rem; min-height: 3rem;">
+                <span style="color: var(--text-muted);" id="settingsMemoryLoading">Memuat...</span>
+              </div>
+              <p id="memoryUpdatedAt" style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 1rem; display: none;"></p>
+              <div style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;">
+                <button type="button" id="btnResetMemory" style="border: 1px solid rgba(220,38,38,0.3); background: transparent; color: #dc2626; font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; padding: 0.55rem 1.1rem; border-radius: 8px; transition: all 0.2s;">
+                  <i class="fa-solid fa-trash"></i> <span id="settingsMemoryResetBtn">Hapus Catatan</span>
+                </button>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main); cursor: pointer;">
+                  <input type="checkbox" id="memoryOptOutCheckbox" style="width: 16px; height: 16px; cursor: pointer;">
+                  <span id="settingsMemoryOptOutLabel">Jangan pelajari profil saya secara otomatis</span>
+                </label>
+              </div>
+              <div id="memoryMessage" style="font-size: 0.85rem; display: none; font-weight: 600; margin-top: 0.75rem;"></div>
+            </div>
+
             <!-- Section 1c: Usage - grafik pemakaian kredit DEEPSEEK POOL bersama
                  (kredit/minggu), mirip halaman Usage di Claude. Data dimuat lazy
                  dari GET /api/usage saat tab Pengaturan dibuka (lihat
@@ -7504,6 +7530,7 @@
         }
         if (window.syncPasswordFieldsMount) window.syncPasswordFieldsMount(tabName);
         if (tabName === 'pengaturan' && window.loadUsageData) window.loadUsageData();
+        if (tabName === 'pengaturan' && window.loadMemoryData) window.loadMemoryData();
         // Close mobile menu if open
         sidebar.classList.remove('show');
         const mobileMenuIcon = mobileMenuBtn.querySelector('i');

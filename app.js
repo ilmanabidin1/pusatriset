@@ -6102,6 +6102,81 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.loadUsageData = loadUsageData;
 
+    // --- Memori otomatis JH Intelligence (lihat GET/POST /api/memory di server.js) ---
+    async function loadMemoryData() {
+      const box = document.getElementById('memorySummaryBox');
+      const updatedAtEl = document.getElementById('memoryUpdatedAt');
+      const optOutCheckbox = document.getElementById('memoryOptOutCheckbox');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/memory');
+        const data = await res.json();
+        if (!data.ok) return;
+
+        if (data.summary) {
+          box.innerHTML = `<span>${escapeHtml(data.summary)}</span>`;
+        } else {
+          box.innerHTML = `<span style="color: var(--text-muted);">Belum ada catatan - mulai chat di JurnalHub Intelligence supaya sistem bisa mengenal Anda.</span>`;
+        }
+        if (updatedAtEl) {
+          if (data.updatedAt) {
+            updatedAtEl.textContent = `Terakhir diperbarui: ${new Date(data.updatedAt).toLocaleString('id-ID')}`;
+            updatedAtEl.style.display = 'block';
+          } else {
+            updatedAtEl.style.display = 'none';
+          }
+        }
+        if (optOutCheckbox) optOutCheckbox.checked = !!data.optedOut;
+      } catch (err) {
+        console.error('Gagal memuat data memori:', err);
+      }
+    }
+    window.loadMemoryData = loadMemoryData;
+
+    const btnResetMemory = document.getElementById('btnResetMemory');
+    const memoryMessageEl = document.getElementById('memoryMessage');
+    if (btnResetMemory) {
+      btnResetMemory.addEventListener('click', async () => {
+        if (!confirm('Hapus catatan profil riset Anda? Sistem akan mulai mempelajari dari awal lagi.')) return;
+        try {
+          const res = await fetch('/api/memory/reset', { method: 'POST' });
+          const data = await res.json();
+          if (memoryMessageEl) {
+            memoryMessageEl.style.display = 'block';
+            memoryMessageEl.style.color = data.ok ? '#16a34a' : '#dc2626';
+            memoryMessageEl.textContent = data.ok ? 'Catatan berhasil dihapus.' : (data.message || 'Gagal menghapus catatan.');
+          }
+          if (data.ok) loadMemoryData();
+        } catch (err) {
+          console.error('Gagal reset memori:', err);
+        }
+      });
+    }
+
+    const memoryOptOutCheckbox = document.getElementById('memoryOptOutCheckbox');
+    if (memoryOptOutCheckbox) {
+      memoryOptOutCheckbox.addEventListener('change', async () => {
+        try {
+          const res = await fetch('/api/memory/opt-out', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ optedOut: memoryOptOutCheckbox.checked })
+          });
+          const data = await res.json();
+          if (memoryMessageEl) {
+            memoryMessageEl.style.display = 'block';
+            memoryMessageEl.style.color = data.ok ? '#16a34a' : '#dc2626';
+            memoryMessageEl.textContent = data.ok
+              ? (data.optedOut ? 'Pembelajaran profil otomatis dimatikan, catatan lama juga sudah dihapus.' : 'Pembelajaran profil otomatis diaktifkan kembali.')
+              : (data.message || 'Gagal menyimpan preferensi.');
+          }
+          if (data.ok) loadMemoryData();
+        } catch (err) {
+          console.error('Gagal mengubah opt-out memori:', err);
+        }
+      });
+    }
+
     // --- LOGIKA PROMPT BANK ---
     let promptBankData = null;
     let promptBankDataLang = null;
