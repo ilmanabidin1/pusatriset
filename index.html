@@ -1986,6 +1986,15 @@
       line-height: 1.55;
       white-space: pre-wrap;
       word-wrap: break-word;
+    }
+
+    /* overflow-x:hidden di sini SENGAJA dibatasi ke bubble di dalam modal Riwayat
+       saja (bukan class .research-chat-bubble secara umum) - pernah dicoba taruh
+       langsung di base class, tapi itu bikin overflow-y browser ikut kehitung
+       'auto' (quirk overflow-x/overflow-y CSS lama saat salah satunya 'visible')
+       dan merusak bubble chat asli di JurnalHub Intelligence (teks user jadi
+       terpotong di kedua ujung). */
+    #historyDetailBody .research-chat-bubble {
       overflow-x: hidden;
     }
 
