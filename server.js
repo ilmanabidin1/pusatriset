@@ -7451,16 +7451,20 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
     // web search) di bawah - supaya chat tetap jalan walau formatnya berubah/
     // tidak didukung di sisi DeepSeek.
     try {
-      // Model DeepSeek punya prior kuat dari training "saya tidak bisa browsing
-      // internet" dan sering tetap bilang begitu walau tool web_search-nya
-      // TERSEDIA di request ini - kalau tidak ditegaskan di instructions, dia
-      // bisa jawab dari asumsi lama itu alih-alih benar-benar memakai tool-nya,
-      // terutama untuk pertanyaan meta ("bisa cari di internet?") bukan
-      // perintah langsung ("carikan ...").
-      const instructionsParts = [
-        RESEARCH_CHAT_SYSTEM_PROMPT,
-        'CATATAN: Kamu punya akses tool `web_search` yang benar-benar bisa browsing internet real-time di request ini. JANGAN bilang "saya tidak bisa browsing internet" atau semacamnya - kamu BISA. Kalau pertanyaan pengguna butuh info terkini, paper/sumber asli, atau mereka minta dicarikan sesuatu, langsung pakai tool itu dan jawab berdasarkan hasil pencariannya, jangan cuma kasih saran cara mencari manual.'
-      ];
+      // Instruksi soal web_search DIBEDAKAN per mode, bukan disamakan - kalau
+      // sama, salah satu mode pasti rusak:
+      // - Mendalam: DeepSeek punya prior kuat dari training "saya tidak bisa
+      //   browsing internet" dan tetap bilang begitu walau tool-nya TERSEDIA,
+      //   terutama utk pertanyaan meta ("bisa cari di internet?") bukan
+      //   perintah langsung - jadi didorong proaktif pakai tool-nya.
+      // - Cepat: kalau dikasih instruksi proaktif yang sama, modelnya jadi
+      //   kepancing search padahal ga perlu2 amat, bikin "Cepat" kehilangan
+      //   janji kecepatannya - jadi sebaliknya, dikasih gatekeeper ketat biar
+      //   cuma search kalau memang jelas-jelas dibutuhkan.
+      const searchInstruction = isMendalamMode
+        ? 'CATATAN: Kamu punya akses tool `web_search` yang benar-benar bisa browsing internet real-time di request ini. JANGAN bilang "saya tidak bisa browsing internet" atau semacamnya - kamu BISA. Kalau pertanyaan pengguna butuh info terkini, paper/sumber asli, atau mereka minta dicarikan sesuatu, langsung pakai tool itu dan jawab berdasarkan hasil pencariannya, jangan cuma kasih saran cara mencari manual.'
+        : 'PROTOKOL PENCARIAN (MODE CEPAT): Secara default JANGAN pakai tool `web_search` - andalkan pengetahuanmu sendiri dulu supaya jawaban tetap instan. Cuma pakai tool ini kalau MINIMAL SATU syarat ini terpenuhi: (1) pengguna eksplisit minta dicarikan/di-browsing-kan sesuatu, mis. "carikan di internet", "cari berita", "cek update terbaru"; (2) butuh data real-time/sensitif-waktu (harga saham, cuaca, berita hari ini); (3) menanyakan event/publikasi/entitas spesifik yang kemungkinan terjadi setelah batas pengetahuanmu. JANGAN cari untuk konsep akademik/ilmiah umum, prinsip hukum umum, bantuan menulis/edit teks, logika/matematika standar, atau klarifikasi ulang dari yang sudah ada di riwayat percakapan - kalau ragu, jawab langsung dari pengetahuanmu tanpa memicu pencarian.';
+      const instructionsParts = [RESEARCH_CHAT_SYSTEM_PROMPT, searchInstruction];
       if (customInstructionsMsg) instructionsParts.push(customInstructionsMsg.content);
       if (academicResult) instructionsParts.push(academicResult.contextText);
 
