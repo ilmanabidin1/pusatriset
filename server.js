@@ -6780,6 +6780,25 @@ function getDeepSeekApiKey() {
   return process.env.DEEPSEEK_API_KEY;
 }
 
+// DeepSeek expose 7 nama level reasoning.effort (none/minimal/low/medium/
+// high/xhigh/max) tapi cuma benar-benar 4 tier internal: none=nonaktif,
+// minimal&low->low, medium&high&xhigh->high, max->max. Jadi "medium" itu SAMA
+// PERSIS lambatnya dengan "high" - tidak ada win kecepatan di situ. Biar mode
+// Mendalam tetap adaptif tanpa nambah request/latensi ekstra (tidak minta
+// model lain mengklasifikasi dulu), pakai heuristik ringan dari pesan
+// terakhir user: pertanyaan pendek & terlihat sederhana dapat "low" (jauh
+// lebih cepat), yang lain tetap "medium" (level penuh, jaga kualitas
+// reasoning utk pertanyaan yang mungkin butuh analisis).
+function pickReasoningEffort(text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) return 'medium';
+  const complexMarkers = /\b(bandingkan|banding|analisis|analisa|evaluasi|kritik|kritis|telaah|rancang|susun|strategi|dampak|implikasi|kelebihan|kekurangan|pro dan kontra|langkah|tahapan|kenapa|mengapa|bagaimana|jelaskan)\b/i;
+  const isShort = trimmed.length <= 80;
+  const multiQuestion = (trimmed.match(/\?/g) || []).length > 1;
+  if (isShort && !complexMarkers.test(trimmed) && !multiQuestion) return 'low';
+  return 'medium';
+}
+
 // Endpoint Responses API DeepSeek (beda dari /chat/completions biasa) - dipakai
 // khusus mode Mendalam (Pro + Deep Thinking) di JurnalHub Intelligence, supaya
 // AI bisa browsing web ASLI lewat tool bawaan `web_search` yang dijalankan di
@@ -7451,7 +7470,7 @@ app.post('/api/research-chat', requireAccess, async (req, res) => {
         model: dsModel,
         instructions: instructionsParts.join('\n\n'),
         inputItems,
-        reasoningEffort: thinkingEnabled ? 'high' : null
+        reasoningEffort: thinkingEnabled ? pickReasoningEffort(lastUserMessage ? lastUserMessage.content : '') : null
       });
       fullReply = result.fullReply;
       fullReasoning = result.fullReasoning;
