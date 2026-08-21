@@ -6297,9 +6297,10 @@ Wajib mengembalikan output dalam format JSON MENTAH SAJA (TANPA pembungkus markd
       "authorYear": "Nama Penulis & Tahun - HARUS identik persis dengan authorYear pada item yang bersesuaian di array matrix, dan array themeMatrix ini HARUS berisi paper yang SAMA PERSIS dengan urutan yang SAMA PERSIS seperti array matrix (jangan diacak, jangan ada yang hilang/ditambah)",
       "matchedThemes": ["daftar nama tema (harus persis sama string-nya dengan salah satu isi themeConstructs) yang relevan/dibahas pada paper ini - boleh lebih dari satu, boleh nol"]
     }
-  ],
-  "narrative": "Laporan naratif SLR yang LENGKAP dan MENDALAM, mengikuti struktur pelaporan bagian Results & Discussion pada PRISMA 2020 (Page et al., International Journal of Surgery, 2021). Gunakan format HTML (tag <h4> untuk judul tiap subbab, <p> untuk paragraf, <ul>/<li> bila memang perlu poin, <strong> untuk penekanan). WAJIB memuat subbab berikut, persis dengan urutan ini: (1) Karakteristik dan Proses Seleksi Studi - ringkas alur seleksi (identified/screened/eligible/included beserta alasan eksklusi paling umum) dan karakteristik umum studi yang disertakan (desain penelitian, sebaran tahun publikasi, konteks/populasi/setting). (2) Penilaian Risiko Bias dan Kualitas Metodologis - rangkum POLA risiko bias di seluruh studi (bukan mengulang tabel matriks per studi satu-satu), soroti kelemahan metodologis yang berulang di beberapa studi. (3) Sintesis Temuan per Pertanyaan Penelitian - buat sintesis naratif TERPISAH untuk SETIAP pertanyaan penelitian yang diberikan pengguna, membandingkan dan mengontraskan temuan antar studi (bukan sekadar merangkum satu per satu), soroti konsistensi maupun inkonsistensi/kontradiksi antar studi. (4) Pembahasan dan Interpretasi - interpretasikan temuan gabungan dalam konteks bidang ilmu terkait secara umum. (5) Keterbatasan - keterbatasan bukti (kualitas/desain studi yang disertakan) DAN keterbatasan proses review ini sendiri (mis. cakupan basis data pencarian, tidak dilakukan meta-analisis kuantitatif, dsb). (6) Celah Penelitian dan Rekomendasi Riset Masa Depan - celah spesifik dan arah riset konkret yang bisa ditindaklanjuti. Setiap subbab WAJIB berisi paragraf naratif akademik yang mengalir (BUKAN daftar poin pendek/template generik), minimal 2-4 paragraf substansial per subbab, dan setiap klaim WAJIB disertai sitasi dalam teks format (Penulis, Tahun) / (Author, Year) yang merujuk ke studi spesifik dalam daftar paper - jangan membuat generalisasi tanpa rujukan ke studi yang disertakan."
+  ]
 }
+
+CATATAN: field "narrative" (laporan naratif lengkap) TIDAK diminta di sini - itu digenerate lewat request TERPISAH setelah ini, supaya modelnya bisa fokus penuh menulis narasi mendalam tanpa berbagi konteks dengan data terstruktur di atas. Jangan sertakan field "narrative" pada JSON ini.
 
 MATRIKS TEMA/KONSTRUK (themeConstructs & themeMatrix): identifikasi 4-8 tema, konstruk, atau dimensi yang MUNCUL BERULANG secara nyata di seluruh abstrak paper yang diberikan (bukan daftar generik yang dipaksakan) - ini mengikuti gaya tabel "sustainability indicators"/"coding matrix" yang lazim di artikel SLR yang dipublikasi di jurnal bereputasi, contohnya artikel "A Systematic Literature Review on the Development of Sustainable Heritage Cities in Malaysia" (Saleh et al., 2021, Journal of Regional and City Planning) yang mengelompokkan seluruh studi ke dalam 5 konstruk (Economic, Social, Environmental, Cultural heritage, Government and community) dan menandai paper mana yang membahas konstruk mana dengan checklist. Tema harus SPESIFIK sesuai topik riset yang diberikan pengguna (bukan template tetap) - misal untuk riset tentang machine learning bisa jadi tema-nya adalah pendekatan algoritma yang dipakai (mis. "Deep Learning", "Ensemble Method") atau domain aplikasi (mis. "Diagnosis Medis", "Deteksi Anomali"), sesuaikan dengan pola nyata yang muncul di data.
 
@@ -6308,7 +6309,7 @@ ${outputLanguage === 'en'
   : 'BAHASA OUTPUT: Tulis SELURUH teks konten (reason, methodology, findings, gap, riskOfBias.reason, themeConstructs, dan khususnya narrative) dalam Bahasa Indonesia akademik. Jangan campur dengan Bahasa Inggris.'
 }`;
 
-    const userPrompt = `Daftar Paper:\n${paperListText}\n\nPertanyaan Penelitian (Research Questions):\n${researchQuestions || '-'}\n\nKriteria Inklusi:\n${inclusionCriteria || '-'}\n\nKriteria Eksklusi:\n${exclusionCriteria || '-'}\n\nLakukan analisis screening, hitung diagram PRISMA, bangun tabel matriks sintesis, identifikasi matriks tema/konstruk (themeConstructs & themeMatrix), dan tulis narasi SLR lengkap sekarang. Kembalikan HANYA dalam format JSON sesuai spesifikasi system prompt:`;
+    const userPrompt = `Daftar Paper:\n${paperListText}\n\nPertanyaan Penelitian (Research Questions):\n${researchQuestions || '-'}\n\nKriteria Inklusi:\n${inclusionCriteria || '-'}\n\nKriteria Eksklusi:\n${exclusionCriteria || '-'}\n\nLakukan analisis screening, hitung diagram PRISMA, bangun tabel matriks sintesis, dan identifikasi matriks tema/konstruk (themeConstructs & themeMatrix) sekarang. Kembalikan HANYA dalam format JSON sesuai spesifikasi system prompt (TANPA field narrative):`;
 
     const deepSeekUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
     const dsResponse = await fetchFn(deepSeekUrl, {
@@ -6320,10 +6321,12 @@ ${outputLanguage === 'en'
       body: JSON.stringify({
         model: 'deepseek-v4-flash',
         // 8192 sebelumnya kepotong di tengah generate kalau paper-nya banyak
-        // (mis. 100 paper -> screenedPapers + matrix + narrative lengkap bisa
-        // butuh 25-40rb token) - DeepSeek sendiri dukung output sampai 384K,
-        // jadi naikkan jauh di atas kebutuhan wajar supaya tidak kepotong lagi.
-        max_tokens: 32000,
+        // (mis. 100 paper -> screenedPapers + matrix + tema bisa butuh belasan
+        // ribu token) - DeepSeek sendiri dukung output sampai 384K, jadi naikkan
+        // jauh di atas kebutuhan wajar supaya tidak kepotong lagi. Narrative
+        // TIDAK lagi ikut di sini (lihat request kedua di bawah), jadi budget-nya
+        // lebih longgar dibanding sebelumnya.
+        max_tokens: 20000,
         stream: false,
         thinking: { type: 'disabled' },
         extra_body: { thinking: { type: 'disabled' } },
@@ -6386,7 +6389,86 @@ ${outputLanguage === 'en'
       }
     }
 
-    recordDeepSeekPoolUsage(user.id, dsData?.usage?.total_tokens);
+    // Tahap 2: laporan naratif digenerate lewat request TERPISAH dengan reasoning
+    // ("thinking") DINYALAKAN - permintaan sebelumnya (screening + matriks + tema)
+    // sengaja disable thinking demi kecepatan, tapi narasi butuh model benar-benar
+    // "mikir" dulu sebelum menulis pembahasan supaya sedalam SLR yang dipublikasi
+    // di jurnal, bukan cuma merangkum abstrak satu-satu. Karena ini bukan JSON
+    // (plain HTML), sekalian menghilangkan risiko tanda kutip di narasi merusak
+    // parsing JSON.
+    updateTask({ status: 'processing', statusLog: 'Menyusun laporan naratif mendalam (tahap 2/2)...' });
+
+    const matrixSummaryText = (parsedResult.matrix || []).map(r => {
+      const rob = r.riskOfBias || {};
+      return `- ${r.authorYear} | Metodologi: ${r.methodology} | Temuan: ${r.findings} | Gap: ${r.gap} | Risk of Bias: ${rob.rating || '-'} (${rob.reason || '-'})`;
+    }).join('\n');
+
+    const themeSummaryText = (parsedResult.themeConstructs || []).length > 0
+      ? `Tema/konstruk yang teridentifikasi: ${parsedResult.themeConstructs.join(', ')}.\n` +
+        (parsedResult.themeMatrix || []).map(r => `- ${r.authorYear}: ${(r.matchedThemes || []).join(', ') || '(tidak ada tema cocok)'}`).join('\n')
+      : '(tidak ada data tema/konstruk)';
+
+    const narrativeSystemPrompt = `Anda adalah penulis akademik senior yang menyusun bagian Results & Discussion sebuah Systematic Literature Review (SLR) untuk dipublikasikan di jurnal bereputasi, mengikuti struktur pelaporan PRISMA 2020 (Page et al., International Journal of Surgery, 2021). Tulis SELENGKAP dan SEMENDALAM mungkin, setara dengan kedalaman pembahasan pada SLR yang benar-benar terbit di jurnal - JANGAN membuat rangkuman dangkal yang cuma menyebutkan ulang tiap paper satu per satu.
+
+Kembalikan HANYA konten HTML mentah (TANPA pembungkus markdown seperti \`\`\`html, TANPA "Berikut adalah...", TANPA penjelasan tambahan) menggunakan tag <h4> untuk judul subbab, <p> untuk paragraf, <ul>/<li> bila memang perlu poin, <strong> untuk penekanan.
+
+WAJIB memuat subbab berikut, persis dengan urutan ini:
+(1) Karakteristik dan Proses Seleksi Studi - ringkas alur seleksi (identified/screened/eligible/included beserta alasan eksklusi paling umum) dan karakteristik umum studi yang disertakan (desain penelitian, sebaran tahun publikasi, konteks/populasi/setting).
+(2) Penilaian Risiko Bias dan Kualitas Metodologis - rangkum POLA risiko bias di seluruh studi (bukan mengulang tabel matriks per studi satu-satu), soroti kelemahan metodologis yang berulang di beberapa studi.
+(3) Sintesis Temuan per Pertanyaan Penelitian - buat sintesis naratif TERPISAH untuk SETIAP pertanyaan penelitian yang diberikan pengguna, membandingkan dan mengontraskan temuan antar studi (bukan sekadar merangkum satu per satu), soroti konsistensi maupun inkonsistensi/kontradiksi antar studi, dan manfaatkan matriks tema/konstruk yang sudah teridentifikasi untuk mengelompokkan diskusi.
+(4) Pembahasan dan Interpretasi - interpretasikan temuan gabungan dalam konteks bidang ilmu terkait secara umum.
+(5) Keterbatasan - keterbatasan bukti (kualitas/desain studi yang disertakan) DAN keterbatasan proses review ini sendiri (mis. cakupan basis data pencarian, tidak dilakukan meta-analisis kuantitatif, dsb).
+(6) Celah Penelitian dan Rekomendasi Riset Masa Depan - celah spesifik dan arah riset konkret yang bisa ditindaklanjuti.
+
+Setiap subbab WAJIB berisi paragraf naratif akademik yang mengalir (BUKAN daftar poin pendek/template generik), MINIMAL 3-5 paragraf substansial per subbab (bukan 2-4 seperti draf singkat), dan setiap klaim WAJIB disertai sitasi dalam teks format (Penulis, Tahun) / (Author, Year) yang merujuk ke studi spesifik dalam daftar paper - jangan membuat generalisasi tanpa rujukan ke studi yang disertakan. Batasi diri HANYA pada paper yang diberikan - jangan mengarang sitasi dari luar daftar ini.
+
+${outputLanguage === 'en'
+  ? 'BAHASA OUTPUT: Tulis SELURUH narasi dalam ACADEMIC ENGLISH. Jangan campur dengan Bahasa Indonesia sama sekali.'
+  : 'BAHASA OUTPUT: Tulis SELURUH narasi dalam Bahasa Indonesia akademik. Jangan campur dengan Bahasa Inggris.'
+}`;
+
+    const narrativeUserPrompt = `Daftar Paper (abstrak lengkap):\n${paperListText}\n\nPertanyaan Penelitian (Research Questions):\n${researchQuestions || '-'}\n\nKriteria Inklusi:\n${inclusionCriteria || '-'}\n\nKriteria Eksklusi:\n${exclusionCriteria || '-'}\n\nMatriks Sintesis yang sudah diekstraksi sebelumnya (gunakan sebagai referensi cepat, tapi tetap gali lebih dalam dari abstrak lengkap di atas):\n${matrixSummaryText}\n\nMatriks Tema/Konstruk yang sudah teridentifikasi:\n${themeSummaryText}\n\nTulis laporan naratif SLR yang lengkap dan mendalam sekarang, sesuai spesifikasi system prompt:`;
+
+    const narrativeDsResponse = await fetchFn(deepSeekUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        max_tokens: 16000,
+        stream: false,
+        thinking: { type: 'enabled' },
+        reasoning_effort: 'high',
+        extra_body: { thinking: { type: 'enabled' } },
+        messages: [
+          { role: 'system', content: narrativeSystemPrompt },
+          { role: 'user', content: narrativeUserPrompt }
+        ]
+      })
+    });
+
+    if (!narrativeDsResponse.ok) {
+      const errText = await narrativeDsResponse.text();
+      throw new Error(`DeepSeek API Error Status (narrative): ${narrativeDsResponse.status} - ${errText}`);
+    }
+
+    const narrativeDsData = await narrativeDsResponse.json();
+    const narrativeChoice = narrativeDsData?.choices?.[0];
+    let narrativeContent = narrativeChoice?.message?.content?.trim();
+    if (!narrativeContent && narrativeChoice?.message?.reasoning_content) {
+      narrativeContent = String(narrativeChoice.message.reasoning_content).trim();
+    }
+    if (!narrativeContent) {
+      throw new Error('Respons AI kosong saat menyusun laporan naratif SLR.');
+    }
+    // Bersihkan pembungkus markdown kalau ada (defensif, walau sudah diminta tanpa itu)
+    narrativeContent = narrativeContent.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```$/, '').trim();
+    parsedResult.narrative = narrativeContent;
+
+    const totalTokensUsed = (dsData?.usage?.total_tokens || 0) + (narrativeDsData?.usage?.total_tokens || 0);
+    recordDeepSeekPoolUsage(user.id, totalTokensUsed);
 
     // Tambahkan item riwayat SLR
     addHistoryItem(req.session.userId, 'slr', {
