@@ -26,7 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.deltaY === 0 || e.ctrlKey) return;
     let el = e.target;
     while (el && el !== document.body && el !== document.documentElement) {
-      if (el.scrollWidth > el.clientWidth) {
+      // Ambang batas 20px: elemen yang cuma set overflow-y:auto (tanpa overflow-x)
+      // kena "quirk" CSS lama - overflow-x ikut kehitung 'auto' oleh browser
+      // walau tidak pernah dimaksudkan buat scroll horizontal, dan bedanya
+      // scrollWidth/clientWidth cuma 1-2px (rounding/scrollbar). Tanpa ambang
+      // batas ini, container modal/list yang murni vertikal (mis. modal Riwayat)
+      // ikut kehijack wheel-nya jadi horizontal dan scroll vertikal jadi macet.
+      if (el.scrollWidth - el.clientWidth > 20) {
         const style = window.getComputedStyle(el);
         if (style.overflowX === 'auto' || style.overflowX === 'scroll') {
           const scrollsVertically = el.scrollHeight > el.clientHeight &&
