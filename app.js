@@ -12305,6 +12305,36 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
+        // Update Thematic Construct Matrix Table (tema/konstruk digenerate AI dari pola
+        // yang muncul berulang di seluruh abstrak paper - jumlah kolom tema dinamis,
+        // bukan daftar tetap, jadi header tabelnya juga harus dibangun ulang tiap render)
+        const themeConstructs = Array.isArray(slrResult.themeConstructs) ? slrResult.themeConstructs : [];
+        const themeMatrix = Array.isArray(slrResult.themeMatrix) ? slrResult.themeMatrix : [];
+        const themeTableEl = document.getElementById('slrThemeMatrixTable');
+        if (themeTableEl) {
+          const theadRow = themeTableEl.querySelector('thead tr');
+          const tbody = themeTableEl.querySelector('tbody');
+          if (theadRow) {
+            theadRow.innerHTML = `<th style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-main);">Penulis & Tahun</th>` +
+              themeConstructs.map(theme => `<th style="padding: 0.75rem 0.6rem; font-weight: 700; color: var(--text-main); text-align: center; font-size: 0.76rem;">${escapeHtml(theme)}</th>`).join('');
+          }
+          if (tbody) {
+            if (themeMatrix.length === 0 || themeConstructs.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="${Math.max(1, themeConstructs.length + 1)}" style="padding: 2rem; text-align: center; color: var(--text-muted);">Matriks tema/konstruk tidak tersedia dari AI.</td></tr>`;
+            } else {
+              tbody.innerHTML = themeMatrix.map((row, idx) => {
+                const matched = Array.isArray(row.matchedThemes) ? row.matchedThemes : [];
+                return `
+                  <tr style="border-bottom: 1px solid rgba(8,34,64,0.04);">
+                    <td style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-main);"><span class="lit-cite-marker" data-slr-cite-idx="${idx}" tabindex="0">${escapeHtml(row.authorYear)}</span></td>
+                    ${themeConstructs.map(theme => `<td style="padding: 0.75rem 0.6rem; text-align: center; ${matched.includes(theme) ? 'color: #10b981; font-weight: 800;' : 'color: rgba(8,34,64,0.15);'}">${matched.includes(theme) ? '&#10003;' : '-'}</td>`).join('')}
+                  </tr>
+                `;
+              }).join('');
+            }
+          }
+        }
+
         // Update Narrative Output
         const narrativeOutput = document.getElementById('slrNarrativeOutput');
         if (narrativeOutput) {
@@ -12321,6 +12351,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const subContents = [
           document.getElementById('slrSubContentPrisma'),
           document.getElementById('slrSubContentMatrix'),
+          document.getElementById('slrSubContentThemes'),
           document.getElementById('slrSubContentNarrative')
         ];
         subContents.forEach((c) => {
@@ -12342,6 +12373,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const prisma = slrResult.prisma || {};
         const matrix = slrResult.matrix || [];
         const narrative = slrResult.narrative || '';
+        const themeConstructs = Array.isArray(slrResult.themeConstructs) ? slrResult.themeConstructs : [];
+        const themeMatrix = Array.isArray(slrResult.themeMatrix) ? slrResult.themeMatrix : [];
 
         let docHtml = `
           <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b;">
@@ -12406,7 +12439,26 @@ document.addEventListener('DOMContentLoaded', () => {
               }).join('')}
             </table>
 
-            <h2 style="color: #0b1a30; font-size: 14pt; margin-top: 20pt;">4. Laporan Naratif SLR Terstruktur</h2>
+            ${themeConstructs.length > 0 && themeMatrix.length > 0 ? `
+            <h2 style="color: #0b1a30; font-size: 14pt; margin-top: 20pt;">4. Matriks Tema / Konstruk</h2>
+            <table border="1" cellspacing="0" cellpadding="6" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 9pt;">
+              <tr style="background: #0b1a30; color: #ffffff; font-weight: bold;">
+                <th>Penulis & Tahun</th>
+                ${themeConstructs.map(th => `<th style="text-align: center;">${escapeHtml(th)}</th>`).join('')}
+              </tr>
+              ${themeMatrix.map(row => {
+                const matched = Array.isArray(row.matchedThemes) ? row.matchedThemes : [];
+                return `
+                  <tr>
+                    <td><b>${escapeHtml(row.authorYear)}</b></td>
+                    ${themeConstructs.map(th => `<td style="text-align: center;">${matched.includes(th) ? '&#10003;' : '-'}</td>`).join('')}
+                  </tr>
+                `;
+              }).join('')}
+            </table>
+            ` : ''}
+
+            <h2 style="color: #0b1a30; font-size: 14pt; margin-top: 20pt;">${themeConstructs.length > 0 && themeMatrix.length > 0 ? '5' : '4'}. Laporan Naratif SLR Terstruktur</h2>
             <div style="font-size: 10.5pt; line-height: 1.6;">
               ${narrative}
             </div>
@@ -12496,6 +12548,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const contents = {
             prisma: document.getElementById('slrSubContentPrisma'),
             matrix: document.getElementById('slrSubContentMatrix'),
+            themes: document.getElementById('slrSubContentThemes'),
             narrative: document.getElementById('slrSubContentNarrative')
           };
 
@@ -12566,6 +12619,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const exportDocxFull = document.getElementById('slrExportDocxBtn');
       if (exportDocxFull) {
         exportDocxFull.addEventListener('click', () => {
+          exportSlrToDocx();
+        });
+      }
+
+      const exportDocxThemes = document.getElementById('slrExportDocxThemesBtn');
+      if (exportDocxThemes) {
+        exportDocxThemes.addEventListener('click', () => {
           exportSlrToDocx();
         });
       }

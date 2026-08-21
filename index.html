@@ -6391,6 +6391,7 @@
               <div style="display: flex; border-bottom: 2px solid rgba(8,34,64,0.06); margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
                 <button type="button" class="slr-tab-btn active" data-slr-tab="prisma" style="border: none; background: none; font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 0.5rem 0.25rem; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -2px;">Diagram PRISMA</button>
                 <button type="button" class="slr-tab-btn" data-slr-tab="matrix" style="border: none; background: none; font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 0.5rem 0.25rem; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -2px;">Matriks Sintesis</button>
+                <button type="button" class="slr-tab-btn" data-slr-tab="themes" style="border: none; background: none; font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 0.5rem 0.25rem; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -2px;">Matriks Tema/Konstruk</button>
                 <button type="button" class="slr-tab-btn" data-slr-tab="narrative" style="border: none; background: none; font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 0.5rem 0.25rem; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -2px;">Laporan Naratif SLR</button>
               </div>
 
@@ -6499,6 +6500,32 @@
                     <tbody id="slrMatrixTableBody">
                       <tr>
                         <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">Belum ada data sintesis.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Content SLR Step 4: Thematic Construct Matrix (matriks tema x paper dengan
+                   checklist √, mengikuti gaya tabel "sustainability indicators" pada SLR
+                   akademik yang dipublikasi - tema/konstruknya digenerate AI berdasarkan
+                   pola yang muncul berulang di seluruh abstrak paper, bukan daftar tetap) -->
+              <div class="slr-sub-content" id="slrSubContentThemes" style="display: none;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 0.75rem;">
+                  <button type="button" id="slrExportDocxThemesBtn" style="background: #10b981; color: #ffffff; border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.45rem 1rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">
+                    <i class="fa-solid fa-file-word"></i> Ekspor PRISMA 2020 (.DOCX)
+                  </button>
+                </div>
+                <div style="overflow-x: auto; border: 1px solid rgba(8,34,64,0.08); border-radius: 8px; background: #ffffff;">
+                  <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.82rem;" id="slrThemeMatrixTable">
+                    <thead>
+                      <tr style="background: #f8fafc; border-bottom: 1px solid rgba(8,34,64,0.08);">
+                        <th style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-main);">Penulis & Tahun</th>
+                      </tr>
+                    </thead>
+                    <tbody id="slrThemeMatrixTableBody">
+                      <tr>
+                        <td style="padding: 2rem; text-align: center; color: var(--text-muted);">Belum ada data sintesis.</td>
                       </tr>
                     </tbody>
                   </table>
