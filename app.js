@@ -12557,6 +12557,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
+      // Step 4: Export DOCX Buttons (laporan lengkap PRISMA + naskah naratif saja)
+      const exportDocxFull = document.getElementById('slrExportDocxBtn');
+      if (exportDocxFull) {
+        exportDocxFull.addEventListener('click', () => {
+          exportSlrToDocx();
+        });
+      }
+
+      const exportDocxNarrative = document.getElementById('slrExportDocxNarrativeBtn');
+      if (exportDocxNarrative) {
+        exportDocxNarrative.addEventListener('click', () => {
+          if (!slrResult || !slrResult.narrative) {
+            alert('Belum ada hasil narasi laporan untuk diunduh.');
+            return;
+          }
+          const queryTitle = document.getElementById('slrQuery')?.value.trim() || 'Systematic Literature Review';
+          const narrativeOutput = document.getElementById('slrNarrativeOutput');
+          const cleanFileName = `SLR_Naskah_${queryTitle.replace(/[^a-z0-9]/gi, '_')}.doc`;
+          exportElementToDocx(narrativeOutput, `Laporan Naratif SLR - ${queryTitle}`, cleanFileName);
+        });
+      }
+
       // Step 2 suggestions generator
       const suggestBtns = document.querySelectorAll('.btn-slr-ai-suggest');
       suggestBtns.forEach((btn) => {
