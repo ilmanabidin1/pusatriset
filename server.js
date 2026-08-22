@@ -6497,13 +6497,14 @@ ${outputLanguage === 'en'
       },
       body: JSON.stringify({
         model: 'deepseek-v4-flash',
-        // 8192 sebelumnya kepotong di tengah generate kalau paper-nya banyak
-        // (mis. 100 paper -> screenedPapers + matrix + tema bisa butuh belasan
-        // ribu token) - DeepSeek sendiri dukung output sampai 384K, jadi naikkan
-        // jauh di atas kebutuhan wajar supaya tidak kepotong lagi. Narrative
-        // TIDAK lagi ikut di sini (lihat request kedua di bawah), jadi budget-nya
-        // lebih longgar dibanding sebelumnya.
-        max_tokens: 20000,
+        // Sempat diturunkan ke 20000 waktu narrative dipindah ke request terpisah,
+        // dengan asumsi budget-nya jadi longgar - ternyata SALAH: untuk SLR ~100
+        // paper, screenedPapers (100x) + matrix (100x, tiap entry ada methodology/
+        // findings/gap) + themeMatrix (100x) saja sudah bisa >20rb token dan
+        // kepotong di tengah generate ("Unterminated string in JSON" - truncation,
+        // BUKAN masalah tanda kutip). Naikkan lagi ke 32000 (DeepSeek dukung
+        // sampai 384K, jadi ini masih jauh di bawah kebutuhan wajar).
+        max_tokens: 32000,
         stream: false,
         thinking: { type: 'disabled' },
         extra_body: { thinking: { type: 'disabled' } },
