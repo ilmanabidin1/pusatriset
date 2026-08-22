@@ -12260,8 +12260,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (banner) banner.style.display = 'flex';
           if (loaderText) loaderText.textContent = 'Menganalisis dan mensintesis artikel dengan AI...';
 
-          const finalTask = await pollSlrTask(data.taskId);
+          const finalTask = await pollSlrTask(data.taskId, updateSlrNarrativePreview);
           if (banner) banner.style.display = 'none';
+          updateSlrNarrativePreview(null);
 
           if (finalTask.status === 'failed') {
             throw new Error(finalTask.errorMessage || 'Sintesis SLR gagal diproses.');
@@ -12295,14 +12296,19 @@ document.addEventListener('DOMContentLoaded', () => {
           if (banner) banner.style.display = 'none';
           if (loader) loader.style.display = 'none';
           if (nextBtn) nextBtn.disabled = false;
+          updateSlrNarrativePreview(null);
         }
       }
 
-      // Poll GET /api/slr/synthesize/status/:id tiap 5 detik sampai task
+      // Poll GET /api/slr/synthesize/status/:id tiap 1.5 detik sampai task
       // berstatus 'completed'/'failed' - dipakai baik di alur normal
       // (runSynthesis, user tetap di halaman) maupun resume dari deep-link
-      // email (kalau task ternyata masih diproses saat link diklik).
-      function pollSlrTask(taskId) {
+      // email (kalau task ternyata masih diproses saat link diklik). Interval
+      // dipercepat dari 5 detik supaya preview task.partialNarrative (lihat
+      // updateSlrNarrativePreview) kerasa kaya "lagi diketik", bukan cuma
+      // banner statis - onProgress opsional dipanggil tiap tick (termasuk
+      // yang belum selesai) buat caller yang mau nampilin progress live.
+      function pollSlrTask(taskId, onProgress) {
         return new Promise((resolve, reject) => {
           const check = async () => {
             try {
@@ -12313,17 +12319,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
               }
               const task = data.task;
+              if (typeof onProgress === 'function') onProgress(task);
               if (task.status === 'completed' || task.status === 'failed') {
                 resolve(task);
                 return;
               }
-              setTimeout(check, 5000);
+              setTimeout(check, 1500);
             } catch (err) {
-              setTimeout(check, 5000); // gangguan jaringan sesaat - coba lagi, jangan gagalkan seluruh polling
+              setTimeout(check, 1500); // gangguan jaringan sesaat - coba lagi, jangan gagalkan seluruh polling
             }
           };
           check();
         });
+      }
+
+      function updateSlrNarrativePreview(task) {
+        const box = document.getElementById('slrNarrativePreviewBox');
+        const textEl = document.getElementById('slrNarrativePreviewText');
+        if (!box || !textEl) return;
+        if (task && task.partialNarrative) {
+          box.style.display = 'block';
+          textEl.textContent = task.partialNarrative;
+          box.scrollTop = box.scrollHeight;
+        } else {
+          box.style.display = 'none';
+        }
       }
 
       function renderSynthesisOutput() {
@@ -12865,8 +12885,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStepUI();
             const banner = document.getElementById('slrSynthesisBanner');
             if (banner) banner.style.display = 'flex';
-            task = await pollSlrTask(taskId);
+            task = await pollSlrTask(taskId, updateSlrNarrativePreview);
             if (banner) banner.style.display = 'none';
+            updateSlrNarrativePreview(null);
           }
 
           if (task.status === 'failed') {

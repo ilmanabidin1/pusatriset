@@ -6616,7 +6616,8 @@ ${outputLanguage === 'en'
       body: JSON.stringify({
         model: 'deepseek-v4-flash',
         max_tokens: 16000,
-        stream: false,
+        stream: true,
+        stream_options: { include_usage: true },
         thinking: { type: 'enabled' },
         reasoning_effort: 'high',
         extra_body: { thinking: { type: 'enabled' } },
@@ -6632,12 +6633,51 @@ ${outputLanguage === 'en'
       throw new Error(`DeepSeek API Error Status (narrative): ${narrativeDsResponse.status} - ${errText}`);
     }
 
-    const narrativeDsData = await narrativeDsResponse.json();
-    const narrativeChoice = narrativeDsData?.choices?.[0];
-    let narrativeContent = narrativeChoice?.message?.content?.trim();
-    if (!narrativeContent && narrativeChoice?.message?.reasoning_content) {
-      narrativeContent = String(narrativeChoice.message.reasoning_content).trim();
+    // Konsumsi stream SSE-nya - selain merangkai balasan penuh, teks yang lagi
+    // jalan juga disimpan berkala ke task.partialNarrative supaya frontend yang
+    // polling GET /api/slr/synthesize/status/:id bisa nampilin preview "lagi
+    // diketik" (bukan cuma banner "sedang diproses" tanpa progress apa pun).
+    // Ditulis PLAIN TEXT dulu (bukan HTML rapi) karena tag HTML-nya baru valid
+    // kalau sudah lengkap - tag setengah jadi bakal berantakan kalau dirender.
+    let narrativeContent = '';
+    let narrativeUsage = null;
+    let lastPartialWriteAt = 0;
+    let sseBuffer = '';
+    const narrativeReader = narrativeDsResponse.body.getReader();
+    const narrativeDecoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await narrativeReader.read();
+      if (done) break;
+
+      sseBuffer += narrativeDecoder.decode(value, { stream: true });
+      const lines = sseBuffer.split('\n');
+      sseBuffer = lines.pop();
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const payload = trimmed.slice(5).trim();
+        if (payload === '[DONE]') continue;
+        try {
+          const parsedChunk = JSON.parse(payload);
+          const delta = parsedChunk?.choices?.[0]?.delta?.content;
+          if (delta) {
+            narrativeContent += delta;
+            const now = Date.now();
+            if (now - lastPartialWriteAt > 700) {
+              lastPartialWriteAt = now;
+              updateTask({ partialNarrative: narrativeContent });
+            }
+          }
+          if (parsedChunk?.usage) narrativeUsage = parsedChunk.usage;
+        } catch (e) {
+          // Baris SSE parsial/tidak valid - abaikan
+        }
+      }
     }
+    narrativeContent = narrativeContent.trim();
+
     if (!narrativeContent) {
       throw new Error('Respons AI kosong saat menyusun laporan naratif SLR.');
     }
@@ -6645,7 +6685,7 @@ ${outputLanguage === 'en'
     narrativeContent = narrativeContent.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```$/, '').trim();
     parsedResult.narrative = narrativeContent;
 
-    const totalTokensUsed = (dsData?.usage?.total_tokens || 0) + (narrativeDsData?.usage?.total_tokens || 0);
+    const totalTokensUsed = (dsData?.usage?.total_tokens || 0) + (narrativeUsage?.total_tokens || 0);
     recordDeepSeekPoolUsage(user.id, totalTokensUsed);
 
     // Tambahkan item riwayat SLR
@@ -6691,6 +6731,7 @@ app.get('/api/slr/synthesize/status/:id', requireAccess, (req, res) => {
   }
   res.json({ ok: true, task: {
     id: task.id, status: task.status, statusLog: task.statusLog, result: task.result,
+    partialNarrative: task.partialNarrative || null,
     papers: task.papers, researchQuestions: task.researchQuestions,
     inclusionCriteria: task.inclusionCriteria, exclusionCriteria: task.exclusionCriteria,
     errorMessage: task.errorMessage, createdAt: task.createdAt, updatedAt: task.updatedAt
