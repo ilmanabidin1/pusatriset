@@ -6177,9 +6177,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // --- Mini side-tab kategori di Pengaturan (#settingsSideNav) - klik scroll
-    // halus ke section terkait, kategori yang lagi kelihatan di viewport
-    // otomatis di-highlight pakai IntersectionObserver. Tidak perlu dipanggil
+    // --- Mini side-tab kategori di Pengaturan (#settingsSideNav) - klik ganti
+    // section mana yang tampil (mirip tab PRISMA/Matriks/dsb di SLR), BUKAN
+    // scroll ke section di halaman panjang - pola lama sempat pakai
+    // scrollIntoView + position:sticky, tapi sticky-nya rusak di struktur
+    // nested-flex halaman ini (sudah diinvestigasi cukup dalam, tidak
+    // ditemukan akar penyebab yang meyakinkan untuk diperbaiki). Dengan cuma
+    // 1 section aktif kelihatan sekaligus, halamannya jadi pendek dan nav-nya
+    // otomatis selalu kelihatan tanpa perlu sticky sama sekali - persis pola
+    // settings modal Claude/kebanyakan aplikasi lain. Tidak perlu dipanggil
     // ulang tiap kali tab Pengaturan dibuka (elemennya statis di DOM, cukup
     // di-init sekali di awal) - beda dengan loadUsageData/loadMemoryData yang
     // memang perlu refetch data tiap tab dibuka.
@@ -6189,34 +6195,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const links = Array.from(nav.querySelectorAll('.settings-nav-link'));
       if (links.length === 0) return;
 
-      links.forEach((link) => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const targetId = link.getAttribute('data-target');
-          const targetEl = document.getElementById(targetId);
-          if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      });
-
-      const setActive = (id) => {
-        links.forEach((link) => {
-          link.classList.toggle('active', link.getAttribute('data-target') === id);
-        });
-      };
-      setActive(links[0].getAttribute('data-target'));
-
       const sections = links
         .map((link) => document.getElementById(link.getAttribute('data-target')))
         .filter(Boolean);
-      const observer = new IntersectionObserver((entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length === 0) return;
-        // Kalau beberapa section kelihatan sekaligus (section pendek), pilih
-        // yang paling atas di viewport - itu yang paling "dibaca" user.
-        visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        setActive(visible[0].target.id);
-      }, { root: null, rootMargin: '-15% 0px -70% 0px', threshold: 0 });
-      sections.forEach((el) => observer.observe(el));
+
+      const showSection = (targetId) => {
+        links.forEach((link) => {
+          link.classList.toggle('active', link.getAttribute('data-target') === targetId);
+        });
+        sections.forEach((el) => {
+          el.classList.toggle('active', el.id === targetId);
+        });
+      };
+
+      links.forEach((link) => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          showSection(link.getAttribute('data-target'));
+        });
+      });
     })();
 
     // --- LOGIKA PROMPT BANK ---
