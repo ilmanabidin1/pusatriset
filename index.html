@@ -291,13 +291,6 @@
       font-family: var(--font-primary);
       min-height: 100vh;
       display: flex;
-      /* auto (bukan hidden) - kalau window di-shrink ke rasio sangat sempit
-         (mis. 9:16) dan konten dashboard belum sempat reflow rapi, tetap ada
-         scrollbar/gesture (drag, trackpad swipe, shift+wheel) buat mengakses
-         bagian yang overflow, bukan dipotong tanpa cara melihatnya sama sekali.
-         Tombol wheel listener di app.js sengaja skip body/html jadi ini TIDAK
-         membajak scroll vertikal biasa. */
-      overflow-x: auto;
     }
 
     /* Sidebar Layout */
@@ -3043,6 +3036,67 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
       margin-bottom: 1.5rem;
+    }
+
+    /* Mini side-tab kategori di Pengaturan - lihat #settingsSideNav di index.html
+       dan initSettingsSideNav di app.js (scroll halus + highlight kategori
+       aktif via IntersectionObserver). */
+    .settings-side-nav {
+      width: 200px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .settings-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .settings-nav-link i {
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .settings-nav-link:hover {
+      background: rgba(7,135,220,0.06);
+      color: var(--text-main);
+    }
+    .settings-nav-link.active {
+      background: rgba(7,135,220,0.1);
+      color: var(--brand-blue);
+      font-weight: 700;
+    }
+    @media (max-width: 900px) {
+      .settings-layout {
+        flex-direction: column;
+        gap: 0.5rem !important;
+      }
+      .settings-side-nav {
+        position: static;
+        flex-direction: row;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 0.4rem;
+        padding-bottom: 0.6rem;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(8,34,64,0.06);
+      }
+      .settings-side-nav .settings-nav-link {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .settings-side-nav .settings-nav-link span {
+        display: inline;
+      }
     }
 
     .filter-dropdown-item {
@@ -7008,13 +7062,32 @@
 
       <!-- TAB 4: SETTINGS (PENGATURAN) -->
       <div id="tabContentPengaturan" class="tab-content">
-        <div class="settings-container" style="max-width: 800px; margin: 0 auto;">
-          
+        <div class="settings-layout" style="max-width: 1100px; margin: 0 auto; display: flex; align-items: flex-start; gap: 2rem;">
+
+          <!-- Mini side-tab per kategori - klik scroll halus ke section terkait,
+               kategori yang lagi kelihatan di viewport otomatis di-highlight
+               (lihat initSettingsSideNav di app.js, pakai IntersectionObserver).
+               Di layar sempit berubah jadi baris pill horizontal scrollable
+               (lihat media query .settings-side-nav di bawah), bukan hilang. -->
+          <nav class="settings-side-nav" id="settingsSideNav">
+            <a href="#settingsSectionProfile" class="settings-nav-link" data-target="settingsSectionProfile"><i class="fa-regular fa-user"></i> <span>Profil & Keanggotaan</span></a>
+            <a href="#settingsSectionCustomInstructions" class="settings-nav-link" data-target="settingsSectionCustomInstructions"><i class="fa-solid fa-wand-magic-sparkles"></i> <span>Instruksi Kustom AI</span></a>
+            <a href="#settingsSectionMemory" class="settings-nav-link" data-target="settingsSectionMemory"><i class="fa-solid fa-brain"></i> <span>Profil Riset (Memori)</span></a>
+            <a href="#settingsSectionUsage" class="settings-nav-link" data-target="settingsSectionUsage"><i class="fa-solid fa-chart-column"></i> <span>Usage</span></a>
+            <a href="#settingsSectionSearchPrefs" class="settings-nav-link" data-target="settingsSectionSearchPrefs"><i class="fa-solid fa-sliders"></i> <span>Preferensi Riset</span></a>
+            <a href="#settingsSectionSecurity" class="settings-nav-link" data-target="settingsSectionSecurity"><i class="fa-solid fa-shield-halved"></i> <span>Keamanan</span></a>
+            <a href="#settingsSectionBilling" class="settings-nav-link" data-target="settingsSectionBilling"><i class="fa-solid fa-receipt"></i> <span>Transaksi</span></a>
+            <a href="#settingsSectionHelp" class="settings-nav-link" data-target="settingsSectionHelp"><i class="fa-regular fa-circle-question"></i> <span>Bantuan & Legal</span></a>
+            <a href="#settingsSectionDanger" class="settings-nav-link" data-target="settingsSectionDanger"><i class="fa-solid fa-triangle-exclamation"></i> <span>Zona Berbahaya</span></a>
+          </nav>
+
+        <div class="settings-container" style="max-width: 800px; margin: 0; flex: 1; min-width: 0;">
+
           <!-- Grid Pengaturan -->
           <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
-            
+
             <!-- Section 1: Profil Akun -->
-            <div class="filter-box-card" style="padding: 2rem;">
+            <div class="filter-box-card" id="settingsSectionProfile" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="fa-regular fa-user" style="color: var(--brand-blue);"></i> <span id="settingsProfileTitle">Profil & Keanggotaan</span>
               </h3>
@@ -7069,7 +7142,7 @@
                  buildCustomInstructionsMessage di server.js. Sengaja section
                  terpisah dari form Profil Akun (save-nya independen, sama
                  seperti pola Preferensi Riset di bawah). -->
-            <div class="filter-box-card" style="padding: 2rem;">
+            <div class="filter-box-card" id="settingsSectionCustomInstructions" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--brand-blue);"></i> <span id="settingsCustomInstructionsTitle">Instruksi Kustom untuk AI</span>
               </h3>
@@ -7084,7 +7157,7 @@
                  oleh sistem dari histori percakapan (lihat maybeUpdateUserMemory di
                  server.js). Dimuat lazy lewat GET /api/memory saat tab Pengaturan
                  dibuka, sama seperti pola Usage di bawah. -->
-            <div class="filter-box-card" style="padding: 2rem;">
+            <div class="filter-box-card" id="settingsSectionMemory" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="fa-solid fa-brain" style="color: var(--brand-blue);"></i> <span id="settingsMemoryTitle">Profil Riset Anda (Dipelajari Otomatis)</span>
               </h3>
@@ -7113,7 +7186,7 @@
                  warna terpisah di bar chart-nya (lihat legenda) supaya user tahu
                  penyebab kuotanya kepakai. Hanya Humanizer yang benar-benar di
                  luar pool ini (dijatah kata terpisah, API beda konsep). -->
-            <div class="filter-box-card" style="padding: 2rem;">
+            <div class="filter-box-card" id="settingsSectionUsage" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="fa-solid fa-chart-column" style="color: var(--brand-blue);"></i> <span id="settingsUsageTitle">Usage</span>
               </h3>
@@ -7144,7 +7217,7 @@
             </div>
 
             <!-- Section 2: Preferensi Pencarian -->
-            <div class="filter-box-card" style="padding: 2rem;">
+            <div class="filter-box-card" id="settingsSectionSearchPrefs" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="fa-solid fa-sliders" style="color: var(--brand-blue);"></i> <span id="settingsPrefsTitle">Preferensi Riset Default</span>
               </h3>
@@ -7174,7 +7247,7 @@
             </div>
 
             <!-- Section 3: Keamanan (Ganti Password) -->
-            <div class="filter-box-card" style="padding: 2rem;">
+            <div class="filter-box-card" id="settingsSectionSecurity" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="fa-solid fa-shield-halved" style="color: var(--brand-blue);"></i> <span id="settingsSecurityTitle">Keamanan & Kata Sandi</span>
               </h3>
@@ -7196,7 +7269,7 @@
             </div>
 
             <!-- Section 4: Riwayat Transaksi & Kuitansi -->
-            <div class="filter-box-card" style="padding: 2rem;">
+            <div class="filter-box-card" id="settingsSectionBilling" style="padding: 2rem;">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.35rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="fa-solid fa-receipt" style="color: var(--brand-blue);"></i> Transaksi & Kuitansi
               </h3>
@@ -7222,7 +7295,7 @@
             </div>
 
             <!-- Section 5: Bantuan & Legal -->
-            <div class="filter-box-card" style="padding: 1.5rem 2rem;">
+            <div class="filter-box-card" id="settingsSectionHelp" style="padding: 1.5rem 2rem;">
               <h3 id="settingsHelpLegalHeading" style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: var(--text-muted); margin-bottom: 0.9rem; display: flex; align-items: center; gap: 0.6rem; text-transform: uppercase; letter-spacing: 0.03em;">
                 <i class="fa-regular fa-circle-question"></i> Bantuan & Legal
               </h3>
@@ -7236,7 +7309,7 @@
             </div>
 
             <!-- Section 6: Zona Berbahaya (Hapus Akun) -->
-            <div class="filter-box-card" style="padding: 1.5rem 2rem; border: 1px solid rgba(220,38,38,0.2);">
+            <div class="filter-box-card" id="settingsSectionDanger" style="padding: 1.5rem 2rem; border: 1px solid rgba(220,38,38,0.2);">
               <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1rem; color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem; text-transform: uppercase; letter-spacing: 0.03em;">
                 <i class="fa-solid fa-triangle-exclamation"></i> Zona Berbahaya
               </h3>
@@ -7247,6 +7320,7 @@
             </div>
 
           </div>
+        </div>
         </div>
       </div>
 
