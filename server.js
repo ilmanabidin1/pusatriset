@@ -2654,7 +2654,7 @@ app.post('/api/logout', (req, res) => {
 // lama yang sudah dismiss pengumuman LAMA otomatis akan lihat yang BARU
 // (ID beda -> belum ada di dismissedAnnouncements mereka), tapi tidak akan
 // lihat pengumuman yang SAMA dua kali walau reload berkali-kali.
-const CURRENT_ANNOUNCEMENT_ID = 'campus-ambassador-2026-08';
+const CURRENT_ANNOUNCEMENT_ID = 'slr-upgrade-2026-08';
 
 app.get('/api/me', (req, res) => {
   if (hasAccess(req)) {

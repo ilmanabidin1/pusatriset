@@ -8528,20 +8528,56 @@
   </div>
 
   <!-- Popup pengumuman fitur baru - tampil OTOMATIS (bukan lewat klik) sekali
-       per user, lihat initFeatureAnnouncement di app.js. Gambar poster-nya
-       sendiri sudah berisi judul/CTA fitur (di-bake langsung ke gambar),
-       jadi di sini cukup gambar + tombol CTA + tombol tutup. data-announcement-id
-       HARUS sama persis dengan CURRENT_ANNOUNCEMENT_ID di server.js supaya
-       dismiss-nya tercatat benar - kalau nanti ganti konten pengumuman baru,
-       ganti gambar src DAN data-announcement-id ini bersamaan. -->
-  <div id="featureAnnouncementModal" data-announcement-id="campus-ambassador-2026-08" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(8, 34, 64, 0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: center; padding: 1rem;">
-    <div style="max-width: 420px; width: 100%; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.35); position: relative;">
+       per user, lihat initFeatureAnnouncement di app.js. Kontennya HTML/CSS
+       langsung (bukan gambar poster statis seperti pengumuman sebelumnya) -
+       supaya tetap tajam di semua ukuran layar dan gampang diedit lagi nanti.
+       data-announcement-id HARUS sama persis dengan CURRENT_ANNOUNCEMENT_ID
+       di server.js supaya dismiss-nya tercatat benar - kalau nanti ganti
+       konten pengumuman baru, ganti isi di sini DAN data-announcement-id ini
+       bersamaan. -->
+  <div id="featureAnnouncementModal" data-announcement-id="slr-upgrade-2026-08" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(8, 34, 64, 0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: center; padding: 1rem;">
+    <div style="max-width: 460px; width: 100%; max-height: 92vh; overflow-y: auto; background: #ffffff; border-radius: 20px; overflow-x: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.35); position: relative;">
       <button type="button" id="featureAnnouncementCloseBtn" title="Tutup" style="position: absolute; top: 0.75rem; right: 0.75rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(0,0,0,0.45); color: #fff; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">&times;</button>
-      <img id="featureAnnouncementImage" src="assets/campus-ambassador-announcement.webp" alt="JurnalHub Campus Ambassador - Join Now" style="width: 100%; display: block; background: #0b1a30;">
-      <div style="padding: 1.25rem 1.5rem 1.5rem;">
-        <button type="button" id="featureAnnouncementCtaBtn" class="upgrade-btn" style="width: 100%; padding: 0.75rem;">
-          <i class="fa-solid fa-handshake"></i> Gabung Campus Ambassador Sekarang
+
+      <div style="background: linear-gradient(180deg, #0a5fd6, #0747a8); padding: 1.75rem 1.5rem 2rem; text-align: center; position: relative; overflow: hidden;">
+        <img src="assets/jurnalhub-logo-light.png" alt="JurnalHub" style="height: 24px; margin-bottom: 1.1rem;">
+        <h2 style="font-family: var(--font-outfit); font-weight: 900; font-size: 1.9rem; letter-spacing: 0.01em; color: #ffffff; margin: 0 0 0.15rem; line-height: 1.05;">UPGRADED FEATURE</h2>
+        <h3 style="font-family: var(--font-outfit); font-weight: 800; font-size: 1.15rem; color: #ffffff; margin: 0 0 0.75rem; line-height: 1.15;">Systematic Literature Review</h3>
+        <p style="font-size: 0.85rem; color: rgba(255,255,255,0.9); line-height: 1.5; max-width: 340px; margin: 0 auto 1.25rem;">Dari diagram PRISMA 2020, Matriks Sintesis, Matriks Tema/Konstruk, beserta Laporan Naratif SLR yang sudah sesuai pedoman SLR dari Scopus.</p>
+        <button type="button" id="featureAnnouncementCtaBtn" style="background: linear-gradient(135deg, #ff7a18, #d6247a); border: none; color: #ffffff; font-family: inherit; font-weight: 800; font-size: 0.88rem; letter-spacing: 0.02em; padding: 0.75rem 2.25rem; border-radius: 999px; cursor: pointer; box-shadow: 0 8px 20px rgba(214,36,122,0.35); transition: transform 0.2s ease;">
+          TRY IT NOW
         </button>
+      </div>
+
+      <!-- Mockup tampilan fitur (bukan screenshot asli, cukup representatif -
+           mengikuti struktur tab Step 4 SLR yang sebenarnya: PRISMA/Matriks
+           Sintesis/Matriks Tema/Laporan Naratif) -->
+      <div style="padding: 0 1.25rem 1.5rem; margin-top: -1rem;">
+        <div style="background: #ffffff; border: 1px solid rgba(8,34,64,0.08); border-radius: 12px; box-shadow: 0 10px 25px rgba(8,34,64,0.15); padding: 1rem 1.1rem; overflow: hidden;">
+          <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.6rem;">Langkah 4: Hasil Sintesis Systematic Review</div>
+          <div style="display: flex; gap: 0.45rem; border-bottom: 1px solid rgba(8,34,64,0.08); padding-bottom: 0.5rem; margin-bottom: 0.6rem; font-size: 0.6rem; font-weight: 700; color: var(--text-muted); white-space: nowrap;">
+            <span>Diagram PRISMA</span>
+            <span>Matriks Sintesis</span>
+            <span style="color: var(--brand-blue); border-bottom: 2px solid var(--brand-blue); padding-bottom: 0.5rem; margin-bottom: -0.56rem;">Matriks Tema/Konstruk</span>
+            <span>Laporan Naratif SLR</span>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem;">
+            <span style="background: #10b981; color: #fff; font-size: 0.62rem; font-weight: 700; padding: 0.3rem 0.6rem; border-radius: 5px;"><i class="fa-solid fa-file-word"></i> Ekspor PRISMA 2020 (.DOCX)</span>
+          </div>
+          <div style="overflow-x: hidden; font-size: 0.62rem;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="color: var(--text-muted); font-weight: 700;">
+                <td style="padding: 0.3rem 0.3rem 0.3rem 0;">Penulis & Tahun</td>
+                <td style="padding: 0.3rem; text-align: center;">Etika AI</td>
+                <td style="padding: 0.3rem; text-align: center;">Privasi Data</td>
+                <td style="padding: 0.3rem; text-align: center;">Regulasi</td>
+              </tr>
+              <tr style="border-top: 1px solid rgba(8,34,64,0.06);"><td style="padding: 0.3rem 0.3rem 0.3rem 0; color: var(--brand-blue);">Ruschemeier, 2025</td><td style="text-align: center; color: #10b981; font-weight: 800;">&#10003;</td><td style="text-align: center; color: rgba(8,34,64,0.2);">-</td><td style="text-align: center; color: #10b981; font-weight: 800;">&#10003;</td></tr>
+              <tr style="border-top: 1px solid rgba(8,34,64,0.06);"><td style="padding: 0.3rem 0.3rem 0.3rem 0; color: var(--brand-blue);">Sebastian, 2023</td><td style="text-align: center; color: rgba(8,34,64,0.2);">-</td><td style="text-align: center; color: #10b981; font-weight: 800;">&#10003;</td><td style="text-align: center; color: rgba(8,34,64,0.2);">-</td></tr>
+              <tr style="border-top: 1px solid rgba(8,34,64,0.06);"><td style="padding: 0.3rem 0.3rem 0.3rem 0; color: var(--brand-blue);">Li et al., 2022</td><td style="text-align: center; color: #10b981; font-weight: 800;">&#10003;</td><td style="text-align: center; color: #10b981; font-weight: 800;">&#10003;</td><td style="text-align: center; color: rgba(8,34,64,0.2);">-</td></tr>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>

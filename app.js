@@ -1322,7 +1322,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ctaBtn) {
       ctaBtn.addEventListener('click', () => {
         dismissFeatureAnnouncement();
-        if (window.switchTab) window.switchTab('afiliasi');
+        if (window.switchTab) window.switchTab('slr');
       });
     }
   })();
